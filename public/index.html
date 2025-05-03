@@ -151,7 +151,7 @@
         let anchorDistanceGuess = 0;
 
         //default to 5x scope
-        if (typeof data.environment.depth?.belowTransducer?.value !== "undefined")
+        if (typeof data.environment?.depth?.belowTransducer?.value !== "undefined")
           anchorDistanceGuess += data.environment.depth.belowTransducer.value * 5;
 
         //add in our gps offset
@@ -163,13 +163,13 @@
         _maxRadius = Math.max(0, _maxRadius);
         _maxRadius = Math.min(150, _maxRadius);
 
-        if (typeof data.environment.depth?.belowTransducer?.value !== "undefined")
+        if (typeof data.environment?.depth?.belowTransducer?.value !== "undefined")
           updateDepthUI(data.environment.depth.belowTransducer.value);
-        if (typeof data.environment.wind?.directionTrue?.value !== "undefined") {
+        if (typeof data.environment?.wind?.directionTrue?.value !== "undefined") {
           _twa = rad2deg(data.environment.wind.directionTrue.value);
           updateWindAngleUI(_twa);
         }
-        if (typeof data.environment.wind?.speedApparent?.value !== "undefined")
+        if (typeof data.environment?.wind?.speedApparent?.value !== "undefined")
           updateWindSpeedUI(data.environment.wind.speedApparent.value);
 
         //save our parameters for boat size + gps position
