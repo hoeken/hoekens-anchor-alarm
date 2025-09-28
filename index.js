@@ -345,7 +345,7 @@ module.exports = function (app) {
     });
   }
 
-  function putRadius(context, path, value, cb) {
+  function putRadius(context, path, value) {
     app.handleMessage(plugin.id, {
       updates: [
         {
@@ -368,16 +368,13 @@ module.exports = function (app) {
     try {
       savePluginOptions();
       return { state: "SUCCESS" };
-    } catch {
-      err;
-    }
-    {
+    } catch (err) {
       app.error(err);
       return { state: "FAILURE", message: err.message };
     }
   }
 
-  function putPosition(context, path, value, cb) {
+  function putPosition(context, path, value) {
     try {
       if (value == null) {
         raiseAnchor();
@@ -404,10 +401,7 @@ module.exports = function (app) {
         savePluginOptions();
       }
       return { state: "SUCCESS" };
-    } catch {
-      err;
-    }
-    {
+    } catch (err) {
       app.error(err);
       return { state: "FAILURE", message: err.message };
     }
@@ -416,10 +410,10 @@ module.exports = function (app) {
   plugin.stop = function () {
     if (alarm_state != "normal") {
       alarm_state = "normal";
-      var delta = getAnchorAlarmDelta(app, alarm_state, "Stopped");
+      let delta = getAnchorAlarmDelta(app, alarm_state, "Stopped");
       app.handleMessage(plugin.id, delta);
     }
-    var delta = getAnchorDelta({
+    let delta = getAnchorDelta({
       app: app,
       isSet: false,
     });
@@ -449,10 +443,6 @@ module.exports = function (app) {
             path: "navigation.position",
             period: subscriberPeriod,
           },
-          {
-            path: "navigation.headingTrue",
-            period: subscriberPeriod,
-          },
         ],
       },
       onStop,
@@ -461,7 +451,7 @@ module.exports = function (app) {
         app.setProviderError(err);
       },
       (delta) => {
-        let vesselPosition, trueHeading;
+        let vesselPosition;
 
         if (delta.updates) {
           delta.updates.forEach((update) => {
@@ -469,8 +459,6 @@ module.exports = function (app) {
               update.values.forEach((vp) => {
                 if (vp.path === "navigation.position") {
                   vesselPosition = vp.value;
-                } else if (vp.path === "navigation.headingTrue") {
-                  trueHeading = vp.value;
                 }
               });
             }
@@ -533,9 +521,9 @@ module.exports = function (app) {
       } else {
         app.debug(
           "set anchor position to: " +
-          position.latitude +
-          " " +
-          position.longitude,
+            position.latitude +
+            " " +
+            position.longitude,
         );
         var radius = req.body["radius"];
         var segmentSize = req.body["segmentSize"] || 0;
@@ -847,7 +835,7 @@ module.exports = function (app) {
 
       //wait, do we have engines on?
       if (configuration.enableEngineCheck) {
-        if (checkEngineState(app, plugin)) {
+        if (checkEngineState(app)) {
           app.debug("anchor alarm disabled due to engines on: %j", delta);
           do_update = true;
           new_state = "normal";
@@ -862,7 +850,7 @@ module.exports = function (app) {
 
     if (new_state !== alarm_state || do_update) {
       alarm_state = new_state;
-      var delta = getAnchorAlarmDelta(app, alarm_state, message);
+      let delta = getAnchorAlarmDelta(app, alarm_state, message);
       app.debug("alarm state change: %j", delta);
       app.handleMessage(plugin.id, delta);
 
@@ -877,8 +865,8 @@ module.exports = function (app) {
   return plugin;
 };
 
-function checkEngineState(app, plugin) {
-  propulsion = app.getSelfPath("propulsion");
+function checkEngineState(app) {
+  let propulsion = app.getSelfPath("propulsion");
 
   if (typeof propulsion !== "undefined") {
     const propulsionKeys = Object.keys(propulsion);
@@ -910,9 +898,9 @@ function calc_distance(lat1, lon1, lat2, lon2) {
   var a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(degsToRad(lat1)) *
-    Math.cos(degsToRad(lat2)) *
-    Math.sin(dLon / 2) *
-    Math.sin(dLon / 2);
+      Math.cos(degsToRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   var d = R * c; // Distance in m
   return d;
@@ -942,16 +930,8 @@ function getAnchorAlarmDelta(app, state, msg) {
   return delta;
 }
 
-function radsToDeg(radians) {
-  return (radians * 180) / Math.PI;
-}
-
 function degsToRad(degrees) {
   return degrees * (Math.PI / 180.0);
-}
-
-function mod(x, y) {
-  return x - y * Math.floor(x / y);
 }
 
 class Watchdog {

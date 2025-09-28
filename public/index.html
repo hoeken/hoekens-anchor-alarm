@@ -599,8 +599,11 @@
 
         //load our heading value
         //try heading sensor:
-        if (navigation.headingTrue?.value) {
-          _heading = rad2deg(navigation.headingTrue?.value);
+        if (
+          navigation.headingTrue &&
+          !isStale(navigation.headingTrue.timestamp)
+        ) {
+          _heading = rad2deg(navigation.headingTrue.value);
         }
         //no heading data?  try pointing to our anchor.
         else if (navigation.anchor?.position) {
@@ -757,7 +760,7 @@
           //true wind angle looks the cleanest on the map
           else if (_twd !== null) vessel_heading = _twd;
           //if nothing else is available, have other vessels point the same direction as us
-          else if (!_heading) vessel_heading = _heading;
+          else if (_heading) vessel_heading = _heading;
 
           //where are they?
           let position = vessel.navigation.position.value;
