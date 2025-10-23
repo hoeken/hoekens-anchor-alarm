@@ -76,6 +76,10 @@
     <script>
       // used for ageing out stale depth and wind data
       const DATA_MAX_AGE = 300; // seconds
+      const MAX_RADIUS_GUESS = 200;
+      const MIN_RADIUS_GUESS = 20;
+      const MAX_ANCHOR_DISTANCE_GUESS = MAX_RADIUS_GUESS - 10;
+      const MIN_ANCHOR_DISTANCE_GUESS = MIN_RADIUS_GUESS - 10;
 
       let _currentCoordinates;
       let _anchorCoordinates;
@@ -442,6 +446,14 @@
           if (!_isAnchored) {
             //try to guess where to put the anchor.
             let anchorDistanceGuess = calculateScope(5, belowSurface) || 15; // default to 15 meters if no depth avaialble
+            anchorDistanceGuess = Math.max(
+              MIN_ANCHOR_DISTANCE_GUESS,
+              anchorDistanceGuess,
+            ); // min 10m
+            anchorDistanceGuess = Math.min(
+              MAX_ANCHOR_DISTANCE_GUESS,
+              anchorDistanceGuess,
+            ); // max 190m
 
             //our radius defaults.
             _maxRadius = anchorDistanceGuess;
@@ -451,8 +463,8 @@
             );
             _maxRadius *= 1.5;
             _maxRadius = Math.round(_maxRadius / 5) * 5; //multiples of 5
-            _maxRadius = Math.max(20, _maxRadius); // minimum 20 meters
-            _maxRadius = Math.min(200, _maxRadius); // maximum 200 meters
+            _maxRadius = Math.max(MIN_RADIUS_GUESS, _maxRadius); // minimum 20 meters
+            _maxRadius = Math.min(MAX_RADIUS_GUESS, _maxRadius); // maximum 200 meters
 
             let bowPos = calculateBowCoordinates(
               _currentCoordinates,
