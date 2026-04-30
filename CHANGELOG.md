@@ -1,4 +1,8 @@
-#v1.3
+# v1.3.3
+
+* Startup notification visual only now.  Fixes #11
+
+# v1.3
 
 * added a table to bottom right with various scope suggestions based on depth + bow height above water + tidal delta
 * plugin is now gps antenna location aware.  this makes calculation of the anchor bearing and distance more accurate
