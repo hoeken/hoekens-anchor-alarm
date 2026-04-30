@@ -182,7 +182,7 @@ module.exports = function (app) {
 
     app.setPluginStatus("Started");
 
-    var delta = getAnchorAlarmDelta(app, "normal", "Started")
+    var delta = getAnchorAlarmDelta(app, "normal", "Started", ["visual"])
     app.handleMessage(plugin.id, delta)
     alarm_state = "normal"
 
@@ -762,11 +762,12 @@ function calc_distance(lat1, lon1, lat2, lon2) {
   return d;
 }
 
-function getAnchorAlarmDelta(app, state, msg) {
+function getAnchorAlarmDelta(app, state, msg, method) {
   if (!msg)
     msg = state.charAt(0).toUpperCase() + state.slice(1)
 
-  let method = ["visual", "sound"]
+  if (!method)
+    method = ["visual", "sound"]
 
   var delta = {
     "updates": [
