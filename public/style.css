@@ -3,6 +3,9 @@ body {
   margin: 0;
   font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
   font-size: 0.75rem;
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
 }
 
 html,
