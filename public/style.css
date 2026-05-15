@@ -97,6 +97,12 @@ button {
   display: none;
 }
 
+.leaflet-control-home {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
 .anchorLineLabel textPath {
   fill: black;
   /* or whatever text color you want */

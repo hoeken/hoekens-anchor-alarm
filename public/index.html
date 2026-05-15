@@ -61,6 +61,7 @@
 
       let _isAnchored = false;
       let _waitingForTheDrop = false;
+      let _homeZoom;
 
       let myBoatMarker;
       let crosshairMarker;
@@ -115,6 +116,43 @@
         "OpenStreetMap": osmLayer,
         "Satellite": satelliteLayer
       };
+
+      // Define the home button control
+      const HomeButtonControl = L.Control.extend({
+        options: {
+          position: 'topright'
+        },
+
+        onAdd: function (map) {
+          const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+          const homeButton = L.DomUtil.create('a', 'leaflet-control-home', container);
+          homeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" stroke="currentColor" stroke-width="0.75" class="bi bi-house" viewBox="0 0 16 16">
+  <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/>
+</svg>`;
+          homeButton.href = '#';
+          homeButton.title = 'Center on Boat';
+          homeButton.setAttribute('role', 'button');
+
+          L.DomEvent.disableClickPropagation(container);
+          L.DomEvent.on(homeButton, 'click', function (e) {
+            L.DomEvent.stopPropagation(e);
+            L.DomEvent.preventDefault(e);
+            if (_currentCoordinates) {
+              const doPan = function () {
+                map.panTo(_currentCoordinates);
+              };
+              if (_homeZoom != null && map.getZoom() !== _homeZoom) {
+                map.once('zoomend', doPan);
+                map.setZoom(_homeZoom);
+              } else {
+                doPan();
+              }
+            }
+          });
+
+          return container;
+        }
+      });
 
       // Define the info box control
       const InfoBoxControl = L.Control.extend({
@@ -286,6 +324,9 @@
           position: 'topright' // Options: 'topleft', 'topright', 'bottomleft', 'bottomright'
         }).addTo(map);
 
+        //add home button
+        map.addControl(new HomeButtonControl());
+
         //add layer control
         let layerControl = L.control.layers(baseMaps, {}, {
           position: 'topright' // Options: 'topleft', 'topright', 'bottomleft', 'bottomright'
@@ -365,6 +406,7 @@
 
         //zoom baby zoom.
         map.fitBounds(anchorRadiusCircle.getBounds());
+        _homeZoom = map.getZoom();
 
         //load up all the other vessels.
         $.get(`/signalk/v1/api/tracks?radius=${_filterRadius}`, (tracks) => {
