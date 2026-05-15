@@ -695,8 +695,11 @@
       });
 
       $('#setRadius').click(() => {
-        let newRadius = parseInt(prompt('Enter Radius (m)', _maxRadius))
-        if (newRadius <= 0)
+        let input = prompt('Enter Radius (m)', _maxRadius);
+        if (input === null)
+          return;
+        let newRadius = parseInt(input);
+        if (isNaN(newRadius) || newRadius <= 0)
           return;
 
         _maxRadius = newRadius;
