@@ -36,6 +36,12 @@ body,
   border-radius: 5px;
   text-align: center;
   line-height: 40px;
+  pointer-events: none;
+}
+
+#map_toggle button {
+  pointer-events: auto;
+  touch-action: none;
 }
 
 button {

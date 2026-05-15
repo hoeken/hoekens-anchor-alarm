@@ -691,6 +691,25 @@
         }
       });
 
+      // macOS Chrome delivers trackpad pinch as a wheel event with ctrlKey=true.
+      // Over the #map_toggle overlay the browser would zoom the page instead of
+      // the map, so swallow the default and re-dispatch onto the map container.
+      document.getElementById('map_toggle').addEventListener('wheel', (e) => {
+        if (!e.ctrlKey) return;
+        e.preventDefault();
+        map.getContainer().dispatchEvent(new WheelEvent('wheel', {
+          deltaX: e.deltaX,
+          deltaY: e.deltaY,
+          deltaZ: e.deltaZ,
+          deltaMode: e.deltaMode,
+          ctrlKey: e.ctrlKey,
+          clientX: e.clientX,
+          clientY: e.clientY,
+          bubbles: false,
+          cancelable: true,
+        }));
+      }, { passive: false });
+
       $('#decreaseRadius').click(() => {
         _maxRadius = parseInt(_maxRadius);
         if (_maxRadius <= 5)
