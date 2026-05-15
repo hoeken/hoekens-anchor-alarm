@@ -98,6 +98,27 @@
 
       let urlParams = new URLSearchParams(window.location.search);
 
+      const STALE_RELOAD_MS = 5 * 60 * 1000;
+      let _hiddenAt = null;
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          _hiddenAt = Date.now();
+        } else if (_hiddenAt !== null) {
+          const elapsed = Date.now() - _hiddenAt;
+          _hiddenAt = null;
+          if (elapsed >= STALE_RELOAD_MS) {
+            window.location.reload();
+          }
+        }
+      });
+
+      window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+          window.location.reload();
+        }
+      });
+
       satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
         maxZoom: 23,
