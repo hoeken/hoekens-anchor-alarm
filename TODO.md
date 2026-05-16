@@ -1,8 +1,7 @@
 # v1.4
 
 * add prettify to js
-* refactor js out of index.html
-* add wind arrow indication
+* home button should use existing home / centering code
 * new screenshot for readme
 * respect units (kts / meters / etc)
 
