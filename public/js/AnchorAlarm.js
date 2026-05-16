@@ -12,18 +12,6 @@ const AnchorState = Object.freeze({
   RAISING: 'RAISING',
 });
 
-const ANCHOR_ICON = L.icon({
-  iconUrl: 'icons/anchor.png',
-  iconSize: [24, 24],
-  iconAnchor: [12, 4],
-});
-
-const CROSSHAIR_ICON = L.icon({
-  iconUrl: 'icons/crosshair.png',
-  iconSize: [24, 24],
-  iconAnchor: [12, 12],
-});
-
 class AnchorAlarm {
 
   constructor() {
@@ -53,21 +41,15 @@ class AnchorAlarm {
 
     this.myBoatMarker = undefined;
     this.gpsAntennaMarker = undefined;
-    this.anchorMarker = undefined;
-    this.anchorRadiusCircle = undefined;
 
     this.map = undefined;
     this.fleetLayer = undefined;
+    this.anchorOverlay = undefined;
 
     this.infoPanel = undefined;
     this.scopePanel = undefined;
     this.windPanel = undefined;
     this.homeButton = undefined;
-
-    this.crosshairMarker = undefined;
-
-    this.anchorLine = undefined;
-    this.anchorLineAngle = undefined;
 
     this.pollTimer = null;
   }
@@ -117,7 +99,7 @@ class AnchorAlarm {
 
     $('#dropAnchor').click(() => {
       if (this.state !== AnchorState.UP) return;
-      let mc = this.crosshairMarker.getLatLng();
+      let mc = this.anchorOverlay.getCrosshairPosition();
       this.state = AnchorState.DROPPING;
       this.dropAnchor(mc, this.maxRadius); //better UI response outside.
       this.signalK.dropAnchor({ latitude: mc.lat, longitude: mc.lng }, this.maxRadius).always(() => {
@@ -189,11 +171,10 @@ class AnchorAlarm {
 
       this.heading = this.computeInitialHeading(data);
       this.placeOwnVessel(this.currentCoordinates, this.heading);
-      this.placeAnchorWidgets(this.currentCoordinates);
+      this.placeAnchorWidgets();
       this.restoreAnchorState(data, anchorDistanceGuess);
 
-      this.updateAnchorLine(this.currentCoordinates, this.anchorCoordinates);
-      this.map.fitBounds(this.anchorRadiusCircle.getBounds());
+      this.map.fitBounds(this.anchorOverlay.getBounds());
       this.homeZoom = this.map.getZoom();
 
       this.fleetLayer = new FleetLayer({ map: this.map, ownMmsi: this.mmsi });
@@ -335,25 +316,15 @@ class AnchorAlarm {
     }).addTo(this.map);
   }
 
-  // The anchor line uses two overlapping polylines because leaflet.textpath
-  // only supports one label per polyline; one carries the distance label, the
-  // other (invisible) carries the bearing label.
-  placeAnchorWidgets(coords) {
-    this.anchorRadiusCircle = L.circle(this.map.getCenter(), this.maxRadius, { color: 'green' });
-    this.anchorRadiusCircle.addTo(this.map);
-    this.uiSetRadius(this.maxRadius);
-
-    this.anchorCoordinates = this.map.getCenter();
-
-    this.anchorLine = L.polyline([coords, this.anchorCoordinates], {
-      color: 'grey',
-      weight: 2,
-    }).addTo(this.map);
-
-    this.anchorLineAngle = L.polyline([coords, this.anchorCoordinates], {
-      color: 'grey',
-      weight: 0,
-    }).addTo(this.map);
+  placeAnchorWidgets() {
+    this.anchorOverlay = new AnchorOverlay({ map: this.map, radius: this.maxRadius })
+      .setBoatPosition(this.currentCoordinates, this.heading, { x: this.gpsBowXDistance, y: this.gpsBowYDistance })
+      .onCrosshairDrag((pos) => {
+        if (this.state !== AnchorState.ANCHORED) {
+          this.anchorCoordinates = pos;
+        }
+      });
+    $('#radius').html(this.maxRadius);
   }
 
   restoreAnchorState(data, anchorDistanceGuess) {
@@ -363,7 +334,7 @@ class AnchorAlarm {
     if (initialAnchorPos) {
       this.anchorCoordinates = L.latLng(initialAnchorPos.latitude, initialAnchorPos.longitude);
       const radius = parseInt(SignalKClient.value(nav, 'anchor.maxRadius'), 10);
-      // Set state before dropAnchor so uiSetRadiusColor (called inside) paints green.
+      // Set state before dropAnchor so the overlay paints green.
       this.state = AnchorState.ANCHORED;
       this.dropAnchor(this.anchorCoordinates, radius);
     } else {
@@ -419,7 +390,10 @@ class AnchorAlarm {
 
       this.fleetLayer.appendOwnTrack(this.currentCoordinates);
 
-      this.updateAnchorLine(this.currentCoordinates, this.anchorCoordinates);
+      this.anchorOverlay.setBoatPosition(
+        this.currentCoordinates, this.heading,
+        { x: this.gpsBowXDistance, y: this.gpsBowYDistance },
+      );
     });
   }
 
@@ -487,7 +461,7 @@ class AnchorAlarm {
         this.anchorCoordinates = L.latLng(anchorPos.latitude, anchorPos.longitude);
 
         if (this.state === AnchorState.UP) {
-          // Flip state before dropAnchor so uiSetRadiusColor paints green.
+          // Flip state before dropAnchor so the overlay paints green.
           this.state = AnchorState.ANCHORED;
           this.dropAnchor(this.anchorCoordinates, this.maxRadius);
         } else {
@@ -514,8 +488,7 @@ class AnchorAlarm {
 
   uiSetRadius(radius) {
     $('#radius').html(radius);
-    this.anchorRadiusCircle.setRadius(radius);
-    this.uiSetRadiusColor();
+    this.anchorOverlay.setRadius(radius);
   }
 
   setMaxRadius(newRadius) {
@@ -534,20 +507,6 @@ class AnchorAlarm {
     }
   }
 
-  uiSetRadiusColor() {
-    const center = this.anchorRadiusCircle.getLatLng();
-    const boat = this.myBoatMarker.getLatLng();
-    const radius = this.anchorRadiusCircle.getRadius();
-    const distance = GeoMath.calculateDistance(center.lat, center.lng, boat.lat, boat.lng);
-
-    if (distance > radius)
-      this.anchorRadiusCircle.setStyle({ color: 'red' });
-    else if (this.state === AnchorState.ANCHORED || this.state === AnchorState.DROPPING)
-      this.anchorRadiusCircle.setStyle({ color: 'green' });
-    else
-      this.anchorRadiusCircle.setStyle({ color: 'blue' });
-  }
-
   dropAnchor(position, radius) {
     $('#anchorDown').show();
     $('#anchorUp').hide();
@@ -561,22 +520,8 @@ class AnchorAlarm {
     if (this.maxRadius <= 0)
       this.maxRadius = 20;
 
-    if (this.crosshairMarker) {
-      this.map.removeLayer(this.crosshairMarker);
-      this.crosshairMarker = undefined;
-    }
-
-    this.anchorRadiusCircle.setLatLng(position);
-    this.uiSetRadius(this.maxRadius);
-
-    if (this.anchorMarker) {
-      this.map.removeLayer(this.anchorMarker);
-      this.anchorMarker = undefined;
-    }
-
-    this.anchorMarker = L.marker(position, {
-      icon: ANCHOR_ICON,
-    }).addTo(this.map);
+    this.anchorOverlay.drop(position, this.maxRadius);
+    $('#radius').html(this.maxRadius);
   }
 
   raiseAnchor() {
@@ -586,67 +531,7 @@ class AnchorAlarm {
     this.infoPanel.hide();
     this.scopePanel.show();
 
-    if (this.anchorMarker) {
-      this.map.removeLayer(this.anchorMarker);
-      this.anchorMarker = undefined;
-    }
-
-    this.uiSetRadiusColor();
-
-    if (this.crosshairMarker) {
-      this.map.removeLayer(this.crosshairMarker);
-      this.crosshairMarker = undefined;
-    }
-
-    this.crosshairMarker = L.marker(this.anchorCoordinates, {
-      icon: CROSSHAIR_ICON,
-      draggable: true,
-    }).addTo(this.map);
-
-    this.crosshairMarker.on('drag', (ev) => {
-      if (this.state !== AnchorState.ANCHORED) {
-        this.anchorCoordinates = this.crosshairMarker.getLatLng();
-        this.updateAnchorLine(this.currentCoordinates, this.anchorCoordinates);
-        this.anchorRadiusCircle.setLatLng(this.crosshairMarker.getLatLng());
-        this.uiSetRadiusColor();
-      }
-    });
-
-    this.anchorRadiusCircle.setLatLng(this.anchorCoordinates);
-
-    this.updateAnchorLine(this.currentCoordinates, this.anchorCoordinates);
-  }
-
-  updateAnchorLine(current, anchor) {
-    const bowCoordinates = GeoMath.calculateBowCoordinates(current, this.heading, this.gpsBowXDistance, this.gpsBowYDistance);
-
-    this.anchorLine.setLatLngs([bowCoordinates, anchor]);
-    this.anchorLineAngle.setLatLngs([bowCoordinates, anchor]);
-
-    // textpath label flipping: if the anchor is west of the bow, the label
-    // reads upside-down without this flip. (Fails exactly on the equator.)
-    const flip = bowCoordinates.lng > anchor.lng;
-
-    let distance = GeoMath.calculateDistance(bowCoordinates.lat, bowCoordinates.lng, anchor.lat, anchor.lng);
-    distance = Math.round(distance * 10) / 10;
-
-    this.anchorLine.setText("");
-    this.anchorLine.setText(`${distance}m`, {
-      orientation: flip ? 'flip' : 0,
-      offset: 12,
-      center: true,
-      attributes: { class: "anchorLineLabel" },
-    });
-
-    const bearing = Math.round(GeoMath.calculateBearing(bowCoordinates.lat, bowCoordinates.lng, anchor.lat, anchor.lng));
-
-    this.anchorLineAngle.setText("");
-    this.anchorLineAngle.setText(`${bearing}°`, {
-      orientation: flip ? 'flip' : 0,
-      offset: -3,
-      center: true,
-      attributes: { class: "anchorLineLabel" },
-    });
+    this.anchorOverlay.raise(this.anchorCoordinates);
   }
 
   // === Calculations ================================================================
