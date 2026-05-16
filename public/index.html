@@ -40,10 +40,6 @@
       </div>
     </div>
     <script>
-
-      // used for ageing out stale depth and wind data
-      const DATA_MAX_AGE = 300; // seconds
-
       let _currentCoordinates;
       let _anchorCoordinates;
       let _filterRadius = 500;
@@ -298,18 +294,18 @@
         //a couple different depths
         let belowKeel = 0;
         let belowSurface = 0;
-        if (typeof data.environment.depth?.belowKeel?.value !== "undefined" && !isStale(data.environment.depth.belowKeel))
+        if (typeof data.environment.depth?.belowKeel?.value !== "undefined" && isFresh(data.environment.depth.belowKeel))
           belowKeel = data.environment.depth.belowKeel.value;
-        if (typeof data.environment.depth?.belowSurface?.value !== "undefined" && !isStale(data.environment.depth.belowSurface))
+        if (typeof data.environment.depth?.belowSurface?.value !== "undefined" && isFresh(data.environment.depth.belowSurface))
           belowSurface = data.environment.depth.belowSurface.value;
         updateDepthUI(belowSurface, belowKeel);
 
         //wind info.
-        if (typeof data.environment.wind?.directionTrue?.value !== "undefined" && !isStale(data.environment.wind.directionTrue)) {
+        if (typeof data.environment.wind?.directionTrue?.value !== "undefined" && isFresh(data.environment.wind.directionTrue)) {
           _twa = rad2deg(data.environment.wind.directionTrue.value);
           updateWindAngleUI(_twa);
         }
-        if (typeof data.environment.wind?.speedApparent?.value !== "undefined" && !isStale(data.environment.wind.speedApparent))
+        if (typeof data.environment.wind?.speedApparent?.value !== "undefined" && isFresh(data.environment.wind.speedApparent))
           updateWindSpeedUI(data.environment.wind.speedApparent.value);
 
         //save our parameters for boat size + gps position
@@ -524,7 +520,7 @@
 
           //load our heading value
           let heading = 0;
-          if (data.headingTrue && !isStale(data.headingTrue)) {
+          if (data.headingTrue && isFresh(data.headingTrue)) {
             heading = rad2deg(data.headingTrue.value);
           } else {
             heading = Math.round(calculateBearing(_currentCoordinates.lat, _currentCoordinates.lng, _anchorCoordinates.lat, _anchorCoordinates.lng));
@@ -626,7 +622,7 @@
             let vessel_heading = 0;
 
             //heading would be best.... but it doesnt show up in AIS very often
-            if (typeof vessel.navigation?.headingTrue?.value !== "undefined" && !isStale(navigation.headingTrue))
+            if (typeof vessel.navigation?.headingTrue?.value !== "undefined" && isFresh(navigation.headingTrue))
               vessel_heading = rad2deg(vessel.navigation.headingTrue.value);
             //COG works, but is really wonky - lets only use when they are moving
             else if (typeof vessel.navigation?.courseOverGroundTrue?.value !== "undefined" && vessel_sog > 1)
@@ -1422,13 +1418,16 @@
         return result;
       }
 
-      function isStale(data) {
+      function isFresh(data, max_age = 300) {
         if (!data)
-          return true;
-
+          return false;
         const date = new Date(data.timestamp);
         const ageInSecs = (Date.now() - date) / 1000;
-        return ageInSecs > DATA_MAX_AGE;
+        return ageInSecs <= max_age;
+      }
+
+      function isStale(data, max_age = 300) {
+        return !isFresh(data, max_age);
       }
     </script>
 </body>

@@ -16,7 +16,6 @@
 const geolib = require('geolib')
 
 const subscriberPeriod = 1000
-const DATA_MAX_AGE = 300; // seconds
 
 module.exports = function (app) {
   var plugin = {};
@@ -767,9 +766,9 @@ function checkEngineState(app) {
     const propulsionKeys = Object.keys(propulsion);
 
     for (let key of propulsionKeys) {
-      if (propulsion[key] && propulsion[key].revolutions && !isStale(propulsion[key].revolutions) && propulsion[key].revolutions.value > 0)
+      if (propulsion[key] && propulsion[key].revolutions && isFresh(propulsion[key].revolutions) && propulsion[key].revolutions.value > 0)
         return true;
-      if (propulsion[key] && propulsion[key].state && !isStale(propulsion[key].state) && propulsion[key].state.value === 'started')
+      if (propulsion[key] && propulsion[key].state && isFresh(propulsion[key].state) && propulsion[key].state.value === 'started')
         return true;
     }
   }
@@ -821,14 +820,18 @@ function degsToRad(degrees) {
   return degrees * (Math.PI / 180.0);
 }
 
-function isStale(data) {
+function isFresh(data, max_age = 300) {
   if (!data)
-    return true;
-
+    return false;
   const date = new Date(data.timestamp);
   const ageInSecs = (Date.now() - date) / 1000;
-  return ageInSecs > DATA_MAX_AGE;
+  return ageInSecs <= max_age;
 }
+
+function isStale(data, max_age = 300) {
+  return !isFresh(data, max_age);
+}
+
 
 class Watchdog {
   constructor(timeout, onTimeout) {
