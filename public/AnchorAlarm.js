@@ -2,8 +2,15 @@ const MPS_TO_KNOTS = 1.94384;
 const POLL_INTERVAL_MS = 1000;
 const DEFAULT_FRESHNESS_SEC = 300;
 const STALE_RELOAD_MS = 5 * 60 * 1000;
-const MAX_OWN_TRACK_POINTS = 3600; // 1 hour at 1Hz
+const MAX_OWN_TRACK_POINTS = 3600 * 24; //24 hours at 1Hz
 const INITIAL_LOAD_RETRY_MS = 5000;
+
+const AnchorState = Object.freeze({
+  UP: 'UP',
+  DROPPING: 'DROPPING',
+  ANCHORED: 'ANCHORED',
+  RAISING: 'RAISING',
+});
 
 const ANCHOR_ICON = L.icon({
   iconUrl: 'icons/anchor.png',
@@ -185,8 +192,7 @@ class AnchorAlarm {
     this.tidalRise = 0;
     this.tidalFall = 0;
 
-    this.isAnchored = false;
-    this.waitingForTheDrop = false;
+    this.state = AnchorState.UP;
     this.homeZoom = undefined;
 
     this.myBoatMarker = undefined;
@@ -254,18 +260,25 @@ class AnchorAlarm {
 
   wireButtons() {
     $('#raiseAnchor').click(() => {
+      if (this.state !== AnchorState.ANCHORED) return;
       let agree = confirm('Do you really want to disable your anchor alarm?');
-      if (agree) {
-        this.raiseAnchor(); //better UI response outside.
-        this.pluginPost('raiseAnchor');
-      }
+      if (!agree) return;
+      this.state = AnchorState.RAISING;
+      this.raiseAnchor(); //better UI response outside.
+      this.pluginPost('raiseAnchor').always(() => {
+        this.state = AnchorState.UP;
+      });
     });
 
     $('#dropAnchor').click(() => {
+      if (this.state !== AnchorState.UP) return;
       let mc = this.crosshairMarker.getLatLng();
+      this.state = AnchorState.DROPPING;
       this.dropAnchor(mc, this.maxRadius); //better UI response outside.
       let newPosition = { latitude: mc.lat, longitude: mc.lng };
-      this.pluginPost('dropAnchor', { position: newPosition, radius: this.maxRadius });
+      this.pluginPost('dropAnchor', { position: newPosition, radius: this.maxRadius }).always(() => {
+        this.state = AnchorState.ANCHORED;
+      });
     });
 
     $('#setRadius').click(() => {
@@ -478,6 +491,8 @@ class AnchorAlarm {
       if (initialAnchorPos) {
         this.anchorCoordinates = L.latLng(initialAnchorPos.latitude, initialAnchorPos.longitude);
         let radius = parseInt(nav.anchor.maxRadius.value, 10);
+        // Set state before dropAnchor so uiSetRadiusColor (called inside) paints green.
+        this.state = AnchorState.ANCHORED;
         this.dropAnchor(this.anchorCoordinates, radius);
       } else {
         let bowPos = GeoMath.calculateBowCoordinates(this.currentCoordinates, heading, this.gpsBowXDistance, this.gpsBowYDistance);
@@ -638,21 +653,26 @@ class AnchorAlarm {
 
     //update our watch status
     $.get('/signalk/v1/api/vessels/self/navigation/anchor', (anchorStatus) => {
-      if (!this.waitingForTheDrop) {
-        if (anchorStatus.state.value === "on") {
-          this.maxRadius = anchorStatus.maxRadius.value;
-          this.anchorCoordinates = L.latLng(anchorStatus.position.value.latitude, anchorStatus.position.value.longitude);
-          this.uiSetRadius(this.maxRadius);
+      // Don't reconcile while a drop/raise POST is in flight — the server
+      // doesn't reflect our pending change yet, so we'd flip ourselves back.
+      if (this.state !== AnchorState.UP && this.state !== AnchorState.ANCHORED) return;
 
-          //switch to anchored?
-          if (!this.isAnchored) {
-            this.dropAnchor(this.anchorCoordinates, this.maxRadius);
-          }
+      const serverOn = anchorStatus.state.value === "on";
+
+      if (serverOn) {
+        this.maxRadius = anchorStatus.maxRadius.value;
+        this.anchorCoordinates = L.latLng(anchorStatus.position.value.latitude, anchorStatus.position.value.longitude);
+
+        if (this.state === AnchorState.UP) {
+          // Flip state before dropAnchor so uiSetRadiusColor paints green.
+          this.state = AnchorState.ANCHORED;
+          this.dropAnchor(this.anchorCoordinates, this.maxRadius);
+        } else {
+          this.uiSetRadius(this.maxRadius);
         }
-        //switch off anchored?
-        else if (this.isAnchored) {
-          this.raiseAnchor();
-        }
+      } else if (this.state === AnchorState.ANCHORED) {
+        this.state = AnchorState.UP;
+        this.raiseAnchor();
       }
     });
 
@@ -787,20 +807,16 @@ class AnchorAlarm {
     this.maxRadius = newRadius;
     this.uiSetRadius(newRadius);
 
-    if (this.isAnchored) {
+    if (this.state === AnchorState.ANCHORED) {
       this.pluginPost('setRadius', { radius: newRadius });
     }
   }
 
   pluginPost(path, data) {
-    this.waitingForTheDrop = true;
     return $.post(`/plugins/hoekens-anchor-alarm/${path}`, data)
       .fail((response) => {
         if (response.status === 401)
           location.href = "/admin/#/login";
-      })
-      .always(() => {
-        this.waitingForTheDrop = false;
       });
   }
 
@@ -819,7 +835,7 @@ class AnchorAlarm {
 
     if (distance > radius)
       this.anchorRadiusCircle.setStyle({ color: 'red' });
-    else if (this.isAnchored)
+    else if (this.state === AnchorState.ANCHORED || this.state === AnchorState.DROPPING)
       this.anchorRadiusCircle.setStyle({ color: 'green' });
     else
       this.anchorRadiusCircle.setStyle({ color: 'blue' });
@@ -830,8 +846,6 @@ class AnchorAlarm {
     $('#anchorUp').hide();
 
     this.anchorCoordinates = position;
-
-    this.isAnchored = true;
 
     $('#scopeUI').hide();
     $('#infoUI').show();
@@ -862,8 +876,6 @@ class AnchorAlarm {
     $('#anchorUp').show();
     $('#anchorDown').hide();
 
-    this.isAnchored = false;
-
     $('#infoUI').hide();
     $('#scopeUI').show();
 
@@ -885,7 +897,7 @@ class AnchorAlarm {
     }).addTo(this.map);
 
     this.crosshairMarker.on('drag', (ev) => {
-      if (!this.isAnchored) {
+      if (this.state !== AnchorState.ANCHORED) {
         this.anchorCoordinates = this.crosshairMarker.getLatLng();
         this.updateAnchorLine(this.currentCoordinates, this.anchorCoordinates);
         this.anchorRadiusCircle.setLatLng(this.crosshairMarker.getLatLng());
