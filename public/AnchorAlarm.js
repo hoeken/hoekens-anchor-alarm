@@ -2,6 +2,8 @@ const MPS_TO_KNOTS = 1.94384;
 const POLL_INTERVAL_MS = 1000;
 const DEFAULT_FRESHNESS_SEC = 300;
 const STALE_RELOAD_MS = 5 * 60 * 1000;
+const MAX_OWN_TRACK_POINTS = 3600; // 1 hour at 1Hz
+const INITIAL_LOAD_RETRY_MS = 5000;
 
 const ANCHOR_ICON = L.icon({
   iconUrl: 'icons/anchor.png',
@@ -85,7 +87,7 @@ const WindBarbControl = L.Control.extend({
     container.innerHTML = `
       <div><b>Wind</b></div>
       <div id="windBarbContainer"></div>
-      <div id="awsValue">~</span>
+      <div id="awsValue">~</div>
       `;
     container.id = "windBarbUI";
     return container;
@@ -200,6 +202,7 @@ class AnchorAlarm {
     this.anchorLineAngle = undefined;
 
     this.hiddenAt = null;
+    this.pollTimer = null;
   }
 
   static startup() {
@@ -253,37 +256,23 @@ class AnchorAlarm {
     $('#raiseAnchor').click(() => {
       let agree = confirm('Do you really want to disable your anchor alarm?');
       if (agree) {
-        this.waitingForTheDrop = true;
         this.raiseAnchor(); //better UI response outside.
-        $.post('/plugins/hoekens-anchor-alarm/raiseAnchor', () => { }).fail((response) => {
-          if (response.status == 401)
-            location.href = "/admin/#/login";
-        }).always(() => {
-          this.waitingForTheDrop = false;
-        });
+        this.pluginPost('raiseAnchor');
       }
     });
 
     $('#dropAnchor').click(() => {
-      //let mc = map.getCenter()
       let mc = this.crosshairMarker.getLatLng();
-      this.waitingForTheDrop = true;
       this.dropAnchor(mc, this.maxRadius); //better UI response outside.
       let newPosition = { latitude: mc.lat, longitude: mc.lng };
-      $.post('/plugins/hoekens-anchor-alarm/dropAnchor', { position: newPosition, radius: this.maxRadius }, () => {
-      }).fail((response) => {
-        if (response.status == 401)
-          location.href = "/admin/#/login";
-      }).always(() => {
-        this.waitingForTheDrop = false;
-      });
+      this.pluginPost('dropAnchor', { position: newPosition, radius: this.maxRadius });
     });
 
     $('#setRadius').click(() => {
       let input = prompt('Enter Radius (m)', this.maxRadius);
       if (input === null)
         return;
-      let newRadius = parseInt(input);
+      let newRadius = parseInt(input, 10);
       if (isNaN(newRadius) || newRadius <= 0)
         return;
 
@@ -382,8 +371,8 @@ class AnchorAlarm {
       this.maxRadius = Math.max(0, this.maxRadius);
       this.maxRadius = Math.min(200, this.maxRadius);
 
-      data = data.navigation;
-      this.currentCoordinates = L.latLng(data.position.value.latitude, data.position.value.longitude);
+      const nav = data.navigation;
+      this.currentCoordinates = L.latLng(nav.position.value.latitude, nav.position.value.longitude);
 
       //init our map
       this.map = L.map('map', {
@@ -432,19 +421,19 @@ class AnchorAlarm {
       this.map.addControl(new WindBarbControl());
 
       //load up our heading.
-      let heading = data.headingTrue?.value;
-      if (heading) {
+      let heading = nav.headingTrue?.value;
+      const initialAnchorPos = nav.anchor?.position?.value;
+      if (heading != null) {
         heading = GeoMath.rad2deg(heading);
       }
       //no heading data?  try pointing to our anchor.
-      else if ((data.anchor) && (data.anchor.position) && (data.anchor.position.value)) {
-        let anchorPosition = data.anchor.position.value;
-        this.anchorCoordinates = L.latLng(anchorPosition.latitude, anchorPosition.longitude);
+      else if (initialAnchorPos) {
+        this.anchorCoordinates = L.latLng(initialAnchorPos.latitude, initialAnchorPos.longitude);
         heading = Math.round(GeoMath.calculateBearing(this.currentCoordinates.lat, this.currentCoordinates.lng, this.anchorCoordinates.lat, this.anchorCoordinates.lng));
       }
-      //no anchor?  into the wind then.
+      //no anchor?  into the wind then (fall back to 0 if no wind either).
       else
-        heading = this.twa;
+        heading = this.twa ?? 0;
       this.heading = heading;
 
       //calculate the x offset from the left side, not center
@@ -478,15 +467,17 @@ class AnchorAlarm {
         weight: 2
       }).addTo(this.map);
 
+      // Invisible duplicate of anchorLine — leaflet.textpath only supports one
+      // label per polyline, so we use this second polyline to carry the bearing
+      // label while anchorLine carries the distance label.
       this.anchorLineAngle = L.polyline([this.currentCoordinates, this.anchorCoordinates], {
         color: 'grey',
         weight: 0
       }).addTo(this.map);
 
-      if ((data.anchor) && (data.anchor.position) && (data.anchor.position.value)) {
-        let anchorPosition = data.anchor.position.value;
-        this.anchorCoordinates = L.latLng(anchorPosition.latitude, anchorPosition.longitude);
-        let radius = parseInt(data.anchor.maxRadius.value);
+      if (initialAnchorPos) {
+        this.anchorCoordinates = L.latLng(initialAnchorPos.latitude, initialAnchorPos.longitude);
+        let radius = parseInt(nav.anchor.maxRadius.value, 10);
         this.dropAnchor(this.anchorCoordinates, radius);
       } else {
         let bowPos = GeoMath.calculateBowCoordinates(this.currentCoordinates, heading, this.gpsBowXDistance, this.gpsBowYDistance);
@@ -542,7 +533,10 @@ class AnchorAlarm {
       });
 
       //start our interval updater
-      setInterval(() => this.intervalUpdate(), POLL_INTERVAL_MS);
+      this.pollTimer = setInterval(() => this.intervalUpdate(), POLL_INTERVAL_MS);
+    }).fail((response) => {
+      console.error('Failed to load initial data:', response.status, response.statusText);
+      setTimeout(() => this.loadInitialData(), INITIAL_LOAD_RETRY_MS);
     });
   }
 
@@ -582,9 +576,18 @@ class AnchorAlarm {
       this.gpsAntennaMarker.setLatLng(this.currentCoordinates);
 
       //add to our scribble
-      if (this.vesselTracks[this.mmsi]) {
-        this.vesselTracks[this.mmsi].addLatLng([this.currentCoordinates.lat, this.currentCoordinates.lng, this.vesselTracks[this.mmsi].getLatLngs().length]);
-        this.vesselTracks[this.mmsi].options.max++;
+      const ownTrack = this.vesselTracks[this.mmsi];
+      if (ownTrack) {
+        ownTrack.addLatLng([this.currentCoordinates.lat, this.currentCoordinates.lng, ownTrack.getLatLngs().length]);
+        ownTrack.options.max++;
+
+        // Trim oldest points so the track doesn't grow unbounded over a long anchor watch.
+        const pts = ownTrack.getLatLngs();
+        if (pts.length > MAX_OWN_TRACK_POINTS) {
+          const trimmed = pts.slice(-MAX_OWN_TRACK_POINTS);
+          ownTrack.setLatLngs(trimmed);
+          ownTrack.options.min = trimmed[0].alt;
+        }
       }
 
       //redraw our anchor line
@@ -696,7 +699,7 @@ class AnchorAlarm {
           if (vessel.mmsi in this.vessels) {
             this.vessels[vessel.mmsi].setLatLng([position.latitude, position.longitude]);
             this.vessels[vessel.mmsi].setHeading(vessel_heading);
-            this.vessels[vessel.mmsi]._popup.setContent(`${vessel.name} at ${distance} meters`);
+            this.vessels[vessel.mmsi].setPopupContent(`${vessel.name} at ${distance} meters`);
             this.vessels[vessel.mmsi].gpsAntennaMarker.setLatLng([position.latitude, position.longitude]);
 
             //do we have a track for them?
@@ -785,25 +788,41 @@ class AnchorAlarm {
     this.uiSetRadius(newRadius);
 
     if (this.isAnchored) {
-      this.waitingForTheDrop = true;
-      $.post('/plugins/hoekens-anchor-alarm/setRadius', { radius: newRadius })
-        .fail((response) => {
-          if (response.status == 401)
-            location.href = "/admin/#/login";
-        })
-        .always(() => {
-          this.waitingForTheDrop = false;
-        });
+      this.pluginPost('setRadius', { radius: newRadius });
+    }
+  }
+
+  pluginPost(path, data) {
+    this.waitingForTheDrop = true;
+    return $.post(`/plugins/hoekens-anchor-alarm/${path}`, data)
+      .fail((response) => {
+        if (response.status === 401)
+          location.href = "/admin/#/login";
+      })
+      .always(() => {
+        this.waitingForTheDrop = false;
+      });
+  }
+
+  destroy() {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
     }
   }
 
   uiSetRadiusColor() {
-    if (GeoMath.calculateDistance(this.anchorRadiusCircle.getLatLng().lat, this.anchorRadiusCircle.getLatLng().lng, this.myBoatMarker.getLatLng().lat, this.myBoatMarker.getLatLng().lng) > this.anchorRadiusCircle.getRadius())
-      this.anchorRadiusCircle.setStyle({ 'color': 'red' })
+    const center = this.anchorRadiusCircle.getLatLng();
+    const boat = this.myBoatMarker.getLatLng();
+    const radius = this.anchorRadiusCircle.getRadius();
+    const distance = GeoMath.calculateDistance(center.lat, center.lng, boat.lat, boat.lng);
+
+    if (distance > radius)
+      this.anchorRadiusCircle.setStyle({ color: 'red' });
     else if (this.isAnchored)
-      this.anchorRadiusCircle.setStyle({ 'color': 'green' })
+      this.anchorRadiusCircle.setStyle({ color: 'green' });
     else
-      this.anchorRadiusCircle.setStyle({ 'color': 'blue' })
+      this.anchorRadiusCircle.setStyle({ color: 'blue' });
   }
 
   dropAnchor(position, radius) {
@@ -817,11 +836,11 @@ class AnchorAlarm {
     $('#scopeUI').hide();
     $('#infoUI').show();
 
-    this.maxRadius = parseInt(radius);
+    this.maxRadius = parseInt(radius, 10);
     if (this.maxRadius <= 0)
       this.maxRadius = 20;
 
-    if (typeof this.crosshairMarker !== "undefined") {
+    if (this.crosshairMarker) {
       this.map.removeLayer(this.crosshairMarker);
       this.crosshairMarker = undefined;
     }
@@ -829,7 +848,7 @@ class AnchorAlarm {
     this.anchorRadiusCircle.setLatLng(position);
     this.uiSetRadius(this.maxRadius)
 
-    if (typeof this.anchorMarker !== "undefined") {
+    if (this.anchorMarker) {
       this.map.removeLayer(this.anchorMarker);
       this.anchorMarker = undefined;
     }
@@ -848,14 +867,14 @@ class AnchorAlarm {
     $('#infoUI').hide();
     $('#scopeUI').show();
 
-    if (typeof this.anchorMarker !== "undefined") {
+    if (this.anchorMarker) {
       this.map.removeLayer(this.anchorMarker);
       this.anchorMarker = undefined;
     }
 
     this.uiSetRadiusColor();
 
-    if (typeof this.crosshairMarker !== "undefined") {
+    if (this.crosshairMarker) {
       this.map.removeLayer(this.crosshairMarker);
       this.crosshairMarker = undefined;
     }
@@ -1010,7 +1029,7 @@ class AnchorAlarm {
   }
 
   getShipTypeIcon(aisShipType, aspectRatio) {
-    aisShipType = parseInt(aisShipType);
+    aisShipType = parseInt(aisShipType, 10);
 
     // Sailing: pick monohull vs catamaran by hull aspect ratio.
     if (aisShipType === 36)
