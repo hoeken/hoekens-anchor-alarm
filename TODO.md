@@ -1,8 +1,12 @@
-#v1.3.1
+# v1.4
 
+* add prettify to js
+* refactor js out of index.html
+* add wind arrow indication
 * new screenshot for readme
+* respect units (kts / meters / etc)
 
-#v1.4
+# LONG TERM
 
 * make filterRadius a plugin option
 * tidy up plugin config with ui:schema

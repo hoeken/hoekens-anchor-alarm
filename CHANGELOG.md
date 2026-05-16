@@ -12,7 +12,7 @@
 * added required path checks to the plugin config page
 * added new icons based on ais type of the boat
 
-#v1.2
+# v1.2
 
 * removed openseamaps layer
 * updated UI positions for one hand use on mobile
