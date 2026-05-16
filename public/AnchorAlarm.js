@@ -372,7 +372,7 @@ class AnchorAlarm {
 
       //wind info.
       if (typeof data.environment.wind?.directionTrue?.value !== "undefined" && this.isFresh(data.environment.wind.directionTrue)) {
-        this.twa = this.rad2deg(data.environment.wind.directionTrue.value);
+        this.twa = GeoMath.rad2deg(data.environment.wind.directionTrue.value);
         this.updateWindAngleUI(this.twa);
       }
       if (typeof data.environment.wind?.speedApparent?.value !== "undefined" && this.isFresh(data.environment.wind.speedApparent))
@@ -399,7 +399,7 @@ class AnchorAlarm {
 
       //check our tide data
       if (typeof data.environment?.tide !== "undefined") {
-        let currentTide = this.estimateTideHeightSmooth(data.environment.tide.timeLow.value, data.environment.tide.heightLow.value, data.environment.tide.timeHigh.value, data.environment.tide.heightHigh.value);
+        let currentTide = GeoMath.estimateTideHeightSmooth(data.environment.tide.timeLow.value, data.environment.tide.heightLow.value, data.environment.tide.timeHigh.value, data.environment.tide.heightHigh.value);
         this.tidalRise = data.environment.tide.heightHigh.value - currentTide;
         this.tidalFall = currentTide - data.environment.tide.heightLow.value;
       }
@@ -409,7 +409,7 @@ class AnchorAlarm {
 
       //our radius defaults.
       this.maxRadius = anchorDistanceGuess;
-      this.maxRadius += this.calculateVectorDistance(this.gpsBowXDistance, this.gpsBowYDistance);
+      this.maxRadius += GeoMath.calculateVectorDistance(this.gpsBowXDistance, this.gpsBowYDistance);
       this.maxRadius *= 1.5;
       this.maxRadius = Math.round(this.maxRadius / 5) * 5; //multiples of 5
       this.maxRadius = Math.max(0, this.maxRadius);
@@ -458,13 +458,13 @@ class AnchorAlarm {
       //load up our heading.
       let heading = data.headingTrue?.value;
       if (heading) {
-        heading = this.rad2deg(heading);
+        heading = GeoMath.rad2deg(heading);
       }
       //no heading data?  try pointing to our anchor.
       else if ((data.anchor) && (data.anchor.position) && (data.anchor.position.value)) {
         let anchorPosition = data.anchor.position.value;
         this.anchorCoordinates = L.latLng(anchorPosition.latitude, anchorPosition.longitude);
-        heading = Math.round(this.calculateBearing(this.currentCoordinates.lat, this.currentCoordinates.lng, this.anchorCoordinates.lat, this.anchorCoordinates.lng));
+        heading = Math.round(GeoMath.calculateBearing(this.currentCoordinates.lat, this.currentCoordinates.lng, this.anchorCoordinates.lat, this.anchorCoordinates.lng));
       }
       //no anchor?  into the wind then.
       else
@@ -513,8 +513,8 @@ class AnchorAlarm {
         let radius = parseInt(data.anchor.maxRadius.value);
         this.dropAnchor(this.anchorCoordinates, radius);
       } else {
-        let bowPos = this.calculateBowCoordinates(this.currentCoordinates, heading, this.gpsBowXDistance, this.gpsBowYDistance);
-        let anchorPositionGuess = this.calculateDestinationPoint(bowPos.lat, bowPos.lng, heading, anchorDistanceGuess);
+        let bowPos = GeoMath.calculateBowCoordinates(this.currentCoordinates, heading, this.gpsBowXDistance, this.gpsBowYDistance);
+        let anchorPositionGuess = GeoMath.calculateDestinationPoint(bowPos.lat, bowPos.lng, heading, anchorDistanceGuess);
         this.anchorCoordinates = L.latLng(anchorPositionGuess.latitude, anchorPositionGuess.longitude);
         this.raiseAnchor();
       }
@@ -543,7 +543,7 @@ class AnchorAlarm {
               for (let position of history) {
                 let lat = position[1];
                 let lon = position[0];
-                let distance = this.calculateDistance(this.currentCoordinates.lat, this.currentCoordinates.lng, lat, lon);
+                let distance = GeoMath.calculateDistance(this.currentCoordinates.lat, this.currentCoordinates.lng, lat, lon);
 
                 if (distance < this.filterRadius) {
                   points.push([lat, lon, i]);
@@ -594,9 +594,9 @@ class AnchorAlarm {
       //load our heading value
       let heading = 0;
       if (data.headingTrue && this.isFresh(data.headingTrue)) {
-        heading = this.rad2deg(data.headingTrue.value);
+        heading = GeoMath.rad2deg(data.headingTrue.value);
       } else {
-        heading = Math.round(this.calculateBearing(this.currentCoordinates.lat, this.currentCoordinates.lng, this.anchorCoordinates.lat, this.anchorCoordinates.lng));
+        heading = Math.round(GeoMath.calculateBearing(this.currentCoordinates.lat, this.currentCoordinates.lng, this.anchorCoordinates.lat, this.anchorCoordinates.lng));
       }
       this.heading = heading;
 
@@ -650,7 +650,7 @@ class AnchorAlarm {
 
     //update wind angle.
     $.get('/signalk/v1/api/vessels/self/environment/wind/directionTrue/value', (directionTrue) => {
-      this.twa = this.rad2deg(directionTrue);
+      this.twa = GeoMath.rad2deg(directionTrue);
       this.updateWindAngleUI(this.twa);
       // this.updateWindBarbUI(this.twa, this.aws);
     }).fail((response) => {
@@ -699,17 +699,17 @@ class AnchorAlarm {
 
         //heading would be best.... but it doesnt show up in AIS very often
         if (typeof vessel.navigation?.headingTrue?.value !== "undefined" && this.isFresh(vessel.navigation.headingTrue))
-          vessel_heading = this.rad2deg(vessel.navigation.headingTrue.value);
+          vessel_heading = GeoMath.rad2deg(vessel.navigation.headingTrue.value);
         //COG works, but is really wonky - lets only use when they are moving
         else if (typeof vessel.navigation?.courseOverGroundTrue?.value !== "undefined" && vessel_sog > 1)
-          vessel_heading = this.rad2deg(vessel.navigation.courseOverGroundTrue.value);
+          vessel_heading = GeoMath.rad2deg(vessel.navigation.courseOverGroundTrue.value);
         //true wind angle looks the cleanest on the map
         else if (this.twa !== false)
           vessel_heading = this.twa;
 
         //where are they?
         let position = vessel.navigation.position.value;
-        let distance = this.calculateDistance(position.latitude, position.longitude, this.currentCoordinates.lat, this.currentCoordinates.lng);
+        let distance = GeoMath.calculateDistance(position.latitude, position.longitude, this.currentCoordinates.lat, this.currentCoordinates.lng);
 
         //only show vessels in our radius
         if (distance <= this.filterRadius) {
@@ -822,7 +822,7 @@ class AnchorAlarm {
   }
 
   uiSetRadiusColor() {
-    if (this.calculateDistance(this.anchorRadiusCircle.getLatLng().lat, this.anchorRadiusCircle.getLatLng().lng, this.myBoatMarker.getLatLng().lat, this.myBoatMarker.getLatLng().lng) > this.anchorRadiusCircle.getRadius())
+    if (GeoMath.calculateDistance(this.anchorRadiusCircle.getLatLng().lat, this.anchorRadiusCircle.getLatLng().lng, this.myBoatMarker.getLatLng().lat, this.myBoatMarker.getLatLng().lng) > this.anchorRadiusCircle.getRadius())
       this.anchorRadiusCircle.setStyle({ 'color': 'red' })
     else if (this.isAnchored)
       this.anchorRadiusCircle.setStyle({ 'color': 'green' })
@@ -975,7 +975,7 @@ class AnchorAlarm {
 
   updateWindAngleUI(directionTrue) {
     if (typeof directionTrue !== "undefined") {
-      let angle = this.normalizeAngle(Math.round(directionTrue));
+      let angle = GeoMath.normalizeAngle(Math.round(directionTrue));
       $('#awaValue').html(`${angle}°`);
 
       $('#windBarbContainer svg').css('transform', `rotate(${angle}deg)`);
@@ -987,7 +987,7 @@ class AnchorAlarm {
 
   updateAnchorLine(current, anchor) {
 
-    let bowCoordinates = this.calculateBowCoordinates(current, this.heading, this.gpsBowXDistance, this.gpsBowYDistance);
+    let bowCoordinates = GeoMath.calculateBowCoordinates(current, this.heading, this.gpsBowXDistance, this.gpsBowYDistance);
 
     this.anchorLine.setLatLngs([bowCoordinates, anchor]);
     this.anchorLineAngle.setLatLngs([bowCoordinates, anchor]); // this duplicate on is so we can have 2 text labels
@@ -997,7 +997,7 @@ class AnchorAlarm {
     if (bowCoordinates.lng > anchor.lng)
       flip = true;
 
-    let distance = this.calculateDistance(bowCoordinates.lat, bowCoordinates.lng, anchor.lat, anchor.lng);
+    let distance = GeoMath.calculateDistance(bowCoordinates.lat, bowCoordinates.lng, anchor.lat, anchor.lng);
     distance = Math.round(distance * 10) / 10;
 
     this.anchorLine.setText("");
@@ -1010,7 +1010,7 @@ class AnchorAlarm {
       }
     });
 
-    const bearing = Math.round(this.calculateBearing(bowCoordinates.lat, bowCoordinates.lng, anchor.lat, anchor.lng));
+    const bearing = Math.round(GeoMath.calculateBearing(bowCoordinates.lat, bowCoordinates.lng, anchor.lat, anchor.lng));
 
     this.anchorLineAngle.setText("");
     this.anchorLineAngle.setText(`${bearing}°`, {
@@ -1186,195 +1186,6 @@ class AnchorAlarm {
     }
 
     return icon;
-  }
-
-  calculateBowCoordinates(current, heading, xOffset, yOffset) {
-    //first do our Y along our heading.
-    let bc = this.calculateDestinationPoint(current.lat, current.lng, heading, yOffset);
-
-    //then do our X at 90 degrees.
-    if (xOffset != 0)
-      bc = this.calculateDestinationPoint(bc.latitude, bc.longitude, heading - 90, xOffset);
-
-    //okay use the new bow coordinates
-    return L.latLng(bc.latitude, bc.longitude);
-  }
-
-  calculateDistance(lat1, lon1, lat2, lon2) {
-    let R = 6371000; // Radius of the earth in m
-    let dLat = this.deg2rad(lat2 - lat1);  // deg2rad below
-    let dLon = this.deg2rad(lon2 - lon1);
-    let a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2)
-      ;
-    let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    let d = R * c; // Distance in km
-    return d;
-  }
-
-  deg2rad(deg) {
-    return deg * (Math.PI / 180)
-  }
-
-  // Convert radians to degrees
-  rad2deg(radians) {
-    return radians * 180 / Math.PI;
-  }
-
-  calculateBearing(lat1, lon1, lat2, lon2) {
-    // Convert latitude and longitude from degrees to radians
-    var θa = this.deg2rad(lat1);
-    var θb = this.deg2rad(lat2);
-    var ΔL = this.deg2rad(lon2 - lon1);
-
-    // Calculate X and Y using the provided formulas
-    var X = Math.cos(θb) * Math.sin(ΔL);
-    var Y = Math.cos(θa) * Math.sin(θb) - Math.sin(θa) * Math.cos(θb) * Math.cos(ΔL);
-
-    // Calculate the initial bearing (β) in radians
-    var β = Math.atan2(X, Y);
-
-    // Convert the bearing from radians to degrees
-    var bearing = this.rad2deg(β);
-
-    // Normalize the bearing to be between 0° and 360°
-    bearing = (bearing + 360) % 360;
-
-    return bearing;
-  }
-
-  /**
-   * Calculates the destination point given starting latitude and longitude,
-   * bearing, and distance using the haversine formula.
-   *
-   * @param {number} lat1 - Starting latitude in degrees.
-   * @param {number} lon1 - Starting longitude in degrees.
-   * @param {number} bearing - Bearing in degrees (clockwise from north).
-   * @param {number} distance - Distance to travel from the starting point in meters.
-   * @returns {{ latitude: number, longitude: number }} - The destination latitude and longitude.
-   */
-  calculateDestinationPoint(lat1, lon1, bearing, distance) {
-
-    //console.log(`lat: ${lat1}, lon: ${lon1}, bearing: ${bearing}, distance: ${distance}`);
-    const R = 6371e3; // Earth's radius in meters
-
-    // Convert input values to radians
-    const φ1 = (lat1 * Math.PI) / 180;
-    const λ1 = (lon1 * Math.PI) / 180;
-    const θ = (bearing * Math.PI) / 180;
-    const δ = distance / R; // Angular distance in radians
-
-    // Calculate destination coordinates
-    const sinφ1 = Math.sin(φ1);
-    const cosφ1 = Math.cos(φ1);
-    const sinδ = Math.sin(δ);
-    const cosδ = Math.cos(δ);
-    const sinθ = Math.sin(θ);
-    const cosθ = Math.cos(θ);
-
-    const sinφ2 = sinφ1 * cosδ + cosφ1 * sinδ * cosθ;
-    const φ2 = Math.asin(sinφ2);
-
-    const y = sinθ * sinδ * cosφ1;
-    const x = cosδ - sinφ1 * sinφ2;
-    const λ2 = λ1 + Math.atan2(y, x);
-
-    // Convert radians back to degrees
-    const lat2 = (φ2 * 180) / Math.PI;
-    const lon2 = ((λ2 * 180) / Math.PI + 540) % 360 - 180; // Normalize to [-180, +180]
-
-    return { latitude: lat2, longitude: lon2 };
-  }
-
-  /**
-   * Returns the length of the vector (x, y) from the origin.
-   * @param {number} x – x-coordinate
-   * @param {number} y – y-coordinate
-   * @returns {number} distance from (0,0) to (x,y)
-   */
-  calculateVectorDistance(x, y) {
-    return Math.sqrt(x * x + y * y);
-  }
-
-  normalizeAngle(angle) {
-    return ((angle % 360) + 360) % 360;
-  }
-
-  /**
-   * Estimate current tide height with sinusoidal easing
-   *
-   * @param {Date|string|number} lowTime      — time of low tide
-   * @param {number}            lowHeight    — height at low tide
-   * @param {Date|string|number} highTime     — time of high tide
-   * @param {number}            highHeight   — height at high tide
-   * @param {Date|string|number} [currentTime=new Date()] — time to estimate
-   * @returns {number} smoothly interpolated tide height
-   */
-  estimateTideHeightSmooth(lowTime, lowHeight, highTime, highHeight, currentTime = new Date()) {
-    // normalize inputs to UTC timestamps
-    const tLow = (lowTime instanceof Date ? lowTime : new Date(lowTime)).getTime();
-    const tHigh = (highTime instanceof Date ? highTime : new Date(highTime)).getTime();
-    const tCurrent = (currentTime instanceof Date ? currentTime : new Date(currentTime)).getTime();
-
-    let t0, h0, t1, h1;
-
-    // console.log('time low: ' + new Date(tLow));
-    // console.log('time high: ' + new Date(tHigh));
-    // console.log('time current: ' + new Date(tCurrent));
-    // console.log(`low height: ${lowHeight}`);
-    // console.log(`high height: ${highHeight}`);
-
-    // determine rising vs falling tide
-    if (tLow < tHigh) {
-      // console.log(`rising tide`);
-      // rising: low → high
-      if (tCurrent <= tLow) {
-        // extrapolate previous high tide one half-period before the known low
-        // console.log("now before low tide — extrapolating previous high")
-        t0 = tLow - (tHigh - tLow); h0 = highHeight;
-        t1 = tLow; h1 = lowHeight;
-      } else if (tCurrent >= tHigh) {
-        // extrapolate next low tide one half-period after the known high
-        // console.log("now after high tide — extrapolating next low")
-        t0 = tHigh; h0 = highHeight;
-        t1 = tHigh + (tHigh - tLow); h1 = lowHeight;
-      } else {
-        t0 = tLow; h0 = lowHeight;
-        t1 = tHigh; h1 = highHeight;
-      }
-    } else {
-      // console.log(`falling tide`);
-      // falling: high → low
-      if (tCurrent <= tHigh) {
-        // extrapolate previous low tide one half-period before the known high
-        // console.log("now before high tide — extrapolating previous low")
-        t0 = tHigh - (tLow - tHigh); h0 = lowHeight;
-        t1 = tHigh; h1 = highHeight;
-      } else if (tCurrent >= tLow) {
-        // extrapolate next high tide one half-period after the known low
-        // console.log("now after low tide — extrapolating next high")
-        t0 = tLow; h0 = lowHeight;
-        t1 = tLow + (tLow - tHigh); h1 = highHeight;
-      } else {
-        t0 = tHigh; h0 = highHeight;
-        t1 = tLow; h1 = lowHeight;
-      }
-    }
-
-    // fraction through the tide interval [0…1]
-    const frac = (tCurrent - t0) / (t1 - t0);
-
-    // sinusoidal easing: starts slow, speeds up, then slows into the end
-    const sineFrac = (1 - Math.cos(Math.PI * frac)) / 2;
-
-    // interpolated height
-    const result = h0 + (h1 - h0) * sineFrac;
-
-    // console.log(`currentHeight: ${result}`);
-
-    return result;
   }
 
   isFresh(data, max_age = 300) {
