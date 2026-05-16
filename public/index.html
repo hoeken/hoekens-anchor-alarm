@@ -17,8 +17,10 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="leaflet/leaflet.css" />
   <script src="jquery-3.7.1.min.js"></script>
+  <script src="WindBarb.js"></script>
   <script src="leaflet/leaflet.js"></script>
   <script src="leaflet/leaflet.BoatMarker.js"></script>
+  <script src="leaflet/leaflet.WindBarb.js"></script>
   <script src="leaflet/leaflet.hotline.js"></script>
   <script src="leaflet/leaflet.textpath.js"></script>
 </head>
@@ -40,6 +42,7 @@
       </div>
     </div>
     <script>
+      let _heading;
       let _currentCoordinates;
       let _anchorCoordinates;
       let _filterRadius = 500;
@@ -49,6 +52,7 @@
       let _vesselTracks = {};
 
       let _twa = false;
+      let _aws = false;
 
       let _boatLOA = 0;
       let _boatBeam = 0;
@@ -63,6 +67,7 @@
       let _waitingForTheDrop = false;
       let _homeZoom;
 
+      let _windBarb = false;
       let myBoatMarker;
       let crosshairMarker;
       let gpsAntennaMarker;
@@ -192,11 +197,7 @@
               <table>
                 <tr>
                   <th>Depth:</th>
-                  <td><span title="Below Surface" id='belowSurface'>~</span> / <span title="Below Keel" class='belowKeel'>~</span></td>
-                </tr>
-                <tr>
-                  <th>Wind:</th>
-                  <td><span title="Wind Speed" id='awsValue'>~</span> / <span title="Wind Direction" id='awaValue'>~</span></td>
+                  <td><span title="Below Surface" id='belowSurface'>~</span></td>
                 </tr>
                 <tr>
                   <th>Status:</th>
@@ -206,6 +207,31 @@
           `;
 
           container.id = "infoUI";
+
+          return container;
+        }
+      });
+
+      // Define the info box control
+      const WindBarbControl = L.Control.extend({
+        options: {
+          position: 'bottomright' // 'topleft', 'topright', 'bottomleft', 'bottomright'
+        },
+
+        onAdd: function (map) {
+          // Create a container div with a class
+          const container = L.DomUtil.create('div', 'windBarbControl leaflet-bar');
+
+          // Prevent events from being propagated to the map
+          L.DomEvent.disableClickPropagation(container);
+
+          container.innerHTML = `
+            <div><b>Wind</b></div>
+            <div id="windBarbContainer"></div>
+            <div id="awsValue">~</span>
+            `;
+
+          container.id = "windBarbUI";
 
           return container;
         }
@@ -381,6 +407,10 @@
         // ScopeBox for scope suggestion
         const scopeBox = new ScopeBoxControl();
         map.addControl(scopeBox);
+
+        // Wind barb for status
+        const windBarb = new WindBarbControl();
+        map.addControl(windBarb);
 
         //load up our heading.
         let heading = data.headingTrue?.value;
@@ -563,12 +593,14 @@
           updateScopeUI(belowSurface, belowKeel);
         }).fail((response) => {
           $('#belowSurface').html("~");
-          $('.belowKeel').html("~");
+          $('#belowKeel').html("~");
         });
 
         //update wind speed.
         $.get('/signalk/v1/api/vessels/self/environment/wind/speedApparent/value', (speedApparent) => {
+          _aws = speedApparent;
           updateWindSpeedUI(speedApparent);
+          // updateWindBarbUI(_twa, _aws);
         }).fail((response) => {
           $('#awsValue').html("~");
         });
@@ -576,7 +608,8 @@
         //update wind angle.
         $.get('/signalk/v1/api/vessels/self/environment/wind/directionTrue/value', (directionTrue) => {
           _twa = rad2deg(directionTrue);
-          updateWindAngleUI(directionTrue);
+          updateWindAngleUI(_twa);
+          // updateWindBarbUI(_twa, _aws);
         }).fail((response) => {
           $('#awaValue').html("~");
         });
@@ -921,7 +954,6 @@
           dbk = '~'
 
         $('#belowSurface').html(`${dbs}m`);
-        $('.belowKeel').html(`${dbk}m`);
       }
 
       function updateScopeUI(dbs, dbk) {
@@ -968,7 +1000,7 @@
         $('#scopeTotal').html(`${maxHeight}m`);
 
         dbk = dbk.toFixed(1);
-        $('.belowKeel').html(`${dbk}m`);
+        $('#belowKeel').html(`${dbk}m`);
 
         let tidalFall = _tidalFall.toFixed(1);
         $('#tidalFall').html(`${tidalFall}m`);
@@ -1010,6 +1042,11 @@
         if (typeof speedApparent !== "undefined") {
           let kts = Math.round(speedApparent * 1.94384);
           $('#awsValue').html(`${kts}kts`);
+
+          const windBarbIcon = getWindBarb(speedApparent);
+          $('#windBarbContainer').html(windBarbIcon);
+          $('#windBarbContainer svg').css('transform', `rotate(${Math.round(_twa)}deg)`);
+          console.log(_twa);
         } else {
           $('#awsValue').html('~');
         }
@@ -1017,14 +1054,34 @@
 
       function updateWindAngleUI(directionTrue) {
         if (typeof directionTrue !== "undefined") {
-          let angle = Math.round(rad2deg(directionTrue));
+          let angle = Math.round(directionTrue);
           if (angle < 0)
             angle = 360 - angle;
           $('#awaValue').html(`${angle}°`);
+
+          console.log(angle);
+
+          $('#windBarbContainer svg').css('transform', `rotate(${Math.round(angle)}deg)`);
+
         } else {
           $('#awaValue').html('~');
         }
       }
+
+      // function updateWindBarbUI(directionTrue, speedApparent) {
+      //   if (!_currentCoordinates || !_heading)
+      //     return;
+
+      //   const _bowCoordinates = calculateBowCoordinates(_currentCoordinates, _heading, _gpsBowXDistance, _gpsBowYDistance);
+
+      //   if (!_windBarb)
+      //     _windBarb = new L.WindBarb(_bowCoordinates, { speed: speedApparent, angle: directionTrue }).addTo(map);
+      //   else {
+      //     _windBarb.setLatLng(_bowCoordinates);
+      //     _windBarb.setSpeed(speedApparent);
+      //     _windBarb.setAngle(directionTrue);
+      //   }
+      // }
 
       function updateAnchorLine(current, anchor) {
 

@@ -50,7 +50,7 @@ button {
 
 .info {
   padding: 5px;
-  width: 160px;
+  width: 150px;
   font-size: 11pt;
   line-height: 1.1;
   background-color: white;
@@ -111,4 +111,30 @@ button {
   /* transparent white "background" */
   stroke-width: 3px;
   /* thickness of the background */
+}
+
+.wind-barb {
+  fill: black;
+  stroke: black;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-miterlimit: 10;
+  z-index: 100;
+
+  /* Adds a shadow: X-offset, Y-offset, Blur-radius, Color */
+  filter: drop-shadow(0px 0px 1px rgba(255, 255, 255, 0.5));
+}
+
+#windBarbContainer .wind-barb {
+  width: 24px;
+}
+
+.windBarbControl {
+  padding: 5px;
+  font-size: 11pt;
+  line-height: 1.1;
+  background-color: white;
+  text-align: center;
+  width: 70px;
 }
