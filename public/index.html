@@ -293,7 +293,7 @@
                 </tr>
                 <tr>
                   <th>Below&nbsp;Keel</th>
-                  <td><span class='belowKeel'>~</span></td>
+                  <td><span id='belowKeel'>~</span></td>
                 </tr>
                 <tr>
                   <th>Tidal&nbsp;Fall</th>
@@ -954,6 +954,7 @@
           dbk = '~'
 
         $('#belowSurface').html(`${dbs}m`);
+        $('#belowKeel').html(`${dbk}m`);
       }
 
       function updateScopeUI(dbs, dbk) {
