@@ -57,7 +57,8 @@
       let _gpsBowYDistance = 0;
       let _gpsBowXDistance = 0;
       let _aisShipType = 0;
-      let _tideDelta = 0;
+      let _tidalRise = 0;
+      let _tidalFall = 0;
 
       let _isAnchored = false;
       let _waitingForTheDrop = false;
@@ -192,7 +193,7 @@
               <table>
                 <tr>
                   <th>Depth:</th>
-                  <td><span title="Below Surface" id='belowSurface'>~</span> / <span title="Below Keel" id='belowKeel'>~</span></td>
+                  <td><span title="Below Surface" id='belowSurface'>~</span> / <span title="Below Keel" class='belowKeel'>~</span></td>
                 </tr>
                 <tr>
                   <th>Wind:</th>
@@ -237,7 +238,7 @@
                 </tr>
                 <tr>
                   <th>Tidal&nbsp;Rise</th>
-                  <td>+ <span id='tideDelta'>~</span></td>
+                  <td>+ <span id='tidalRise'>~</span></td>
                 </tr>
                 <tr>
                   <th>Total</th>
@@ -261,6 +262,21 @@
                 <tr>
                   <th>3:1&nbspScope</th>
                   <td><span id='scope3to1'>~</span></td>
+                </tr>
+                <tr>
+                  <th colspan="2">&nbsp;</th>
+                </tr>
+                <tr>
+                  <th>Below&nbsp;Keel</th>
+                  <td><span class='belowKeel'>~</span></td>
+                </tr>
+                <tr>
+                  <th>Tidal&nbsp;Fall</th>
+                  <td>- <span id='tidalFall'>~</span></td>
+                </tr>
+                <tr class="minimumDepthRow">
+                  <th>Minimum&nbsp;Depth</th>
+                  <td>= <span id='minimumDepth'>~</span></td>
                 </tr>
               </table>
           `;
@@ -310,7 +326,8 @@
         //check our tide data
         if (typeof data.environment?.tide !== "undefined") {
           let currentTide = estimateTideHeightSmooth(data.environment.tide.timeLow.value, data.environment.tide.heightLow.value, data.environment.tide.timeHigh.value, data.environment.tide.heightHigh.value);
-          _tideDelta = data.environment.tide.heightHigh.value - currentTide;
+          _tidalRise = data.environment.tide.heightHigh.value - currentTide;
+          _tidalFall = currentTide - data.environment.tide.heightLow.value;
         }
 
         //try to guess where to put the anchor.
@@ -530,10 +547,10 @@
             belowKeel = data.belowKeel.value;
 
           updateDepthUI(belowSurface, belowKeel);
-          updateScopeUI(belowSurface);
+          updateScopeUI(belowSurface, belowKeel);
         }).fail((response) => {
           $('#belowSurface').html("~");
-          $('#belowKeel').html("~");
+          $('.belowKeel').html("~");
         });
 
         //update wind speed.
@@ -881,22 +898,23 @@
         let output;
 
         if (typeof dbs !== "undefined")
-          dbs = Math.round(dbs * 10) / 10;
+          dbs = parseFloat(dbs).toFixed(1);
         else
           dbs = '~'
 
         if (typeof dbk !== "undefined")
-          dbk = Math.round(dbk * 10) / 10;
+          dbk = parseFloat(dbk).toFixed(1);
         else
           dbk = '~'
 
         $('#belowSurface').html(`${dbs}m`);
-        $('#belowKeel').html(`${dbk}m`);
+        $('.belowKeel').html(`${dbk}m`);
       }
 
-      function updateScopeUI(dbs) {
+      function updateScopeUI(dbs, dbk) {
 
         dbs = parseFloat(dbs);
+        dbk = parseFloat(dbk);
 
         let scope;
 
@@ -906,7 +924,7 @@
         maxHeight += _boatAnchorRollerHeight;
 
         //the delta between now and high tide.
-        maxHeight += _tideDelta;
+        maxHeight += _tidalRise;
 
         scope = calculateScope(7, dbs);
         scope = scope.toFixed(1);
@@ -930,12 +948,32 @@
         let bowHeightDisplay = _boatAnchorRollerHeight.toFixed(1);
         $('#bowHeight').html(`${bowHeightDisplay}m`);
 
-        let tideDelta = _tideDelta.toFixed(1);
-        $('#tideDelta').html(`${tideDelta}m`);
+        let tidalRise = _tidalRise.toFixed(1);
+        $('#tidalRise').html(`${tidalRise}m`);
 
         maxHeight = maxHeight.toFixed(1);
         $('#scopeTotal').html(`${maxHeight}m`);
 
+        dbk = dbk.toFixed(1);
+        $('.belowKeel').html(`${dbk}m`);
+
+        let tidalFall = _tidalFall.toFixed(1);
+        $('#tidalFall').html(`${tidalFall}m`);
+
+        let minimumDepth = dbk - tidalFall;
+        minimumDepth = minimumDepth.toFixed(1);
+        $('#minimumDepth').html(`${minimumDepth}m`);
+
+        //color warning for depth.
+        if (minimumDepth > 1) {
+          $(".minimumDepthRow").css("color", "green")
+        }
+        else if (minimumDepth > 0) {
+          $(".minimumDepthRow").css("color", "orange")
+        }
+        else {
+          $(".minimumDepthRow").css("color", "red")
+        }
       }
 
       function calculateScope(scope, dbs) {
@@ -947,7 +985,7 @@
         maxHeight += _boatAnchorRollerHeight;
 
         //the delta between now and high tide.
-        maxHeight += _tideDelta;
+        maxHeight += _tidalRise;
 
         //okay, send it back.
         let total = maxHeight * scope;
