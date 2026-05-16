@@ -46,9 +46,7 @@ class AnchorAlarm {
       iconAnchor: [12, 12], // point of the icon which will correspond to marker's location
     });
 
-    this.crosshairMarker = L.marker({
-      icon: this.crosshairIcon
-    });
+    this.crosshairMarker = undefined;
 
     this.gpsAntennaIcon = L.icon({
       iconUrl: 'icons/antenna.svg',
@@ -798,7 +796,7 @@ class AnchorAlarm {
               aisShipType = vessel.design.aisShipType.value.id;
 
             //calculate the x offset from the left side, not center
-            let xOffset = beam / 2 + this.gpsBowXDistance;
+            let xOffset = beam / 2 + gpsXOffset;
 
             //create our boat marker
             this.vessels[vessel.mmsi] = new L.BoatMarker([position.latitude, position.longitude], {
@@ -872,7 +870,10 @@ class AnchorAlarm {
     if (this.maxRadius <= 0)
       this.maxRadius = 20;
 
-    this.map.removeLayer(this.crosshairMarker);
+    if (typeof this.crosshairMarker !== "undefined") {
+      this.map.removeLayer(this.crosshairMarker);
+      this.crosshairMarker = undefined;
+    }
 
     this.anchorRadiusCircle.setLatLng(position);
     this.uiSetRadius(this.maxRadius)
@@ -891,8 +892,10 @@ class AnchorAlarm {
     $('#infoUI').hide();
     $('#scopeUI').show();
 
-    if (typeof this.anchorMarker != "undefined")
+    if (typeof this.anchorMarker !== "undefined") {
       this.map.removeLayer(this.anchorMarker);
+      this.anchorMarker = undefined;
+    }
 
     this.uiSetRadiusColor();
 
@@ -937,53 +940,20 @@ class AnchorAlarm {
     dbs = parseFloat(dbs);
     dbk = parseFloat(dbk);
 
-    let scope;
+    const maxHeight = dbs + this.boatAnchorRollerHeight + this.tidalRise;
+    const minimumDepth = dbk - this.tidalFall;
 
-    let maxHeight = dbs;
-
-    //the height of our bow roller.
-    maxHeight += this.boatAnchorRollerHeight;
-
-    //the delta between now and high tide.
-    maxHeight += this.tidalRise;
-
-    scope = this.calculateScope(7, dbs);
-    scope = scope.toFixed(1);
-    $('#scope7to1').html(`${scope}m`);
-
-    scope = this.calculateScope(5, dbs);
-    scope = scope.toFixed(1);
-    $('#scope5to1').html(`${scope}m`);
-
-    scope = this.calculateScope(4, dbs);
-    scope = scope.toFixed(1);
-    $('#scope4to1').html(`${scope}m`);
-
-    scope = this.calculateScope(3, dbs);
-    scope = scope.toFixed(1);
-    $('#scope3to1').html(`${scope}m`);
-
-    let dbsDisplay = dbs.toFixed(1);
-    $('#scopeDepth').html(`${dbsDisplay}m`);
-
-    let bowHeightDisplay = this.boatAnchorRollerHeight.toFixed(1);
-    $('#bowHeight').html(`${bowHeightDisplay}m`);
-
-    let tidalRise = this.tidalRise.toFixed(1);
-    $('#tidalRise').html(`${tidalRise}m`);
-
-    maxHeight = maxHeight.toFixed(1);
-    $('#scopeTotal').html(`${maxHeight}m`);
-
-    dbk = dbk.toFixed(1);
-    $('#belowKeel').html(`${dbk}m`);
-
-    let tidalFall = this.tidalFall.toFixed(1);
-    $('#tidalFall').html(`${tidalFall}m`);
-
-    let minimumDepth = dbk - tidalFall;
-    minimumDepth = minimumDepth.toFixed(1);
-    $('#minimumDepth').html(`${minimumDepth}m`);
+    $('#scope7to1').html(`${this.calculateScope(7, dbs).toFixed(1)}m`);
+    $('#scope5to1').html(`${this.calculateScope(5, dbs).toFixed(1)}m`);
+    $('#scope4to1').html(`${this.calculateScope(4, dbs).toFixed(1)}m`);
+    $('#scope3to1').html(`${this.calculateScope(3, dbs).toFixed(1)}m`);
+    $('#scopeDepth').html(`${dbs.toFixed(1)}m`);
+    $('#bowHeight').html(`${this.boatAnchorRollerHeight.toFixed(1)}m`);
+    $('#tidalRise').html(`${this.tidalRise.toFixed(1)}m`);
+    $('#scopeTotal').html(`${maxHeight.toFixed(1)}m`);
+    $('#belowKeel').html(`${dbk.toFixed(1)}m`);
+    $('#tidalFall').html(`${this.tidalFall.toFixed(1)}m`);
+    $('#minimumDepth').html(`${minimumDepth.toFixed(1)}m`);
 
     //color warning for depth.
     if (minimumDepth > 1) {
@@ -1030,14 +1000,10 @@ class AnchorAlarm {
 
   updateWindAngleUI(directionTrue) {
     if (typeof directionTrue !== "undefined") {
-      let angle = Math.round(directionTrue);
-      if (angle < 0)
-        angle = 360 - angle;
+      let angle = this.normalizeAngle(Math.round(directionTrue));
       $('#awaValue').html(`${angle}°`);
 
-      console.log(angle);
-
-      $('#windBarbContainer svg').css('transform', `rotate(${Math.round(angle)}deg)`);
+      $('#windBarbContainer svg').css('transform', `rotate(${angle}deg)`);
 
     } else {
       $('#awaValue').html('~');
