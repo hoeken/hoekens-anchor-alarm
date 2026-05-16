@@ -66,6 +66,33 @@ class FleetLayer {
     this.ownMmsi = ownMmsi;
     this.vessels = {};      // mmsi -> L.BoatMarker (with .gpsAntennaMarker attached)
     this.vesselTracks = {}; // mmsi -> L.hotline
+    this.ownVessel = undefined;
+    this.ownAntenna = undefined;
+  }
+
+  // Own boat is kept outside the AIS vessels dict so syncOtherVessels never
+  // removes it.
+  setOwnVessel(coords, heading, { beam, loa, gpsBowXDistance, gpsBowYDistance, aisShipType }) {
+    // BoatMarker takes x-offset from the left edge of the hull, not center.
+    const xOffset = beam / 2 + gpsBowXDistance;
+
+    this.ownVessel = new L.BoatMarker(coords, {
+      beam: beam,
+      loa: loa,
+      gpsOffset: { x: xOffset, y: gpsBowYDistance },
+      heading: heading,
+      icon: ShipIcons.iconFor(aisShipType, loa / beam),
+    }).addTo(this.map);
+
+    this.ownAntenna = L.marker(coords, {
+      icon: GPS_ANTENNA_ICON,
+    }).addTo(this.map);
+  }
+
+  updateOwnPosition(coords, heading) {
+    this.ownVessel.setLatLng(coords);
+    this.ownVessel.setHeading(heading);
+    this.ownAntenna.setLatLng(coords);
   }
 
   // Initial bulk history load from /tracks. Includes self.

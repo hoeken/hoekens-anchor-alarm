@@ -39,9 +39,6 @@ class AnchorAlarm {
     this.state = AnchorState.UP;
     this.homeZoom = undefined;
 
-    this.myBoatMarker = undefined;
-    this.gpsAntennaMarker = undefined;
-
     this.map = undefined;
     this.fleetLayer = undefined;
     this.anchorOverlay = undefined;
@@ -170,14 +167,22 @@ class AnchorAlarm {
       this.paintInitialReadings(belowSurface, belowKeel, data);
 
       this.heading = this.computeInitialHeading(data);
-      this.placeOwnVessel(this.currentCoordinates, this.heading);
+
+      this.fleetLayer = new FleetLayer({ map: this.map, ownMmsi: this.mmsi });
+      this.fleetLayer.setOwnVessel(this.currentCoordinates, this.heading, {
+        beam: this.boatBeam,
+        loa: this.boatLOA,
+        gpsBowXDistance: this.gpsBowXDistance,
+        gpsBowYDistance: this.gpsBowYDistance,
+        aisShipType: this.aisShipType,
+      });
+
       this.placeAnchorWidgets();
       this.restoreAnchorState(data, anchorDistanceGuess);
 
       this.map.fitBounds(this.anchorOverlay.getBounds());
       this.homeZoom = this.map.getZoom();
 
-      this.fleetLayer = new FleetLayer({ map: this.map, ownMmsi: this.mmsi });
       this.signalK.fetchTracks(this.filterRadius).done((tracks) => {
         this.fleetLayer.loadHistoricalTracks(tracks, this.currentCoordinates, this.filterRadius);
       });
@@ -299,23 +304,6 @@ class AnchorAlarm {
     return this.twa ?? 0;
   }
 
-  placeOwnVessel(coords, heading) {
-    // BoatMarker takes x-offset from the left edge of the hull, not center.
-    const xOffset = this.boatBeam / 2 + this.gpsBowXDistance;
-
-    this.myBoatMarker = new L.BoatMarker(coords, {
-      beam: this.boatBeam,
-      loa: this.boatLOA,
-      gpsOffset: { x: xOffset, y: this.gpsBowYDistance },
-      heading: heading,
-      icon: ShipIcons.iconFor(this.aisShipType, this.boatLOA / this.boatBeam),
-    }).addTo(this.map);
-
-    this.gpsAntennaMarker = L.marker(coords, {
-      icon: GPS_ANTENNA_ICON,
-    }).addTo(this.map);
-  }
-
   placeAnchorWidgets() {
     this.anchorOverlay = new AnchorOverlay({ map: this.map, radius: this.maxRadius })
       .setBoatPosition(this.currentCoordinates, this.heading, { x: this.gpsBowXDistance, y: this.gpsBowYDistance })
@@ -384,10 +372,7 @@ class AnchorAlarm {
         ));
       }
 
-      this.myBoatMarker.setLatLng(this.currentCoordinates);
-      this.myBoatMarker.setHeading(this.heading);
-      this.gpsAntennaMarker.setLatLng(this.currentCoordinates);
-
+      this.fleetLayer.updateOwnPosition(this.currentCoordinates, this.heading);
       this.fleetLayer.appendOwnTrack(this.currentCoordinates);
 
       this.anchorOverlay.setBoatPosition(
