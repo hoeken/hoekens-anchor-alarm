@@ -3,7 +3,6 @@
 // FleetLayer (vessels + tracks) and the four HudPanels (Info/Scope/Wind/Home).
 
 const POLL_INTERVAL_MS = 1000;
-const STALE_RELOAD_MS = 5 * 60 * 1000;
 const INITIAL_LOAD_RETRY_MS = 5000;
 
 const AnchorState = Object.freeze({
@@ -70,7 +69,6 @@ class AnchorAlarm {
     this.anchorLine = undefined;
     this.anchorLineAngle = undefined;
 
-    this.hiddenAt = null;
     this.pollTimer = null;
   }
 
@@ -80,23 +78,7 @@ class AnchorAlarm {
   }
 
   init() {
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        this.hiddenAt = Date.now();
-      } else if (this.hiddenAt !== null) {
-        const elapsed = Date.now() - this.hiddenAt;
-        this.hiddenAt = null;
-        if (elapsed >= STALE_RELOAD_MS) {
-          window.location.reload();
-        }
-      }
-    });
-
-    window.addEventListener('pageshow', (event) => {
-      if (event.persisted) {
-        window.location.reload();
-      }
-    });
+    new StaleReloader({ staleThresholdMs: 5 * 60 * 1000 }).start();
 
     this.satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
