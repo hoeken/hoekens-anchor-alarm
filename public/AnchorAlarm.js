@@ -148,38 +148,11 @@ class AnchorAlarm {
       if (isNaN(newRadius) || newRadius <= 0)
         return;
 
-      this.maxRadius = newRadius;
-      this.uiSetRadius(newRadius);
-
-      if (this.isAnchored) {
-        this.waitingForTheDrop = true;
-        $.post('/plugins/hoekens-anchor-alarm/setRadius', { radius: newRadius })
-          .fail((response) => {
-            if (response.status == 401)
-              location.href = "/admin/#/login";
-          })
-          .always(() => {
-            this.waitingForTheDrop = false;
-          });
-      }
-
+      this.setMaxRadius(newRadius);
     });
 
     $('#increaseRadius').click(() => {
-      this.maxRadius = parseInt(this.maxRadius) + 5;
-      this.uiSetRadius(this.maxRadius);
-
-      if (this.isAnchored) {
-        this.waitingForTheDrop = true;
-        $.post('/plugins/hoekens-anchor-alarm/setRadius', { radius: this.maxRadius })
-          .fail((response) => {
-            if (response.status == 401)
-              location.href = "/admin/#/login";
-          })
-          .always(() => {
-            this.waitingForTheDrop = false;
-          });
-      }
+      this.setMaxRadius(this.maxRadius + 5);
     });
 
     // macOS Chrome delivers trackpad pinch as a wheel event with ctrlKey=true.
@@ -202,24 +175,9 @@ class AnchorAlarm {
     }, { passive: false });
 
     $('#decreaseRadius').click(() => {
-      this.maxRadius = parseInt(this.maxRadius);
       if (this.maxRadius <= 5)
         return;
-
-      this.maxRadius = this.maxRadius - 5;
-      this.uiSetRadius(this.maxRadius)
-
-      if (this.isAnchored) {
-        this.waitingForTheDrop = true;
-        $.post('/plugins/hoekens-anchor-alarm/setRadius', { radius: this.maxRadius })
-          .fail((response) => {
-            if (response.status == 401)
-              location.href = "/admin/#/login";
-          })
-          .always(() => {
-            this.waitingForTheDrop = false;
-          });
-      }
+      this.setMaxRadius(this.maxRadius - 5);
     });
   }
 
@@ -844,6 +802,23 @@ class AnchorAlarm {
     $('#radius').html(radius);
     this.anchorRadiusCircle.setRadius(radius);
     this.uiSetRadiusColor()
+  }
+
+  setMaxRadius(newRadius) {
+    this.maxRadius = newRadius;
+    this.uiSetRadius(newRadius);
+
+    if (this.isAnchored) {
+      this.waitingForTheDrop = true;
+      $.post('/plugins/hoekens-anchor-alarm/setRadius', { radius: newRadius })
+        .fail((response) => {
+          if (response.status == 401)
+            location.href = "/admin/#/login";
+        })
+        .always(() => {
+          this.waitingForTheDrop = false;
+        });
+    }
   }
 
   uiSetRadiusColor() {
