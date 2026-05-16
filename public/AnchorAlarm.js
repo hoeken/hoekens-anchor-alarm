@@ -1,6 +1,5 @@
 const MPS_TO_KNOTS = 1.94384;
 const POLL_INTERVAL_MS = 1000;
-const DEFAULT_FRESHNESS_SEC = 300;
 const STALE_RELOAD_MS = 5 * 60 * 1000;
 const MAX_OWN_TRACK_POINTS = 3600 * 24; //24 hours at 1Hz
 const INITIAL_LOAD_RETRY_MS = 5000;
@@ -171,6 +170,8 @@ const ScopeBoxControl = L.Control.extend({
 class AnchorAlarm {
 
   constructor() {
+    this.signalK = new SignalKClient({ pluginName: 'hoekens-anchor-alarm' });
+
     this.heading = undefined;
     this.currentCoordinates = undefined;
     this.anchorCoordinates = undefined;
@@ -265,7 +266,7 @@ class AnchorAlarm {
       if (!agree) return;
       this.state = AnchorState.RAISING;
       this.raiseAnchor(); //better UI response outside.
-      this.pluginPost('raiseAnchor').always(() => {
+      this.signalK.raiseAnchor().always(() => {
         this.state = AnchorState.UP;
       });
     });
@@ -275,8 +276,7 @@ class AnchorAlarm {
       let mc = this.crosshairMarker.getLatLng();
       this.state = AnchorState.DROPPING;
       this.dropAnchor(mc, this.maxRadius); //better UI response outside.
-      let newPosition = { latitude: mc.lat, longitude: mc.lng };
-      this.pluginPost('dropAnchor', { position: newPosition, radius: this.maxRadius }).always(() => {
+      this.signalK.dropAnchor({ latitude: mc.lat, longitude: mc.lng }, this.maxRadius).always(() => {
         this.state = AnchorState.ANCHORED;
       });
     });
@@ -324,53 +324,53 @@ class AnchorAlarm {
 
   //this is our initial data lookup call.  Needs to happen first.
   loadInitialData() {
-    $.get('/signalk/v1/api/vessels/self', (data) => {
+    this.signalK.fetchSelf().done((data) => {
       this.mmsi = data.mmsi;
 
       //anchor distance guess...
       let anchorDistanceGuess = 0;
 
       //a couple different depths
-      let belowKeel = 0;
-      let belowSurface = 0;
-      if (typeof data.environment.depth?.belowKeel?.value !== "undefined" && this.isFresh(data.environment.depth.belowKeel))
-        belowKeel = data.environment.depth.belowKeel.value;
-      if (typeof data.environment.depth?.belowSurface?.value !== "undefined" && this.isFresh(data.environment.depth.belowSurface))
-        belowSurface = data.environment.depth.belowSurface.value;
+      const belowKeel = SignalKClient.freshValue(data, 'environment.depth.belowKeel', { fallback: 0 });
+      const belowSurface = SignalKClient.freshValue(data, 'environment.depth.belowSurface', { fallback: 0 });
       this.updateDepthUI(belowSurface, belowKeel);
 
       //wind info.
-      if (typeof data.environment.wind?.directionTrue?.value !== "undefined" && this.isFresh(data.environment.wind.directionTrue)) {
-        this.twa = GeoMath.rad2deg(data.environment.wind.directionTrue.value);
+      const directionTrue = SignalKClient.freshValue(data, 'environment.wind.directionTrue');
+      if (directionTrue !== undefined) {
+        this.twa = GeoMath.rad2deg(directionTrue);
         this.updateWindAngleUI(this.twa);
       }
-      if (typeof data.environment.wind?.speedApparent?.value !== "undefined" && this.isFresh(data.environment.wind.speedApparent))
-        this.updateWindSpeedUI(data.environment.wind.speedApparent.value);
+      const speedApparent = SignalKClient.freshValue(data, 'environment.wind.speedApparent');
+      if (speedApparent !== undefined)
+        this.updateWindSpeedUI(speedApparent);
 
       //save our parameters for boat size + gps position
-      if (typeof data.design?.length?.value !== "undefined")
-        this.boatLOA = parseFloat(data.design.length.value.overall);
-      if (typeof data.design?.beam?.value !== "undefined")
-        this.boatBeam = parseFloat(data.design.beam?.value);
-      if (typeof data.design?.bowAnchorRollerHeight?.value !== "undefined")
-        this.boatAnchorRollerHeight = parseFloat(data.design.bowAnchorRollerHeight?.value);
-      if (typeof data.sensors?.gps?.fromBow?.value !== "undefined")
-        this.gpsBowYDistance = data.sensors.gps.fromBow.value;
-      if (typeof data.sensors?.gps?.fromCenter?.value !== "undefined")
-        this.gpsBowXDistance = data.sensors.gps.fromCenter.value;
-      if (typeof data.design?.aisShipType?.value?.id !== "undefined")
-        this.aisShipType = data.design.aisShipType.value.id;
-
-      // console.log(`loa: ${this.boatLOA}`);
-      // console.log(`beam: ${this.boatBeam}`);
-      // console.log(`bowXDistance: ${this.gpsBowXDistance}`);
-      // console.log(`bowYDistance: ${this.gpsBowYDistance}`);
+      const designLength = SignalKClient.value(data, 'design.length');
+      if (designLength !== undefined)
+        this.boatLOA = parseFloat(designLength.overall);
+      const designBeam = SignalKClient.value(data, 'design.beam');
+      if (designBeam !== undefined)
+        this.boatBeam = parseFloat(designBeam);
+      const rollerHeight = SignalKClient.value(data, 'design.bowAnchorRollerHeight');
+      if (rollerHeight !== undefined)
+        this.boatAnchorRollerHeight = parseFloat(rollerHeight);
+      const fromBow = SignalKClient.value(data, 'sensors.gps.fromBow');
+      if (fromBow !== undefined)
+        this.gpsBowYDistance = fromBow;
+      const fromCenter = SignalKClient.value(data, 'sensors.gps.fromCenter');
+      if (fromCenter !== undefined)
+        this.gpsBowXDistance = fromCenter;
+      const shipType = SignalKClient.value(data, 'design.aisShipType');
+      if (shipType?.id !== undefined)
+        this.aisShipType = shipType.id;
 
       //check our tide data
-      if (typeof data.environment?.tide !== "undefined") {
-        let currentTide = GeoMath.estimateTideHeightSmooth(data.environment.tide.timeLow.value, data.environment.tide.heightLow.value, data.environment.tide.timeHigh.value, data.environment.tide.heightHigh.value);
-        this.tidalRise = data.environment.tide.heightHigh.value - currentTide;
-        this.tidalFall = currentTide - data.environment.tide.heightLow.value;
+      const tide = SignalKClient.extract(data, 'environment.tide');
+      if (tide) {
+        let currentTide = GeoMath.estimateTideHeightSmooth(tide.timeLow.value, tide.heightLow.value, tide.timeHigh.value, tide.heightHigh.value);
+        this.tidalRise = tide.heightHigh.value - currentTide;
+        this.tidalFall = currentTide - tide.heightLow.value;
       }
 
       //try to guess where to put the anchor.
@@ -385,7 +385,8 @@ class AnchorAlarm {
       this.maxRadius = Math.min(200, this.maxRadius);
 
       const nav = data.navigation;
-      this.currentCoordinates = L.latLng(nav.position.value.latitude, nav.position.value.longitude);
+      const navPosition = SignalKClient.value(nav, 'position');
+      this.currentCoordinates = L.latLng(navPosition.latitude, navPosition.longitude);
 
       //init our map
       this.map = L.map('map', {
@@ -434,8 +435,8 @@ class AnchorAlarm {
       this.map.addControl(new WindBarbControl());
 
       //load up our heading.
-      let heading = nav.headingTrue?.value;
-      const initialAnchorPos = nav.anchor?.position?.value;
+      let heading = SignalKClient.value(nav, 'headingTrue');
+      const initialAnchorPos = SignalKClient.value(nav, 'anchor.position');
       if (heading != null) {
         heading = GeoMath.rad2deg(heading);
       }
@@ -490,7 +491,7 @@ class AnchorAlarm {
 
       if (initialAnchorPos) {
         this.anchorCoordinates = L.latLng(initialAnchorPos.latitude, initialAnchorPos.longitude);
-        let radius = parseInt(nav.anchor.maxRadius.value, 10);
+        let radius = parseInt(SignalKClient.value(nav, 'anchor.maxRadius'), 10);
         // Set state before dropAnchor so uiSetRadiusColor (called inside) paints green.
         this.state = AnchorState.ANCHORED;
         this.dropAnchor(this.anchorCoordinates, radius);
@@ -508,7 +509,7 @@ class AnchorAlarm {
       this.homeZoom = this.map.getZoom();
 
       //load up all the other vessels.
-      $.get(`/signalk/v1/api/tracks?radius=${this.filterRadius}`, (tracks) => {
+      this.signalK.fetchTracks(this.filterRadius).done((tracks) => {
         const mmsiRegex = /urn:mrn:imo:mmsi:(\d+)$/;
         for (let uri in tracks) {
           const match = uri.match(mmsiRegex);
@@ -559,27 +560,27 @@ class AnchorAlarm {
   intervalUpdate() {
 
     //update our position
-    $.get('/signalk/v1/api/vessels/self/navigation', (data) => {
+    this.signalK.fetchSelfNavigation().done((data) => {
 
-      // console.log(data);
-
-      if (this.isStale(data.position)) {
+      if (SignalKClient.isStale(data.position)) {
         console.error("Position stale");
         return;
       }
 
-      if (data.position.value.latitude === null || data.position.value.longitude === null) {
+      const position = SignalKClient.value(data, 'position');
+      if (position.latitude === null || position.longitude === null) {
         console.error("Invalid position");
         console.error(data.position);
         return;
       }
 
-      this.currentCoordinates = L.latLng(data.position.value.latitude, data.position.value.longitude);
+      this.currentCoordinates = L.latLng(position.latitude, position.longitude);
 
       //load our heading value
       let heading = 0;
-      if (data.headingTrue && this.isFresh(data.headingTrue)) {
-        heading = GeoMath.rad2deg(data.headingTrue.value);
+      const headingTrue = SignalKClient.freshValue(data, 'headingTrue');
+      if (headingTrue !== undefined) {
+        heading = GeoMath.rad2deg(headingTrue);
       } else {
         heading = Math.round(GeoMath.calculateBearing(this.currentCoordinates.lat, this.currentCoordinates.lng, this.anchorCoordinates.lat, this.anchorCoordinates.lng));
       }
@@ -610,58 +611,55 @@ class AnchorAlarm {
     });
 
     //what is our current status?
-    $.get('/signalk/v1/api/vessels/self/notifications/navigation/anchor', (alarm) => {
-      $('#pluginStatus').html(alarm.value.message);
+    this.signalK.fetchAnchorAlarm().done((alarm) => {
+      const v = SignalKClient.value(alarm);
+      if (!v) return;
+      $('#pluginStatus').html(v.message);
       $('#pluginStatus').removeClass();
-      if (alarm.value.message != 'Off')
-        $('#pluginStatus').addClass(alarm.value.state);
+      if (v.message != 'Off')
+        $('#pluginStatus').addClass(v.state);
     });
 
     //update our depth
-    $.get('/signalk/v1/api/vessels/self/environment/depth', (data) => {
-      let belowSurface = 0;
-      let belowKeel = 0;
-      if (data.hasOwnProperty('belowSurface'))
-        belowSurface = data.belowSurface.value;
-      if (data.hasOwnProperty('belowKeel'))
-        belowKeel = data.belowKeel.value;
+    this.signalK.fetchDepth().done((data) => {
+      const belowSurface = SignalKClient.value(data, 'belowSurface', 0);
+      const belowKeel = SignalKClient.value(data, 'belowKeel', 0);
 
       this.updateDepthUI(belowSurface, belowKeel);
       this.updateScopeUI(belowSurface, belowKeel);
-    }).fail((response) => {
+    }).fail(() => {
       $('#belowSurface').html("~");
       $('#belowKeel').html("~");
     });
 
     //update wind speed.
-    $.get('/signalk/v1/api/vessels/self/environment/wind/speedApparent/value', (speedApparent) => {
+    this.signalK.fetchWindSpeedApparent().done((speedApparent) => {
       this.aws = speedApparent;
       this.updateWindSpeedUI(speedApparent);
-      // this.updateWindBarbUI(this.twa, this.aws);
-    }).fail((response) => {
+    }).fail(() => {
       $('#awsValue').html("~");
     });
 
     //update wind angle.
-    $.get('/signalk/v1/api/vessels/self/environment/wind/directionTrue/value', (directionTrue) => {
+    this.signalK.fetchWindDirectionTrue().done((directionTrue) => {
       this.twa = GeoMath.rad2deg(directionTrue);
       this.updateWindAngleUI(this.twa);
-      // this.updateWindBarbUI(this.twa, this.aws);
-    }).fail((response) => {
+    }).fail(() => {
       $('#awaValue').html("~");
     });
 
     //update our watch status
-    $.get('/signalk/v1/api/vessels/self/navigation/anchor', (anchorStatus) => {
+    this.signalK.fetchAnchorState().done((anchorStatus) => {
       // Don't reconcile while a drop/raise POST is in flight — the server
       // doesn't reflect our pending change yet, so we'd flip ourselves back.
       if (this.state !== AnchorState.UP && this.state !== AnchorState.ANCHORED) return;
 
-      const serverOn = anchorStatus.state.value === "on";
+      const serverOn = SignalKClient.value(anchorStatus, 'state') === "on";
 
       if (serverOn) {
-        this.maxRadius = anchorStatus.maxRadius.value;
-        this.anchorCoordinates = L.latLng(anchorStatus.position.value.latitude, anchorStatus.position.value.longitude);
+        this.maxRadius = SignalKClient.value(anchorStatus, 'maxRadius');
+        const anchorPos = SignalKClient.value(anchorStatus, 'position');
+        this.anchorCoordinates = L.latLng(anchorPos.latitude, anchorPos.longitude);
 
         if (this.state === AnchorState.UP) {
           // Flip state before dropAnchor so uiSetRadiusColor paints green.
@@ -677,7 +675,7 @@ class AnchorAlarm {
     });
 
     //update any other vessels and their tracks.
-    $.get('/signalk/v1/api/vessels', (vessels) => {
+    this.signalK.fetchAllVessels().done((vessels) => {
       let detectedVessels = [];
       for (let key in vessels) {
         let vessel = vessels[key];
@@ -690,18 +688,21 @@ class AnchorAlarm {
 
         //are they moving?
         let vessel_sog = 0;
-        if (typeof vessel.navigation?.speedOverGround?.value !== "undefined")
-          vessel_sog = vessel.navigation.speedOverGround.value * MPS_TO_KNOTS;
+        const sog = SignalKClient.value(vessel, 'navigation.speedOverGround');
+        if (sog !== undefined)
+          vessel_sog = sog * MPS_TO_KNOTS;
 
         //try to figure out where they are pointing
         let vessel_heading = 0;
 
         //heading would be best.... but it doesnt show up in AIS very often
-        if (typeof vessel.navigation?.headingTrue?.value !== "undefined" && this.isFresh(vessel.navigation.headingTrue))
-          vessel_heading = GeoMath.rad2deg(vessel.navigation.headingTrue.value);
+        const vesselHeadingTrue = SignalKClient.freshValue(vessel, 'navigation.headingTrue');
+        const vesselCog = SignalKClient.value(vessel, 'navigation.courseOverGroundTrue');
+        if (vesselHeadingTrue !== undefined)
+          vessel_heading = GeoMath.rad2deg(vesselHeadingTrue);
         //COG works, but is really wonky - lets only use when they are moving
-        else if (typeof vessel.navigation?.courseOverGroundTrue?.value !== "undefined" && vessel_sog > 1)
-          vessel_heading = GeoMath.rad2deg(vessel.navigation.courseOverGroundTrue.value);
+        else if (vesselCog !== undefined && vessel_sog > 1)
+          vessel_heading = GeoMath.rad2deg(vesselCog);
         //true wind angle looks the cleanest on the map
         else if (this.twa !== null)
           vessel_heading = this.twa;
@@ -741,16 +742,21 @@ class AnchorAlarm {
             let gpsYOffset = 0;
 
             //load them if we got them.
-            if (typeof vessel.sensors.ais?.fromCenter?.value !== "undefined")
-              gpsXOffset = parseFloat(vessel.sensors.ais.fromCenter.value);
-            if (typeof vessel.sensors.ais?.fromBow?.value !== "undefined")
-              gpsYOffset = parseFloat(vessel.sensors.ais.fromBow.value);
-            if (typeof vessel.design?.length?.value !== "undefined")
-              loa = parseFloat(vessel.design.length.value.overall);
-            if (typeof vessel.design?.beam?.value !== "undefined")
-              beam = parseFloat(vessel.design.beam.value);
-            if (typeof vessel.design?.aisShipType?.value?.id !== "undefined")
-              aisShipType = vessel.design.aisShipType.value.id;
+            const aisFromCenter = SignalKClient.value(vessel, 'sensors.ais.fromCenter');
+            if (aisFromCenter !== undefined)
+              gpsXOffset = parseFloat(aisFromCenter);
+            const aisFromBow = SignalKClient.value(vessel, 'sensors.ais.fromBow');
+            if (aisFromBow !== undefined)
+              gpsYOffset = parseFloat(aisFromBow);
+            const vesselLength = SignalKClient.value(vessel, 'design.length');
+            if (vesselLength !== undefined)
+              loa = parseFloat(vesselLength.overall);
+            const vesselBeam = SignalKClient.value(vessel, 'design.beam');
+            if (vesselBeam !== undefined)
+              beam = parseFloat(vesselBeam);
+            const vesselShipType = SignalKClient.value(vessel, 'design.aisShipType');
+            if (vesselShipType?.id !== undefined)
+              aisShipType = vesselShipType.id;
 
             //calculate the x offset from the left side, not center
             let xOffset = beam / 2 + gpsXOffset;
@@ -808,16 +814,8 @@ class AnchorAlarm {
     this.uiSetRadius(newRadius);
 
     if (this.state === AnchorState.ANCHORED) {
-      this.pluginPost('setRadius', { radius: newRadius });
+      this.signalK.setRadius(newRadius);
     }
-  }
-
-  pluginPost(path, data) {
-    return $.post(`/plugins/hoekens-anchor-alarm/${path}`, data)
-      .fail((response) => {
-        if (response.status === 401)
-          location.href = "/admin/#/login";
-      });
   }
 
   destroy() {
@@ -1058,17 +1056,6 @@ class AnchorAlarm {
       : "icons/ships/png/default.png";
   }
 
-  isFresh(data, max_age = DEFAULT_FRESHNESS_SEC) {
-    if (!data)
-      return false;
-    const date = new Date(data.timestamp);
-    const ageInSecs = (Date.now() - date) / 1000;
-    return ageInSecs <= max_age;
-  }
-
-  isStale(data, max_age = DEFAULT_FRESHNESS_SEC) {
-    return !this.isFresh(data, max_age);
-  }
 }
 
 // AIS ship-type code → icon filename (under icons/ships/png/).
