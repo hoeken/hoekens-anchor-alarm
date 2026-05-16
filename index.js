@@ -183,7 +183,7 @@ module.exports = function (app) {
     app.setPluginStatus("Started");
 
     alarm_state = "normal"
-    var delta = getAnchorAlarmDelta(app, alarm_state, "Started", ["visual"])
+    let delta = getAnchorAlarmDelta(app, alarm_state, "Started", ["visual"])
     app.handleMessage(plugin.id, delta)
 
     configuration = props
@@ -239,7 +239,7 @@ module.exports = function (app) {
         if (noPositionAlarmTime > 0) {
           positionWatchdogTimer = new Watchdog(noPositionAlarmTime * 1000, () => {
             alarm_state = "warn";
-            var delta = getAnchorAlarmDelta(app, alarm_state, `No position data received for ${noPositionAlarmTime} seconds.`);
+            let delta = getAnchorAlarmDelta(app, alarm_state, `No position data received for ${noPositionAlarmTime} seconds.`);
             app.handleMessage(plugin.id, delta)
           });
         }
@@ -302,7 +302,7 @@ module.exports = function (app) {
     })
   }
 
-  function putRadius(context, path, value, cb) {
+  function putRadius(context, path, value) {
     app.handleMessage(plugin.id, {
       updates: [
         {
@@ -331,12 +331,12 @@ module.exports = function (app) {
     }
   }
 
-  function putPosition(context, path, value, cb) {
+  function putPosition(context, path, value) {
     try {
       if (value == null) {
         raiseAnchor()
       } else {
-        var delta = getAnchorDelta({
+        let delta = getAnchorDelta({
           app: app,
           anchorPosition: value,
           maxRadius: configuration["radius"],
@@ -364,11 +364,11 @@ module.exports = function (app) {
   plugin.stop = function () {
     if (alarm_state != "normal") {
       alarm_state = "normal"
-      var delta = getAnchorAlarmDelta(app, alarm_state, "Stopped")
+      let delta = getAnchorAlarmDelta(app, alarm_state, "Stopped")
       app.handleMessage(plugin.id, delta)
     }
 
-    var delta = getAnchorDelta({
+    let delta = getAnchorDelta({
       app: app,
       isSet: false
     });
@@ -384,7 +384,7 @@ module.exports = function (app) {
       return
 
     alarm_state = "normal"
-    var delta = getAnchorAlarmDelta(app, alarm_state, "Watching")
+    let delta = getAnchorAlarmDelta(app, alarm_state, "Watching")
     app.handleMessage(plugin.id, delta)
 
     app.setPluginStatus("Watching");
@@ -399,10 +399,6 @@ module.exports = function (app) {
           {
             path: 'navigation.position',
             period: subscriberPeriod
-          },
-          {
-            path: 'navigation.headingTrue',
-            period: subscriberPeriod
           }
         ]
       },
@@ -412,7 +408,7 @@ module.exports = function (app) {
         app.setProviderError(err)
       },
       (delta) => {
-        let vesselPosition, trueHeading
+        let vesselPosition
 
         if (delta.updates) {
           delta.updates.forEach(update => {
@@ -420,8 +416,6 @@ module.exports = function (app) {
               update.values.forEach(vp => {
                 if (vp.path === 'navigation.position') {
                   vesselPosition = vp.value
-                } else if (vp.path === 'navigation.headingTrue') {
-                  trueHeading = vp.value
                 }
               })
             }
@@ -439,7 +433,7 @@ module.exports = function (app) {
 
   function stopWatchingPosition() {
     alarm_state = "normal"
-    var delta = getAnchorAlarmDelta(app, alarm_state, "Off")
+    let delta = getAnchorAlarmDelta(app, alarm_state, "Off")
     app.handleMessage(plugin.id, delta)
 
     if (positionWatchdogTimer)
@@ -454,7 +448,7 @@ module.exports = function (app) {
   function raiseAnchor() {
     app.debug("raise anchor")
 
-    var delta = getAnchorDelta({
+    let delta = getAnchorDelta({
       app: app,
       isSet: false
     });
@@ -489,7 +483,7 @@ module.exports = function (app) {
         if (typeof radius == 'undefined')
           radius = null
 
-        var delta = getAnchorDelta({
+        let delta = getAnchorDelta({
           app: app,
           anchorPosition: position,
           currentRadius: 0,
@@ -556,7 +550,7 @@ module.exports = function (app) {
 
         app.debug("set anchor radius: " + radius)
 
-        var delta = getAnchorDelta({
+        let delta = getAnchorDelta({
           app: app,
           vesselPosition: position,
           anchorPosition: configuration.position,
@@ -682,7 +676,7 @@ module.exports = function (app) {
       ]
     }
 
-    var delta = {
+    let delta = {
       "updates": [
         {
           "values": values
@@ -705,7 +699,7 @@ module.exports = function (app) {
 
     //app.debug("currentRadius: " + currentRadius + ", maxRadius: " + maxRadius);
 
-    var delta = getAnchorDelta({
+    let delta = getAnchorDelta({
       app: app,
       vesselPosition: vesselPosition,
       anchorPosition: anchorPosition,
@@ -733,7 +727,7 @@ module.exports = function (app) {
 
       //wait, do we have engines on?
       if (configuration.enableEngineCheck) {
-        if (checkEngineState(app, plugin)) {
+        if (checkEngineState(app)) {
           app.debug("anchor alarm disabled due to engines on: %j", delta)
           do_update = true;
           new_state = "normal";
@@ -748,7 +742,7 @@ module.exports = function (app) {
 
     if (new_state !== alarm_state || do_update) {
       alarm_state = new_state;
-      var delta = getAnchorAlarmDelta(app, alarm_state, message)
+      let delta = getAnchorAlarmDelta(app, alarm_state, message)
       app.debug("alarm state change: %j", delta)
       app.handleMessage(plugin.id, delta)
 
@@ -765,7 +759,7 @@ module.exports = function (app) {
   return plugin;
 }
 
-function checkEngineState(app, plugin) {
+function checkEngineState(app) {
   const propulsion = app.getSelfPath('propulsion');
 
   if (typeof propulsion !== 'undefined') {
@@ -804,7 +798,7 @@ function getAnchorAlarmDelta(app, state, msg, method) {
   if (!method)
     method = ["visual", "sound"]
 
-  var delta = {
+  let delta = {
     "updates": [
       {
         "values": [
@@ -822,16 +816,8 @@ function getAnchorAlarmDelta(app, state, msg, method) {
   return delta;
 }
 
-function radsToDeg(radians) {
-  return radians * 180 / Math.PI
-}
-
 function degsToRad(degrees) {
   return degrees * (Math.PI / 180.0);
-}
-
-function mod(x, y) {
-  return x - y * Math.floor(x / y)
 }
 
 class Watchdog {
