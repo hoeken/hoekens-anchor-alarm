@@ -41,6 +41,9 @@
     </div>
     <script>
 
+      // used for ageing out stale depth and wind data
+      const DATA_MAX_AGE = 300; // seconds
+
       let _currentCoordinates;
       let _anchorCoordinates;
       let _filterRadius = 500;
@@ -295,18 +298,18 @@
         //a couple different depths
         let belowKeel = 0;
         let belowSurface = 0;
-        if (typeof data.environment.depth?.belowKeel?.value !== "undefined")
+        if (typeof data.environment.depth?.belowKeel?.value !== "undefined" && !isStale(data.environment.depth.belowKeel))
           belowKeel = data.environment.depth.belowKeel.value;
-        if (typeof data.environment.depth?.belowSurface?.value !== "undefined")
+        if (typeof data.environment.depth?.belowSurface?.value !== "undefined" && !isStale(data.environment.depth.belowSurface))
           belowSurface = data.environment.depth.belowSurface.value;
         updateDepthUI(belowSurface, belowKeel);
 
         //wind info.
-        if (typeof data.environment.wind?.directionTrue?.value !== "undefined") {
+        if (typeof data.environment.wind?.directionTrue?.value !== "undefined" && !isStale(data.environment.wind.directionTrue)) {
           _twa = rad2deg(data.environment.wind.directionTrue.value);
           updateWindAngleUI(_twa);
         }
-        if (typeof data.environment.wind?.speedApparent?.value !== "undefined")
+        if (typeof data.environment.wind?.speedApparent?.value !== "undefined" && !isStale(data.environment.wind.speedApparent))
           updateWindSpeedUI(data.environment.wind.speedApparent.value);
 
         //save our parameters for boat size + gps position
@@ -322,6 +325,11 @@
           _gpsBowXDistance = data.sensors.gps.fromCenter.value;
         if (typeof data.design?.aisShipType?.value?.id !== "undefined")
           _aisShipType = data.design.aisShipType.value.id;
+
+        // console.log(`loa: ${_boatLOA}`);
+        // console.log(`beam: ${_boatBeam}`);
+        // console.log(`bowXDistance: ${_gpsBowXDistance}`);
+        // console.log(`bowYDistance: ${_gpsBowYDistance}`);
 
         //check our tide data
         if (typeof data.environment?.tide !== "undefined") {
@@ -396,6 +404,8 @@
 
         //calculate the x offset from the left side, not center
         let xOffset = _boatBeam / 2 + _gpsBowXDistance;
+
+        // console.log(`xOffset: ${xOffset}`);
 
         //marker for our boat
         myBoatMarker = new L.BoatMarker(_currentCoordinates, {
@@ -497,6 +507,13 @@
         //update our position
         $.get('/signalk/v1/api/vessels/self/navigation', (data) => {
 
+          // console.log(data);
+
+          if (isStale(data.position)) {
+            console.error("Position stale");
+            return;
+          }
+
           if (data.position.value.latitude === null || data.position.value.longitude === null) {
             console.error("Invalid position");
             console.error(data.position);
@@ -506,9 +523,9 @@
           _currentCoordinates = L.latLng(data.position.value.latitude, data.position.value.longitude);
 
           //load our heading value
-          let heading = data.headingTrue?.value;
-          if (heading) {
-            heading = rad2deg(heading);
+          let heading = 0;
+          if (data.headingTrue && !isStale(data.headingTrue)) {
+            heading = rad2deg(data.headingTrue.value);
           } else {
             heading = Math.round(calculateBearing(_currentCoordinates.lat, _currentCoordinates.lng, _anchorCoordinates.lat, _anchorCoordinates.lng));
           }
@@ -609,7 +626,7 @@
             let vessel_heading = 0;
 
             //heading would be best.... but it doesnt show up in AIS very often
-            if (typeof vessel.navigation?.headingTrue?.value !== "undefined")
+            if (typeof vessel.navigation?.headingTrue?.value !== "undefined" && !isStale(navigation.headingTrue))
               vessel_heading = rad2deg(vessel.navigation.headingTrue.value);
             //COG works, but is really wonky - lets only use when they are moving
             else if (typeof vessel.navigation?.courseOverGroundTrue?.value !== "undefined" && vessel_sog > 1)
@@ -1221,15 +1238,8 @@
         let bc = calculateDestinationPoint(current.lat, current.lng, heading, yOffset);
 
         //then do our X at 90 degrees.
-        if (xOffset != 0) {
-          let _heading2 = heading;
-          if (_gpsBowXDistance > 0)
-            _heading2 = heading + 90;
-          else if (xOffset < 0)
-            _heading2 = heading - 90;
-          _heading2 = normalizeAngle(_heading2);
-          bc = calculateDestinationPoint(bc.latitude, bc.longitude, _heading2, xOffset);
-        }
+        if (xOffset != 0)
+          bc = calculateDestinationPoint(bc.latitude, bc.longitude, heading - 90, xOffset);
 
         //okay use the new bow coordinates
         return L.latLng(bc.latitude, bc.longitude);
@@ -1410,6 +1420,15 @@
         // console.log(`currentHeight: ${result}`);
 
         return result;
+      }
+
+      function isStale(data) {
+        if (!data)
+          return true;
+
+        const date = new Date(data.timestamp);
+        const ageInSecs = (Date.now() - date) / 1000;
+        return ageInSecs > DATA_MAX_AGE;
       }
     </script>
 </body>
