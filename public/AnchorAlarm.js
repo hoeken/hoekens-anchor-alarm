@@ -1,3 +1,164 @@
+const MPS_TO_KNOTS = 1.94384;
+const POLL_INTERVAL_MS = 1000;
+const DEFAULT_FRESHNESS_SEC = 300;
+const STALE_RELOAD_MS = 5 * 60 * 1000;
+
+const ANCHOR_ICON = L.icon({
+  iconUrl: 'icons/anchor.png',
+  iconSize: [24, 24],
+  iconAnchor: [12, 4],
+});
+
+const CROSSHAIR_ICON = L.icon({
+  iconUrl: 'icons/crosshair.png',
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+});
+
+const GPS_ANTENNA_ICON = L.icon({
+  iconUrl: 'icons/antenna.svg',
+  iconSize: [25, 25],
+  iconAnchor: [13, 25],
+});
+
+const HomeButtonControl = L.Control.extend({
+  options: {
+    position: 'topright',
+    onHome: null,
+  },
+
+  onAdd: function (map) {
+    const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+    const homeButton = L.DomUtil.create('a', 'leaflet-control-home', container);
+    homeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" stroke="currentColor" stroke-width="0.75" class="bi bi-house" viewBox="0 0 16 16">
+  <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/>
+</svg>`;
+    homeButton.href = '#';
+    homeButton.title = 'Center on Boat';
+    homeButton.setAttribute('role', 'button');
+
+    L.DomEvent.disableClickPropagation(container);
+    const onHome = this.options.onHome;
+    L.DomEvent.on(homeButton, 'click', function (e) {
+      L.DomEvent.stopPropagation(e);
+      L.DomEvent.preventDefault(e);
+      if (onHome) onHome(map);
+    });
+
+    return container;
+  }
+});
+
+const InfoBoxControl = L.Control.extend({
+  options: {
+    position: 'bottomright'
+  },
+
+  onAdd: function (map) {
+    const container = L.DomUtil.create('div', 'info leaflet-bar');
+    L.DomEvent.disableClickPropagation(container);
+    container.innerHTML = `
+        <table>
+          <tr>
+            <th>Depth:</th>
+            <td><span title="Below Surface" id='belowSurface'>~</span></td>
+          </tr>
+          <tr>
+            <th>Status:</th>
+            <td><span id='pluginStatus'>Loading</span></td>
+          </tr>
+        </table>
+    `;
+    container.id = "infoUI";
+    return container;
+  }
+});
+
+const WindBarbControl = L.Control.extend({
+  options: {
+    position: 'bottomright'
+  },
+
+  onAdd: function (map) {
+    const container = L.DomUtil.create('div', 'windBarbControl leaflet-bar');
+    L.DomEvent.disableClickPropagation(container);
+    container.innerHTML = `
+      <div><b>Wind</b></div>
+      <div id="windBarbContainer"></div>
+      <div id="awsValue">~</span>
+      `;
+    container.id = "windBarbUI";
+    return container;
+  }
+});
+
+const ScopeBoxControl = L.Control.extend({
+  options: {
+    position: 'bottomright'
+  },
+
+  onAdd: function (map) {
+    const container = L.DomUtil.create('div', 'scope leaflet-bar');
+    L.DomEvent.disableClickPropagation(container);
+    container.id = "scopeUI";
+    container.innerHTML = `
+        <table>
+          <tr>
+            <th>Water&nbsp;Depth</th>
+            <td><span id='scopeDepth'>~</span></td>
+          </tr>
+          <tr>
+            <th>Bow&nbsp;Height</th>
+            <td>+ <span id='bowHeight'>~</span></td>
+          </tr>
+          <tr>
+            <th>Tidal&nbsp;Rise</th>
+            <td>+ <span id='tidalRise'>~</span></td>
+          </tr>
+          <tr>
+            <th>Total</th>
+            <td>= <span id='scopeTotal'>~</span></td>
+          </tr>
+          <tr>
+            <th colspan="2">&nbsp;</th>
+          </tr>
+          <tr>
+            <th>7:1&nbspScope</th>
+            <td><span id='scope7to1'>~</span></td>
+          </tr>
+          <tr>
+            <th>5:1&nbspScope</th>
+            <td><span id='scope5to1'>~</span></td>
+          </tr>
+          <tr>
+            <th>4:1&nbspScope</th>
+            <td><span id='scope4to1'>~</span></td>
+          </tr>
+          <tr>
+            <th>3:1&nbspScope</th>
+            <td><span id='scope3to1'>~</span></td>
+          </tr>
+          <tr>
+            <th colspan="2">&nbsp;</th>
+          </tr>
+          <tr>
+            <th>Below&nbsp;Keel</th>
+            <td><span id='belowKeel'>~</span></td>
+          </tr>
+          <tr>
+            <th>Tidal&nbsp;Fall</th>
+            <td>- <span id='tidalFall'>~</span></td>
+          </tr>
+          <tr class="minimumDepthRow">
+            <th>Minimum&nbsp;Depth</th>
+            <td>= <span id='minimumDepth'>~</span></td>
+          </tr>
+        </table>
+    `;
+    return container;
+  }
+});
+
 class AnchorAlarm {
 
   constructor() {
@@ -10,8 +171,8 @@ class AnchorAlarm {
     this.vessels = {};
     this.vesselTracks = {};
 
-    this.twa = false;
-    this.aws = false;
+    this.twa = null;
+    this.aws = null;
 
     this.boatLOA = 0;
     this.boatBeam = 0;
@@ -26,7 +187,6 @@ class AnchorAlarm {
     this.waitingForTheDrop = false;
     this.homeZoom = undefined;
 
-    this.windBarb = false;
     this.myBoatMarker = undefined;
     this.gpsAntennaMarker = undefined;
     this.anchorMarker = undefined;
@@ -34,30 +194,10 @@ class AnchorAlarm {
 
     this.map = undefined;
 
-    this.anchorIcon = L.icon({
-      iconUrl: 'icons/anchor.png',
-      iconSize: [24, 24], // size of the icon
-      iconAnchor: [12, 4], // point of the icon which will correspond to marker's location
-    });
-
-    this.crosshairIcon = L.icon({
-      iconUrl: 'icons/crosshair.png',
-      iconSize: [24, 24], // size of the icon
-      iconAnchor: [12, 12], // point of the icon which will correspond to marker's location
-    });
-
     this.crosshairMarker = undefined;
-
-    this.gpsAntennaIcon = L.icon({
-      iconUrl: 'icons/antenna.svg',
-      iconSize: [25, 25], // size of the icon
-      iconAnchor: [13, 25], // point of the icon which will correspond to marker's location
-    });
 
     this.anchorLine = undefined;
     this.anchorLineAngle = undefined;
-
-    this.urlParams = new URLSearchParams(window.location.search);
 
     this.hiddenAt = null;
   }
@@ -74,7 +214,7 @@ class AnchorAlarm {
       } else if (this.hiddenAt !== null) {
         const elapsed = Date.now() - this.hiddenAt;
         this.hiddenAt = null;
-        if (elapsed >= AnchorAlarm.STALE_RELOAD_MS) {
+        if (elapsed >= STALE_RELOAD_MS) {
           window.location.reload();
         }
       }
@@ -116,7 +256,6 @@ class AnchorAlarm {
         this.waitingForTheDrop = true;
         this.raiseAnchor(); //better UI response outside.
         $.post('/plugins/hoekens-anchor-alarm/raiseAnchor', () => { }).fail((response) => {
-        }).fail((response) => {
           if (response.status == 401)
             location.href = "/admin/#/login";
         }).always(() => {
@@ -179,178 +318,6 @@ class AnchorAlarm {
         return;
       this.setMaxRadius(this.maxRadius - 5);
     });
-  }
-
-  buildControls() {
-    const self = this;
-
-    const HomeButtonControl = L.Control.extend({
-      options: {
-        position: 'topright'
-      },
-
-      onAdd: function (map) {
-        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-        const homeButton = L.DomUtil.create('a', 'leaflet-control-home', container);
-        homeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" stroke="currentColor" stroke-width="0.75" class="bi bi-house" viewBox="0 0 16 16">
-  <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/>
-</svg>`;
-        homeButton.href = '#';
-        homeButton.title = 'Center on Boat';
-        homeButton.setAttribute('role', 'button');
-
-        L.DomEvent.disableClickPropagation(container);
-        L.DomEvent.on(homeButton, 'click', function (e) {
-          L.DomEvent.stopPropagation(e);
-          L.DomEvent.preventDefault(e);
-          if (self.currentCoordinates) {
-            const doPan = function () {
-              map.panTo(self.currentCoordinates);
-            };
-            if (self.homeZoom != null && map.getZoom() !== self.homeZoom) {
-              map.once('zoomend', doPan);
-              map.setZoom(self.homeZoom);
-            } else {
-              doPan();
-            }
-          }
-        });
-
-        return container;
-      }
-    });
-
-    // Define the info box control
-    const InfoBoxControl = L.Control.extend({
-      options: {
-        position: 'bottomright' // 'topleft', 'topright', 'bottomleft', 'bottomright'
-      },
-
-      onAdd: function (map) {
-        // Create a container div with a class
-        const container = L.DomUtil.create('div', 'info leaflet-bar');
-
-        // Prevent events from being propagated to the map
-        L.DomEvent.disableClickPropagation(container);
-
-        container.innerHTML = `
-            <table>
-              <tr>
-                <th>Depth:</th>
-                <td><span title="Below Surface" id='belowSurface'>~</span></td>
-              </tr>
-              <tr>
-                <th>Status:</th>
-                <td><span id='pluginStatus'>Loading</span></td>
-              </tr>
-            </table>
-        `;
-
-        container.id = "infoUI";
-
-        return container;
-      }
-    });
-
-    // Define the info box control
-    const WindBarbControl = L.Control.extend({
-      options: {
-        position: 'bottomright' // 'topleft', 'topright', 'bottomleft', 'bottomright'
-      },
-
-      onAdd: function (map) {
-        // Create a container div with a class
-        const container = L.DomUtil.create('div', 'windBarbControl leaflet-bar');
-
-        // Prevent events from being propagated to the map
-        L.DomEvent.disableClickPropagation(container);
-
-        container.innerHTML = `
-          <div><b>Wind</b></div>
-          <div id="windBarbContainer"></div>
-          <div id="awsValue">~</span>
-          `;
-
-        container.id = "windBarbUI";
-
-        return container;
-      }
-    });
-
-    // Define the info box control
-    const ScopeBoxControl = L.Control.extend({
-      options: {
-        position: 'bottomright' // 'topleft', 'topright', 'bottomleft', 'bottomright'
-      },
-
-      onAdd: function (map) {
-        // Create a container div with a class
-        const container = L.DomUtil.create('div', 'scope leaflet-bar');
-
-        // Prevent events from being propagated to the map
-        L.DomEvent.disableClickPropagation(container);
-
-        container.id = "scopeUI";
-        container.innerHTML = `
-            <table>
-              <tr>
-                <th>Water&nbsp;Depth</th>
-                <td><span id='scopeDepth'>~</span></td>
-              </tr>
-              <tr>
-                <th>Bow&nbsp;Height</th>
-                <td>+ <span id='bowHeight'>~</span></td>
-              </tr>
-              <tr>
-                <th>Tidal&nbsp;Rise</th>
-                <td>+ <span id='tidalRise'>~</span></td>
-              </tr>
-              <tr>
-                <th>Total</th>
-                <td>= <span id='scopeTotal'>~</span></td>
-              </tr>
-              <tr>
-                <th colspan="2">&nbsp;</th>
-              </tr>
-              <tr>
-                <th>7:1&nbspScope</th>
-                <td><span id='scope7to1'>~</span></td>
-              </tr>
-              <tr>
-                <th>5:1&nbspScope</th>
-                <td><span id='scope5to1'>~</span></td>
-              </tr>
-              <tr>
-                <th>4:1&nbspScope</th>
-                <td><span id='scope4to1'>~</span></td>
-              </tr>
-              <tr>
-                <th>3:1&nbspScope</th>
-                <td><span id='scope3to1'>~</span></td>
-              </tr>
-              <tr>
-                <th colspan="2">&nbsp;</th>
-              </tr>
-              <tr>
-                <th>Below&nbsp;Keel</th>
-                <td><span id='belowKeel'>~</span></td>
-              </tr>
-              <tr>
-                <th>Tidal&nbsp;Fall</th>
-                <td>- <span id='tidalFall'>~</span></td>
-              </tr>
-              <tr class="minimumDepthRow">
-                <th>Minimum&nbsp;Depth</th>
-                <td>= <span id='minimumDepth'>~</span></td>
-              </tr>
-            </table>
-        `;
-
-        return container;
-      }
-    });
-
-    return { HomeButtonControl, InfoBoxControl, WindBarbControl, ScopeBoxControl };
   }
 
   //this is our initial data lookup call.  Needs to happen first.
@@ -436,10 +403,19 @@ class AnchorAlarm {
         position: 'topright' // Options: 'topleft', 'topright', 'bottomleft', 'bottomright'
       }).addTo(this.map);
 
-      const { HomeButtonControl, InfoBoxControl, WindBarbControl, ScopeBoxControl } = this.buildControls();
-
       //add home button
-      this.map.addControl(new HomeButtonControl());
+      this.map.addControl(new HomeButtonControl({
+        onHome: (map) => {
+          if (!this.currentCoordinates) return;
+          const doPan = () => map.panTo(this.currentCoordinates);
+          if (this.homeZoom != null && map.getZoom() !== this.homeZoom) {
+            map.once('zoomend', doPan);
+            map.setZoom(this.homeZoom);
+          } else {
+            doPan();
+          }
+        }
+      }));
 
       //add layer control
       L.control.layers(this.baseMaps, {}, {
@@ -487,7 +463,7 @@ class AnchorAlarm {
 
       //marker for our boat's antenna
       this.gpsAntennaMarker = L.marker(this.currentCoordinates, {
-        icon: this.gpsAntennaIcon
+        icon: GPS_ANTENNA_ICON
       }).addTo(this.map);
 
       //our radius
@@ -566,7 +542,7 @@ class AnchorAlarm {
       });
 
       //start our interval updater
-      setInterval(() => this.intervalUpdate(), 1000);
+      setInterval(() => this.intervalUpdate(), POLL_INTERVAL_MS);
     });
   }
 
@@ -692,7 +668,7 @@ class AnchorAlarm {
         //are they moving?
         let vessel_sog = 0;
         if (typeof vessel.navigation?.speedOverGround?.value !== "undefined")
-          vessel_sog = vessel.navigation.speedOverGround.value * 1.94384;
+          vessel_sog = vessel.navigation.speedOverGround.value * MPS_TO_KNOTS;
 
         //try to figure out where they are pointing
         let vessel_heading = 0;
@@ -704,7 +680,7 @@ class AnchorAlarm {
         else if (typeof vessel.navigation?.courseOverGroundTrue?.value !== "undefined" && vessel_sog > 1)
           vessel_heading = GeoMath.rad2deg(vessel.navigation.courseOverGroundTrue.value);
         //true wind angle looks the cleanest on the map
-        else if (this.twa !== false)
+        else if (this.twa !== null)
           vessel_heading = this.twa;
 
         //where are they?
@@ -768,7 +744,7 @@ class AnchorAlarm {
 
             //marker for our boat's antenna
             this.vessels[vessel.mmsi].gpsAntennaMarker = L.marker([position.latitude, position.longitude], {
-              icon: this.gpsAntennaIcon
+              icon: GPS_ANTENNA_ICON
             }).addTo(this.map);
             this.vessels[vessel.mmsi].gpsAntennaMarker.setLatLng([position.latitude, position.longitude]);
 
@@ -853,8 +829,13 @@ class AnchorAlarm {
     this.anchorRadiusCircle.setLatLng(position);
     this.uiSetRadius(this.maxRadius)
 
+    if (typeof this.anchorMarker !== "undefined") {
+      this.map.removeLayer(this.anchorMarker);
+      this.anchorMarker = undefined;
+    }
+
     this.anchorMarker = L.marker(position, {
-      icon: this.anchorIcon
+      icon: ANCHOR_ICON
     }).addTo(this.map);
   }
 
@@ -874,8 +855,13 @@ class AnchorAlarm {
 
     this.uiSetRadiusColor();
 
+    if (typeof this.crosshairMarker !== "undefined") {
+      this.map.removeLayer(this.crosshairMarker);
+      this.crosshairMarker = undefined;
+    }
+
     this.crosshairMarker = L.marker(this.anchorCoordinates, {
-      icon: this.crosshairIcon,
+      icon: CROSSHAIR_ICON,
       draggable: true
     }).addTo(this.map);
 
@@ -961,13 +947,12 @@ class AnchorAlarm {
 
   updateWindSpeedUI(speedApparent) {
     if (typeof speedApparent !== "undefined") {
-      let kts = Math.round(speedApparent * 1.94384);
+      let kts = Math.round(speedApparent * MPS_TO_KNOTS);
       $('#awsValue').html(`${kts}kts`);
 
       const windBarbIcon = getWindBarb(speedApparent);
       $('#windBarbContainer').html(windBarbIcon);
       $('#windBarbContainer svg').css('transform', `rotate(${Math.round(this.twa)}deg)`);
-      console.log(this.twa);
     } else {
       $('#awsValue').html('~');
     }
@@ -1042,7 +1027,7 @@ class AnchorAlarm {
       : "icons/ships/png/default.png";
   }
 
-  isFresh(data, max_age = 300) {
+  isFresh(data, max_age = DEFAULT_FRESHNESS_SEC) {
     if (!data)
       return false;
     const date = new Date(data.timestamp);
@@ -1050,12 +1035,10 @@ class AnchorAlarm {
     return ageInSecs <= max_age;
   }
 
-  isStale(data, max_age = 300) {
+  isStale(data, max_age = DEFAULT_FRESHNESS_SEC) {
     return !this.isFresh(data, max_age);
   }
 }
-
-AnchorAlarm.STALE_RELOAD_MS = 5 * 60 * 1000;
 
 // AIS ship-type code → icon filename (under icons/ships/png/).
 // Code 36 (sailing) is handled separately to switch on hull aspect ratio.
