@@ -1325,17 +1325,39 @@
 
         // determine rising vs falling tide
         if (tLow < tHigh) {
+          // console.log(`rising tide`);
           // rising: low → high
-          if (tCurrent <= tLow) return lowHeight;
-          if (tCurrent >= tHigh) return highHeight;
-          t0 = tLow; h0 = lowHeight;
-          t1 = tHigh; h1 = highHeight;
+          if (tCurrent <= tLow) {
+            // extrapolate previous high tide one half-period before the known low
+            // console.log("now before low tide — extrapolating previous high")
+            t0 = tLow - (tHigh - tLow); h0 = highHeight;
+            t1 = tLow; h1 = lowHeight;
+          } else if (tCurrent >= tHigh) {
+            // extrapolate next low tide one half-period after the known high
+            // console.log("now after high tide — extrapolating next low")
+            t0 = tHigh; h0 = highHeight;
+            t1 = tHigh + (tHigh - tLow); h1 = lowHeight;
+          } else {
+            t0 = tLow; h0 = lowHeight;
+            t1 = tHigh; h1 = highHeight;
+          }
         } else {
+          // console.log(`falling tide`);
           // falling: high → low
-          if (tCurrent <= tHigh) return highHeight;
-          if (tCurrent >= tLow) return lowHeight;
-          t0 = tHigh; h0 = highHeight;
-          t1 = tLow; h1 = lowHeight;
+          if (tCurrent <= tHigh) {
+            // extrapolate previous low tide one half-period before the known high
+            // console.log("now before high tide — extrapolating previous low")
+            t0 = tHigh - (tLow - tHigh); h0 = lowHeight;
+            t1 = tHigh; h1 = highHeight;
+          } else if (tCurrent >= tLow) {
+            // extrapolate next high tide one half-period after the known low
+            // console.log("now after low tide — extrapolating next high")
+            t0 = tLow; h0 = lowHeight;
+            t1 = tLow + (tLow - tHigh); h1 = highHeight;
+          } else {
+            t0 = tHigh; h0 = highHeight;
+            t1 = tLow; h1 = lowHeight;
+          }
         }
 
         // fraction through the tide interval [0…1]
