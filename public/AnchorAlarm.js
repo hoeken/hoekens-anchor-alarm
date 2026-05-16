@@ -1,32 +1,32 @@
 class AnchorAlarm {
 
   constructor() {
-    this._heading = undefined;
-    this._currentCoordinates = undefined;
-    this._anchorCoordinates = undefined;
-    this._filterRadius = 500;
-    this._mmsi = undefined;
-    this._maxRadius = 50;
-    this._vessels = {};
-    this._vesselTracks = {};
+    this.heading = undefined;
+    this.currentCoordinates = undefined;
+    this.anchorCoordinates = undefined;
+    this.filterRadius = 500;
+    this.mmsi = undefined;
+    this.maxRadius = 50;
+    this.vessels = {};
+    this.vesselTracks = {};
 
-    this._twa = false;
-    this._aws = false;
+    this.twa = false;
+    this.aws = false;
 
-    this._boatLOA = 0;
-    this._boatBeam = 0;
-    this._boatAnchorRollerHeight = 0;
-    this._gpsBowYDistance = 0;
-    this._gpsBowXDistance = 0;
-    this._aisShipType = 0;
-    this._tidalRise = 0;
-    this._tidalFall = 0;
+    this.boatLOA = 0;
+    this.boatBeam = 0;
+    this.boatAnchorRollerHeight = 0;
+    this.gpsBowYDistance = 0;
+    this.gpsBowXDistance = 0;
+    this.aisShipType = 0;
+    this.tidalRise = 0;
+    this.tidalFall = 0;
 
-    this._isAnchored = false;
-    this._waitingForTheDrop = false;
-    this._homeZoom = undefined;
+    this.isAnchored = false;
+    this.waitingForTheDrop = false;
+    this.homeZoom = undefined;
 
-    this._windBarb = false;
+    this.windBarb = false;
     this.myBoatMarker = undefined;
     this.gpsAntennaMarker = undefined;
     this.anchorMarker = undefined;
@@ -61,7 +61,7 @@ class AnchorAlarm {
 
     this.urlParams = new URLSearchParams(window.location.search);
 
-    this._hiddenAt = null;
+    this.hiddenAt = null;
   }
 
   static startup() {
@@ -72,10 +72,10 @@ class AnchorAlarm {
   init() {
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
-        this._hiddenAt = Date.now();
-      } else if (this._hiddenAt !== null) {
-        const elapsed = Date.now() - this._hiddenAt;
-        this._hiddenAt = null;
+        this.hiddenAt = Date.now();
+      } else if (this.hiddenAt !== null) {
+        const elapsed = Date.now() - this.hiddenAt;
+        this.hiddenAt = null;
         if (elapsed >= AnchorAlarm.STALE_RELOAD_MS) {
           window.location.reload();
         }
@@ -107,22 +107,22 @@ class AnchorAlarm {
       "Satellite": this.satelliteLayer
     };
 
-    this._wireButtons();
-    this._loadInitialData();
+    this.wireButtons();
+    this.loadInitialData();
   }
 
-  _wireButtons() {
+  wireButtons() {
     $('#raiseAnchor').click(() => {
       let agree = confirm('Do you really want to disable your anchor alarm?');
       if (agree) {
-        this._waitingForTheDrop = true;
+        this.waitingForTheDrop = true;
         this.raiseAnchor(); //better UI response outside.
         $.post('/plugins/hoekens-anchor-alarm/raiseAnchor', () => { }).fail((response) => {
         }).fail((response) => {
           if (response.status == 401)
             location.href = "/admin/#/login";
         }).always(() => {
-          this._waitingForTheDrop = false;
+          this.waitingForTheDrop = false;
         });
       }
     });
@@ -130,56 +130,56 @@ class AnchorAlarm {
     $('#dropAnchor').click(() => {
       //let mc = map.getCenter()
       let mc = this.crosshairMarker.getLatLng();
-      this._waitingForTheDrop = true;
-      this.dropAnchor(mc, this._maxRadius); //better UI response outside.
+      this.waitingForTheDrop = true;
+      this.dropAnchor(mc, this.maxRadius); //better UI response outside.
       let newPosition = { latitude: mc.lat, longitude: mc.lng };
-      $.post('/plugins/hoekens-anchor-alarm/dropAnchor', { position: newPosition, radius: this._maxRadius }, () => {
+      $.post('/plugins/hoekens-anchor-alarm/dropAnchor', { position: newPosition, radius: this.maxRadius }, () => {
       }).fail((response) => {
         if (response.status == 401)
           location.href = "/admin/#/login";
       }).always(() => {
-        this._waitingForTheDrop = false;
+        this.waitingForTheDrop = false;
       });
     });
 
     $('#setRadius').click(() => {
-      let input = prompt('Enter Radius (m)', this._maxRadius);
+      let input = prompt('Enter Radius (m)', this.maxRadius);
       if (input === null)
         return;
       let newRadius = parseInt(input);
       if (isNaN(newRadius) || newRadius <= 0)
         return;
 
-      this._maxRadius = newRadius;
+      this.maxRadius = newRadius;
       this.uiSetRadius(newRadius);
 
-      if (this._isAnchored) {
-        this._waitingForTheDrop = true;
+      if (this.isAnchored) {
+        this.waitingForTheDrop = true;
         $.post('/plugins/hoekens-anchor-alarm/setRadius', { radius: newRadius })
           .fail((response) => {
             if (response.status == 401)
               location.href = "/admin/#/login";
           })
           .always(() => {
-            this._waitingForTheDrop = false;
+            this.waitingForTheDrop = false;
           });
       }
 
     });
 
     $('#increaseRadius').click(() => {
-      this._maxRadius = parseInt(this._maxRadius) + 5;
-      this.uiSetRadius(this._maxRadius);
+      this.maxRadius = parseInt(this.maxRadius) + 5;
+      this.uiSetRadius(this.maxRadius);
 
-      if (this._isAnchored) {
-        this._waitingForTheDrop = true;
-        $.post('/plugins/hoekens-anchor-alarm/setRadius', { radius: this._maxRadius })
+      if (this.isAnchored) {
+        this.waitingForTheDrop = true;
+        $.post('/plugins/hoekens-anchor-alarm/setRadius', { radius: this.maxRadius })
           .fail((response) => {
             if (response.status == 401)
               location.href = "/admin/#/login";
           })
           .always(() => {
-            this._waitingForTheDrop = false;
+            this.waitingForTheDrop = false;
           });
       }
     });
@@ -204,28 +204,28 @@ class AnchorAlarm {
     }, { passive: false });
 
     $('#decreaseRadius').click(() => {
-      this._maxRadius = parseInt(this._maxRadius);
-      if (this._maxRadius <= 5)
+      this.maxRadius = parseInt(this.maxRadius);
+      if (this.maxRadius <= 5)
         return;
 
-      this._maxRadius = this._maxRadius - 5;
-      this.uiSetRadius(this._maxRadius)
+      this.maxRadius = this.maxRadius - 5;
+      this.uiSetRadius(this.maxRadius)
 
-      if (this._isAnchored) {
-        this._waitingForTheDrop = true;
-        $.post('/plugins/hoekens-anchor-alarm/setRadius', { radius: this._maxRadius })
+      if (this.isAnchored) {
+        this.waitingForTheDrop = true;
+        $.post('/plugins/hoekens-anchor-alarm/setRadius', { radius: this.maxRadius })
           .fail((response) => {
             if (response.status == 401)
               location.href = "/admin/#/login";
           })
           .always(() => {
-            this._waitingForTheDrop = false;
+            this.waitingForTheDrop = false;
           });
       }
     });
   }
 
-  _buildControls() {
+  buildControls() {
     const self = this;
 
     const HomeButtonControl = L.Control.extend({
@@ -247,13 +247,13 @@ class AnchorAlarm {
         L.DomEvent.on(homeButton, 'click', function (e) {
           L.DomEvent.stopPropagation(e);
           L.DomEvent.preventDefault(e);
-          if (self._currentCoordinates) {
+          if (self.currentCoordinates) {
             const doPan = function () {
-              map.panTo(self._currentCoordinates);
+              map.panTo(self.currentCoordinates);
             };
-            if (self._homeZoom != null && map.getZoom() !== self._homeZoom) {
+            if (self.homeZoom != null && map.getZoom() !== self.homeZoom) {
               map.once('zoomend', doPan);
-              map.setZoom(self._homeZoom);
+              map.setZoom(self.homeZoom);
             } else {
               doPan();
             }
@@ -398,9 +398,9 @@ class AnchorAlarm {
   }
 
   //this is our initial data lookup call.  Needs to happen first.
-  _loadInitialData() {
+  loadInitialData() {
     $.get('/signalk/v1/api/vessels/self', (data) => {
-      this._mmsi = data.mmsi;
+      this.mmsi = data.mmsi;
 
       //anchor distance guess...
       let anchorDistanceGuess = 0;
@@ -416,56 +416,56 @@ class AnchorAlarm {
 
       //wind info.
       if (typeof data.environment.wind?.directionTrue?.value !== "undefined" && this.isFresh(data.environment.wind.directionTrue)) {
-        this._twa = this.rad2deg(data.environment.wind.directionTrue.value);
-        this.updateWindAngleUI(this._twa);
+        this.twa = this.rad2deg(data.environment.wind.directionTrue.value);
+        this.updateWindAngleUI(this.twa);
       }
       if (typeof data.environment.wind?.speedApparent?.value !== "undefined" && this.isFresh(data.environment.wind.speedApparent))
         this.updateWindSpeedUI(data.environment.wind.speedApparent.value);
 
       //save our parameters for boat size + gps position
       if (typeof data.design?.length?.value !== "undefined")
-        this._boatLOA = parseFloat(data.design.length.value.overall);
+        this.boatLOA = parseFloat(data.design.length.value.overall);
       if (typeof data.design?.beam?.value !== "undefined")
-        this._boatBeam = parseFloat(data.design.beam?.value);
+        this.boatBeam = parseFloat(data.design.beam?.value);
       if (typeof data.design?.bowAnchorRollerHeight?.value !== "undefined")
-        this._boatAnchorRollerHeight = parseFloat(data.design.bowAnchorRollerHeight?.value);
+        this.boatAnchorRollerHeight = parseFloat(data.design.bowAnchorRollerHeight?.value);
       if (typeof data.sensors?.gps?.fromBow?.value !== "undefined")
-        this._gpsBowYDistance = data.sensors.gps.fromBow.value;
+        this.gpsBowYDistance = data.sensors.gps.fromBow.value;
       if (typeof data.sensors?.gps?.fromCenter?.value !== "undefined")
-        this._gpsBowXDistance = data.sensors.gps.fromCenter.value;
+        this.gpsBowXDistance = data.sensors.gps.fromCenter.value;
       if (typeof data.design?.aisShipType?.value?.id !== "undefined")
-        this._aisShipType = data.design.aisShipType.value.id;
+        this.aisShipType = data.design.aisShipType.value.id;
 
-      // console.log(`loa: ${this._boatLOA}`);
-      // console.log(`beam: ${this._boatBeam}`);
-      // console.log(`bowXDistance: ${this._gpsBowXDistance}`);
-      // console.log(`bowYDistance: ${this._gpsBowYDistance}`);
+      // console.log(`loa: ${this.boatLOA}`);
+      // console.log(`beam: ${this.boatBeam}`);
+      // console.log(`bowXDistance: ${this.gpsBowXDistance}`);
+      // console.log(`bowYDistance: ${this.gpsBowYDistance}`);
 
       //check our tide data
       if (typeof data.environment?.tide !== "undefined") {
         let currentTide = this.estimateTideHeightSmooth(data.environment.tide.timeLow.value, data.environment.tide.heightLow.value, data.environment.tide.timeHigh.value, data.environment.tide.heightHigh.value);
-        this._tidalRise = data.environment.tide.heightHigh.value - currentTide;
-        this._tidalFall = currentTide - data.environment.tide.heightLow.value;
+        this.tidalRise = data.environment.tide.heightHigh.value - currentTide;
+        this.tidalFall = currentTide - data.environment.tide.heightLow.value;
       }
 
       //try to guess where to put the anchor.
       anchorDistanceGuess = this.calculateScope(5, belowSurface);
 
       //our radius defaults.
-      this._maxRadius = anchorDistanceGuess;
-      this._maxRadius += this.calculateVectorDistance(this._gpsBowXDistance, this._gpsBowYDistance);
-      this._maxRadius *= 1.5;
-      this._maxRadius = Math.round(this._maxRadius / 5) * 5; //multiples of 5
-      this._maxRadius = Math.max(0, this._maxRadius);
-      this._maxRadius = Math.min(200, this._maxRadius);
+      this.maxRadius = anchorDistanceGuess;
+      this.maxRadius += this.calculateVectorDistance(this.gpsBowXDistance, this.gpsBowYDistance);
+      this.maxRadius *= 1.5;
+      this.maxRadius = Math.round(this.maxRadius / 5) * 5; //multiples of 5
+      this.maxRadius = Math.max(0, this.maxRadius);
+      this.maxRadius = Math.min(200, this.maxRadius);
 
       data = data.navigation;
-      this._currentCoordinates = L.latLng(data.position.value.latitude, data.position.value.longitude);
+      this.currentCoordinates = L.latLng(data.position.value.latitude, data.position.value.longitude);
 
       //init our map
       this.map = L.map('map', {
         zoomControl: false,
-      }).setView(this._currentCoordinates, 5);
+      }).setView(this.currentCoordinates, 5);
 
       //default to satellite
       this.satelliteLayer.addTo(this.map);
@@ -480,7 +480,7 @@ class AnchorAlarm {
         position: 'topright' // Options: 'topleft', 'topright', 'bottomleft', 'bottomright'
       }).addTo(this.map);
 
-      const { HomeButtonControl, InfoBoxControl, WindBarbControl, ScopeBoxControl } = this._buildControls();
+      const { HomeButtonControl, InfoBoxControl, WindBarbControl, ScopeBoxControl } = this.buildControls();
 
       //add home button
       this.map.addControl(new HomeButtonControl());
@@ -507,70 +507,70 @@ class AnchorAlarm {
       //no heading data?  try pointing to our anchor.
       else if ((data.anchor) && (data.anchor.position) && (data.anchor.position.value)) {
         let anchorPosition = data.anchor.position.value;
-        this._anchorCoordinates = L.latLng(anchorPosition.latitude, anchorPosition.longitude);
-        heading = Math.round(this.calculateBearing(this._currentCoordinates.lat, this._currentCoordinates.lng, this._anchorCoordinates.lat, this._anchorCoordinates.lng));
+        this.anchorCoordinates = L.latLng(anchorPosition.latitude, anchorPosition.longitude);
+        heading = Math.round(this.calculateBearing(this.currentCoordinates.lat, this.currentCoordinates.lng, this.anchorCoordinates.lat, this.anchorCoordinates.lng));
       }
       //no anchor?  into the wind then.
       else
-        heading = this._twa;
-      this._heading = heading;
+        heading = this.twa;
+      this.heading = heading;
 
       //calculate the x offset from the left side, not center
-      let xOffset = this._boatBeam / 2 + this._gpsBowXDistance;
+      let xOffset = this.boatBeam / 2 + this.gpsBowXDistance;
 
       // console.log(`xOffset: ${xOffset}`);
 
       //marker for our boat
-      this.myBoatMarker = new L.BoatMarker(this._currentCoordinates, {
-        beam: this._boatBeam,
-        loa: this._boatLOA,
-        gpsOffset: { x: xOffset, y: this._gpsBowYDistance },
+      this.myBoatMarker = new L.BoatMarker(this.currentCoordinates, {
+        beam: this.boatBeam,
+        loa: this.boatLOA,
+        gpsOffset: { x: xOffset, y: this.gpsBowYDistance },
         heading: heading,
-        icon: this.getShipTypeIcon(this._aisShipType, this._boatLOA / this._boatBeam)
+        icon: this.getShipTypeIcon(this.aisShipType, this.boatLOA / this.boatBeam)
       }).addTo(this.map)
 
       //marker for our boat's antenna
-      this.gpsAntennaMarker = L.marker(this._currentCoordinates, {
+      this.gpsAntennaMarker = L.marker(this.currentCoordinates, {
         icon: this.gpsAntennaIcon
       }).addTo(this.map);
 
       //our radius
-      this.anchorRadiusCircle = L.circle(this.map.getCenter(), this._maxRadius, { color: 'green' });
+      this.anchorRadiusCircle = L.circle(this.map.getCenter(), this.maxRadius, { color: 'green' });
       this.anchorRadiusCircle.addTo(this.map)
-      this.uiSetRadius(this._maxRadius)
+      this.uiSetRadius(this.maxRadius)
 
-      this._anchorCoordinates = this.map.getCenter();
+      this.anchorCoordinates = this.map.getCenter();
 
-      this.anchorLine = L.polyline([this._currentCoordinates, this._anchorCoordinates], {
+      this.anchorLine = L.polyline([this.currentCoordinates, this.anchorCoordinates], {
         color: 'grey',
         weight: 2
       }).addTo(this.map);
 
-      this.anchorLineAngle = L.polyline([this._currentCoordinates, this._anchorCoordinates], {
+      this.anchorLineAngle = L.polyline([this.currentCoordinates, this.anchorCoordinates], {
         color: 'grey',
         weight: 0
       }).addTo(this.map);
 
       if ((data.anchor) && (data.anchor.position) && (data.anchor.position.value)) {
         let anchorPosition = data.anchor.position.value;
-        this._anchorCoordinates = L.latLng(anchorPosition.latitude, anchorPosition.longitude);
+        this.anchorCoordinates = L.latLng(anchorPosition.latitude, anchorPosition.longitude);
         let radius = parseInt(data.anchor.maxRadius.value);
-        this.dropAnchor(this._anchorCoordinates, radius);
+        this.dropAnchor(this.anchorCoordinates, radius);
       } else {
-        let bowPos = this.calculateBowCoordinates(this._currentCoordinates, heading, this._gpsBowXDistance, this._gpsBowYDistance);
+        let bowPos = this.calculateBowCoordinates(this.currentCoordinates, heading, this.gpsBowXDistance, this.gpsBowYDistance);
         let anchorPositionGuess = this.calculateDestinationPoint(bowPos.lat, bowPos.lng, heading, anchorDistanceGuess);
-        this._anchorCoordinates = L.latLng(anchorPositionGuess.latitude, anchorPositionGuess.longitude);
+        this.anchorCoordinates = L.latLng(anchorPositionGuess.latitude, anchorPositionGuess.longitude);
         this.raiseAnchor();
       }
 
-      this.updateAnchorLine(this._currentCoordinates, this._anchorCoordinates);
+      this.updateAnchorLine(this.currentCoordinates, this.anchorCoordinates);
 
       //zoom baby zoom.
       this.map.fitBounds(this.anchorRadiusCircle.getBounds());
-      this._homeZoom = this.map.getZoom();
+      this.homeZoom = this.map.getZoom();
 
       //load up all the other vessels.
-      $.get(`/signalk/v1/api/tracks?radius=${this._filterRadius}`, (tracks) => {
+      $.get(`/signalk/v1/api/tracks?radius=${this.filterRadius}`, (tracks) => {
         const mmsiRegex = /urn:mrn:imo:mmsi:(\d+)$/;
         for (let uri in tracks) {
           const match = uri.match(mmsiRegex);
@@ -587,15 +587,15 @@ class AnchorAlarm {
               for (let position of history) {
                 let lat = position[1];
                 let lon = position[0];
-                let distance = this.calculateDistance(this._currentCoordinates.lat, this._currentCoordinates.lng, lat, lon);
+                let distance = this.calculateDistance(this.currentCoordinates.lat, this.currentCoordinates.lng, lat, lon);
 
-                if (distance < this._filterRadius) {
+                if (distance < this.filterRadius) {
                   points.push([lat, lon, i]);
                   i++;
                 }
               }
 
-              this._vesselTracks[mmsi] = L.hotline(points, {
+              this.vesselTracks[mmsi] = L.hotline(points, {
                 color: 'red',
                 weight: 1,
                 min: 0,
@@ -633,30 +633,30 @@ class AnchorAlarm {
         return;
       }
 
-      this._currentCoordinates = L.latLng(data.position.value.latitude, data.position.value.longitude);
+      this.currentCoordinates = L.latLng(data.position.value.latitude, data.position.value.longitude);
 
       //load our heading value
       let heading = 0;
       if (data.headingTrue && this.isFresh(data.headingTrue)) {
         heading = this.rad2deg(data.headingTrue.value);
       } else {
-        heading = Math.round(this.calculateBearing(this._currentCoordinates.lat, this._currentCoordinates.lng, this._anchorCoordinates.lat, this._anchorCoordinates.lng));
+        heading = Math.round(this.calculateBearing(this.currentCoordinates.lat, this.currentCoordinates.lng, this.anchorCoordinates.lat, this.anchorCoordinates.lng));
       }
-      this._heading = heading;
+      this.heading = heading;
 
       //update our markers
-      this.myBoatMarker.setLatLng(this._currentCoordinates);
+      this.myBoatMarker.setLatLng(this.currentCoordinates);
       this.myBoatMarker.setHeading(heading);
-      this.gpsAntennaMarker.setLatLng(this._currentCoordinates);
+      this.gpsAntennaMarker.setLatLng(this.currentCoordinates);
 
       //add to our scribble
-      if (this._vesselTracks[this._mmsi]) {
-        this._vesselTracks[this._mmsi].addLatLng([this._currentCoordinates.lat, this._currentCoordinates.lng, this._vesselTracks[this._mmsi].getLatLngs().length]);
-        this._vesselTracks[this._mmsi].options.max++;
+      if (this.vesselTracks[this.mmsi]) {
+        this.vesselTracks[this.mmsi].addLatLng([this.currentCoordinates.lat, this.currentCoordinates.lng, this.vesselTracks[this.mmsi].getLatLngs().length]);
+        this.vesselTracks[this.mmsi].options.max++;
       }
 
       //redraw our anchor line
-      this.updateAnchorLine(this._currentCoordinates, this._anchorCoordinates);
+      this.updateAnchorLine(this.currentCoordinates, this.anchorCoordinates);
     });
 
     //what is our current status?
@@ -685,37 +685,37 @@ class AnchorAlarm {
 
     //update wind speed.
     $.get('/signalk/v1/api/vessels/self/environment/wind/speedApparent/value', (speedApparent) => {
-      this._aws = speedApparent;
+      this.aws = speedApparent;
       this.updateWindSpeedUI(speedApparent);
-      // this.updateWindBarbUI(this._twa, this._aws);
+      // this.updateWindBarbUI(this.twa, this.aws);
     }).fail((response) => {
       $('#awsValue').html("~");
     });
 
     //update wind angle.
     $.get('/signalk/v1/api/vessels/self/environment/wind/directionTrue/value', (directionTrue) => {
-      this._twa = this.rad2deg(directionTrue);
-      this.updateWindAngleUI(this._twa);
-      // this.updateWindBarbUI(this._twa, this._aws);
+      this.twa = this.rad2deg(directionTrue);
+      this.updateWindAngleUI(this.twa);
+      // this.updateWindBarbUI(this.twa, this.aws);
     }).fail((response) => {
       $('#awaValue').html("~");
     });
 
     //update our watch status
     $.get('/signalk/v1/api/vessels/self/navigation/anchor', (anchorStatus) => {
-      if (!this._waitingForTheDrop) {
+      if (!this.waitingForTheDrop) {
         if (anchorStatus.state.value === "on") {
-          this._maxRadius = anchorStatus.maxRadius.value;
-          this._anchorCoordinates = L.latLng(anchorStatus.position.value.latitude, anchorStatus.position.value.longitude);
-          this.uiSetRadius(this._maxRadius);
+          this.maxRadius = anchorStatus.maxRadius.value;
+          this.anchorCoordinates = L.latLng(anchorStatus.position.value.latitude, anchorStatus.position.value.longitude);
+          this.uiSetRadius(this.maxRadius);
 
           //switch to anchored?
-          if (!this._isAnchored) {
-            this.dropAnchor(this._anchorCoordinates, this._maxRadius);
+          if (!this.isAnchored) {
+            this.dropAnchor(this.anchorCoordinates, this.maxRadius);
           }
         }
         //switch off anchored?
-        else if (this._isAnchored) {
+        else if (this.isAnchored) {
           this.raiseAnchor();
         }
       }
@@ -726,7 +726,7 @@ class AnchorAlarm {
       let detectedVessels = [];
       for (let key in vessels) {
         let vessel = vessels[key];
-        if (vessel.mmsi == this._mmsi) {
+        if (vessel.mmsi == this.mmsi) {
           continue;
         }
         if (!("navigation" in vessel) || !("position" in vessel.navigation)) {
@@ -748,31 +748,31 @@ class AnchorAlarm {
         else if (typeof vessel.navigation?.courseOverGroundTrue?.value !== "undefined" && vessel_sog > 1)
           vessel_heading = this.rad2deg(vessel.navigation.courseOverGroundTrue.value);
         //true wind angle looks the cleanest on the map
-        else if (this._twa !== false)
-          vessel_heading = this._twa;
+        else if (this.twa !== false)
+          vessel_heading = this.twa;
 
         //where are they?
         let position = vessel.navigation.position.value;
-        let distance = this.calculateDistance(position.latitude, position.longitude, this._currentCoordinates.lat, this._currentCoordinates.lng);
+        let distance = this.calculateDistance(position.latitude, position.longitude, this.currentCoordinates.lat, this.currentCoordinates.lng);
 
         //only show vessels in our radius
-        if (distance <= this._filterRadius) {
+        if (distance <= this.filterRadius) {
           detectedVessels.push(vessel.mmsi);
           distance = Math.round(distance);
 
           //have we seen them already?
-          if (vessel.mmsi in this._vessels) {
-            this._vessels[vessel.mmsi].setLatLng([position.latitude, position.longitude]);
-            this._vessels[vessel.mmsi].setHeading(vessel_heading);
-            this._vessels[vessel.mmsi]._popup.setContent(`${vessel.name} at ${distance} meters`);
-            this._vessels[vessel.mmsi].gpsAntennaMarker.setLatLng([position.latitude, position.longitude]);
+          if (vessel.mmsi in this.vessels) {
+            this.vessels[vessel.mmsi].setLatLng([position.latitude, position.longitude]);
+            this.vessels[vessel.mmsi].setHeading(vessel_heading);
+            this.vessels[vessel.mmsi]._popup.setContent(`${vessel.name} at ${distance} meters`);
+            this.vessels[vessel.mmsi].gpsAntennaMarker.setLatLng([position.latitude, position.longitude]);
 
             //do we have a track for them?
-            if (this._vesselTracks[vessel.mmsi]) {
-              let lastPosition = this._vesselTracks[vessel.mmsi].getLatLngs().at(-1);
+            if (this.vesselTracks[vessel.mmsi]) {
+              let lastPosition = this.vesselTracks[vessel.mmsi].getLatLngs().at(-1);
               if (lastPosition && (lastPosition.lat != position.latitude || lastPosition.lng != position.longitude)) {
-                this._vesselTracks[vessel.mmsi].addLatLng([position.latitude, position.longitude, this._vesselTracks[vessel.mmsi].options.max]);
-                this._vesselTracks[vessel.mmsi].options.max++;
+                this.vesselTracks[vessel.mmsi].addLatLng([position.latitude, position.longitude, this.vesselTracks[vessel.mmsi].options.max]);
+                this.vesselTracks[vessel.mmsi].options.max++;
               }
             }
             //nope, create their info
@@ -798,27 +798,27 @@ class AnchorAlarm {
               aisShipType = vessel.design.aisShipType.value.id;
 
             //calculate the x offset from the left side, not center
-            let xOffset = beam / 2 + this._gpsBowXDistance;
+            let xOffset = beam / 2 + this.gpsBowXDistance;
 
             //create our boat marker
-            this._vessels[vessel.mmsi] = new L.BoatMarker([position.latitude, position.longitude], {
+            this.vessels[vessel.mmsi] = new L.BoatMarker([position.latitude, position.longitude], {
               beam: beam,
               loa: loa,
               gpsOffset: { x: xOffset, y: gpsYOffset },
               heading: vessel_heading,
               icon: this.getShipTypeIcon(aisShipType, loa / beam)
             });
-            this._vessels[vessel.mmsi].addTo(this.map).bindPopup(`${vessel.name} at ${distance} meters`);
+            this.vessels[vessel.mmsi].addTo(this.map).bindPopup(`${vessel.name} at ${distance} meters`);
 
             //marker for our boat's antenna
-            this._vessels[vessel.mmsi].gpsAntennaMarker = L.marker([position.latitude, position.longitude], {
+            this.vessels[vessel.mmsi].gpsAntennaMarker = L.marker([position.latitude, position.longitude], {
               icon: this.gpsAntennaIcon
             }).addTo(this.map);
-            this._vessels[vessel.mmsi].gpsAntennaMarker.setLatLng([position.latitude, position.longitude]);
+            this.vessels[vessel.mmsi].gpsAntennaMarker.setLatLng([position.latitude, position.longitude]);
 
             //make sure we didnt load their track already.
-            if (vessel.mmsi in this._vesselTracks === false) {
-              this._vesselTracks[vessel.mmsi] = L.hotline([[position.latitude, position.longitude, 0]], {
+            if (vessel.mmsi in this.vesselTracks === false) {
+              this.vesselTracks[vessel.mmsi] = L.hotline([[position.latitude, position.longitude, 0]], {
                 color: 'red',
                 weight: 1,
                 min: 0,
@@ -831,12 +831,12 @@ class AnchorAlarm {
           }
         }
       }
-      for (let mmsi in this._vessels) {
+      for (let mmsi in this.vessels) {
         if (!detectedVessels.includes(mmsi)) {
-          this.map.removeLayer(this._vessels[mmsi]);
-          delete this._vessels[mmsi];
-          this.map.removeLayer(this._vesselTracks[mmsi]);
-          delete this._vesselTracks[mmsi];
+          this.map.removeLayer(this.vessels[mmsi]);
+          delete this.vessels[mmsi];
+          this.map.removeLayer(this.vesselTracks[mmsi]);
+          delete this.vesselTracks[mmsi];
         }
       }
     });
@@ -851,7 +851,7 @@ class AnchorAlarm {
   uiSetRadiusColor() {
     if (this.calculateDistance(this.anchorRadiusCircle.getLatLng().lat, this.anchorRadiusCircle.getLatLng().lng, this.myBoatMarker.getLatLng().lat, this.myBoatMarker.getLatLng().lng) > this.anchorRadiusCircle.getRadius())
       this.anchorRadiusCircle.setStyle({ 'color': 'red' })
-    else if (this._isAnchored)
+    else if (this.isAnchored)
       this.anchorRadiusCircle.setStyle({ 'color': 'green' })
     else
       this.anchorRadiusCircle.setStyle({ 'color': 'blue' })
@@ -861,21 +861,21 @@ class AnchorAlarm {
     $('#anchorDown').show();
     $('#anchorUp').hide();
 
-    this._anchorCoordinates = position;
+    this.anchorCoordinates = position;
 
-    this._isAnchored = true;
+    this.isAnchored = true;
 
     $('#scopeUI').hide();
     $('#infoUI').show();
 
-    this._maxRadius = parseInt(radius);
-    if (this._maxRadius <= 0)
-      this._maxRadius = 20;
+    this.maxRadius = parseInt(radius);
+    if (this.maxRadius <= 0)
+      this.maxRadius = 20;
 
     this.map.removeLayer(this.crosshairMarker);
 
     this.anchorRadiusCircle.setLatLng(position);
-    this.uiSetRadius(this._maxRadius)
+    this.uiSetRadius(this.maxRadius)
 
     this.anchorMarker = L.marker(position, {
       icon: this.anchorIcon
@@ -886,7 +886,7 @@ class AnchorAlarm {
     $('#anchorUp').show();
     $('#anchorDown').hide();
 
-    this._isAnchored = false;
+    this.isAnchored = false;
 
     $('#infoUI').hide();
     $('#scopeUI').show();
@@ -896,23 +896,23 @@ class AnchorAlarm {
 
     this.uiSetRadiusColor();
 
-    this.crosshairMarker = L.marker(this._anchorCoordinates, {
+    this.crosshairMarker = L.marker(this.anchorCoordinates, {
       icon: this.crosshairIcon,
       draggable: true
     }).addTo(this.map);
 
     this.crosshairMarker.on('drag', (ev) => {
-      if (!this._isAnchored) {
-        this._anchorCoordinates = this.crosshairMarker.getLatLng();
-        this.updateAnchorLine(this._currentCoordinates, this._anchorCoordinates);
+      if (!this.isAnchored) {
+        this.anchorCoordinates = this.crosshairMarker.getLatLng();
+        this.updateAnchorLine(this.currentCoordinates, this.anchorCoordinates);
         this.anchorRadiusCircle.setLatLng(this.crosshairMarker.getLatLng());
         this.uiSetRadiusColor();
       }
     });
 
-    this.anchorRadiusCircle.setLatLng(this._anchorCoordinates);
+    this.anchorRadiusCircle.setLatLng(this.anchorCoordinates);
 
-    this.updateAnchorLine(this._currentCoordinates, this._anchorCoordinates);
+    this.updateAnchorLine(this.currentCoordinates, this.anchorCoordinates);
   }
 
   updateDepthUI(dbs, dbk) {
@@ -942,10 +942,10 @@ class AnchorAlarm {
     let maxHeight = dbs;
 
     //the height of our bow roller.
-    maxHeight += this._boatAnchorRollerHeight;
+    maxHeight += this.boatAnchorRollerHeight;
 
     //the delta between now and high tide.
-    maxHeight += this._tidalRise;
+    maxHeight += this.tidalRise;
 
     scope = this.calculateScope(7, dbs);
     scope = scope.toFixed(1);
@@ -966,10 +966,10 @@ class AnchorAlarm {
     let dbsDisplay = dbs.toFixed(1);
     $('#scopeDepth').html(`${dbsDisplay}m`);
 
-    let bowHeightDisplay = this._boatAnchorRollerHeight.toFixed(1);
+    let bowHeightDisplay = this.boatAnchorRollerHeight.toFixed(1);
     $('#bowHeight').html(`${bowHeightDisplay}m`);
 
-    let tidalRise = this._tidalRise.toFixed(1);
+    let tidalRise = this.tidalRise.toFixed(1);
     $('#tidalRise').html(`${tidalRise}m`);
 
     maxHeight = maxHeight.toFixed(1);
@@ -978,7 +978,7 @@ class AnchorAlarm {
     dbk = dbk.toFixed(1);
     $('#belowKeel').html(`${dbk}m`);
 
-    let tidalFall = this._tidalFall.toFixed(1);
+    let tidalFall = this.tidalFall.toFixed(1);
     $('#tidalFall').html(`${tidalFall}m`);
 
     let minimumDepth = dbk - tidalFall;
@@ -1003,10 +1003,10 @@ class AnchorAlarm {
     let maxHeight = dbs;
 
     //the height of our bow roller.
-    maxHeight += this._boatAnchorRollerHeight;
+    maxHeight += this.boatAnchorRollerHeight;
 
     //the delta between now and high tide.
-    maxHeight += this._tidalRise;
+    maxHeight += this.tidalRise;
 
     //okay, send it back.
     let total = maxHeight * scope;
@@ -1021,8 +1021,8 @@ class AnchorAlarm {
 
       const windBarbIcon = getWindBarb(speedApparent);
       $('#windBarbContainer').html(windBarbIcon);
-      $('#windBarbContainer svg').css('transform', `rotate(${Math.round(this._twa)}deg)`);
-      console.log(this._twa);
+      $('#windBarbContainer svg').css('transform', `rotate(${Math.round(this.twa)}deg)`);
+      console.log(this.twa);
     } else {
       $('#awsValue').html('~');
     }
@@ -1044,34 +1044,19 @@ class AnchorAlarm {
     }
   }
 
-  // updateWindBarbUI(directionTrue, speedApparent) {
-  //   if (!this._currentCoordinates || !this._heading)
-  //     return;
-
-  //   const _bowCoordinates = this.calculateBowCoordinates(this._currentCoordinates, this._heading, this._gpsBowXDistance, this._gpsBowYDistance);
-
-  //   if (!this._windBarb)
-  //     this._windBarb = new L.WindBarb(_bowCoordinates, { speed: speedApparent, angle: directionTrue }).addTo(this.map);
-  //   else {
-  //     this._windBarb.setLatLng(_bowCoordinates);
-  //     this._windBarb.setSpeed(speedApparent);
-  //     this._windBarb.setAngle(directionTrue);
-  //   }
-  // }
-
   updateAnchorLine(current, anchor) {
 
-    let _bowCoordinates = this.calculateBowCoordinates(current, this._heading, this._gpsBowXDistance, this._gpsBowYDistance);
+    let bowCoordinates = this.calculateBowCoordinates(current, this.heading, this.gpsBowXDistance, this.gpsBowYDistance);
 
-    this.anchorLine.setLatLngs([_bowCoordinates, anchor]);
-    this.anchorLineAngle.setLatLngs([_bowCoordinates, anchor]); // this duplicate on is so we can have 2 text labels
+    this.anchorLine.setLatLngs([bowCoordinates, anchor]);
+    this.anchorLineAngle.setLatLngs([bowCoordinates, anchor]); // this duplicate on is so we can have 2 text labels
 
     //this will fail if you're anchored exactly on the equator, lol.
     let flip = false;
-    if (_bowCoordinates.lng > anchor.lng)
+    if (bowCoordinates.lng > anchor.lng)
       flip = true;
 
-    let distance = this.calculateDistance(_bowCoordinates.lat, _bowCoordinates.lng, anchor.lat, anchor.lng);
+    let distance = this.calculateDistance(bowCoordinates.lat, bowCoordinates.lng, anchor.lat, anchor.lng);
     distance = Math.round(distance * 10) / 10;
 
     this.anchorLine.setText("");
@@ -1084,7 +1069,7 @@ class AnchorAlarm {
       }
     });
 
-    const bearing = Math.round(this.calculateBearing(_bowCoordinates.lat, _bowCoordinates.lng, anchor.lat, anchor.lng));
+    const bearing = Math.round(this.calculateBearing(bowCoordinates.lat, bowCoordinates.lng, anchor.lat, anchor.lng));
 
     this.anchorLineAngle.setText("");
     this.anchorLineAngle.setText(`${bearing}°`, {
