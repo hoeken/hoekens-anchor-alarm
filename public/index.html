@@ -479,6 +479,13 @@
 
         //update our position
         $.get('/signalk/v1/api/vessels/self/navigation', (data) => {
+
+          if (data.position.value.latitude === null || data.position.value.longitude === null) {
+            console.error("Invalid position");
+            console.error(data.position);
+            return;
+          }
+
           _currentCoordinates = L.latLng(data.position.value.latitude, data.position.value.longitude);
 
           //load our heading value
