@@ -13,6 +13,7 @@ class ControlToolbar {
     this._onSetRadius = onSetRadius;
 
     this._radius = 0;
+    this._state = null;
 
     this._container  = document.getElementById('map_toggle');
     this._anchorUp   = document.getElementById('anchorUp');
@@ -20,6 +21,8 @@ class ControlToolbar {
     this._radiusEl   = document.getElementById('radius');
 
     document.getElementById('raiseAnchor').addEventListener('click', () => {
+      if (this._state !== AnchorState.ANCHORED) return;
+      if (!confirm('Do you really want to disable your anchor alarm?')) return;
       if (this._onRaise) this._onRaise();
     });
     document.getElementById('dropAnchor').addEventListener('click', () => {
@@ -66,6 +69,7 @@ class ControlToolbar {
   // "up" states show the drop button. Use 'block' (not '') because the CSS
   // default for these divs is display:none.
   setState(anchorState) {
+    this._state = anchorState;
     const isDown = anchorState === AnchorState.ANCHORED || anchorState === AnchorState.DROPPING;
     this._anchorDown.style.display = isDown ? 'block' : 'none';
     this._anchorUp.style.display   = isDown ? 'none'  : 'block';

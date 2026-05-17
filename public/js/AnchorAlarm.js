@@ -67,11 +67,7 @@ class AnchorAlarm {
 
     this.toolbar = new ControlToolbar({
       getMapContainer: () => this.map && this.map.getContainer(),
-      onRaise: () => {
-        if (this.anchorController.state !== AnchorState.ANCHORED) return;
-        if (!confirm('Do you really want to disable your anchor alarm?')) return;
-        this.anchorController.requestRaise();
-      },
+      onRaise: () => this.anchorController.requestRaise(),
       onDrop: () => this.anchorController.requestDrop(),
       onSetRadius: (newRadius) => this.anchorController.setRadius(newRadius),
     });
