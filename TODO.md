@@ -1,9 +1,6 @@
-# v2.0
-
-- new screenshot for readme
-
 # LONG TERM
 
+- convert to websocket instead of rest polling
 - make filterRadius a plugin option
 - respect units (kts / meters / etc)
 - custom boat icon upload
