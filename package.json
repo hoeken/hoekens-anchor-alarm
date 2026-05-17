@@ -27,7 +27,7 @@
     "name": "Zach Hoeken",
     "email": "hoeken@gmail.com"
   },
-  "license": "ISC",
+  "license": "Apache-2.0",
   "dependencies": {
     "@signalk/tracks-plugin": "^2.0.2"
   },

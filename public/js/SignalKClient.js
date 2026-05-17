@@ -16,9 +16,13 @@ class SignalKClient {
   // reject with { status, statusText } on HTTP errors. A WS rewrite would swap
   // these for delta-fed cache reads without changing call sites.
   request(path) {
-    return fetch(`${this.baseUrl}/signalk/v1/api/${path}`).then(
-      SignalKClient._toJsonOrReject,
-    );
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    return fetch(`${this.baseUrl}/signalk/v1/api/${path}`, {
+      signal: controller.signal,
+    })
+      .finally(() => clearTimeout(timer))
+      .then(SignalKClient._toJsonOrReject);
   }
 
   raiseAnchor() {
@@ -93,7 +97,7 @@ class SignalKClient {
       const ageSec = node.timestamp
         ? Math.round((Date.now() - new Date(node.timestamp).getTime()) / 1000)
         : "unknown";
-      const msg = `Stale SignalK value: ${path || "(root)"}<br/>Age ${ageSec}s, Max ${maxAge}s`;
+      const msg = `Stale SignalK value: ${path || "(root)"} — Age ${ageSec}s, Max ${maxAge}s`;
       console.warn(msg);
       SignalKClient.errorHandler?.(msg);
       return fallback;

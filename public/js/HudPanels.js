@@ -15,19 +15,19 @@ const StatusBar = L.Control.extend({
     return container;
   },
 
-  setStatus: function (html) {
-    this._render(html, "black");
+  setStatus: function (text) {
+    this._render(text, "black");
   },
-  setWarning: function (html) {
-    this._render(html, "#d97706");
+  setWarning: function (text) {
+    this._render(text, "#d97706");
   },
-  setError: function (html) {
-    this._render(html, "red");
+  setError: function (text) {
+    this._render(text, "red");
   },
 
-  _render: function (html, color) {
+  _render: function (text, color) {
     if (!this._container) return;
-    this._container.innerHTML = html;
+    this._container.textContent = text;
     this._container.style.color = color;
     this._container.style.display = "";
   },
@@ -95,14 +95,14 @@ const InfoPanel = L.Control.extend({
 
   setBelowSurface: function (value) {
     if (value === undefined || value === null) {
-      this._belowSurface.innerHTML = "~";
+      this._belowSurface.textContent = "~";
       return;
     }
-    this._belowSurface.innerHTML = `${parseFloat(value).toFixed(1)}m`;
+    this._belowSurface.textContent = `${parseFloat(value).toFixed(1)}m`;
   },
 
   setStatus: function (message, state) {
-    this._pluginStatus.innerHTML = message;
+    this._pluginStatus.textContent = message;
     this._pluginStatus.className = "";
     if (message !== "Off" && state) {
       this._pluginStatus.classList.add(state);
