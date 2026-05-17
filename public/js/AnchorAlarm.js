@@ -157,13 +157,19 @@ class AnchorAlarm {
 
         this.map.fitBounds(this.anchorOverlay.getBounds());
 
-        this.signalK.fetchTracks(this.filterRadius).then((tracks) => {
-          this.fleetLayer.loadHistoricalTracks(
-            tracks,
-            this.currentCoordinates,
-            this.filterRadius,
-          );
-        });
+        this.signalK
+          .fetchTracks(this.filterRadius)
+          .then((tracks) => {
+            this.fleetLayer.loadHistoricalTracks(
+              tracks,
+              this.currentCoordinates,
+              this.filterRadius,
+            );
+          })
+          .catch((err) => {
+            const detail = err.statusText || err.message || "unknown error";
+            this.statusBar.setWarning(`Tracks plugin not available: ${detail}`);
+          });
 
         this.pollTimer = setInterval(() => this.pollSelf(), POLL_INTERVAL_MS);
         this.fleetTimer = setInterval(
