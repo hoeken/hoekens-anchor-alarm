@@ -18,7 +18,7 @@ const AnchorState = Object.freeze({
 
 class AnchorController {
 
-  constructor({ overlay, toolbar, signalK, infoPanel, scopePanel, initialRadius }) {
+  constructor({ overlay, toolbar, signalK, infoPanel, scopePanel }) {
     this._overlay = overlay;
     this._toolbar = toolbar;
     this._signalK = signalK;
@@ -27,9 +27,7 @@ class AnchorController {
 
     this.state = AnchorState.UP;
     this.anchorCoordinates = null;
-    this.maxRadius = initialRadius;
-
-    this._toolbar.setRadius(this.maxRadius);
+    this.maxRadius = 0;
   }
 
   // === User-initiated transitions =================================================
@@ -95,7 +93,7 @@ class AnchorController {
     }
   }
 
-  // === Initial restore (called once from the /self load) ==========================
+  // === Restore (called from /self load and the "home" re-estimate) ================
 
   restoreDropped(position, radius) {
     this.state = AnchorState.ANCHORED;

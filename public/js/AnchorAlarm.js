@@ -23,8 +23,6 @@ class AnchorAlarm {
     this.tidalRise = 0;
     this.tidalFall = 0;
 
-    this.homeZoom = undefined;
-
     this.map = undefined;
     this.fleetLayer = undefined;
     this.anchorOverlay = undefined;
@@ -90,9 +88,6 @@ class AnchorAlarm {
       this.applyInitialWindState(data);
       this.applyInitialTide(data);
 
-      const anchorDistanceGuess = this.calculateScope(5, belowSurface);
-      const defaultRadius = this.computeDefaultRadius(anchorDistanceGuess);
-
       this.currentCoordinates = this.extractStartPosition(data);
       this.buildMap(this.currentCoordinates);
 
@@ -103,11 +98,10 @@ class AnchorAlarm {
       this.fleetLayer = new FleetLayer({ map: this.map, ownMmsi: this.boatConfig.mmsi });
       this.fleetLayer.setOwnVessel(this.currentCoordinates, this.heading, this.boatConfig);
 
-      this.placeAnchorWidgets(defaultRadius);
-      this.restoreAnchorState(data, anchorDistanceGuess);
+      this.placeAnchorWidgets();
+      this.restoreAnchorState(data);
 
       this.map.fitBounds(this.anchorOverlay.getBounds());
-      this.homeZoom = this.map.getZoom();
 
       this.signalK.fetchTracks(this.filterRadius).done((tracks) => {
         this.fleetLayer.loadHistoricalTracks(tracks, this.currentCoordinates, this.filterRadius);
@@ -168,13 +162,8 @@ class AnchorAlarm {
     this.homeButton = new HomeButtonControl({
       onHome: (map) => {
         if (!this.currentCoordinates) return;
-        const doPan = () => map.panTo(this.currentCoordinates);
-        if (this.homeZoom != null && map.getZoom() !== this.homeZoom) {
-          map.once('zoomend', doPan);
-          map.setZoom(this.homeZoom);
-        } else {
-          doPan();
-        }
+        if (this.anchorController.state === AnchorState.UP) this.estimateAnchorPosition();
+        map.fitBounds(this.anchorOverlay.getBounds());
       }
     });
     this.map.addControl(this.homeButton);
@@ -194,12 +183,28 @@ class AnchorAlarm {
   }
 
   paintInitialReadings(belowSurface, belowKeel, data) {
-    this.infoPanel.setBelowSurface(belowSurface);
-    this.scopePanel.setBelowKeel(belowKeel);
+    this.paintDepth(belowSurface, belowKeel);
 
     const speedApparent = SignalKClient.freshValue(data, 'environment.wind.speedApparent');
     if (speedApparent !== undefined) this.windPanel.setSpeed(speedApparent, this.twa);
     if (this.twa !== null) this.windPanel.setAngle(this.twa);
+  }
+
+  paintDepth(belowSurface, belowKeel) {
+    this.infoPanel.setBelowSurface(belowSurface);
+    this.scopePanel.setScopeData({
+      depthBelowSurface: parseFloat(belowSurface),
+      depthBelowKeel: parseFloat(belowKeel),
+      bowHeight: this.boatConfig.anchorRollerHeight,
+      tidalRise: this.tidalRise,
+      tidalFall: this.tidalFall,
+      scopes: {
+        7: this.calculateScope(7, belowSurface),
+        5: this.calculateScope(5, belowSurface),
+        4: this.calculateScope(4, belowSurface),
+        3: this.calculateScope(3, belowSurface),
+      },
+    });
   }
 
   // Heading priority: SignalK headingTrue > bearing-to-anchor (if dropped) >
@@ -221,8 +226,8 @@ class AnchorAlarm {
     return this.twa ?? 0;
   }
 
-  placeAnchorWidgets(initialRadius) {
-    this.anchorOverlay = new AnchorOverlay({ map: this.map, radius: initialRadius })
+  placeAnchorWidgets() {
+    this.anchorOverlay = new AnchorOverlay({ map: this.map, radius: 0 })
       .setBoatPosition(this.currentCoordinates, this.heading, this.boatConfig.gpsOffset);
 
     this.anchorController = new AnchorController({
@@ -231,13 +236,12 @@ class AnchorAlarm {
       signalK: this.signalK,
       infoPanel: this.infoPanel,
       scopePanel: this.scopePanel,
-      initialRadius,
     });
 
     this.anchorOverlay.onCrosshairDrag((pos) => this.anchorController.updateCrosshairPosition(pos));
   }
 
-  restoreAnchorState(data, anchorDistanceGuess) {
+  restoreAnchorState(data) {
     const nav = data.navigation;
     const initialAnchorPos = SignalKClient.value(nav, 'anchor.position');
 
@@ -246,10 +250,16 @@ class AnchorAlarm {
       const radius = parseInt(SignalKClient.value(nav, 'anchor.maxRadius'), 10);
       this.anchorController.restoreDropped(pos, radius);
     } else {
-      const bowPos = GeoMath.calculateBowCoordinates(this.currentCoordinates, this.heading, this.boatConfig.gpsBowXDistance, this.boatConfig.gpsBowYDistance);
-      const guess = GeoMath.calculateDestinationPoint(bowPos.lat, bowPos.lng, this.heading, anchorDistanceGuess);
-      this.anchorController.restoreRaised(L.latLng(guess.latitude, guess.longitude));
+      this.estimateAnchorPosition();
     }
+  }
+
+  estimateAnchorPosition() {
+    const distance = this.scopePanel.getScope(5);
+    this.anchorController.setRadius(this.computeDefaultRadius(distance));
+    const bow = GeoMath.calculateBowCoordinates(this.currentCoordinates, this.heading, this.boatConfig.gpsBowXDistance, this.boatConfig.gpsBowYDistance);
+    const guess = GeoMath.calculateDestinationPoint(bow.lat, bow.lng, this.heading, distance);
+    this.anchorController.restoreRaised(L.latLng(guess.latitude, guess.longitude));
   }
 
   // === Live polling ================================================================
@@ -314,20 +324,7 @@ class AnchorAlarm {
     if (belowSurface === undefined) return;
     const belowKeel = SignalKClient.freshValue(depth, 'belowKeel', { fallback: 0 });
 
-    this.infoPanel.setBelowSurface(belowSurface);
-    this.scopePanel.setScopeData({
-      depthBelowSurface: parseFloat(belowSurface),
-      depthBelowKeel: parseFloat(belowKeel),
-      bowHeight: this.boatConfig.anchorRollerHeight,
-      tidalRise: this.tidalRise,
-      tidalFall: this.tidalFall,
-      scopes: {
-        7: this.calculateScope(7, belowSurface),
-        5: this.calculateScope(5, belowSurface),
-        4: this.calculateScope(4, belowSurface),
-        3: this.calculateScope(3, belowSurface),
-      },
-    });
+    this.paintDepth(belowSurface, belowKeel);
   }
 
   updateWind(wind) {

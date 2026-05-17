@@ -237,6 +237,9 @@ const ScopePanel = L.Control.extend({
   setScopeData: function (data) {
     const { depthBelowSurface, depthBelowKeel, bowHeight, tidalRise, tidalFall, scopes } = data;
 
+    this._belowSurface = depthBelowSurface;
+    this._scopes = scopes;
+
     const maxHeight = depthBelowSurface + bowHeight + tidalRise;
     const minimumDepth = depthBelowKeel - tidalFall;
 
@@ -261,15 +264,7 @@ const ScopePanel = L.Control.extend({
     }
   },
 
-  // Used by the depth-fetch fail path and the depth-fetch success path before
-  // the full scope render. Accepts undefined/null to display '~'.
-  setBelowKeel: function (value) {
-    if (value === undefined || value === null) {
-      this._refs.belowKeel.innerHTML = '~';
-      return;
-    }
-    this._refs.belowKeel.innerHTML = `${parseFloat(value).toFixed(1)}m`;
-  },
+  getScope: function (n) { return this._scopes && this._scopes[n]; },
 
   show: function () { if (this._container) this._container.style.display = ''; },
   hide: function () { if (this._container) this._container.style.display = 'none'; },
