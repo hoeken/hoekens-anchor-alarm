@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(node --check /home/pi/github/hoekens-anchor-alarm/public/AnchorAlarm.js)"
-    ]
-  }
-}
