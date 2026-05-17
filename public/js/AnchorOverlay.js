@@ -5,19 +5,18 @@
 // alarm color is recomputed internally on any state or position change.
 
 const ANCHOR_ICON = L.icon({
-  iconUrl: 'icons/anchor.png',
+  iconUrl: "icons/anchor.png",
   iconSize: [24, 24],
   iconAnchor: [12, 4],
 });
 
 const CROSSHAIR_ICON = L.icon({
-  iconUrl: 'icons/crosshair.png',
+  iconUrl: "icons/crosshair.png",
   iconSize: [24, 24],
   iconAnchor: [12, 12],
 });
 
 class AnchorOverlay {
-
   constructor({ map, radius }) {
     this.map = map;
     this.radius = radius;
@@ -30,20 +29,25 @@ class AnchorOverlay {
 
     this.dragHandler = null;
 
-    this.radiusCircle = L.circle(this.anchorPosition, this.radius, { color: 'green' }).addTo(map);
+    this.radiusCircle = L.circle(this.anchorPosition, this.radius, {
+      color: "green",
+    }).addTo(map);
 
     // Two overlapping polylines because leaflet.textpath only supports one
     // label per polyline; one carries the distance label, the other
     // (invisible) carries the bearing label.
     this.anchorLine = L.polyline([this.anchorPosition, this.anchorPosition], {
-      color: 'grey',
+      color: "grey",
       weight: 2,
     }).addTo(map);
 
-    this.anchorLineAngle = L.polyline([this.anchorPosition, this.anchorPosition], {
-      color: 'grey',
-      weight: 0,
-    }).addTo(map);
+    this.anchorLineAngle = L.polyline(
+      [this.anchorPosition, this.anchorPosition],
+      {
+        color: "grey",
+        weight: 0,
+      },
+    ).addTo(map);
 
     this.anchorMarker = null;
     this.crosshairMarker = null;
@@ -61,7 +65,9 @@ class AnchorOverlay {
     this.radiusCircle.setLatLng(position);
     this.radiusCircle.setRadius(this.radius);
 
-    this.anchorMarker = L.marker(position, { icon: ANCHOR_ICON }).addTo(this.map);
+    this.anchorMarker = L.marker(position, { icon: ANCHOR_ICON }).addTo(
+      this.map,
+    );
 
     this._refreshLine();
     this._refreshColor();
@@ -80,7 +86,7 @@ class AnchorOverlay {
       draggable: true,
     }).addTo(this.map);
 
-    this.crosshairMarker.on('drag', () => {
+    this.crosshairMarker.on("drag", () => {
       this.anchorPosition = this.crosshairMarker.getLatLng();
       this.radiusCircle.setLatLng(this.anchorPosition);
       this._refreshLine();
@@ -128,8 +134,10 @@ class AnchorOverlay {
     if (!this.boatPosition) return;
 
     const bow = GeoMath.calculateBowCoordinates(
-      this.boatPosition, this.heading,
-      this.gpsOffsets.x, this.gpsOffsets.y,
+      this.boatPosition,
+      this.heading,
+      this.gpsOffsets.x,
+      this.gpsOffsets.y,
     );
 
     this.anchorLine.setLatLngs([bow, this.anchorPosition]);
@@ -140,22 +148,34 @@ class AnchorOverlay {
     // sit on the same meridian.)
     const flip = bow.lng > this.anchorPosition.lng;
 
-    let distance = GeoMath.calculateDistance(bow.lat, bow.lng, this.anchorPosition.lat, this.anchorPosition.lng);
+    let distance = GeoMath.calculateDistance(
+      bow.lat,
+      bow.lng,
+      this.anchorPosition.lat,
+      this.anchorPosition.lng,
+    );
     distance = Math.round(distance * 10) / 10;
 
     this.anchorLine.setText("");
     this.anchorLine.setText(`${distance}m`, {
-      orientation: flip ? 'flip' : 0,
+      orientation: flip ? "flip" : 0,
       offset: 12,
       center: true,
       attributes: { class: "anchorLineLabel" },
     });
 
-    const bearing = Math.round(GeoMath.calculateBearing(bow.lat, bow.lng, this.anchorPosition.lat, this.anchorPosition.lng));
+    const bearing = Math.round(
+      GeoMath.calculateBearing(
+        bow.lat,
+        bow.lng,
+        this.anchorPosition.lat,
+        this.anchorPosition.lng,
+      ),
+    );
 
     this.anchorLineAngle.setText("");
     this.anchorLineAngle.setText(`${bearing}°`, {
-      orientation: flip ? 'flip' : 0,
+      orientation: flip ? "flip" : 0,
       offset: -3,
       center: true,
       attributes: { class: "anchorLineLabel" },
@@ -163,16 +183,20 @@ class AnchorOverlay {
   }
 
   _refreshColor() {
-    const baseColor = this.dropped ? 'green' : 'blue';
+    const baseColor = this.dropped ? "green" : "blue";
     if (!this.boatPosition) {
       this.radiusCircle.setStyle({ color: baseColor });
       return;
     }
     const distance = GeoMath.calculateDistance(
-      this.anchorPosition.lat, this.anchorPosition.lng,
-      this.boatPosition.lat, this.boatPosition.lng,
+      this.anchorPosition.lat,
+      this.anchorPosition.lng,
+      this.boatPosition.lat,
+      this.boatPosition.lng,
     );
-    this.radiusCircle.setStyle({ color: distance > this.radius ? 'red' : baseColor });
+    this.radiusCircle.setStyle({
+      color: distance > this.radius ? "red" : baseColor,
+    });
   }
 
   _removeAnchorMarker() {

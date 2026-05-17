@@ -5,11 +5,14 @@
 // with permissive defaults for the often-missing fields).
 
 class BoatConfig {
-
   constructor({
-    loa, beam, anchorRollerHeight,
-    gpsBowXDistance, gpsBowYDistance,
-    aisShipType, mmsi,
+    loa,
+    beam,
+    anchorRollerHeight,
+    gpsBowXDistance,
+    gpsBowYDistance,
+    aisShipType,
+    mmsi,
   }) {
     this.loa = loa;
     this.beam = beam;
@@ -21,51 +24,70 @@ class BoatConfig {
   }
 
   static fromSelf(data) {
-    let loa = 0, beam = 0, anchorRollerHeight = 0;
-    let gpsBowXDistance = 0, gpsBowYDistance = 0;
+    let loa = 0,
+      beam = 0,
+      anchorRollerHeight = 0;
+    let gpsBowXDistance = 0,
+      gpsBowYDistance = 0;
     let aisShipType = 0;
 
-    const designLength = SignalKClient.value(data, 'design.length');
+    const designLength = SignalKClient.value(data, "design.length");
     if (designLength !== undefined) loa = parseFloat(designLength.overall);
-    const designBeam = SignalKClient.value(data, 'design.beam');
+    const designBeam = SignalKClient.value(data, "design.beam");
     if (designBeam !== undefined) beam = parseFloat(designBeam);
-    const rollerHeight = SignalKClient.value(data, 'design.bowAnchorRollerHeight');
-    if (rollerHeight !== undefined) anchorRollerHeight = parseFloat(rollerHeight);
-    const fromBow = SignalKClient.value(data, 'sensors.gps.fromBow');
+    const rollerHeight = SignalKClient.value(
+      data,
+      "design.bowAnchorRollerHeight",
+    );
+    if (rollerHeight !== undefined)
+      anchorRollerHeight = parseFloat(rollerHeight);
+    const fromBow = SignalKClient.value(data, "sensors.gps.fromBow");
     if (fromBow !== undefined) gpsBowYDistance = parseFloat(fromBow);
-    const fromCenter = SignalKClient.value(data, 'sensors.gps.fromCenter');
+    const fromCenter = SignalKClient.value(data, "sensors.gps.fromCenter");
     if (fromCenter !== undefined) gpsBowXDistance = parseFloat(fromCenter);
-    const shipType = SignalKClient.value(data, 'design.aisShipType');
+    const shipType = SignalKClient.value(data, "design.aisShipType");
     if (shipType?.id !== undefined) aisShipType = shipType.id;
 
     return new BoatConfig({
-      loa, beam, anchorRollerHeight,
-      gpsBowXDistance, gpsBowYDistance,
-      aisShipType, mmsi: data.mmsi,
+      loa,
+      beam,
+      anchorRollerHeight,
+      gpsBowXDistance,
+      gpsBowYDistance,
+      aisShipType,
+      mmsi: data.mmsi,
     });
   }
 
   // AIS broadcasts are often partial; degrade gracefully rather than refuse
   // to render. Defaults: 14m sailboat (ship type 36 = sailing).
   static fromVessel(vessel) {
-    let loa = 14, beam = 4, aisShipType = 36;
-    let gpsBowXDistance = 0, gpsBowYDistance = 0;
+    let loa = 14,
+      beam = 4,
+      aisShipType = 36;
+    let gpsBowXDistance = 0,
+      gpsBowYDistance = 0;
 
-    const aisFromCenter = SignalKClient.value(vessel, 'sensors.ais.fromCenter');
-    if (aisFromCenter !== undefined) gpsBowXDistance = parseFloat(aisFromCenter);
-    const aisFromBow = SignalKClient.value(vessel, 'sensors.ais.fromBow');
+    const aisFromCenter = SignalKClient.value(vessel, "sensors.ais.fromCenter");
+    if (aisFromCenter !== undefined)
+      gpsBowXDistance = parseFloat(aisFromCenter);
+    const aisFromBow = SignalKClient.value(vessel, "sensors.ais.fromBow");
     if (aisFromBow !== undefined) gpsBowYDistance = parseFloat(aisFromBow);
-    const vesselLength = SignalKClient.value(vessel, 'design.length');
+    const vesselLength = SignalKClient.value(vessel, "design.length");
     if (vesselLength !== undefined) loa = parseFloat(vesselLength.overall);
-    const vesselBeam = SignalKClient.value(vessel, 'design.beam');
+    const vesselBeam = SignalKClient.value(vessel, "design.beam");
     if (vesselBeam !== undefined) beam = parseFloat(vesselBeam);
-    const vesselShipType = SignalKClient.value(vessel, 'design.aisShipType');
+    const vesselShipType = SignalKClient.value(vessel, "design.aisShipType");
     if (vesselShipType?.id !== undefined) aisShipType = vesselShipType.id;
 
     return new BoatConfig({
-      loa, beam, anchorRollerHeight: 0,
-      gpsBowXDistance, gpsBowYDistance,
-      aisShipType, mmsi: vessel.mmsi,
+      loa,
+      beam,
+      anchorRollerHeight: 0,
+      gpsBowXDistance,
+      gpsBowYDistance,
+      aisShipType,
+      mmsi: vessel.mmsi,
     });
   }
 

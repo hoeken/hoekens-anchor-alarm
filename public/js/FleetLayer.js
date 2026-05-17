@@ -8,7 +8,7 @@ const MPS_TO_KNOTS = 1.94384;
 const MAX_OWN_TRACK_POINTS = 3600 * 24; // 24 hours at 1Hz
 
 const GPS_ANTENNA_ICON = L.icon({
-  iconUrl: 'icons/antenna.svg',
+  iconUrl: "icons/antenna.svg",
   iconSize: [25, 25],
   iconAnchor: [13, 25],
 });
@@ -24,7 +24,7 @@ class ShipIcons {
         : "icons/ships/png/catamaran.png";
 
     const range = ShipIcons.RANGES.find(
-      r => aisShipType >= r.start && aisShipType <= r.end
+      (r) => aisShipType >= r.start && aisShipType <= r.end,
     );
 
     return range
@@ -37,34 +37,33 @@ class ShipIcons {
 // Code 36 (sailing) is handled separately to switch on hull aspect ratio.
 // Codes 0, 1-19, 38, 39, 56, 57 are unmapped and fall through to default.png.
 ShipIcons.RANGES = [
-  { start: 20, end: 29, icon: 'wing-in-ground.png' },   // Wing in ground (WIG)
-  { start: 30, end: 30, icon: 'fishing.png' },
-  { start: 31, end: 32, icon: 'towing.png' },
-  { start: 33, end: 33, icon: 'dredging.png' },
-  { start: 34, end: 34, icon: 'diving.png' },
-  { start: 35, end: 35, icon: 'military.png' },
-  { start: 37, end: 37, icon: 'pleasure.png' },
-  { start: 40, end: 49, icon: 'high-speed-craft.png' }, // High speed craft (HSC)
-  { start: 50, end: 50, icon: 'pilot.png' },
-  { start: 51, end: 51, icon: 'sar.png' },
-  { start: 52, end: 52, icon: 'tug.png' },
-  { start: 53, end: 53, icon: 'port-tender.png' },
-  { start: 54, end: 54, icon: 'anti-pollution.png' },
-  { start: 55, end: 55, icon: 'police.png' },
-  { start: 58, end: 58, icon: 'medical.png' },
-  { start: 59, end: 59, icon: 'noncombatant.png' },
-  { start: 60, end: 69, icon: 'passenger.png' },
-  { start: 70, end: 79, icon: 'cargo.png' },
-  { start: 80, end: 89, icon: 'tanker.png' },
-  { start: 90, end: 99, icon: 'other.png' },
+  { start: 20, end: 29, icon: "wing-in-ground.png" }, // Wing in ground (WIG)
+  { start: 30, end: 30, icon: "fishing.png" },
+  { start: 31, end: 32, icon: "towing.png" },
+  { start: 33, end: 33, icon: "dredging.png" },
+  { start: 34, end: 34, icon: "diving.png" },
+  { start: 35, end: 35, icon: "military.png" },
+  { start: 37, end: 37, icon: "pleasure.png" },
+  { start: 40, end: 49, icon: "high-speed-craft.png" }, // High speed craft (HSC)
+  { start: 50, end: 50, icon: "pilot.png" },
+  { start: 51, end: 51, icon: "sar.png" },
+  { start: 52, end: 52, icon: "tug.png" },
+  { start: 53, end: 53, icon: "port-tender.png" },
+  { start: 54, end: 54, icon: "anti-pollution.png" },
+  { start: 55, end: 55, icon: "police.png" },
+  { start: 58, end: 58, icon: "medical.png" },
+  { start: 59, end: 59, icon: "noncombatant.png" },
+  { start: 60, end: 69, icon: "passenger.png" },
+  { start: 70, end: 79, icon: "cargo.png" },
+  { start: 80, end: 89, icon: "tanker.png" },
+  { start: 90, end: 99, icon: "other.png" },
 ];
 
 class FleetLayer {
-
   constructor({ map, ownMmsi }) {
     this.map = map;
     this.ownMmsi = ownMmsi;
-    this.vessels = {};      // mmsi -> L.BoatMarker (with .gpsAntennaMarker attached)
+    this.vessels = {}; // mmsi -> L.BoatMarker (with .gpsAntennaMarker attached)
     this.vesselTracks = {}; // mmsi -> L.hotline
     this.ownVessel = undefined;
     this.ownAntenna = undefined;
@@ -109,7 +108,12 @@ class FleetLayer {
       for (let position of history) {
         const lat = position[1];
         const lon = position[0];
-        const distance = GeoMath.calculateDistance(ownLatLng.lat, ownLatLng.lng, lat, lon);
+        const distance = GeoMath.calculateDistance(
+          ownLatLng.lat,
+          ownLatLng.lng,
+          lat,
+          lon,
+        );
         if (distance < filterRadius) {
           points.push([lat, lon, i]);
           i++;
@@ -145,12 +149,15 @@ class FleetLayer {
     for (let key in vessels) {
       const vessel = vessels[key];
       if (vessel.mmsi == this.ownMmsi) continue;
-      if (!("navigation" in vessel) || !("position" in vessel.navigation)) continue;
+      if (!("navigation" in vessel) || !("position" in vessel.navigation))
+        continue;
 
       const position = vessel.navigation.position.value;
       const distance = GeoMath.calculateDistance(
-        position.latitude, position.longitude,
-        ownLatLng.lat, ownLatLng.lng,
+        position.latitude,
+        position.longitude,
+        ownLatLng.lat,
+        ownLatLng.lng,
       );
       if (distance > filterRadius) continue;
 
@@ -170,7 +177,8 @@ class FleetLayer {
     for (let mmsi in this.vessels) {
       if (!detectedSet.has(mmsi)) {
         const marker = this.vessels[mmsi];
-        if (marker.gpsAntennaMarker) this.map.removeLayer(marker.gpsAntennaMarker);
+        if (marker.gpsAntennaMarker)
+          this.map.removeLayer(marker.gpsAntennaMarker);
         this.map.removeLayer(marker);
         delete this.vessels[mmsi];
         if (this.vesselTracks[mmsi]) {
@@ -185,13 +193,16 @@ class FleetLayer {
   // COG is wonky at low speed, so we gate it on SOG > 1 knot.
   deriveVesselHeading(vessel, twa) {
     let sog = 0;
-    const sogVal = SignalKClient.value(vessel, 'navigation.speedOverGround');
+    const sogVal = SignalKClient.value(vessel, "navigation.speedOverGround");
     if (sogVal !== undefined) sog = sogVal * MPS_TO_KNOTS;
 
-    const headingTrue = SignalKClient.freshValue(vessel, 'navigation.headingTrue');
+    const headingTrue = SignalKClient.freshValue(
+      vessel,
+      "navigation.headingTrue",
+    );
     if (headingTrue !== undefined) return GeoMath.rad2deg(headingTrue);
 
-    const cog = SignalKClient.value(vessel, 'navigation.courseOverGroundTrue');
+    const cog = SignalKClient.value(vessel, "navigation.courseOverGroundTrue");
     if (cog !== undefined && sog > 1) return GeoMath.rad2deg(cog);
 
     if (twa !== null) return twa;
@@ -208,8 +219,15 @@ class FleetLayer {
     const track = this.vesselTracks[vessel.mmsi];
     if (!track) return;
     const last = track.getLatLngs().at(-1);
-    if (last && (last.lat != position.latitude || last.lng != position.longitude)) {
-      track.addLatLng([position.latitude, position.longitude, track.options.max]);
+    if (
+      last &&
+      (last.lat != position.latitude || last.lng != position.longitude)
+    ) {
+      track.addLatLng([
+        position.latitude,
+        position.longitude,
+        track.options.max,
+      ]);
       track.options.max++;
     }
   }
@@ -226,9 +244,12 @@ class FleetLayer {
     });
     marker.addTo(this.map).bindPopup(`${vessel.name} at ${distance} meters`);
 
-    marker.gpsAntennaMarker = L.marker([position.latitude, position.longitude], {
-      icon: GPS_ANTENNA_ICON,
-    }).addTo(this.map);
+    marker.gpsAntennaMarker = L.marker(
+      [position.latitude, position.longitude],
+      {
+        icon: GPS_ANTENNA_ICON,
+      },
+    ).addTo(this.map);
 
     this.vessels[vessel.mmsi] = marker;
 
@@ -243,13 +264,13 @@ class FleetLayer {
 
   createTrack(points, max) {
     return L.hotline(points, {
-      color: 'red',
+      color: "red",
       weight: 1,
       min: 0,
       max: max,
-      palette: { 0.0: 'red', 0.5: 'yellow', 1.0: 'green' },
+      palette: { 0.0: "red", 0.5: "yellow", 1.0: "green" },
       outlineWidth: 0,
-      text: '',
+      text: "",
     }).addTo(this.map);
   }
 }

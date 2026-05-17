@@ -5,7 +5,15 @@
   "main": "index.js",
   "scripts": {
     "test": "$NODE $npm_package_main",
-    "release": "git tag -d v$npm_package_version; git tag v$npm_package_version && git push --tags && git push && npm publish"
+    "release": "git tag -d v$npm_package_version; git tag v$npm_package_version && git push --tags && git push && npm publish",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,json,css,html}": "prettier --write",
+    "*.js": "eslint --fix"
   },
   "keywords": [
     "signalk-node-server-plugin",
@@ -21,11 +29,19 @@
   },
   "license": "ISC",
   "dependencies": {
-    "geolib": "^3.3.3",
     "@signalk/tracks-plugin": "^2.0.2"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hoeken/hoekens-anchor-alarm.git"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.4.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.6.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.3"
   }
 }

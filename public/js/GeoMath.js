@@ -1,12 +1,11 @@
 class GeoMath {
-
   static deg2rad(deg) {
-    return deg * (Math.PI / 180)
+    return deg * (Math.PI / 180);
   }
 
   // Convert radians to degrees
   static rad2deg(radians) {
-    return radians * 180 / Math.PI;
+    return (radians * 180) / Math.PI;
   }
 
   static normalizeAngle(angle) {
@@ -29,9 +28,10 @@ class GeoMath {
     let dLon = GeoMath.deg2rad(lon2 - lon1);
     let a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(GeoMath.deg2rad(lat1)) * Math.cos(GeoMath.deg2rad(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2)
-      ;
+      Math.cos(GeoMath.deg2rad(lat1)) *
+        Math.cos(GeoMath.deg2rad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
     let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     let d = R * c; // Distance in m
     return d;
@@ -45,7 +45,8 @@ class GeoMath {
 
     // Calculate X and Y using the provided formulas
     var X = Math.cos(θb) * Math.sin(ΔL);
-    var Y = Math.cos(θa) * Math.sin(θb) - Math.sin(θa) * Math.cos(θb) * Math.cos(ΔL);
+    var Y =
+      Math.cos(θa) * Math.sin(θb) - Math.sin(θa) * Math.cos(θb) * Math.cos(ΔL);
 
     // Calculate the initial bearing (β) in radians
     var β = Math.atan2(X, Y);
@@ -70,7 +71,6 @@ class GeoMath {
    * @returns {{ latitude: number, longitude: number }} - The destination latitude and longitude.
    */
   static calculateDestinationPoint(lat1, lon1, bearing, distance) {
-
     const R = 6371e3; // Earth's radius in meters
 
     // Convert input values to radians
@@ -96,18 +96,28 @@ class GeoMath {
 
     // Convert radians back to degrees
     const lat2 = (φ2 * 180) / Math.PI;
-    const lon2 = ((λ2 * 180) / Math.PI + 540) % 360 - 180; // Normalize to [-180, +180]
+    const lon2 = (((λ2 * 180) / Math.PI + 540) % 360) - 180; // Normalize to [-180, +180]
 
     return { latitude: lat2, longitude: lon2 };
   }
 
   static calculateBowCoordinates(current, heading, xOffset, yOffset) {
     //first do our Y along our heading.
-    let bc = GeoMath.calculateDestinationPoint(current.lat, current.lng, heading, yOffset);
+    let bc = GeoMath.calculateDestinationPoint(
+      current.lat,
+      current.lng,
+      heading,
+      yOffset,
+    );
 
     //then do our X at 90 degrees.
     if (xOffset != 0)
-      bc = GeoMath.calculateDestinationPoint(bc.latitude, bc.longitude, heading - 90, xOffset);
+      bc = GeoMath.calculateDestinationPoint(
+        bc.latitude,
+        bc.longitude,
+        heading - 90,
+        xOffset,
+      );
 
     //okay use the new bow coordinates
     return L.latLng(bc.latitude, bc.longitude);
@@ -123,11 +133,23 @@ class GeoMath {
    * @param {Date|string|number} [currentTime=new Date()] — time to estimate
    * @returns {number} smoothly interpolated tide height
    */
-  static estimateTideHeightSmooth(lowTime, lowHeight, highTime, highHeight, currentTime = new Date()) {
+  static estimateTideHeightSmooth(
+    lowTime,
+    lowHeight,
+    highTime,
+    highHeight,
+    currentTime = new Date(),
+  ) {
     // normalize inputs to UTC timestamps
-    const tLow = (lowTime instanceof Date ? lowTime : new Date(lowTime)).getTime();
-    const tHigh = (highTime instanceof Date ? highTime : new Date(highTime)).getTime();
-    const tCurrent = (currentTime instanceof Date ? currentTime : new Date(currentTime)).getTime();
+    const tLow = (
+      lowTime instanceof Date ? lowTime : new Date(lowTime)
+    ).getTime();
+    const tHigh = (
+      highTime instanceof Date ? highTime : new Date(highTime)
+    ).getTime();
+    const tCurrent = (
+      currentTime instanceof Date ? currentTime : new Date(currentTime)
+    ).getTime();
 
     let t0, h0, t1, h1;
 
@@ -136,29 +158,41 @@ class GeoMath {
       // rising: low → high
       if (tCurrent <= tLow) {
         // extrapolate previous high tide one half-period before the known low
-        t0 = tLow - (tHigh - tLow); h0 = highHeight;
-        t1 = tLow; h1 = lowHeight;
+        t0 = tLow - (tHigh - tLow);
+        h0 = highHeight;
+        t1 = tLow;
+        h1 = lowHeight;
       } else if (tCurrent >= tHigh) {
         // extrapolate next low tide one half-period after the known high
-        t0 = tHigh; h0 = highHeight;
-        t1 = tHigh + (tHigh - tLow); h1 = lowHeight;
+        t0 = tHigh;
+        h0 = highHeight;
+        t1 = tHigh + (tHigh - tLow);
+        h1 = lowHeight;
       } else {
-        t0 = tLow; h0 = lowHeight;
-        t1 = tHigh; h1 = highHeight;
+        t0 = tLow;
+        h0 = lowHeight;
+        t1 = tHigh;
+        h1 = highHeight;
       }
     } else {
       // falling: high → low
       if (tCurrent <= tHigh) {
         // extrapolate previous low tide one half-period before the known high
-        t0 = tHigh - (tLow - tHigh); h0 = lowHeight;
-        t1 = tHigh; h1 = highHeight;
+        t0 = tHigh - (tLow - tHigh);
+        h0 = lowHeight;
+        t1 = tHigh;
+        h1 = highHeight;
       } else if (tCurrent >= tLow) {
         // extrapolate next high tide one half-period after the known low
-        t0 = tLow; h0 = lowHeight;
-        t1 = tLow + (tLow - tHigh); h1 = highHeight;
+        t0 = tLow;
+        h0 = lowHeight;
+        t1 = tLow + (tLow - tHigh);
+        h1 = highHeight;
       } else {
-        t0 = tHigh; h0 = highHeight;
-        t1 = tLow; h1 = lowHeight;
+        t0 = tHigh;
+        h0 = highHeight;
+        t1 = tLow;
+        h1 = lowHeight;
       }
     }
 

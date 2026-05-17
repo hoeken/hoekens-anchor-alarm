@@ -4,14 +4,13 @@
 // old anchor data.
 
 class StaleReloader {
-
   constructor({ staleThresholdMs }) {
     this.staleThresholdMs = staleThresholdMs;
     this.hiddenAt = null;
   }
 
   start() {
-    document.addEventListener('visibilitychange', () => {
+    document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         this.hiddenAt = Date.now();
       } else if (this.hiddenAt !== null) {
@@ -23,7 +22,7 @@ class StaleReloader {
       }
     });
 
-    window.addEventListener('pageshow', (event) => {
+    window.addEventListener("pageshow", (event) => {
       if (event.persisted) {
         window.location.reload();
       }

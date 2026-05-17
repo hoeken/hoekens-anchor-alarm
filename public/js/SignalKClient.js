@@ -7,8 +7,7 @@
 const SIGNALK_DEFAULT_FRESHNESS_SEC = 300;
 
 class SignalKClient {
-
-  constructor({ baseUrl = '', pluginName = null } = {}) {
+  constructor({ baseUrl = "", pluginName = null } = {}) {
     this.baseUrl = baseUrl;
     this.pluginName = pluginName;
   }
@@ -17,26 +16,27 @@ class SignalKClient {
   // reject with { status, statusText } on HTTP errors. A WS rewrite would swap
   // these for delta-fed cache reads without changing call sites.
   request(path) {
-    return fetch(`${this.baseUrl}/signalk/v1/api/${path}`)
-      .then(SignalKClient._toJsonOrReject);
+    return fetch(`${this.baseUrl}/signalk/v1/api/${path}`).then(
+      SignalKClient._toJsonOrReject,
+    );
   }
 
   raiseAnchor() {
-    return this.pluginPost('raiseAnchor');
+    return this.pluginPost("raiseAnchor");
   }
 
   dropAnchor(position, radius) {
-    return this.pluginPost('dropAnchor', { position, radius });
+    return this.pluginPost("dropAnchor", { position, radius });
   }
 
   setRadius(radius) {
-    return this.pluginPost('setRadius', { radius });
+    return this.pluginPost("setRadius", { radius });
   }
 
   pluginPost(action, data) {
     return fetch(`${this.baseUrl}/plugins/${this.pluginName}/${action}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data ?? {}),
     }).then((response) => {
       if (response.status === 401) location.href = "/admin/#/login";
@@ -46,41 +46,54 @@ class SignalKClient {
 
   static _toJsonOrReject(response) {
     if (!response.ok) {
-      return Promise.reject({ status: response.status, statusText: response.statusText });
+      return Promise.reject({
+        status: response.status,
+        statusText: response.statusText,
+      });
     }
     return response.json();
   }
 
-  fetchSelf() { return this.request('vessels/self'); }
-  fetchAllVessels() { return this.request('vessels'); }
-  fetchTracks(radius) { return this.request(`tracks?radius=${radius}`); }
+  fetchSelf() {
+    return this.request("vessels/self");
+  }
+  fetchAllVessels() {
+    return this.request("vessels");
+  }
+  fetchTracks(radius) {
+    return this.request(`tracks?radius=${radius}`);
+  }
 
   // Walk a subtree by dot-separated path. An empty path returns the tree itself
   // so callers can pass a notification envelope and read its `.value` via value().
-  static extract(tree, path = '') {
+  static extract(tree, path = "") {
     if (!tree) return null;
     if (!path) return tree;
     let node = tree;
-    for (const key of path.split('.')) {
-      if (node == null || typeof node !== 'object') return null;
+    for (const key of path.split(".")) {
+      if (node == null || typeof node !== "object") return null;
       node = node[key];
     }
     return node ?? null;
   }
 
-  static value(tree, path = '', fallback = undefined) {
+  static value(tree, path = "", fallback = undefined) {
     const node = this.extract(tree, path);
-    return (node && node.value !== undefined) ? node.value : fallback;
+    return node && node.value !== undefined ? node.value : fallback;
   }
 
-  static freshValue(tree, path = '', { maxAge = SIGNALK_DEFAULT_FRESHNESS_SEC, fallback = undefined } = {}) {
+  static freshValue(
+    tree,
+    path = "",
+    { maxAge = SIGNALK_DEFAULT_FRESHNESS_SEC, fallback = undefined } = {},
+  ) {
     const node = this.extract(tree, path);
     if (!node || node.value === undefined) return fallback;
     if (!this.isFresh(node, maxAge)) {
       const ageSec = node.timestamp
         ? Math.round((Date.now() - new Date(node.timestamp).getTime()) / 1000)
-        : 'unknown';
-      const msg = `Stale SignalK value: ${path || '(root)'}<br/>Age ${ageSec}s, Max ${maxAge}s`;
+        : "unknown";
+      const msg = `Stale SignalK value: ${path || "(root)"}<br/>Age ${ageSec}s, Max ${maxAge}s`;
       console.warn(msg);
       SignalKClient.errorHandler?.(msg);
       return fallback;

@@ -1,43 +1,58 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <title>Hoeken's Anchor Alarm</title>
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="favicons/apple-touch-icon.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="favicons/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="favicons/favicon-16x16.png"
+    />
+    <link rel="manifest" href="site.webmanifest" />
 
-<head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Hoeken's Anchor Alarm</title>
-  <link rel="apple-touch-icon" sizes="180x180" href="favicons/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="favicons/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="favicons/favicon-16x16.png">
-  <link rel="manifest" href="site.webmanifest">
+    <link rel="preload" href="icons/anchor.png" as="image" />
+    <link rel="preload" href="icons/crosshair.png" as="image" />
 
-  <link rel="preload" href="icons/anchor.png" as="image">
-  <link rel="preload" href="icons/crosshair.png" as="image">
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="leaflet/leaflet.css" />
+    <script src="js/WindBarb.js"></script>
+    <script src="leaflet/leaflet.js"></script>
+    <script src="leaflet/leaflet.BoatMarker.js"></script>
+    <script src="leaflet/leaflet.WindBarb.js"></script>
+    <script src="leaflet/leaflet.hotline.js"></script>
+    <script src="leaflet/leaflet.textpath.js"></script>
+    <script src="js/GeoMath.js"></script>
+    <script src="js/SignalKClient.js"></script>
+    <script src="js/BoatConfig.js"></script>
+    <script src="js/FleetLayer.js"></script>
+    <script src="js/HudPanels.js"></script>
+    <script src="js/StaleReloader.js"></script>
+    <script src="js/AnchorOverlay.js"></script>
+    <script src="js/AnchorController.js"></script>
+    <script src="js/ControlToolbar.js"></script>
+    <script src="js/AnchorAlarm.js"></script>
+  </head>
 
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="leaflet/leaflet.css" />
-  <script src="js/WindBarb.js"></script>
-  <script src="leaflet/leaflet.js"></script>
-  <script src="leaflet/leaflet.BoatMarker.js"></script>
-  <script src="leaflet/leaflet.WindBarb.js"></script>
-  <script src="leaflet/leaflet.hotline.js"></script>
-  <script src="leaflet/leaflet.textpath.js"></script>
-  <script src="js/GeoMath.js"></script>
-  <script src="js/SignalKClient.js"></script>
-  <script src="js/BoatConfig.js"></script>
-  <script src="js/FleetLayer.js"></script>
-  <script src="js/HudPanels.js"></script>
-  <script src="js/StaleReloader.js"></script>
-  <script src="js/AnchorOverlay.js"></script>
-  <script src="js/AnchorController.js"></script>
-  <script src="js/ControlToolbar.js"></script>
-  <script src="js/AnchorAlarm.js"></script>
-</head>
-
-<body>
-  <div id="map_container">
-    <div id="map"></div>
-  </div>
-</body>
-
+  <body>
+    <div id="map_container">
+      <div id="map"></div>
+    </div>
+  </body>
 </html>

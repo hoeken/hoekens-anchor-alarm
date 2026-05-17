@@ -1,0 +1,7 @@
+node_modules
+package-lock.json
+public/leaflet
+public/favicons
+public/icons
+public/anchoralarm.png
+*.md

@@ -10,14 +10,13 @@
 //     ignored entirely while a user request is in flight.
 
 const AnchorState = Object.freeze({
-  UP: 'UP',
-  DROPPING: 'DROPPING',
-  ANCHORED: 'ANCHORED',
-  RAISING: 'RAISING',
+  UP: "UP",
+  DROPPING: "DROPPING",
+  ANCHORED: "ANCHORED",
+  RAISING: "RAISING",
 });
 
 class AnchorController {
-
   constructor({ overlay, toolbar, signalK, infoPanel, scopePanel, onError }) {
     this._overlay = overlay;
     this._toolbar = toolbar;
@@ -32,7 +31,7 @@ class AnchorController {
   }
 
   _reportError(prefix, err) {
-    const detail = err?.statusText || err?.message || 'unknown error';
+    const detail = err?.statusText || err?.message || "unknown error";
     this._onError?.(`${prefix}: ${detail}`);
   }
 
@@ -56,7 +55,7 @@ class AnchorController {
         // a green "anchored" UI that doesn't match reality.
         this.state = AnchorState.UP;
         this._enterRaised();
-        this._reportError('Failed to drop anchor', err);
+        this._reportError("Failed to drop anchor", err);
       });
   }
 
@@ -77,7 +76,7 @@ class AnchorController {
       .catch((err) => {
         this.state = AnchorState.ANCHORED;
         this._enterDropped(previousAnchor, previousRadius);
-        this._reportError('Failed to raise anchor', err);
+        this._reportError("Failed to raise anchor", err);
       });
   }
 
@@ -87,8 +86,9 @@ class AnchorController {
     this._overlay.setRadius(newRadius);
 
     if (this.state === AnchorState.ANCHORED) {
-      this._signalK.setRadius(newRadius)
-        .catch((err) => this._reportError('Failed to set radius', err));
+      this._signalK
+        .setRadius(newRadius)
+        .catch((err) => this._reportError("Failed to set radius", err));
     }
   }
 
@@ -97,7 +97,8 @@ class AnchorController {
   // Apply server-side anchor state. Skipped while a drop/raise POST is in flight —
   // the server doesn't reflect our pending change yet and would flip us back.
   reconcile({ on, position, maxRadius }) {
-    if (this.state !== AnchorState.UP && this.state !== AnchorState.ANCHORED) return;
+    if (this.state !== AnchorState.UP && this.state !== AnchorState.ANCHORED)
+      return;
 
     if (on) {
       this.anchorCoordinates = position;
