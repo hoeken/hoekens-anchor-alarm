@@ -72,16 +72,13 @@ class FleetLayer {
 
   // Own boat is kept outside the AIS vessels dict so syncOtherVessels never
   // removes it.
-  setOwnVessel(coords, heading, { beam, loa, gpsBowXDistance, gpsBowYDistance, aisShipType }) {
-    // BoatMarker takes x-offset from the left edge of the hull, not center.
-    const xOffset = beam / 2 + gpsBowXDistance;
-
+  setOwnVessel(coords, heading, boatConfig) {
     this.ownVessel = new L.BoatMarker(coords, {
-      beam: beam,
-      loa: loa,
-      gpsOffset: { x: xOffset, y: gpsBowYDistance },
+      beam: boatConfig.beam,
+      loa: boatConfig.loa,
+      gpsOffset: boatConfig.bowOffset,
       heading: heading,
-      icon: ShipIcons.iconFor(aisShipType, loa / beam),
+      icon: boatConfig.icon,
     }).addTo(this.map);
 
     this.ownAntenna = L.marker(coords, {
@@ -212,33 +209,14 @@ class FleetLayer {
   }
 
   addNewVessel(vessel, position, heading, distance) {
-    // AIS defaults for missing fields. 36 = sailing, see ShipIcons.iconFor.
-    let loa = 14;
-    let beam = 4;
-    let aisShipType = 36;
-    let gpsXOffset = 0;
-    let gpsYOffset = 0;
-
-    const aisFromCenter = SignalKClient.value(vessel, 'sensors.ais.fromCenter');
-    if (aisFromCenter !== undefined) gpsXOffset = parseFloat(aisFromCenter);
-    const aisFromBow = SignalKClient.value(vessel, 'sensors.ais.fromBow');
-    if (aisFromBow !== undefined) gpsYOffset = parseFloat(aisFromBow);
-    const vesselLength = SignalKClient.value(vessel, 'design.length');
-    if (vesselLength !== undefined) loa = parseFloat(vesselLength.overall);
-    const vesselBeam = SignalKClient.value(vessel, 'design.beam');
-    if (vesselBeam !== undefined) beam = parseFloat(vesselBeam);
-    const vesselShipType = SignalKClient.value(vessel, 'design.aisShipType');
-    if (vesselShipType?.id !== undefined) aisShipType = vesselShipType.id;
-
-    // BoatMarker takes x-offset from the left edge of the hull, not center.
-    const xOffset = beam / 2 + gpsXOffset;
+    const config = BoatConfig.fromVessel(vessel);
 
     const marker = new L.BoatMarker([position.latitude, position.longitude], {
-      beam: beam,
-      loa: loa,
-      gpsOffset: { x: xOffset, y: gpsYOffset },
+      beam: config.beam,
+      loa: config.loa,
+      gpsOffset: config.bowOffset,
       heading: heading,
-      icon: ShipIcons.iconFor(aisShipType, loa / beam),
+      icon: config.icon,
     });
     marker.addTo(this.map).bindPopup(`${vessel.name} at ${distance} meters`);
 

@@ -21,18 +21,12 @@ class AnchorAlarm {
     this.currentCoordinates = undefined;
     this.anchorCoordinates = undefined;
     this.filterRadius = 500;
-    this.mmsi = undefined;
     this.maxRadius = 50;
 
     this.twa = null;
     this.aws = null;
 
-    this.boatLOA = 0;
-    this.boatBeam = 0;
-    this.boatAnchorRollerHeight = 0;
-    this.gpsBowYDistance = 0;
-    this.gpsBowXDistance = 0;
-    this.aisShipType = 0;
+    this.boatConfig = undefined;
     this.tidalRise = 0;
     this.tidalFall = 0;
 
@@ -110,13 +104,12 @@ class AnchorAlarm {
 
   loadInitialData() {
     this.signalK.fetchSelf().done((data) => {
-      this.mmsi = data.mmsi;
+      this.boatConfig = BoatConfig.fromSelf(data);
 
       const belowKeel = SignalKClient.freshValue(data, 'environment.depth.belowKeel', { fallback: 0 });
       const belowSurface = SignalKClient.freshValue(data, 'environment.depth.belowSurface', { fallback: 0 });
 
       this.applyInitialWindState(data);
-      this.applyBoatConfig(data);
       this.applyInitialTide(data);
 
       const anchorDistanceGuess = this.calculateScope(5, belowSurface);
@@ -129,14 +122,8 @@ class AnchorAlarm {
 
       this.heading = this.computeInitialHeading(data);
 
-      this.fleetLayer = new FleetLayer({ map: this.map, ownMmsi: this.mmsi });
-      this.fleetLayer.setOwnVessel(this.currentCoordinates, this.heading, {
-        beam: this.boatBeam,
-        loa: this.boatLOA,
-        gpsBowXDistance: this.gpsBowXDistance,
-        gpsBowYDistance: this.gpsBowYDistance,
-        aisShipType: this.aisShipType,
-      });
+      this.fleetLayer = new FleetLayer({ map: this.map, ownMmsi: this.boatConfig.mmsi });
+      this.fleetLayer.setOwnVessel(this.currentCoordinates, this.heading, this.boatConfig);
 
       this.placeAnchorWidgets();
       this.restoreAnchorState(data, anchorDistanceGuess);
@@ -160,21 +147,6 @@ class AnchorAlarm {
     if (directionTrue !== undefined) this.twa = GeoMath.rad2deg(directionTrue);
   }
 
-  applyBoatConfig(data) {
-    const designLength = SignalKClient.value(data, 'design.length');
-    if (designLength !== undefined) this.boatLOA = parseFloat(designLength.overall);
-    const designBeam = SignalKClient.value(data, 'design.beam');
-    if (designBeam !== undefined) this.boatBeam = parseFloat(designBeam);
-    const rollerHeight = SignalKClient.value(data, 'design.bowAnchorRollerHeight');
-    if (rollerHeight !== undefined) this.boatAnchorRollerHeight = parseFloat(rollerHeight);
-    const fromBow = SignalKClient.value(data, 'sensors.gps.fromBow');
-    if (fromBow !== undefined) this.gpsBowYDistance = fromBow;
-    const fromCenter = SignalKClient.value(data, 'sensors.gps.fromCenter');
-    if (fromCenter !== undefined) this.gpsBowXDistance = fromCenter;
-    const shipType = SignalKClient.value(data, 'design.aisShipType');
-    if (shipType?.id !== undefined) this.aisShipType = shipType.id;
-  }
-
   applyInitialTide(data) {
     const tide = SignalKClient.extract(data, 'environment.tide');
     if (!tide) return;
@@ -190,7 +162,7 @@ class AnchorAlarm {
   // 5-meter step and clamped to [0, 200].
   computeDefaultRadius(anchorDistanceGuess) {
     let r = anchorDistanceGuess;
-    r += GeoMath.calculateVectorDistance(this.gpsBowXDistance, this.gpsBowYDistance);
+    r += GeoMath.calculateVectorDistance(this.boatConfig.gpsBowXDistance, this.boatConfig.gpsBowYDistance);
     r *= 1.5;
     r = Math.round(r / 5) * 5;
     r = Math.max(0, r);
@@ -267,7 +239,7 @@ class AnchorAlarm {
 
   placeAnchorWidgets() {
     this.anchorOverlay = new AnchorOverlay({ map: this.map, radius: this.maxRadius })
-      .setBoatPosition(this.currentCoordinates, this.heading, { x: this.gpsBowXDistance, y: this.gpsBowYDistance })
+      .setBoatPosition(this.currentCoordinates, this.heading, this.boatConfig.gpsOffset)
       .onCrosshairDrag((pos) => {
         if (this.state !== AnchorState.ANCHORED) {
           this.anchorCoordinates = pos;
@@ -287,7 +259,7 @@ class AnchorAlarm {
       this.state = AnchorState.ANCHORED;
       this.dropAnchor(this.anchorCoordinates, radius);
     } else {
-      const bowPos = GeoMath.calculateBowCoordinates(this.currentCoordinates, this.heading, this.gpsBowXDistance, this.gpsBowYDistance);
+      const bowPos = GeoMath.calculateBowCoordinates(this.currentCoordinates, this.heading, this.boatConfig.gpsBowXDistance, this.boatConfig.gpsBowYDistance);
       const anchorPositionGuess = GeoMath.calculateDestinationPoint(bowPos.lat, bowPos.lng, this.heading, anchorDistanceGuess);
       this.anchorCoordinates = L.latLng(anchorPositionGuess.latitude, anchorPositionGuess.longitude);
       this.raiseAnchor();
@@ -338,7 +310,7 @@ class AnchorAlarm {
 
       this.anchorOverlay.setBoatPosition(
         this.currentCoordinates, this.heading,
-        { x: this.gpsBowXDistance, y: this.gpsBowYDistance },
+        this.boatConfig.gpsOffset,
       );
     });
   }
@@ -360,7 +332,7 @@ class AnchorAlarm {
       this.scopePanel.setScopeData({
         depthBelowSurface: parseFloat(belowSurface),
         depthBelowKeel: parseFloat(belowKeel),
-        bowHeight: this.boatAnchorRollerHeight,
+        bowHeight: this.boatConfig.anchorRollerHeight,
         tidalRise: this.tidalRise,
         tidalFall: this.tidalFall,
         scopes: {
@@ -482,7 +454,7 @@ class AnchorAlarm {
 
   calculateScope(scope, dbs) {
     let maxHeight = dbs;
-    maxHeight += this.boatAnchorRollerHeight; // height of the bow roller
+    maxHeight += this.boatConfig.anchorRollerHeight; // height of the bow roller
     maxHeight += this.tidalRise;              // delta to high tide
     return maxHeight * scope;
   }
