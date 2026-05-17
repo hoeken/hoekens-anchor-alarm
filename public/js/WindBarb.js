@@ -239,7 +239,7 @@ const getSvgPath = function (windSpeed) {
   return WindBarb[getSvgKey(windSpeed)];
 };
 
-const getWindBarb = function (windSpeed) {
+export const getWindBarb = function (windSpeed) {
   const key = getSvgKey(windSpeed);
   return `
         <svg xmlns="http://www.w3.org/2000/svg" class="wind-barb" viewBox="${WindBarbViewBox[key]}">
@@ -247,5 +247,3 @@ const getWindBarb = function (windSpeed) {
         </svg>
     `;
 };
-
-// export { getWindBarb };

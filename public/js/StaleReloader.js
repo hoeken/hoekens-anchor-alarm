@@ -3,7 +3,7 @@
 // with stale DOM state, so we force a fresh load instead of showing minutes-
 // old anchor data.
 
-class StaleReloader {
+export class StaleReloader {
   constructor({ staleThresholdMs }) {
     this.staleThresholdMs = staleThresholdMs;
     this.hiddenAt = null;

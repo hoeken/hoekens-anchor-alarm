@@ -3,6 +3,22 @@
 // HudPanels (Info/Scope/Wind/Home), and hands the anchor state machine to
 // AnchorController.
 
+import { GeoMath } from "./GeoMath.js";
+import { SignalKClient } from "./SignalKClient.js";
+import { BoatConfig } from "./BoatConfig.js";
+import { FleetLayer } from "./FleetLayer.js";
+import {
+  StatusBar,
+  HomeButtonControl,
+  InfoPanel,
+  WindPanel,
+  ScopePanel,
+} from "./HudPanels.js";
+import { StaleReloader } from "./StaleReloader.js";
+import { AnchorOverlay } from "./AnchorOverlay.js";
+import { AnchorController, AnchorState } from "./AnchorController.js";
+import { ControlToolbar } from "./ControlToolbar.js";
+
 const POLL_INTERVAL_MS = 1000;
 const FLEET_POLL_INTERVAL_MS = 5000;
 const INITIAL_LOAD_RETRY_MS = 5000;
@@ -521,8 +537,4 @@ class AnchorAlarm {
   }
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => AnchorAlarm.startup());
-} else {
-  AnchorAlarm.startup();
-}
+AnchorAlarm.startup();

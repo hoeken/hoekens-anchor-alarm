@@ -4,7 +4,10 @@
 // /self) and AIS-detected vessels (fromVessel, parsed from a /vessels record
 // with permissive defaults for the often-missing fields).
 
-class BoatConfig {
+import { SignalKClient } from "./SignalKClient.js";
+import { ShipIcons } from "./ShipIcons.js";
+
+export class BoatConfig {
   constructor({
     loa,
     beam,

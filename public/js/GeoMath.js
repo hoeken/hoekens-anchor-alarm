@@ -1,4 +1,6 @@
-class GeoMath {
+export const MPS_TO_KNOTS = 1.94384;
+
+export class GeoMath {
   static deg2rad(deg) {
     return deg * (Math.PI / 180);
   }

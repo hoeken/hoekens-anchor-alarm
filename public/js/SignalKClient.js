@@ -6,7 +6,7 @@
 
 const SIGNALK_DEFAULT_FRESHNESS_SEC = 300;
 
-class SignalKClient {
+export class SignalKClient {
   constructor({ baseUrl = "", pluginName = null } = {}) {
     this.baseUrl = baseUrl;
     this.pluginName = pluginName;

@@ -22,7 +22,7 @@ module.exports = [
   {
     files: ["public/js/**/*.js"],
     languageOptions: {
-      sourceType: "script",
+      sourceType: "module",
       globals: { ...globals.browser, L: "readonly" },
     },
     rules: {

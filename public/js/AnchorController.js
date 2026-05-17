@@ -9,14 +9,14 @@
 //   - Server-initiated (reconcile): transitions UP↔ANCHORED directly, no POST,
 //     ignored entirely while a user request is in flight.
 
-const AnchorState = Object.freeze({
+export const AnchorState = Object.freeze({
   UP: "UP",
   DROPPING: "DROPPING",
   ANCHORED: "ANCHORED",
   RAISING: "RAISING",
 });
 
-class AnchorController {
+export class AnchorController {
   constructor({ overlay, toolbar, signalK, infoPanel, scopePanel, onError }) {
     this._overlay = overlay;
     this._toolbar = toolbar;

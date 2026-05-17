@@ -3,7 +3,10 @@
 // touching the document directly. Element IDs are preserved for CSS hooks in
 // style.css; do not rename without updating the stylesheet.
 
-const StatusBar = L.Control.extend({
+import { GeoMath, MPS_TO_KNOTS } from "./GeoMath.js";
+import { getWindBarb } from "./WindBarb.js";
+
+export const StatusBar = L.Control.extend({
   options: { position: "bottomright" },
 
   onAdd: function () {
@@ -40,7 +43,7 @@ const StatusBar = L.Control.extend({
   },
 });
 
-const HomeButtonControl = L.Control.extend({
+export const HomeButtonControl = L.Control.extend({
   options: {
     position: "topright",
     onHome: null,
@@ -68,7 +71,7 @@ const HomeButtonControl = L.Control.extend({
   },
 });
 
-const InfoPanel = L.Control.extend({
+export const InfoPanel = L.Control.extend({
   options: { position: "bottomright" },
 
   onAdd: function () {
@@ -117,7 +120,7 @@ const InfoPanel = L.Control.extend({
   },
 });
 
-const WindPanel = L.Control.extend({
+export const WindPanel = L.Control.extend({
   options: { position: "bottomright" },
 
   onAdd: function () {
@@ -169,7 +172,7 @@ const WindPanel = L.Control.extend({
   },
 });
 
-const ScopePanel = L.Control.extend({
+export const ScopePanel = L.Control.extend({
   options: { position: "bottomright" },
 
   onAdd: function () {
