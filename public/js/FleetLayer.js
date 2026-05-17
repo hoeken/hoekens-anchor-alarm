@@ -24,16 +24,18 @@ export class FleetLayer {
     this.vesselTracks = {}; // mmsi -> L.hotline
     this.ownVessel = undefined;
     this.ownAntenna = undefined;
+    this.ownBoatConfig = undefined;
   }
 
   // Own boat is kept outside the AIS vessels dict so syncOtherVessels never
   // removes it.
-  setOwnVessel(coords, heading, boatConfig) {
+  setOwnVessel(coords, boatConfig) {
+    this.ownBoatConfig = boatConfig;
     this.ownVessel = new L.BoatMarker(coords, {
       beam: boatConfig.beam,
       loa: boatConfig.loa,
       gpsOffset: boatConfig.bowOffset,
-      heading: heading,
+      heading: boatConfig.heading,
       icon: boatConfig.icon,
     }).addTo(this.map);
 
@@ -42,9 +44,9 @@ export class FleetLayer {
     }).addTo(this.map);
   }
 
-  updateOwnPosition(coords, heading) {
+  updateOwnPosition(coords) {
     this.ownVessel.setLatLng(coords);
-    this.ownVessel.setHeading(heading);
+    this.ownVessel.setHeading(this.ownBoatConfig.heading);
     this.ownAntenna.setLatLng(coords);
   }
 

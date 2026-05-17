@@ -16,6 +16,7 @@ export class BoatConfig {
     gpsBowYDistance,
     aisShipType,
     mmsi,
+    heading,
   }) {
     this.loa = loa;
     this.beam = beam;
@@ -24,6 +25,7 @@ export class BoatConfig {
     this.gpsBowYDistance = gpsBowYDistance;
     this.aisShipType = aisShipType;
     this.mmsi = mmsi;
+    this.heading = heading;
   }
 
   static fromSelf(data) {

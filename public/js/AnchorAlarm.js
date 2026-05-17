@@ -27,7 +27,6 @@ class AnchorAlarm {
   constructor() {
     this.signalK = new SignalKClient({ pluginName: "hoekens-anchor-alarm" });
 
-    this.heading = undefined;
     this.currentCoordinates = undefined;
     this.filterRadius = 500;
 
@@ -140,17 +139,13 @@ class AnchorAlarm {
 
         this.paintInitialReadings(belowSurface, belowKeel, data);
 
-        this.heading = this.computeInitialHeading(data);
+        this.boatConfig.heading = this.computeInitialHeading(data);
 
         this.fleetLayer = new FleetLayer({
           map: this.map,
           ownMmsi: this.boatConfig.mmsi,
         });
-        this.fleetLayer.setOwnVessel(
-          this.currentCoordinates,
-          this.heading,
-          this.boatConfig,
-        );
+        this.fleetLayer.setOwnVessel(this.currentCoordinates, this.boatConfig);
 
         this.placeAnchorWidgets();
         this.restoreAnchorState(data);
@@ -329,7 +324,7 @@ class AnchorAlarm {
       radius: 0,
     }).setBoatPosition(
       this.currentCoordinates,
-      this.heading,
+      this.boatConfig.heading,
       this.boatConfig.gpsOffset,
     );
 
@@ -368,14 +363,14 @@ class AnchorAlarm {
     this.anchorController.setRadius(this.computeDefaultRadius(distance));
     const bow = GeoMath.calculateBowCoordinates(
       this.currentCoordinates,
-      this.heading,
+      this.boatConfig.heading,
       this.boatConfig.gpsBowXDistance,
       this.boatConfig.gpsBowYDistance,
     );
     const guess = GeoMath.calculateDestinationPoint(
       bow.lat,
       bow.lng,
-      this.heading,
+      this.boatConfig.heading,
       distance,
     );
     this.anchorController.restoreRaised(
@@ -431,11 +426,11 @@ class AnchorAlarm {
 
     const headingTrue = SignalKClient.freshValue(nav, "headingTrue");
     if (headingTrue !== undefined) {
-      this.heading = GeoMath.rad2deg(headingTrue);
+      this.boatConfig.heading = GeoMath.rad2deg(headingTrue);
     } else {
       // No live heading — point at the anchor instead.
       const anchor = this.anchorController.anchorCoordinates;
-      this.heading = Math.round(
+      this.boatConfig.heading = Math.round(
         GeoMath.calculateBearing(
           this.currentCoordinates.lat,
           this.currentCoordinates.lng,
@@ -445,12 +440,12 @@ class AnchorAlarm {
       );
     }
 
-    this.fleetLayer.updateOwnPosition(this.currentCoordinates, this.heading);
+    this.fleetLayer.updateOwnPosition(this.currentCoordinates);
     this.fleetLayer.appendOwnTrack(this.currentCoordinates);
 
     this.anchorOverlay.setBoatPosition(
       this.currentCoordinates,
-      this.heading,
+      this.boatConfig.heading,
       this.boatConfig.gpsOffset,
     );
   }
