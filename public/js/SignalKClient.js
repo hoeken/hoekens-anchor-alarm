@@ -40,9 +40,9 @@ class SignalKClient {
       });
   }
 
-  fetchSelf()              { return this.request('vessels/self'); }
-  fetchAllVessels()        { return this.request('vessels'); }
-  fetchTracks(radius)      { return this.request(`tracks?radius=${radius}`); }
+  fetchSelf() { return this.request('vessels/self'); }
+  fetchAllVessels() { return this.request('vessels'); }
+  fetchTracks(radius) { return this.request(`tracks?radius=${radius}`); }
 
   // Walk a subtree by dot-separated path. An empty path returns the tree itself
   // so callers can pass a notification envelope and read its `.value` via value().
@@ -69,7 +69,9 @@ class SignalKClient {
       const ageSec = node.timestamp
         ? Math.round((Date.now() - new Date(node.timestamp).getTime()) / 1000)
         : 'unknown';
-      console.error(`Stale Signal K value at ${path || '(root)'}: age ${ageSec}s, max ${maxAge}s`);
+      const msg = `Stale SignalK value: ${path || '(root)'}<br/>Age ${ageSec}s, Max ${maxAge}s`;
+      console.warn(msg);
+      SignalKClient.errorHandler?.(msg);
       return fallback;
     }
     return node.value;

@@ -116,7 +116,9 @@ class AnchorAlarm {
       this.fleetTimer = setInterval(() => this.pollFleet(), FLEET_POLL_INTERVAL_MS);
       this.pollFleet();
     }).fail((response) => {
-      console.error('Failed to load initial data:', response.status, response.statusText);
+      const msg = `Failed to load initial data: ${response.status} ${response.statusText}`;
+      console.error(msg);
+      this.statusBar?.setError(msg);
       setTimeout(() => this.loadInitialData(), INITIAL_LOAD_RETRY_MS);
     });
   }
@@ -179,6 +181,7 @@ class AnchorAlarm {
     L.control.layers(this.baseMaps, {}, { position: 'topright' }).addTo(this.map);
 
     this.statusBar = new StatusBar();
+    SignalKClient.errorHandler = (msg) => this.statusBar.setWarning(msg);
     this.infoPanel = new InfoPanel();
     this.scopePanel = new ScopePanel();
     this.windPanel = new WindPanel();
@@ -269,7 +272,9 @@ class AnchorAlarm {
     const position = SignalKClient.freshValue(nav, 'position');
     if (!position) return;
     if (position.latitude === null || position.longitude === null) {
-      console.error(`Invalid Signal K value at position: ${JSON.stringify(position)}`);
+      const msg = `Invalid Signal K value at position: ${JSON.stringify(position)}`;
+      console.warn(msg);
+      this.statusBar.setWarning(msg);
       return;
     }
 

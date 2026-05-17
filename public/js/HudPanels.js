@@ -16,7 +16,7 @@ const StatusBar = L.Control.extend({
   },
 
   setStatus: function (html) { this._render(html, 'black'); },
-  setWarning: function (html) { this._render(html, 'orange'); },
+  setWarning: function (html) { this._render(html, '#d97706'); },
   setError: function (html) { this._render(html, 'red'); },
 
   _render: function (html, color) {
