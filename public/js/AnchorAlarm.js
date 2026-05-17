@@ -4,6 +4,7 @@
 // AnchorController.
 
 const POLL_INTERVAL_MS = 1000;
+const FLEET_POLL_INTERVAL_MS = 5000;
 const INITIAL_LOAD_RETRY_MS = 5000;
 
 class AnchorAlarm {
@@ -36,6 +37,7 @@ class AnchorAlarm {
     this.toolbar = undefined;
 
     this.pollTimer = null;
+    this.fleetTimer = null;
   }
 
   static startup() {
@@ -110,7 +112,9 @@ class AnchorAlarm {
         this.fleetLayer.loadHistoricalTracks(tracks, this.currentCoordinates, this.filterRadius);
       });
 
-      this.pollTimer = setInterval(() => this.intervalUpdate(), POLL_INTERVAL_MS);
+      this.pollTimer = setInterval(() => this.pollSelf(), POLL_INTERVAL_MS);
+      this.fleetTimer = setInterval(() => this.pollFleet(), FLEET_POLL_INTERVAL_MS);
+      this.pollFleet();
     }).fail((response) => {
       console.error('Failed to load initial data:', response.status, response.statusText);
       setTimeout(() => this.loadInitialData(), INITIAL_LOAD_RETRY_MS);
@@ -243,115 +247,107 @@ class AnchorAlarm {
 
   // === Live polling ================================================================
 
-  intervalUpdate() {
-    this.pollPosition();
-    this.pollAnchorStatus();
-    this.pollDepth();
-    this.pollWindSpeed();
-    this.pollWindAngle();
-    this.pollAnchorReconcile();
-    this.pollFleet();
-  }
-
-  pollPosition() {
-    this.signalK.fetchSelfNavigation().done((data) => {
-      if (SignalKClient.isStale(data.position)) {
-        console.error("Position stale");
-        return;
-      }
-
-      const position = SignalKClient.value(data, 'position');
-      if (position.latitude === null || position.longitude === null) {
-        console.error("Invalid position");
-        console.error(data.position);
-        return;
-      }
-
-      this.currentCoordinates = L.latLng(position.latitude, position.longitude);
-
-      const headingTrue = SignalKClient.freshValue(data, 'headingTrue');
-      if (headingTrue !== undefined) {
-        this.heading = GeoMath.rad2deg(headingTrue);
-      } else {
-        // No live heading — point at the anchor instead.
-        const anchor = this.anchorController.anchorCoordinates;
-        this.heading = Math.round(GeoMath.calculateBearing(
-          this.currentCoordinates.lat, this.currentCoordinates.lng,
-          anchor.lat, anchor.lng,
-        ));
-      }
-
-      this.fleetLayer.updateOwnPosition(this.currentCoordinates, this.heading);
-      this.fleetLayer.appendOwnTrack(this.currentCoordinates);
-
-      this.anchorOverlay.setBoatPosition(
-        this.currentCoordinates, this.heading,
-        this.boatConfig.gpsOffset,
-      );
+  // One GET of vessels/self per tick feeds position, depth, wind, anchor state,
+  // and the anchor alarm — they're all subtrees of the same document. The fleet
+  // poll runs on its own slower timer.
+  pollSelf() {
+    this.signalK.fetchSelf().done((data) => {
+      this.updatePosition(data.navigation);
+      this.updateAnchorStatus(SignalKClient.extract(data, 'notifications.navigation.anchor'));
+      this.updateDepth(SignalKClient.extract(data, 'environment.depth'));
+      this.updateWind(SignalKClient.extract(data, 'environment.wind'));
+      this.updateAnchorReconcile(SignalKClient.extract(data, 'navigation.anchor'));
     });
   }
 
-  pollAnchorStatus() {
-    this.signalK.fetchAnchorAlarm().done((alarm) => {
-      const v = SignalKClient.value(alarm);
-      if (!v) return;
-      this.infoPanel.setStatus(v.message, v.state);
+  updatePosition(nav) {
+    if (!nav) return;
+
+    const position = SignalKClient.freshValue(nav, 'position');
+    if (!position) return;
+    if (position.latitude === null || position.longitude === null) {
+      console.error(`Invalid Signal K value at position: ${JSON.stringify(position)}`);
+      return;
+    }
+
+    this.currentCoordinates = L.latLng(position.latitude, position.longitude);
+
+    const headingTrue = SignalKClient.freshValue(nav, 'headingTrue');
+    if (headingTrue !== undefined) {
+      this.heading = GeoMath.rad2deg(headingTrue);
+    } else {
+      // No live heading — point at the anchor instead.
+      const anchor = this.anchorController.anchorCoordinates;
+      this.heading = Math.round(GeoMath.calculateBearing(
+        this.currentCoordinates.lat, this.currentCoordinates.lng,
+        anchor.lat, anchor.lng,
+      ));
+    }
+
+    this.fleetLayer.updateOwnPosition(this.currentCoordinates, this.heading);
+    this.fleetLayer.appendOwnTrack(this.currentCoordinates);
+
+    this.anchorOverlay.setBoatPosition(
+      this.currentCoordinates, this.heading,
+      this.boatConfig.gpsOffset,
+    );
+  }
+
+  updateAnchorStatus(alarm) {
+    const v = SignalKClient.value(alarm);
+    if (!v) return;
+    this.infoPanel.setStatus(v.message, v.state);
+  }
+
+  updateDepth(depth) {
+    if (!depth) return;
+    const belowSurface = SignalKClient.freshValue(depth, 'belowSurface');
+    if (belowSurface === undefined) return;
+    const belowKeel = SignalKClient.freshValue(depth, 'belowKeel', { fallback: 0 });
+
+    this.infoPanel.setBelowSurface(belowSurface);
+    this.scopePanel.setScopeData({
+      depthBelowSurface: parseFloat(belowSurface),
+      depthBelowKeel: parseFloat(belowKeel),
+      bowHeight: this.boatConfig.anchorRollerHeight,
+      tidalRise: this.tidalRise,
+      tidalFall: this.tidalFall,
+      scopes: {
+        7: this.calculateScope(7, belowSurface),
+        5: this.calculateScope(5, belowSurface),
+        4: this.calculateScope(4, belowSurface),
+        3: this.calculateScope(3, belowSurface),
+      },
     });
   }
 
-  pollDepth() {
-    this.signalK.fetchDepth().done((data) => {
-      const belowSurface = SignalKClient.value(data, 'belowSurface', 0);
-      const belowKeel = SignalKClient.value(data, 'belowKeel', 0);
+  updateWind(wind) {
+    if (!wind) return;
 
-      this.infoPanel.setBelowSurface(belowSurface);
-      this.scopePanel.setScopeData({
-        depthBelowSurface: parseFloat(belowSurface),
-        depthBelowKeel: parseFloat(belowKeel),
-        bowHeight: this.boatConfig.anchorRollerHeight,
-        tidalRise: this.tidalRise,
-        tidalFall: this.tidalFall,
-        scopes: {
-          7: this.calculateScope(7, belowSurface),
-          5: this.calculateScope(5, belowSurface),
-          4: this.calculateScope(4, belowSurface),
-          3: this.calculateScope(3, belowSurface),
-        },
-      });
-    }).fail(() => {
-      this.infoPanel.setBelowSurface(null);
-      this.scopePanel.setBelowKeel(null);
-    });
-  }
-
-  pollWindSpeed() {
-    this.signalK.fetchWindSpeedApparent().done((speedApparent) => {
+    const speedApparent = SignalKClient.freshValue(wind, 'speedApparent');
+    if (speedApparent !== undefined) {
       this.aws = speedApparent;
       this.windPanel.setSpeed(speedApparent, this.twa);
-    }).fail(() => {
-      this.windPanel.clearSpeed();
-    });
-  }
+    }
 
-  pollWindAngle() {
-    this.signalK.fetchWindDirectionTrue().done((directionTrue) => {
+    const directionTrue = SignalKClient.freshValue(wind, 'directionTrue');
+    if (directionTrue !== undefined) {
       this.twa = GeoMath.rad2deg(directionTrue);
       this.windPanel.setAngle(this.twa);
-    });
+    }
   }
 
-  pollAnchorReconcile() {
-    this.signalK.fetchAnchorState().done((anchorStatus) => {
-      const on = SignalKClient.value(anchorStatus, 'state') === 'on';
-      let position = null;
-      if (on) {
-        const p = SignalKClient.value(anchorStatus, 'position');
-        if (p) position = L.latLng(p.latitude, p.longitude);
-      }
-      const maxRadius = SignalKClient.value(anchorStatus, 'maxRadius');
+  updateAnchorReconcile(anchorStatus) {
+    if (!anchorStatus) return;
+    const on = SignalKClient.value(anchorStatus, 'state') === 'on';
+    let position = null;
+    if (on) {
+      const p = SignalKClient.value(anchorStatus, 'position');
+      if (p) position = L.latLng(p.latitude, p.longitude);
+    }
+    const maxRadius = SignalKClient.value(anchorStatus, 'maxRadius');
 
-      this.anchorController.reconcile({ on, position, maxRadius });
-    });
+    this.anchorController.reconcile({ on, position, maxRadius });
   }
 
   pollFleet() {
@@ -368,6 +364,10 @@ class AnchorAlarm {
     if (this.pollTimer) {
       clearInterval(this.pollTimer);
       this.pollTimer = null;
+    }
+    if (this.fleetTimer) {
+      clearInterval(this.fleetTimer);
+      this.fleetTimer = null;
     }
   }
 

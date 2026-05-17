@@ -41,14 +41,8 @@ class SignalKClient {
   }
 
   fetchSelf()              { return this.request('vessels/self'); }
-  fetchSelfNavigation()    { return this.request('vessels/self/navigation'); }
   fetchAllVessels()        { return this.request('vessels'); }
   fetchTracks(radius)      { return this.request(`tracks?radius=${radius}`); }
-  fetchAnchorState()       { return this.request('vessels/self/navigation/anchor'); }
-  fetchAnchorAlarm()       { return this.request('vessels/self/notifications/navigation/anchor'); }
-  fetchDepth()             { return this.request('vessels/self/environment/depth'); }
-  fetchWindSpeedApparent() { return this.request('vessels/self/environment/wind/speedApparent/value'); }
-  fetchWindDirectionTrue() { return this.request('vessels/self/environment/wind/directionTrue/value'); }
 
   // Walk a subtree by dot-separated path. An empty path returns the tree itself
   // so callers can pass a notification envelope and read its `.value` via value().
@@ -71,7 +65,13 @@ class SignalKClient {
   static freshValue(tree, path = '', { maxAge = SIGNALK_DEFAULT_FRESHNESS_SEC, fallback = undefined } = {}) {
     const node = this.extract(tree, path);
     if (!node || node.value === undefined) return fallback;
-    if (!this.isFresh(node, maxAge)) return fallback;
+    if (!this.isFresh(node, maxAge)) {
+      const ageSec = node.timestamp
+        ? Math.round((Date.now() - new Date(node.timestamp).getTime()) / 1000)
+        : 'unknown';
+      console.error(`Stale Signal K value at ${path || '(root)'}: age ${ageSec}s, max ${maxAge}s`);
+      return fallback;
+    }
     return node.value;
   }
 
