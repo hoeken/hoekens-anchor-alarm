@@ -1,12 +1,12 @@
-// ControlToolbar owns the bottom map_toggle bar (raise/drop anchor buttons and
-// the +/- radius stepper). It binds to the static HTML in index.html, hides
+// ControlToolbar owns the top control bar (raise/drop anchor buttons and the
+// +/- radius stepper). It builds its own DOM under the supplied parent, hides
 // jQuery from the host, and exposes onDrop/onRaise/onSetRadius callbacks plus
 // setState(anchorState) and setRadius(r) update methods. Element IDs are
 // preserved for CSS hooks in style.css; do not rename without updating it.
 
 class ControlToolbar {
 
-  constructor({ getMapContainer, onDrop, onRaise, onSetRadius }) {
+  constructor({ parent, getMapContainer, onDrop, onRaise, onSetRadius }) {
     this._getMapContainer = getMapContainer;
     this._onDrop = onDrop;
     this._onRaise = onRaise;
@@ -15,30 +15,46 @@ class ControlToolbar {
     this._radius = 0;
     this._state = null;
 
-    this._container  = document.getElementById('map_toggle');
-    this._anchorUp   = document.getElementById('anchorUp');
-    this._anchorDown = document.getElementById('anchorDown');
-    this._radiusEl   = document.getElementById('radius');
+    this._container = document.createElement('div');
+    this._container.id = 'controlToolbar';
+    this._container.innerHTML = `
+      <div id="anchorDown">
+        <button id="raiseAnchor">Raise Anchor</button>
+      </div>
+      <div id="anchorUp">
+        <button id="dropAnchor">Drop Anchor</button>
+      </div>
+      <div id="radiusControl">
+        <button id="decreaseRadius">-</button>
+        <button id="setRadius"><span id="radius">0</span>m</button>
+        <button id="increaseRadius">+</button>
+      </div>
+    `;
+    parent.appendChild(this._container);
 
-    document.getElementById('raiseAnchor').addEventListener('click', () => {
+    this._anchorUp   = this._container.querySelector('#anchorUp');
+    this._anchorDown = this._container.querySelector('#anchorDown');
+    this._radiusEl   = this._container.querySelector('#radius');
+
+    this._container.querySelector('#raiseAnchor').addEventListener('click', () => {
       if (this._state !== AnchorState.ANCHORED) return;
       if (!confirm('Do you really want to disable your anchor alarm?')) return;
       if (this._onRaise) this._onRaise();
     });
-    document.getElementById('dropAnchor').addEventListener('click', () => {
+    this._container.querySelector('#dropAnchor').addEventListener('click', () => {
       if (this._onDrop) this._onDrop();
     });
-    document.getElementById('setRadius').addEventListener('click', () => {
+    this._container.querySelector('#setRadius').addEventListener('click', () => {
       const input = prompt('Enter Radius (m)', this._radius);
       if (input === null) return;
       const newRadius = parseInt(input, 10);
       if (isNaN(newRadius) || newRadius <= 0) return;
       if (this._onSetRadius) this._onSetRadius(newRadius);
     });
-    document.getElementById('increaseRadius').addEventListener('click', () => {
+    this._container.querySelector('#increaseRadius').addEventListener('click', () => {
       if (this._onSetRadius) this._onSetRadius(this._radius + 5);
     });
-    document.getElementById('decreaseRadius').addEventListener('click', () => {
+    this._container.querySelector('#decreaseRadius').addEventListener('click', () => {
       if (this._radius <= 5) return;
       if (this._onSetRadius) this._onSetRadius(this._radius - 5);
     });

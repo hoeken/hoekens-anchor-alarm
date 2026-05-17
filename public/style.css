@@ -24,22 +24,27 @@ body,
   position: relative;
 }
 
-#map_toggle {
+#controlToolbar {
   position: absolute;
   top: 10px;
   left: 50%;
-  width: 300px;
-  height: 50px;
+  width: 250px;
   margin-left: -150px;
   z-index: 99;
   opacity: 1;
   border-radius: 5px;
   text-align: center;
-  line-height: 40px;
   pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-#map_toggle button {
+#controlToolbar button {
+  height: 40px;
+}
+
+#controlToolbar button {
   pointer-events: auto;
   touch-action: none;
 }
@@ -95,6 +100,36 @@ button {
 #anchorDown,
 #anchorUp {
   display: none;
+}
+
+#anchorDown button,
+#anchorUp button {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#radiusControl {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#radiusControl button {
+  box-sizing: border-box;
+  padding: 0;
+}
+
+#decreaseRadius,
+#increaseRadius {
+  flex: 0 0 auto;
+  width: 40px;
+  aspect-ratio: 1 / 1;
+}
+
+#setRadius {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .leaflet-control-home {

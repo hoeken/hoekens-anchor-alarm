@@ -68,6 +68,7 @@ class AnchorAlarm {
     };
 
     this.toolbar = new ControlToolbar({
+      parent: document.getElementById('map_container'),
       getMapContainer: () => this.map && this.map.getContainer(),
       onRaise: () => this.anchorController.requestRaise(),
       onDrop: () => this.anchorController.requestDrop(),
