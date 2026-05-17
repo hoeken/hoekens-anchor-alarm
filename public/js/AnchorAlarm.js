@@ -112,7 +112,10 @@ class AnchorAlarm {
     this.signalK
       .fetchSelf()
       .then((data) => {
-        this.currentCoordinates = this.extractStartPosition(data);
+        this.currentCoordinates = this.extractPosition(
+          data,
+          "navigation.position",
+        );
         if (!this.currentCoordinates) {
           this.statusBar.setError("Waiting for GPS position…");
           setTimeout(() => this.loadInitialData(), INITIAL_LOAD_RETRY_MS);
@@ -220,16 +223,12 @@ class AnchorAlarm {
     return r;
   }
 
-  extractStartPosition(data) {
-    const navPosition = SignalKClient.value(data.navigation, "position");
-    if (
-      !navPosition ||
-      navPosition.latitude == null ||
-      navPosition.longitude == null
-    ) {
-      return null;
-    }
-    return L.latLng(navPosition.latitude, navPosition.longitude);
+  extractPosition(tree, path = "position", { fresh = false } = {}) {
+    const pos = fresh
+      ? SignalKClient.freshValue(tree, path)
+      : SignalKClient.value(tree, path);
+    if (!pos || pos.latitude == null || pos.longitude == null) return null;
+    return L.latLng(pos.latitude, pos.longitude);
   }
 
   // Decorates the map shell built in init() with the rest of the controls.
@@ -300,7 +299,7 @@ class AnchorAlarm {
   computeInitialHeading(data) {
     const nav = data.navigation;
     let heading = SignalKClient.value(nav, "headingTrue");
-    const initialAnchorPos = SignalKClient.value(nav, "anchor.position");
+    const initialAnchorPos = this.extractPosition(nav, "anchor.position");
 
     if (heading != null) return GeoMath.rad2deg(heading);
 
@@ -309,8 +308,8 @@ class AnchorAlarm {
         GeoMath.calculateBearing(
           this.currentCoordinates.lat,
           this.currentCoordinates.lng,
-          initialAnchorPos.latitude,
-          initialAnchorPos.longitude,
+          initialAnchorPos.lat,
+          initialAnchorPos.lng,
         ),
       );
     }
@@ -344,13 +343,9 @@ class AnchorAlarm {
 
   restoreAnchorState(data) {
     const nav = data.navigation;
-    const initialAnchorPos = SignalKClient.value(nav, "anchor.position");
+    const pos = this.extractPosition(nav, "anchor.position");
 
-    if (initialAnchorPos) {
-      const pos = L.latLng(
-        initialAnchorPos.latitude,
-        initialAnchorPos.longitude,
-      );
+    if (pos) {
       const radius = parseInt(SignalKClient.value(nav, "anchor.maxRadius"), 10);
       this.anchorController.restoreDropped(pos, radius);
     } else {
@@ -413,16 +408,10 @@ class AnchorAlarm {
   updatePosition(nav) {
     if (!nav) return;
 
-    const position = SignalKClient.freshValue(nav, "position");
+    const position = this.extractPosition(nav, "position", { fresh: true });
     if (!position) return;
-    if (position.latitude === null || position.longitude === null) {
-      const msg = `Invalid Signal K value at position: ${JSON.stringify(position)}`;
-      console.warn(msg);
-      this.statusBar.setWarning(msg);
-      return;
-    }
 
-    this.currentCoordinates = L.latLng(position.latitude, position.longitude);
+    this.currentCoordinates = position;
 
     const headingTrue = SignalKClient.freshValue(nav, "headingTrue");
     if (headingTrue !== undefined) {
@@ -486,11 +475,7 @@ class AnchorAlarm {
   updateAnchorReconcile(anchorStatus) {
     if (!anchorStatus) return;
     const on = SignalKClient.value(anchorStatus, "state") === "on";
-    let position = null;
-    if (on) {
-      const p = SignalKClient.value(anchorStatus, "position");
-      if (p) position = L.latLng(p.latitude, p.longitude);
-    }
+    const position = on ? this.extractPosition(anchorStatus, "position") : null;
     const maxRadius = SignalKClient.value(anchorStatus, "maxRadius");
 
     this.anchorController.reconcile({ on, position, maxRadius });
