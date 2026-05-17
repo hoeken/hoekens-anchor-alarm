@@ -178,9 +178,12 @@ class AnchorAlarm {
 
     L.control.layers(this.baseMaps, {}, { position: 'topright' }).addTo(this.map);
 
+    this.statusBar = new StatusBar();
     this.infoPanel = new InfoPanel();
     this.scopePanel = new ScopePanel();
     this.windPanel = new WindPanel();
+
+    this.map.addControl(this.statusBar);
     this.map.addControl(this.infoPanel);
     this.map.addControl(this.scopePanel);
     this.map.addControl(this.windPanel);

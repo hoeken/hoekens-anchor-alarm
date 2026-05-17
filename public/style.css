@@ -138,3 +138,13 @@ button {
   text-align: center;
   width: 70px;
 }
+
+.statusBar {
+  padding: 5px;
+  max-width: 320px;
+  font-size: 11pt;
+  line-height: 1.1;
+  background-color: white;
+  font-weight: bold;
+  line-height: 1.2;
+}

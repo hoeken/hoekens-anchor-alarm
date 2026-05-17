@@ -3,6 +3,33 @@
 // touching the document directly. Element IDs are preserved for CSS hooks in
 // style.css; do not rename without updating the stylesheet.
 
+const StatusBar = L.Control.extend({
+  options: { position: 'bottomright' },
+
+  onAdd: function (map) {
+    const container = L.DomUtil.create('div', 'statusBar leaflet-bar');
+    L.DomEvent.disableClickPropagation(container);
+    container.id = 'statusBarUI';
+    container.style.display = 'none';
+    this._container = container;
+    return container;
+  },
+
+  setStatus: function (html) { this._render(html, 'black'); },
+  setWarning: function (html) { this._render(html, 'orange'); },
+  setError: function (html) { this._render(html, 'red'); },
+
+  _render: function (html, color) {
+    if (!this._container) return;
+    this._container.innerHTML = html;
+    this._container.style.color = color;
+    this._container.style.display = '';
+  },
+
+  show: function () { if (this._container) this._container.style.display = ''; },
+  hide: function () { if (this._container) this._container.style.display = 'none'; },
+});
+
 const HomeButtonControl = L.Control.extend({
   options: {
     position: 'topright',
@@ -189,17 +216,17 @@ const ScopePanel = L.Control.extend({
     `;
     this._container = container;
     this._refs = {
-      scopeDepth:      container.querySelector('#scopeDepth'),
-      bowHeight:       container.querySelector('#bowHeight'),
-      tidalRise:       container.querySelector('#tidalRise'),
-      scopeTotal:      container.querySelector('#scopeTotal'),
-      scope7to1:       container.querySelector('#scope7to1'),
-      scope5to1:       container.querySelector('#scope5to1'),
-      scope4to1:       container.querySelector('#scope4to1'),
-      scope3to1:       container.querySelector('#scope3to1'),
-      belowKeel:       container.querySelector('#belowKeel'),
-      tidalFall:       container.querySelector('#tidalFall'),
-      minimumDepth:    container.querySelector('#minimumDepth'),
+      scopeDepth: container.querySelector('#scopeDepth'),
+      bowHeight: container.querySelector('#bowHeight'),
+      tidalRise: container.querySelector('#tidalRise'),
+      scopeTotal: container.querySelector('#scopeTotal'),
+      scope7to1: container.querySelector('#scope7to1'),
+      scope5to1: container.querySelector('#scope5to1'),
+      scope4to1: container.querySelector('#scope4to1'),
+      scope3to1: container.querySelector('#scope3to1'),
+      belowKeel: container.querySelector('#belowKeel'),
+      tidalFall: container.querySelector('#tidalFall'),
+      minimumDepth: container.querySelector('#minimumDepth'),
       minimumDepthRow: container.querySelector('.minimumDepthRow'),
     };
     return container;
@@ -213,16 +240,16 @@ const ScopePanel = L.Control.extend({
     const maxHeight = depthBelowSurface + bowHeight + tidalRise;
     const minimumDepth = depthBelowKeel - tidalFall;
 
-    this._refs.scope7to1.innerHTML    = `${scopes[7].toFixed(1)}m`;
-    this._refs.scope5to1.innerHTML    = `${scopes[5].toFixed(1)}m`;
-    this._refs.scope4to1.innerHTML    = `${scopes[4].toFixed(1)}m`;
-    this._refs.scope3to1.innerHTML    = `${scopes[3].toFixed(1)}m`;
-    this._refs.scopeDepth.innerHTML   = `${depthBelowSurface.toFixed(1)}m`;
-    this._refs.bowHeight.innerHTML    = `${bowHeight.toFixed(1)}m`;
-    this._refs.tidalRise.innerHTML    = `${tidalRise.toFixed(1)}m`;
-    this._refs.scopeTotal.innerHTML   = `${maxHeight.toFixed(1)}m`;
-    this._refs.belowKeel.innerHTML    = `${depthBelowKeel.toFixed(1)}m`;
-    this._refs.tidalFall.innerHTML    = `${tidalFall.toFixed(1)}m`;
+    this._refs.scope7to1.innerHTML = `${scopes[7].toFixed(1)}m`;
+    this._refs.scope5to1.innerHTML = `${scopes[5].toFixed(1)}m`;
+    this._refs.scope4to1.innerHTML = `${scopes[4].toFixed(1)}m`;
+    this._refs.scope3to1.innerHTML = `${scopes[3].toFixed(1)}m`;
+    this._refs.scopeDepth.innerHTML = `${depthBelowSurface.toFixed(1)}m`;
+    this._refs.bowHeight.innerHTML = `${bowHeight.toFixed(1)}m`;
+    this._refs.tidalRise.innerHTML = `${tidalRise.toFixed(1)}m`;
+    this._refs.scopeTotal.innerHTML = `${maxHeight.toFixed(1)}m`;
+    this._refs.belowKeel.innerHTML = `${depthBelowKeel.toFixed(1)}m`;
+    this._refs.tidalFall.innerHTML = `${tidalFall.toFixed(1)}m`;
     this._refs.minimumDepth.innerHTML = `${minimumDepth.toFixed(1)}m`;
 
     if (minimumDepth > 1) {
