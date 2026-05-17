@@ -39,16 +39,8 @@ module.exports = function (app) {
       description: "Optional - used to display size-accurate icon. Edit Server -> Settings"
     },
     {
-      path: "design.draft",
-      description: "Optional - used for depth calculations. Edit Server -> Settings"
-    },
-    {
       path: "design.aisShipType",
       description: "Optional - used to choose the correct icon. Edit Server -> Settings"
-    },
-    {
-      path: "environment.depth.belowTransducer",
-      description: "Optional - used for scope calculations. No depthsounder found."
     },
     {
       path: "environment.depth.belowSurface",
@@ -83,7 +75,6 @@ module.exports = function (app) {
       type: "object",
       required: [
         "radius",
-        "active",
       ],
       properties: {
         pathChecks: {
@@ -272,26 +263,33 @@ module.exports = function (app) {
   }
 
   function putRadius(context, path, value) {
-    app.handleMessage(plugin.id, {
-      updates: [
-        {
-          values: [
-            {
-              path: "navigation.anchor.maxRadius",
-              value: parseFloat(value)
-            }
-          ]
-        }
-      ]
-    })
-
-    configuration["radius"] = parseFloat(value)
-    if (configuration["position"]) {
-      configuration["on"] = true
-      startWatchingPosition()
-    }
-
     try {
+      const radius = parseFloat(value)
+
+      if (configuration.position) {
+        // Emit the full anchor delta so navigation.anchor.meta.zones gets the
+        // new threshold — pushing maxRadius alone leaves dragging detection
+        // pinned to the old value.
+        let delta = getAnchorDelta({
+          app: app,
+          vesselPosition: app.getSelfPath('navigation.position.value'),
+          anchorPosition: configuration.position,
+          maxRadius: radius,
+          isSet: false
+        })
+        app.handleMessage(plugin.id, delta)
+      } else {
+        app.handleMessage(plugin.id, {
+          updates: [{ values: [{ path: "navigation.anchor.maxRadius", value: radius }] }]
+        })
+      }
+
+      configuration["radius"] = radius
+      if (configuration["position"]) {
+        configuration["on"] = true
+        startWatchingPosition()
+      }
+
       savePluginOptions()
       return { state: 'SUCCESS' }
     } catch (err) {

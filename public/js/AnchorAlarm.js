@@ -36,6 +36,8 @@ class AnchorAlarm {
 
     this.pollTimer = null;
     this.fleetTimer = null;
+    this._pollSelfInFlight = false;
+    this._pollFleetInFlight = false;
   }
 
   static startup() {
@@ -65,6 +67,13 @@ class AnchorAlarm {
       "Satellite": this.satelliteLayer
     };
 
+    // Map shell and status bar first so failures during initial load (missing
+    // GPS, server unreachable, etc.) have somewhere to surface.
+    this.map = L.map('map', { zoomControl: false }).setView([0, 0], 5);
+    this.statusBar = new StatusBar();
+    this.map.addControl(this.statusBar);
+    SignalKClient.errorHandler = (msg) => this.statusBar.setWarning(msg);
+
     this.toolbar = new ControlToolbar({
       parent: document.getElementById('map_container'),
       getMapContainer: () => this.map && this.map.getContainer(),
@@ -80,6 +89,13 @@ class AnchorAlarm {
 
   loadInitialData() {
     this.signalK.fetchSelf().then((data) => {
+      this.currentCoordinates = this.extractStartPosition(data);
+      if (!this.currentCoordinates) {
+        this.statusBar.setError('Waiting for GPS position…');
+        setTimeout(() => this.loadInitialData(), INITIAL_LOAD_RETRY_MS);
+        return;
+      }
+
       this.boatConfig = BoatConfig.fromSelf(data);
 
       const belowKeel = SignalKClient.freshValue(data, 'environment.depth.belowKeel', { fallback: 0 });
@@ -88,7 +104,6 @@ class AnchorAlarm {
       this.applyInitialWindState(data);
       this.applyInitialTide(data);
 
-      this.currentCoordinates = this.extractStartPosition(data);
       this.buildMap(this.currentCoordinates);
 
       this.paintInitialReadings(belowSurface, belowKeel, data);
@@ -111,9 +126,11 @@ class AnchorAlarm {
       this.fleetTimer = setInterval(() => this.pollFleet(), FLEET_POLL_INTERVAL_MS);
       this.pollFleet();
     }).catch((response) => {
-      const msg = `Failed to load initial data: ${response.status} ${response.statusText}`;
+      const detail = response.statusText || response.message || 'unknown error';
+      const status = response.status ? `${response.status} ` : '';
+      const msg = `Failed to load initial data: ${status}${detail}`;
       console.error(msg);
-      this.statusBar?.setError(msg);
+      this.statusBar.setError(msg);
       setTimeout(() => this.loadInitialData(), INITIAL_LOAD_RETRY_MS);
     });
   }
@@ -148,11 +165,16 @@ class AnchorAlarm {
 
   extractStartPosition(data) {
     const navPosition = SignalKClient.value(data.navigation, 'position');
+    if (!navPosition || navPosition.latitude == null || navPosition.longitude == null) {
+      return null;
+    }
     return L.latLng(navPosition.latitude, navPosition.longitude);
   }
 
+  // Decorates the map shell built in init() with the rest of the controls.
+  // Splitting it this way lets the status bar exist before any data fetch.
   buildMap(initialCenter) {
-    this.map = L.map('map', { zoomControl: false }).setView(initialCenter, 5);
+    this.map.setView(initialCenter, 5);
 
     this.satelliteLayer.addTo(this.map);
 
@@ -169,13 +191,10 @@ class AnchorAlarm {
 
     L.control.layers(this.baseMaps, {}, { position: 'topright' }).addTo(this.map);
 
-    this.statusBar = new StatusBar();
-    SignalKClient.errorHandler = (msg) => this.statusBar.setWarning(msg);
     this.infoPanel = new InfoPanel();
     this.scopePanel = new ScopePanel();
     this.windPanel = new WindPanel();
 
-    this.map.addControl(this.statusBar);
     this.map.addControl(this.infoPanel);
     this.map.addControl(this.scopePanel);
     this.map.addControl(this.windPanel);
@@ -237,6 +256,7 @@ class AnchorAlarm {
       signalK: this.signalK,
       infoPanel: this.infoPanel,
       scopePanel: this.scopePanel,
+      onError: (msg) => this.statusBar.setError(msg),
     });
 
     this.anchorOverlay.onCrosshairDrag((pos) => this.anchorController.updateCrosshairPosition(pos));
@@ -269,13 +289,23 @@ class AnchorAlarm {
   // and the anchor alarm — they're all subtrees of the same document. The fleet
   // poll runs on its own slower timer.
   pollSelf() {
-    this.signalK.fetchSelf().then((data) => {
-      this.updatePosition(data.navigation);
-      this.updateAnchorStatus(SignalKClient.extract(data, 'notifications.navigation.anchor'));
-      this.updateDepth(SignalKClient.extract(data, 'environment.depth'));
-      this.updateWind(SignalKClient.extract(data, 'environment.wind'));
-      this.updateAnchorReconcile(SignalKClient.extract(data, 'navigation.anchor'));
-    });
+    // Skip the tick if the previous fetch is still in flight; otherwise a slow
+    // response can land after a newer one and stomp fresher state.
+    if (this._pollSelfInFlight) return;
+    this._pollSelfInFlight = true;
+    this.signalK.fetchSelf()
+      .then((data) => {
+        this.updatePosition(data.navigation);
+        this.updateAnchorStatus(SignalKClient.extract(data, 'notifications.navigation.anchor'));
+        this.updateDepth(SignalKClient.extract(data, 'environment.depth'));
+        this.updateWind(SignalKClient.extract(data, 'environment.wind'));
+        this.updateAnchorReconcile(SignalKClient.extract(data, 'navigation.anchor'));
+      })
+      .catch((err) => {
+        const detail = err.statusText || err.message || 'unknown error';
+        this.statusBar.setWarning(`Self update failed: ${detail}`);
+      })
+      .finally(() => { this._pollSelfInFlight = false; });
   }
 
   updatePosition(nav) {
@@ -358,13 +388,21 @@ class AnchorAlarm {
   }
 
   pollFleet() {
-    this.signalK.fetchAllVessels().then((vessels) => {
-      this.fleetLayer.syncOtherVessels(vessels, {
-        ownLatLng: this.currentCoordinates,
-        filterRadius: this.filterRadius,
-        twa: this.twa,
-      });
-    });
+    if (this._pollFleetInFlight) return;
+    this._pollFleetInFlight = true;
+    this.signalK.fetchAllVessels()
+      .then((vessels) => {
+        this.fleetLayer.syncOtherVessels(vessels, {
+          ownLatLng: this.currentCoordinates,
+          filterRadius: this.filterRadius,
+          twa: this.twa,
+        });
+      })
+      .catch((err) => {
+        const detail = err.statusText || err.message || 'unknown error';
+        this.statusBar.setWarning(`Fleet update failed: ${detail}`);
+      })
+      .finally(() => { this._pollFleetInFlight = false; });
   }
 
   destroy() {

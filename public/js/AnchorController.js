@@ -18,16 +18,22 @@ const AnchorState = Object.freeze({
 
 class AnchorController {
 
-  constructor({ overlay, toolbar, signalK, infoPanel, scopePanel }) {
+  constructor({ overlay, toolbar, signalK, infoPanel, scopePanel, onError }) {
     this._overlay = overlay;
     this._toolbar = toolbar;
     this._signalK = signalK;
     this._infoPanel = infoPanel;
     this._scopePanel = scopePanel;
+    this._onError = onError;
 
     this.state = AnchorState.UP;
     this.anchorCoordinates = null;
     this.maxRadius = 0;
+  }
+
+  _reportError(prefix, err) {
+    const detail = err?.statusText || err?.message || 'unknown error';
+    this._onError?.(`${prefix}: ${detail}`);
   }
 
   // === User-initiated transitions =================================================
@@ -41,22 +47,37 @@ class AnchorController {
     this._enterDropped(pos, this.maxRadius);
     this._signalK
       .dropAnchor({ latitude: pos.lat, longitude: pos.lng }, this.maxRadius)
-      .finally(() => {
+      .then(() => {
         this.state = AnchorState.ANCHORED;
         this._toolbar.setState(this.state);
+      })
+      .catch((err) => {
+        // Roll back to UP so the user sees the actual server state instead of
+        // a green "anchored" UI that doesn't match reality.
+        this.state = AnchorState.UP;
+        this._enterRaised();
+        this._reportError('Failed to drop anchor', err);
       });
   }
 
   requestRaise() {
     if (this.state !== AnchorState.ANCHORED) return;
 
+    const previousAnchor = this.anchorCoordinates;
+    const previousRadius = this.maxRadius;
+
     this.state = AnchorState.RAISING;
     this._enterRaised();
     this._signalK
       .raiseAnchor()
-      .finally(() => {
+      .then(() => {
         this.state = AnchorState.UP;
         this._toolbar.setState(this.state);
+      })
+      .catch((err) => {
+        this.state = AnchorState.ANCHORED;
+        this._enterDropped(previousAnchor, previousRadius);
+        this._reportError('Failed to raise anchor', err);
       });
   }
 
@@ -66,7 +87,8 @@ class AnchorController {
     this._overlay.setRadius(newRadius);
 
     if (this.state === AnchorState.ANCHORED) {
-      this._signalK.setRadius(newRadius);
+      this._signalK.setRadius(newRadius)
+        .catch((err) => this._reportError('Failed to set radius', err));
     }
   }
 
