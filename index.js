@@ -51,10 +51,6 @@ module.exports = function (app) {
       description: "Optional - used for scope calculations. No depthsounder found."
     },
     {
-      path: "environment.depth.transducerToKeel",
-      description: "Optional - used for scope calculations. You can set it with configuration options below. "
-    },
-    {
       path: "environment.depth.belowSurface",
       description: "Optional - used for scope calculations. Provided by plugin derived-data"
     },
@@ -121,11 +117,6 @@ module.exports = function (app) {
         bowAnchorRollerHeight: {
           type: "number",
           title: "Height of the bow anchor roller above the waterline (in meters).  Used for scope calculations.",
-          default: 0
-        },
-        transducerToKeel: {
-          type: "number",
-          title: "Distance between the transducer and the keel (in meters, should be negative).  Useful if your install doesn't automatically detect this. 0 and above are ignored.",
           default: 0
         },
         on: {
@@ -204,28 +195,6 @@ module.exports = function (app) {
                 {
                   path: "design.bowAnchorRollerHeight",
                   value: parseFloat(configuration['bowAnchorRollerHeight'])
-                }
-              ]
-            }
-          ]
-        })
-      }
-
-      //save our depthsounder config to the tree so it can be used to calculate depth below surface
-      if (typeof configuration['transducerToKeel'] != 'undefined' && parseFloat(configuration['transducerToKeel']) < 0) {
-        app.handleMessage(plugin.id, {
-          updates: [
-            {
-              meta: [
-                {
-                  path: 'environment.depth.transducerToKeel',
-                  value: { units: 'm' }
-                }
-              ],
-              values: [
-                {
-                  path: "environment.depth.transducerToKeel",
-                  value: parseFloat(configuration['transducerToKeel'])
                 }
               ]
             }
