@@ -129,6 +129,7 @@ class AnchorAlarm {
           "environment.depth.belowKeel",
           { fallback: 0 },
         );
+
         const belowSurface = SignalKClient.freshValue(
           data,
           "environment.depth.belowSurface",
