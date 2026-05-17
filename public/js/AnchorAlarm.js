@@ -1,16 +1,10 @@
-// AnchorAlarm is the composition root: it owns the anchor state machine,
-// boat geometry, and the polling lifecycle, and delegates rendering to
-// FleetLayer (vessels + tracks) and the four HudPanels (Info/Scope/Wind/Home).
+// AnchorAlarm is the composition root: it owns boat geometry and the polling
+// lifecycle, delegates rendering to FleetLayer (vessels + tracks) and the four
+// HudPanels (Info/Scope/Wind/Home), and hands the anchor state machine to
+// AnchorController.
 
 const POLL_INTERVAL_MS = 1000;
 const INITIAL_LOAD_RETRY_MS = 5000;
-
-const AnchorState = Object.freeze({
-  UP: 'UP',
-  DROPPING: 'DROPPING',
-  ANCHORED: 'ANCHORED',
-  RAISING: 'RAISING',
-});
 
 class AnchorAlarm {
 
@@ -19,9 +13,7 @@ class AnchorAlarm {
 
     this.heading = undefined;
     this.currentCoordinates = undefined;
-    this.anchorCoordinates = undefined;
     this.filterRadius = 500;
-    this.maxRadius = 50;
 
     this.twa = null;
     this.aws = null;
@@ -30,12 +22,12 @@ class AnchorAlarm {
     this.tidalRise = 0;
     this.tidalFall = 0;
 
-    this.state = AnchorState.UP;
     this.homeZoom = undefined;
 
     this.map = undefined;
     this.fleetLayer = undefined;
     this.anchorOverlay = undefined;
+    this.anchorController = undefined;
 
     this.infoPanel = undefined;
     this.scopePanel = undefined;
@@ -76,25 +68,12 @@ class AnchorAlarm {
     this.toolbar = new ControlToolbar({
       getMapContainer: () => this.map && this.map.getContainer(),
       onRaise: () => {
-        if (this.state !== AnchorState.ANCHORED) return;
-        const agree = confirm('Do you really want to disable your anchor alarm?');
-        if (!agree) return;
-        this.state = AnchorState.RAISING;
-        this.raiseAnchor(); //better UI response outside.
-        this.signalK.raiseAnchor().always(() => {
-          this.state = AnchorState.UP;
-        });
+        if (this.anchorController.state !== AnchorState.ANCHORED) return;
+        if (!confirm('Do you really want to disable your anchor alarm?')) return;
+        this.anchorController.requestRaise();
       },
-      onDrop: () => {
-        if (this.state !== AnchorState.UP) return;
-        const mc = this.anchorOverlay.getCrosshairPosition();
-        this.state = AnchorState.DROPPING;
-        this.dropAnchor(mc, this.maxRadius); //better UI response outside.
-        this.signalK.dropAnchor({ latitude: mc.lat, longitude: mc.lng }, this.maxRadius).always(() => {
-          this.state = AnchorState.ANCHORED;
-        });
-      },
-      onSetRadius: (newRadius) => this.setMaxRadius(newRadius),
+      onDrop: () => this.anchorController.requestDrop(),
+      onSetRadius: (newRadius) => this.anchorController.setRadius(newRadius),
     });
 
     this.loadInitialData();
@@ -113,7 +92,7 @@ class AnchorAlarm {
       this.applyInitialTide(data);
 
       const anchorDistanceGuess = this.calculateScope(5, belowSurface);
-      this.computeDefaultRadius(anchorDistanceGuess);
+      const defaultRadius = this.computeDefaultRadius(anchorDistanceGuess);
 
       this.currentCoordinates = this.extractStartPosition(data);
       this.buildMap(this.currentCoordinates);
@@ -125,7 +104,7 @@ class AnchorAlarm {
       this.fleetLayer = new FleetLayer({ map: this.map, ownMmsi: this.boatConfig.mmsi });
       this.fleetLayer.setOwnVessel(this.currentCoordinates, this.heading, this.boatConfig);
 
-      this.placeAnchorWidgets();
+      this.placeAnchorWidgets(defaultRadius);
       this.restoreAnchorState(data, anchorDistanceGuess);
 
       this.map.fitBounds(this.anchorOverlay.getBounds());
@@ -167,7 +146,7 @@ class AnchorAlarm {
     r = Math.round(r / 5) * 5;
     r = Math.max(0, r);
     r = Math.min(200, r);
-    this.maxRadius = r;
+    return r;
   }
 
   extractStartPosition(data) {
@@ -217,8 +196,7 @@ class AnchorAlarm {
   }
 
   // Heading priority: SignalK headingTrue > bearing-to-anchor (if dropped) >
-  // last-known TWA > 0. The anchor-pointing branch also primes
-  // anchorCoordinates because restoreAnchorState reads it.
+  // last-known TWA > 0.
   computeInitialHeading(data) {
     const nav = data.navigation;
     let heading = SignalKClient.value(nav, 'headingTrue');
@@ -227,25 +205,29 @@ class AnchorAlarm {
     if (heading != null) return GeoMath.rad2deg(heading);
 
     if (initialAnchorPos) {
-      this.anchorCoordinates = L.latLng(initialAnchorPos.latitude, initialAnchorPos.longitude);
       return Math.round(GeoMath.calculateBearing(
         this.currentCoordinates.lat, this.currentCoordinates.lng,
-        this.anchorCoordinates.lat, this.anchorCoordinates.lng,
+        initialAnchorPos.latitude, initialAnchorPos.longitude,
       ));
     }
 
     return this.twa ?? 0;
   }
 
-  placeAnchorWidgets() {
-    this.anchorOverlay = new AnchorOverlay({ map: this.map, radius: this.maxRadius })
-      .setBoatPosition(this.currentCoordinates, this.heading, this.boatConfig.gpsOffset)
-      .onCrosshairDrag((pos) => {
-        if (this.state !== AnchorState.ANCHORED) {
-          this.anchorCoordinates = pos;
-        }
-      });
-    this.toolbar.setRadius(this.maxRadius);
+  placeAnchorWidgets(initialRadius) {
+    this.anchorOverlay = new AnchorOverlay({ map: this.map, radius: initialRadius })
+      .setBoatPosition(this.currentCoordinates, this.heading, this.boatConfig.gpsOffset);
+
+    this.anchorController = new AnchorController({
+      overlay: this.anchorOverlay,
+      toolbar: this.toolbar,
+      signalK: this.signalK,
+      infoPanel: this.infoPanel,
+      scopePanel: this.scopePanel,
+      initialRadius,
+    });
+
+    this.anchorOverlay.onCrosshairDrag((pos) => this.anchorController.updateCrosshairPosition(pos));
   }
 
   restoreAnchorState(data, anchorDistanceGuess) {
@@ -253,16 +235,13 @@ class AnchorAlarm {
     const initialAnchorPos = SignalKClient.value(nav, 'anchor.position');
 
     if (initialAnchorPos) {
-      this.anchorCoordinates = L.latLng(initialAnchorPos.latitude, initialAnchorPos.longitude);
+      const pos = L.latLng(initialAnchorPos.latitude, initialAnchorPos.longitude);
       const radius = parseInt(SignalKClient.value(nav, 'anchor.maxRadius'), 10);
-      // Set state before dropAnchor so the overlay paints green.
-      this.state = AnchorState.ANCHORED;
-      this.dropAnchor(this.anchorCoordinates, radius);
+      this.anchorController.restoreDropped(pos, radius);
     } else {
       const bowPos = GeoMath.calculateBowCoordinates(this.currentCoordinates, this.heading, this.boatConfig.gpsBowXDistance, this.boatConfig.gpsBowYDistance);
-      const anchorPositionGuess = GeoMath.calculateDestinationPoint(bowPos.lat, bowPos.lng, this.heading, anchorDistanceGuess);
-      this.anchorCoordinates = L.latLng(anchorPositionGuess.latitude, anchorPositionGuess.longitude);
-      this.raiseAnchor();
+      const guess = GeoMath.calculateDestinationPoint(bowPos.lat, bowPos.lng, this.heading, anchorDistanceGuess);
+      this.anchorController.restoreRaised(L.latLng(guess.latitude, guess.longitude));
     }
   }
 
@@ -299,9 +278,10 @@ class AnchorAlarm {
         this.heading = GeoMath.rad2deg(headingTrue);
       } else {
         // No live heading — point at the anchor instead.
+        const anchor = this.anchorController.anchorCoordinates;
         this.heading = Math.round(GeoMath.calculateBearing(
           this.currentCoordinates.lat, this.currentCoordinates.lng,
-          this.anchorCoordinates.lat, this.anchorCoordinates.lng,
+          anchor.lat, anchor.lng,
         ));
       }
 
@@ -364,31 +344,17 @@ class AnchorAlarm {
     });
   }
 
-  // Reconcile against the server's anchor state. We skip while a drop/raise
-  // POST is in flight — the server doesn't reflect our pending change yet,
-  // so we'd flip ourselves back.
   pollAnchorReconcile() {
     this.signalK.fetchAnchorState().done((anchorStatus) => {
-      if (this.state !== AnchorState.UP && this.state !== AnchorState.ANCHORED) return;
-
-      const serverOn = SignalKClient.value(anchorStatus, 'state') === "on";
-
-      if (serverOn) {
-        this.maxRadius = SignalKClient.value(anchorStatus, 'maxRadius');
-        const anchorPos = SignalKClient.value(anchorStatus, 'position');
-        this.anchorCoordinates = L.latLng(anchorPos.latitude, anchorPos.longitude);
-
-        if (this.state === AnchorState.UP) {
-          // Flip state before dropAnchor so the overlay paints green.
-          this.state = AnchorState.ANCHORED;
-          this.dropAnchor(this.anchorCoordinates, this.maxRadius);
-        } else {
-          this.uiSetRadius(this.maxRadius);
-        }
-      } else if (this.state === AnchorState.ANCHORED) {
-        this.state = AnchorState.UP;
-        this.raiseAnchor();
+      const on = SignalKClient.value(anchorStatus, 'state') === 'on';
+      let position = null;
+      if (on) {
+        const p = SignalKClient.value(anchorStatus, 'position');
+        if (p) position = L.latLng(p.latitude, p.longitude);
       }
+      const maxRadius = SignalKClient.value(anchorStatus, 'maxRadius');
+
+      this.anchorController.reconcile({ on, position, maxRadius });
     });
   }
 
@@ -402,52 +368,11 @@ class AnchorAlarm {
     });
   }
 
-  // === Anchor operations ===========================================================
-
-  uiSetRadius(radius) {
-    this.toolbar.setRadius(radius);
-    this.anchorOverlay.setRadius(radius);
-  }
-
-  setMaxRadius(newRadius) {
-    this.maxRadius = newRadius;
-    this.uiSetRadius(newRadius);
-
-    if (this.state === AnchorState.ANCHORED) {
-      this.signalK.setRadius(newRadius);
-    }
-  }
-
   destroy() {
     if (this.pollTimer) {
       clearInterval(this.pollTimer);
       this.pollTimer = null;
     }
-  }
-
-  dropAnchor(position, radius) {
-    this.toolbar.setState(this.state);
-
-    this.anchorCoordinates = position;
-
-    this.scopePanel.hide();
-    this.infoPanel.show();
-
-    this.maxRadius = parseInt(radius, 10);
-    if (this.maxRadius <= 0)
-      this.maxRadius = 20;
-
-    this.anchorOverlay.drop(position, this.maxRadius);
-    this.toolbar.setRadius(this.maxRadius);
-  }
-
-  raiseAnchor() {
-    this.toolbar.setState(this.state);
-
-    this.infoPanel.hide();
-    this.scopePanel.show();
-
-    this.anchorOverlay.raise(this.anchorCoordinates);
   }
 
   // === Calculations ================================================================
