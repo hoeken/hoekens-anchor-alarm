@@ -182,19 +182,19 @@ const ScopePanel = L.Control.extend({
             <th colspan="2">&nbsp;</th>
           </tr>
           <tr>
-            <th>7:1&nbspScope</th>
+            <th>7:1&nbsp;Scope</th>
             <td><span id='scope7to1'>~</span></td>
           </tr>
           <tr>
-            <th>5:1&nbspScope</th>
+            <th>5:1&nbsp;Scope</th>
             <td><span id='scope5to1'>~</span></td>
           </tr>
           <tr>
-            <th>4:1&nbspScope</th>
+            <th>4:1&nbsp;Scope</th>
             <td><span id='scope4to1'>~</span></td>
           </tr>
           <tr>
-            <th>3:1&nbspScope</th>
+            <th>3:1&nbsp;Scope</th>
             <td><span id='scope3to1'>~</span></td>
           </tr>
           <tr>

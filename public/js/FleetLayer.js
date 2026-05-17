@@ -101,9 +101,9 @@ class FleetLayer {
       const mmsi = match[1];
       const data = tracks[uri];
 
-      if (!data.coordinates[0].length) continue;
+      const history = data.coordinates?.[0];
+      if (!history || !history.length) continue;
 
-      const history = data.coordinates[0];
       const points = [];
       let i = 0;
       for (let position of history) {
@@ -116,6 +116,7 @@ class FleetLayer {
         }
       }
 
+      if (!points.length) continue;
       this.vesselTracks[mmsi] = this.createTrack(points, points.length);
     }
   }
@@ -165,12 +166,17 @@ class FleetLayer {
     }
 
     // Drop vessels that left the radius.
+    const detectedSet = new Set(detected.map(String));
     for (let mmsi in this.vessels) {
-      if (!detected.includes(mmsi)) {
-        this.map.removeLayer(this.vessels[mmsi]);
+      if (!detectedSet.has(mmsi)) {
+        const marker = this.vessels[mmsi];
+        if (marker.gpsAntennaMarker) this.map.removeLayer(marker.gpsAntennaMarker);
+        this.map.removeLayer(marker);
         delete this.vessels[mmsi];
-        this.map.removeLayer(this.vesselTracks[mmsi]);
-        delete this.vesselTracks[mmsi];
+        if (this.vesselTracks[mmsi]) {
+          this.map.removeLayer(this.vesselTracks[mmsi]);
+          delete this.vesselTracks[mmsi];
+        }
       }
     }
   }

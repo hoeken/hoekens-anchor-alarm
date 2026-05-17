@@ -118,7 +118,7 @@ class AnchorController {
     this.anchorCoordinates = position;
 
     this.maxRadius = parseInt(radius, 10);
-    if (this.maxRadius <= 0) this.maxRadius = 20;
+    if (!(this.maxRadius > 0)) this.maxRadius = 20;
 
     this._toolbar.setState(this.state);
     this._toolbar.setRadius(this.maxRadius);

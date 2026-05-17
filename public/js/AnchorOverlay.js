@@ -53,7 +53,7 @@ class AnchorOverlay {
     this.dropped = true;
     this.anchorPosition = position;
     this.radius = parseInt(radius, 10);
-    if (this.radius <= 0) this.radius = 20;
+    if (!(this.radius > 0)) this.radius = 20;
 
     this._removeCrosshair();
     this._removeAnchorMarker();
@@ -136,7 +136,8 @@ class AnchorOverlay {
     this.anchorLineAngle.setLatLngs([bow, this.anchorPosition]);
 
     // textpath label flipping: if the anchor is west of the bow, the label
-    // reads upside-down without this flip. (Fails exactly on the equator.)
+    // reads upside-down without this flip. (Degenerate when bow and anchor
+    // sit on the same meridian.)
     const flip = bow.lng > this.anchorPosition.lng;
 
     let distance = GeoMath.calculateDistance(bow.lat, bow.lng, this.anchorPosition.lat, this.anchorPosition.lng);

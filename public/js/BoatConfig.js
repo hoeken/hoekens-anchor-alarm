@@ -32,9 +32,9 @@ class BoatConfig {
     const rollerHeight = SignalKClient.value(data, 'design.bowAnchorRollerHeight');
     if (rollerHeight !== undefined) anchorRollerHeight = parseFloat(rollerHeight);
     const fromBow = SignalKClient.value(data, 'sensors.gps.fromBow');
-    if (fromBow !== undefined) gpsBowYDistance = fromBow;
+    if (fromBow !== undefined) gpsBowYDistance = parseFloat(fromBow);
     const fromCenter = SignalKClient.value(data, 'sensors.gps.fromCenter');
-    if (fromCenter !== undefined) gpsBowXDistance = fromCenter;
+    if (fromCenter !== undefined) gpsBowXDistance = parseFloat(fromCenter);
     const shipType = SignalKClient.value(data, 'design.aisShipType');
     if (shipType?.id !== undefined) aisShipType = shipType.id;
 
