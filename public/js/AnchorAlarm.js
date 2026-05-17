@@ -47,6 +47,7 @@ class AnchorAlarm {
     this.scopePanel = undefined;
     this.windPanel = undefined;
     this.homeButton = undefined;
+    this.toolbar = undefined;
 
     this.pollTimer = null;
   }
@@ -78,71 +79,31 @@ class AnchorAlarm {
       "Satellite": this.satelliteLayer
     };
 
-    this.wireButtons();
+    this.toolbar = new ControlToolbar({
+      getMapContainer: () => this.map && this.map.getContainer(),
+      onRaise: () => {
+        if (this.state !== AnchorState.ANCHORED) return;
+        const agree = confirm('Do you really want to disable your anchor alarm?');
+        if (!agree) return;
+        this.state = AnchorState.RAISING;
+        this.raiseAnchor(); //better UI response outside.
+        this.signalK.raiseAnchor().always(() => {
+          this.state = AnchorState.UP;
+        });
+      },
+      onDrop: () => {
+        if (this.state !== AnchorState.UP) return;
+        const mc = this.anchorOverlay.getCrosshairPosition();
+        this.state = AnchorState.DROPPING;
+        this.dropAnchor(mc, this.maxRadius); //better UI response outside.
+        this.signalK.dropAnchor({ latitude: mc.lat, longitude: mc.lng }, this.maxRadius).always(() => {
+          this.state = AnchorState.ANCHORED;
+        });
+      },
+      onSetRadius: (newRadius) => this.setMaxRadius(newRadius),
+    });
+
     this.loadInitialData();
-  }
-
-  wireButtons() {
-    $('#raiseAnchor').click(() => {
-      if (this.state !== AnchorState.ANCHORED) return;
-      let agree = confirm('Do you really want to disable your anchor alarm?');
-      if (!agree) return;
-      this.state = AnchorState.RAISING;
-      this.raiseAnchor(); //better UI response outside.
-      this.signalK.raiseAnchor().always(() => {
-        this.state = AnchorState.UP;
-      });
-    });
-
-    $('#dropAnchor').click(() => {
-      if (this.state !== AnchorState.UP) return;
-      let mc = this.anchorOverlay.getCrosshairPosition();
-      this.state = AnchorState.DROPPING;
-      this.dropAnchor(mc, this.maxRadius); //better UI response outside.
-      this.signalK.dropAnchor({ latitude: mc.lat, longitude: mc.lng }, this.maxRadius).always(() => {
-        this.state = AnchorState.ANCHORED;
-      });
-    });
-
-    $('#setRadius').click(() => {
-      let input = prompt('Enter Radius (m)', this.maxRadius);
-      if (input === null)
-        return;
-      let newRadius = parseInt(input, 10);
-      if (isNaN(newRadius) || newRadius <= 0)
-        return;
-
-      this.setMaxRadius(newRadius);
-    });
-
-    $('#increaseRadius').click(() => {
-      this.setMaxRadius(this.maxRadius + 5);
-    });
-
-    // macOS Chrome delivers trackpad pinch as a wheel event with ctrlKey=true.
-    // Over the #map_toggle overlay the browser would zoom the page instead of
-    // the map, so swallow the default and re-dispatch onto the map container.
-    document.getElementById('map_toggle').addEventListener('wheel', (e) => {
-      if (!e.ctrlKey) return;
-      e.preventDefault();
-      this.map.getContainer().dispatchEvent(new WheelEvent('wheel', {
-        deltaX: e.deltaX,
-        deltaY: e.deltaY,
-        deltaZ: e.deltaZ,
-        deltaMode: e.deltaMode,
-        ctrlKey: e.ctrlKey,
-        clientX: e.clientX,
-        clientY: e.clientY,
-        bubbles: false,
-        cancelable: true,
-      }));
-    }, { passive: false });
-
-    $('#decreaseRadius').click(() => {
-      if (this.maxRadius <= 5)
-        return;
-      this.setMaxRadius(this.maxRadius - 5);
-    });
   }
 
   // === Initial load (one /self call, broken into phases) ===========================
@@ -312,7 +273,7 @@ class AnchorAlarm {
           this.anchorCoordinates = pos;
         }
       });
-    $('#radius').html(this.maxRadius);
+    this.toolbar.setRadius(this.maxRadius);
   }
 
   restoreAnchorState(data, anchorDistanceGuess) {
@@ -472,7 +433,7 @@ class AnchorAlarm {
   // === Anchor operations ===========================================================
 
   uiSetRadius(radius) {
-    $('#radius').html(radius);
+    this.toolbar.setRadius(radius);
     this.anchorOverlay.setRadius(radius);
   }
 
@@ -493,8 +454,7 @@ class AnchorAlarm {
   }
 
   dropAnchor(position, radius) {
-    $('#anchorDown').show();
-    $('#anchorUp').hide();
+    this.toolbar.setState(this.state);
 
     this.anchorCoordinates = position;
 
@@ -506,12 +466,11 @@ class AnchorAlarm {
       this.maxRadius = 20;
 
     this.anchorOverlay.drop(position, this.maxRadius);
-    $('#radius').html(this.maxRadius);
+    this.toolbar.setRadius(this.maxRadius);
   }
 
   raiseAnchor() {
-    $('#anchorUp').show();
-    $('#anchorDown').hide();
+    this.toolbar.setState(this.state);
 
     this.infoPanel.hide();
     this.scopePanel.show();
