@@ -41,7 +41,7 @@ class AnchorController {
     this._enterDropped(pos, this.maxRadius);
     this._signalK
       .dropAnchor({ latitude: pos.lat, longitude: pos.lng }, this.maxRadius)
-      .always(() => {
+      .finally(() => {
         this.state = AnchorState.ANCHORED;
         this._toolbar.setState(this.state);
       });
@@ -54,7 +54,7 @@ class AnchorController {
     this._enterRaised();
     this._signalK
       .raiseAnchor()
-      .always(() => {
+      .finally(() => {
         this.state = AnchorState.UP;
         this._toolbar.setState(this.state);
       });

@@ -79,7 +79,7 @@ class AnchorAlarm {
   // === Initial load (one /self call, broken into phases) ===========================
 
   loadInitialData() {
-    this.signalK.fetchSelf().done((data) => {
+    this.signalK.fetchSelf().then((data) => {
       this.boatConfig = BoatConfig.fromSelf(data);
 
       const belowKeel = SignalKClient.freshValue(data, 'environment.depth.belowKeel', { fallback: 0 });
@@ -103,14 +103,14 @@ class AnchorAlarm {
 
       this.map.fitBounds(this.anchorOverlay.getBounds());
 
-      this.signalK.fetchTracks(this.filterRadius).done((tracks) => {
+      this.signalK.fetchTracks(this.filterRadius).then((tracks) => {
         this.fleetLayer.loadHistoricalTracks(tracks, this.currentCoordinates, this.filterRadius);
       });
 
       this.pollTimer = setInterval(() => this.pollSelf(), POLL_INTERVAL_MS);
       this.fleetTimer = setInterval(() => this.pollFleet(), FLEET_POLL_INTERVAL_MS);
       this.pollFleet();
-    }).fail((response) => {
+    }).catch((response) => {
       const msg = `Failed to load initial data: ${response.status} ${response.statusText}`;
       console.error(msg);
       this.statusBar?.setError(msg);
@@ -269,7 +269,7 @@ class AnchorAlarm {
   // and the anchor alarm — they're all subtrees of the same document. The fleet
   // poll runs on its own slower timer.
   pollSelf() {
-    this.signalK.fetchSelf().done((data) => {
+    this.signalK.fetchSelf().then((data) => {
       this.updatePosition(data.navigation);
       this.updateAnchorStatus(SignalKClient.extract(data, 'notifications.navigation.anchor'));
       this.updateDepth(SignalKClient.extract(data, 'environment.depth'));
@@ -358,7 +358,7 @@ class AnchorAlarm {
   }
 
   pollFleet() {
-    this.signalK.fetchAllVessels().done((vessels) => {
+    this.signalK.fetchAllVessels().then((vessels) => {
       this.fleetLayer.syncOtherVessels(vessels, {
         ownLatLng: this.currentCoordinates,
         filterRadius: this.filterRadius,
@@ -388,4 +388,8 @@ class AnchorAlarm {
   }
 }
 
-$(() => AnchorAlarm.startup());
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => AnchorAlarm.startup());
+} else {
+  AnchorAlarm.startup();
+}

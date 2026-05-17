@@ -1,8 +1,8 @@
 // ControlToolbar owns the top control bar (raise/drop anchor buttons and the
-// +/- radius stepper). It builds its own DOM under the supplied parent, hides
-// jQuery from the host, and exposes onDrop/onRaise/onSetRadius callbacks plus
-// setState(anchorState) and setRadius(r) update methods. Element IDs are
-// preserved for CSS hooks in style.css; do not rename without updating it.
+// +/- radius stepper). It builds its own DOM under the supplied parent and
+// exposes onDrop/onRaise/onSetRadius callbacks plus setState(anchorState) and
+// setRadius(r) update methods. Element IDs are preserved for CSS hooks in
+// style.css; do not rename without updating it.
 
 class ControlToolbar {
 

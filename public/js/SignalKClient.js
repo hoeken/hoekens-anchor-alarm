@@ -13,11 +13,12 @@ class SignalKClient {
     this.pluginName = pluginName;
   }
 
-  // Fetchers return a jQuery deferred so existing .done/.fail/.always chains
-  // keep working. A WS rewrite would swap these for native Promises (or even
-  // synchronous reads from a delta-fed cache).
+  // Fetchers return native Promises that resolve with the parsed JSON body and
+  // reject with { status, statusText } on HTTP errors. A WS rewrite would swap
+  // these for delta-fed cache reads without changing call sites.
   request(path) {
-    return $.get(`${this.baseUrl}/signalk/v1/api/${path}`);
+    return fetch(`${this.baseUrl}/signalk/v1/api/${path}`)
+      .then(SignalKClient._toJsonOrReject);
   }
 
   raiseAnchor() {
@@ -33,11 +34,21 @@ class SignalKClient {
   }
 
   pluginPost(action, data) {
-    return $.post(`${this.baseUrl}/plugins/${this.pluginName}/${action}`, data)
-      .fail((response) => {
-        if (response.status === 401)
-          location.href = "/admin/#/login";
-      });
+    return fetch(`${this.baseUrl}/plugins/${this.pluginName}/${action}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data ?? {}),
+    }).then((response) => {
+      if (response.status === 401) location.href = "/admin/#/login";
+      return SignalKClient._toJsonOrReject(response);
+    });
+  }
+
+  static _toJsonOrReject(response) {
+    if (!response.ok) {
+      return Promise.reject({ status: response.status, statusText: response.statusText });
+    }
+    return response.json();
   }
 
   fetchSelf() { return this.request('vessels/self'); }
