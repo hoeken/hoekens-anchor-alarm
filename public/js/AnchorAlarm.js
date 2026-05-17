@@ -156,7 +156,6 @@ class AnchorAlarm {
 
     this.satelliteLayer.addTo(this.map);
 
-    L.control.scale({ position: 'topleft' }).addTo(this.map);
     L.control.zoom({ position: 'topright' }).addTo(this.map);
 
     this.homeButton = new HomeButtonControl({
@@ -180,6 +179,8 @@ class AnchorAlarm {
     this.map.addControl(this.infoPanel);
     this.map.addControl(this.scopePanel);
     this.map.addControl(this.windPanel);
+
+    L.control.scale({ position: 'topleft' }).addTo(this.map);
   }
 
   paintInitialReadings(belowSurface, belowKeel, data) {

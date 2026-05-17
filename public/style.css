@@ -28,8 +28,8 @@ body,
   position: absolute;
   top: 10px;
   left: 50%;
-  width: 250px;
-  margin-left: -150px;
+  width: 200px;
+  margin-left: -100px;
   z-index: 99;
   opacity: 1;
   border-radius: 5px;
@@ -136,6 +136,14 @@ button {
   display: flex !important;
   align-items: center;
   justify-content: center;
+}
+
+.leaflet-touch .leaflet-control-layers-toggle {
+  width: 30px !important;
+  height: 30px !important;
+  background-size: 18px 18px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
 }
 
 .anchorLineLabel textPath {
