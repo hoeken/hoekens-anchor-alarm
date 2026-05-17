@@ -42,11 +42,14 @@ body,
 
 #controlToolbar button {
   height: 40px;
-}
-
-#controlToolbar button {
   pointer-events: auto;
   touch-action: none;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 5px;
+  border: 1px solid #888;
+  background-color: #f0f0f0;
+  color: black;
 }
 
 button {
