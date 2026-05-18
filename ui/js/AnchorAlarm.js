@@ -104,8 +104,8 @@ class AnchorAlarm {
             },
             {
               path: "environment.tide",
-              policy: "fixed",
-              period: 15 * 60 * 1000,
+              policy: "instant",
+              minPeriod: 60 * 1000,
             },
             {
               path: "navigation.anchor.position",
