@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "build:ui": "vite build",
+    "prepublishOnly": "npm run build:ui"
   },
   "lint-staged": {
     "*.{js,json,css,html}": "prettier --write",
@@ -29,6 +31,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "@signalk/client": "^2.4.0",
     "@signalk/tracks-plugin": "^2.0.2"
   },
   "repository": {
@@ -42,6 +45,7 @@
     "globals": "^17.6.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
-    "prettier": "^3.8.3"
+    "prettier": "^3.8.3",
+    "vite": "^8.0.13"
   }
 }

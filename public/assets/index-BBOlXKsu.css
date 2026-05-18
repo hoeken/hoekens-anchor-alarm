@@ -1,0 +1,195 @@
+body {
+  padding: 0;
+  margin: 0;
+  font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+  font-size: 0.75rem;
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body,
+#map {
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+  position: relative;
+}
+
+#map_container {
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+  position: relative;
+}
+
+#controlToolbar {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 200px;
+  margin-left: -100px;
+  z-index: 99;
+  opacity: 1;
+  border-radius: 5px;
+  text-align: center;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#controlToolbar button {
+  height: 40px;
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 5px;
+  border: 1px solid #888;
+  background-color: #f0f0f0;
+  color: black;
+}
+
+button {
+  font-size: 23px;
+}
+
+.info {
+  padding: 5px;
+  width: 150px;
+  font-size: 11pt;
+  line-height: 1.1;
+  background-color: white;
+}
+
+.info th,
+.scope th {
+  text-align: left;
+}
+
+.info td,
+.scope td {
+  width: 100%;
+  text-align: right;
+}
+
+.scope {
+  padding: 5px;
+  width: 180px;
+  font-size: 11pt;
+  line-height: 1.1;
+  background-color: white;
+}
+
+.normal {
+  color: green;
+}
+
+.alarm {
+  color: yellow;
+}
+
+.warn {
+  color: orange;
+}
+
+.emergency {
+  color: red;
+}
+
+#anchorDown,
+#anchorUp {
+  display: none;
+}
+
+#anchorDown button,
+#anchorUp button {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#radiusControl {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#radiusControl button {
+  box-sizing: border-box;
+  padding: 0;
+}
+
+#decreaseRadius,
+#increaseRadius {
+  flex: 0 0 auto;
+  width: 40px;
+  aspect-ratio: 1 / 1;
+}
+
+#setRadius {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.leaflet-control-home {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.leaflet-touch .leaflet-control-layers-toggle {
+  width: 30px !important;
+  height: 30px !important;
+  background-size: 18px 18px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+.anchorLineLabel textPath {
+  fill: black;
+  /* or whatever text color you want */
+  paint-order: stroke;
+  stroke: rgba(255, 255, 255, 0.6);
+  /* transparent white "background" */
+  stroke-width: 3px;
+  /* thickness of the background */
+}
+
+.wind-barb {
+  fill: black;
+  stroke: black;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-miterlimit: 10;
+  z-index: 100;
+
+  /* Adds a shadow: X-offset, Y-offset, Blur-radius, Color */
+  filter: drop-shadow(0px 0px 1px rgba(255, 255, 255, 0.5));
+}
+
+#windBarbContainer .wind-barb {
+  width: 24px;
+}
+
+.windBarbControl {
+  padding: 5px;
+  font-size: 11pt;
+  line-height: 1.1;
+  background-color: white;
+  text-align: center;
+  width: 70px;
+}
+
+.statusBar {
+  padding: 5px;
+  max-width: 320px;
+  font-size: 11pt;
+  line-height: 1.1;
+  background-color: white;
+  font-weight: bold;
+  line-height: 1.2;
+}

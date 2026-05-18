@@ -4,12 +4,7 @@ const prettier = require("eslint-config-prettier");
 
 module.exports = [
   {
-    ignores: [
-      "node_modules/**",
-      "public/leaflet/**",
-      "public/favicons/**",
-      "public/icons/**",
-    ],
+    ignores: ["node_modules/**", "public/**", "ui/public/**"],
   },
   js.configs.recommended,
   {
@@ -20,7 +15,7 @@ module.exports = [
     },
   },
   {
-    files: ["public/js/**/*.js"],
+    files: ["ui/js/**/*.js"],
     languageOptions: {
       sourceType: "module",
       globals: { ...globals.browser, L: "readonly" },
