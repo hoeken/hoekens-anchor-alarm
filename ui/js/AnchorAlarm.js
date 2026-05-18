@@ -7,13 +7,11 @@ import Client from "@signalk/client";
 import { SignalKClient } from "./SignalKClient.js";
 import { AppState } from "./AppState.js";
 import { FleetLayer } from "./FleetLayer.js";
-import {
-  StatusBar,
-  HomeButtonControl,
-  InfoPanel,
-  WindPanel,
-  ScopePanel,
-} from "./HudPanels.js";
+import { StatusBar } from "./StatusBar.js";
+import { HomeButtonControl } from "./HomeButtonControl.js";
+import { InfoPanel } from "./InfoPanel.js";
+import { WindPanel } from "./WindPanel.js";
+import { ScopePanel } from "./ScopePanel.js";
 import { StaleReloader } from "./StaleReloader.js";
 import { AnchorOverlay } from "./AnchorOverlay.js";
 import { AnchorController } from "./AnchorController.js";

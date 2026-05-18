@@ -4146,6 +4146,115 @@ var FleetLayer = class {
   }
 };
 //#endregion
+//#region ui/js/StatusBar.js
+var StatusBar = L.Control.extend({
+  options: { position: "bottomright" },
+  onAdd: function () {
+    const container = L.DomUtil.create("div", "statusBar leaflet-bar");
+    L.DomEvent.disableClickPropagation(container);
+    container.id = "statusBarUI";
+    container.style.display = "none";
+    this._container = container;
+    return container;
+  },
+  setStatus: function (text) {
+    this._render(text, "black");
+  },
+  setWarning: function (text) {
+    this._render(text, "#d97706");
+  },
+  setError: function (text) {
+    this._render(text, "red");
+  },
+  _render: function (text, color) {
+    if (!this._container) return;
+    this._container.textContent = text;
+    this._container.style.color = color;
+    this._container.style.display = "";
+  },
+  show: function () {
+    if (this._container) this._container.style.display = "";
+  },
+  hide: function () {
+    if (this._container) this._container.style.display = "none";
+  },
+});
+//#endregion
+//#region ui/js/HomeButtonControl.js
+var HomeButtonControl = L.Control.extend({
+  options: {
+    position: "topright",
+    onHome: null,
+  },
+  onAdd: function (map) {
+    const container = L.DomUtil.create("div", "leaflet-bar leaflet-control");
+    const homeButton = L.DomUtil.create("a", "leaflet-control-home", container);
+    homeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" stroke="currentColor" stroke-width="0.75" class="bi bi-house" viewBox="0 0 16 16">
+  <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/>
+</svg>`;
+    homeButton.href = "#";
+    homeButton.title = "Center on Boat";
+    homeButton.setAttribute("role", "button");
+    L.DomEvent.disableClickPropagation(container);
+    const onHome = this.options.onHome;
+    L.DomEvent.on(homeButton, "click", function (e) {
+      L.DomEvent.stopPropagation(e);
+      L.DomEvent.preventDefault(e);
+      if (onHome) onHome(map);
+    });
+    return container;
+  },
+});
+//#endregion
+//#region ui/js/InfoPanel.js
+var InfoPanel = L.Control.extend({
+  options: { position: "bottomright" },
+  onAdd: function () {
+    const container = L.DomUtil.create("div", "info leaflet-bar");
+    L.DomEvent.disableClickPropagation(container);
+    container.id = "infoUI";
+    container.innerHTML = `
+        <table>
+          <tr>
+            <th>Depth:</th>
+            <td><span title="Below Surface" id='belowSurface'>~</span></td>
+          </tr>
+          <tr>
+            <th>Status:</th>
+            <td><span id='pluginStatus'>Loading</span></td>
+          </tr>
+        </table>
+    `;
+    this._container = container;
+    this._belowSurface = container.querySelector("#belowSurface");
+    this._pluginStatus = container.querySelector("#pluginStatus");
+    return container;
+  },
+  update: function (state) {
+    this.setBelowSurface(state.belowSurface);
+    this.setStatus(state.anchor.notification);
+  },
+  setBelowSurface: function (dbs) {
+    if (dbs)
+      this._belowSurface.textContent = `${parseFloat(dbs.value).toFixed(1)}m`;
+    else this._belowSurface.textContent = "~";
+  },
+  setStatus: function (notification) {
+    if (notification) {
+      this._pluginStatus.textContent = notification.value.message;
+      this._pluginStatus.className = "";
+      if (notification.value.message !== "Off" && notification.value.state)
+        this._pluginStatus.classList.add(notification.value.state);
+    } else this._pluginStatus.textContent = "Unknown";
+  },
+  show: function () {
+    if (this._container) this._container.style.display = "";
+  },
+  hide: function () {
+    if (this._container) this._container.style.display = "none";
+  },
+});
+//#endregion
 //#region ui/js/WindBarb.js
 var WindBarb = Object.freeze({
   knot0:
@@ -4361,110 +4470,7 @@ var getWindBarb = function (windSpeed) {
     `;
 };
 //#endregion
-//#region ui/js/HudPanels.js
-var StatusBar = L.Control.extend({
-  options: { position: "bottomright" },
-  onAdd: function () {
-    const container = L.DomUtil.create("div", "statusBar leaflet-bar");
-    L.DomEvent.disableClickPropagation(container);
-    container.id = "statusBarUI";
-    container.style.display = "none";
-    this._container = container;
-    return container;
-  },
-  setStatus: function (text) {
-    this._render(text, "black");
-  },
-  setWarning: function (text) {
-    this._render(text, "#d97706");
-  },
-  setError: function (text) {
-    this._render(text, "red");
-  },
-  _render: function (text, color) {
-    if (!this._container) return;
-    this._container.textContent = text;
-    this._container.style.color = color;
-    this._container.style.display = "";
-  },
-  show: function () {
-    if (this._container) this._container.style.display = "";
-  },
-  hide: function () {
-    if (this._container) this._container.style.display = "none";
-  },
-});
-var HomeButtonControl = L.Control.extend({
-  options: {
-    position: "topright",
-    onHome: null,
-  },
-  onAdd: function (map) {
-    const container = L.DomUtil.create("div", "leaflet-bar leaflet-control");
-    const homeButton = L.DomUtil.create("a", "leaflet-control-home", container);
-    homeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" stroke="currentColor" stroke-width="0.75" class="bi bi-house" viewBox="0 0 16 16">
-  <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/>
-</svg>`;
-    homeButton.href = "#";
-    homeButton.title = "Center on Boat";
-    homeButton.setAttribute("role", "button");
-    L.DomEvent.disableClickPropagation(container);
-    const onHome = this.options.onHome;
-    L.DomEvent.on(homeButton, "click", function (e) {
-      L.DomEvent.stopPropagation(e);
-      L.DomEvent.preventDefault(e);
-      if (onHome) onHome(map);
-    });
-    return container;
-  },
-});
-var InfoPanel = L.Control.extend({
-  options: { position: "bottomright" },
-  onAdd: function () {
-    const container = L.DomUtil.create("div", "info leaflet-bar");
-    L.DomEvent.disableClickPropagation(container);
-    container.id = "infoUI";
-    container.innerHTML = `
-        <table>
-          <tr>
-            <th>Depth:</th>
-            <td><span title="Below Surface" id='belowSurface'>~</span></td>
-          </tr>
-          <tr>
-            <th>Status:</th>
-            <td><span id='pluginStatus'>Loading</span></td>
-          </tr>
-        </table>
-    `;
-    this._container = container;
-    this._belowSurface = container.querySelector("#belowSurface");
-    this._pluginStatus = container.querySelector("#pluginStatus");
-    return container;
-  },
-  update: function (state) {
-    this.setBelowSurface(state.belowSurface);
-    this.setStatus(state.anchor.notification);
-  },
-  setBelowSurface: function (dbs) {
-    if (dbs)
-      this._belowSurface.textContent = `${parseFloat(dbs.value).toFixed(1)}m`;
-    else this._belowSurface.textContent = "~";
-  },
-  setStatus: function (notification) {
-    if (notification) {
-      this._pluginStatus.textContent = notification.value.message;
-      this._pluginStatus.className = "";
-      if (notification.value.message !== "Off" && notification.value.state)
-        this._pluginStatus.classList.add(notification.value.state);
-    } else this._pluginStatus.textContent = "Unknown";
-  },
-  show: function () {
-    if (this._container) this._container.style.display = "";
-  },
-  hide: function () {
-    if (this._container) this._container.style.display = "none";
-  },
-});
+//#region ui/js/WindPanel.js
 var WindPanel = L.Control.extend({
   options: { position: "bottomright" },
   onAdd: function () {
@@ -4510,6 +4516,8 @@ var WindPanel = L.Control.extend({
     this._aws.innerHTML = "~";
   },
 });
+//#endregion
+//#region ui/js/ScopePanel.js
 var ScopePanel = L.Control.extend({
   options: { position: "bottomright" },
   onAdd: function () {
