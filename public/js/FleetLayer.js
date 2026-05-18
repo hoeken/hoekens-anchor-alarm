@@ -9,6 +9,8 @@ import { SignalKClient } from "./SignalKClient.js";
 import { BoatConfig } from "./BoatConfig.js";
 
 const MAX_OWN_TRACK_POINTS = 3600 * 24; // 24 hours at 1Hz
+const POLL_INTERVAL_MS = 5000;
+const DEFAULT_FILTER_RADIUS = 500;
 
 const GPS_ANTENNA_ICON = L.icon({
   iconUrl: "icons/antenna.svg",
@@ -17,7 +19,8 @@ const GPS_ANTENNA_ICON = L.icon({
 });
 
 export class FleetLayer {
-  constructor({ map, ownMmsi }) {
+  constructor({ app, map, ownMmsi }) {
+    this.app = app;
     this.map = map;
     this.ownMmsi = ownMmsi;
     this.vessels = {}; // mmsi -> L.BoatMarker (with .gpsAntennaMarker attached)
@@ -25,6 +28,57 @@ export class FleetLayer {
     this.ownVessel = undefined;
     this.ownAntenna = undefined;
     this.ownBoatConfig = undefined;
+    this.fleetTimer = null;
+    this._pollInFlight = false;
+    this.filterRadius = DEFAULT_FILTER_RADIUS;
+
+    this.setOwnVessel(this.app.state.getPosition(), this.app.state.boatConfig);
+
+    this.loadInitialData();
+  }
+
+  loadInitialData() {
+    this.app.signalK
+      .fetchTracks(this.filterRadius)
+      .then((tracks) => {
+        this.loadHistoricalTracks(
+          tracks,
+          this.app.state.getPosition(),
+          this.filterRadius,
+        );
+      })
+      .catch((err) => {
+        const detail = err.statusText || err.message || "unknown error";
+        this.app.statusBar.setWarning(`Tracks plugin not available: ${detail}`);
+      });
+
+    this.fleetTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
+    this.poll();
+  }
+
+  poll() {
+    if (this._pollInFlight) return;
+    this._pollInFlight = true;
+    this.app.signalK
+      .fetchAllVessels()
+      .then((vessels) => {
+        this.syncOtherVessels(vessels, {
+          ownLatLng: this.app.state.getPosition(),
+          filterRadius: this.filterRadius,
+          twa: this.app.state.twa,
+        });
+      })
+      .catch((error) => {
+        const detail = error.statusText || error.message || "unknown error";
+        const status = error.status ? `${error.status} ` : "";
+        const msg = `Fleet update failed: ${status}${detail}`;
+
+        this.statusBar.setWarning(msg);
+        console.error(msg, error);
+      })
+      .finally(() => {
+        this._pollInFlight = false;
+      });
   }
 
   update(state) {
@@ -160,16 +214,13 @@ export class FleetLayer {
     const sogVal = SignalKClient.value(vessel, "navigation.speedOverGround");
     if (sogVal !== undefined) sog = sogVal * MPS_TO_KNOTS;
 
-    const headingTrue = SignalKClient.freshValue(
-      vessel,
-      "navigation.headingTrue",
-    );
+    const headingTrue = SignalKClient.value(vessel, "navigation.headingTrue");
     if (headingTrue !== undefined) return GeoMath.rad2deg(headingTrue);
 
     const cog = SignalKClient.value(vessel, "navigation.courseOverGroundTrue");
     if (cog !== undefined && sog > 1) return GeoMath.rad2deg(cog);
 
-    if (twa !== null) return twa;
+    if (twa) return GeoMath.rad2deg(twa.value);
     return 0;
   }
 

@@ -19,7 +19,7 @@ export class AppState {
   }
 
   getAnchorPosition() {
-    if (this.anchor.position)
+    if (this.anchor.position && this.anchor.position.value)
       return L.latLng(
         this.anchor.position.value.latitude,
         this.anchor.position.value.longitude,
@@ -40,6 +40,7 @@ export class AppState {
       const msg = `Stale SignalK value: ${path || "(root)"} — Age ${ageSec}s, Max ${maxAge}s`;
       SignalKClient.errorHandler?.(msg);
       console.warn(msg);
+      console.trace();
       return null;
     }
 
@@ -61,13 +62,13 @@ export class AppState {
 
     if (!this.anchor) this.anchor = {};
     this.anchor.position =
-      this.extract(data, "navigation.anchor.position") ?? this.anchor.position;
+      this.extract(data, "navigation.anchor.position", false) ??
+      this.anchor.position;
     this.anchor.state =
-      this.extract(data, "navigation.anchor.state") ?? this.anchor.state;
+      this.extract(data, "navigation.anchor.state", false) ?? this.anchor.state;
     this.anchor.maxRadius =
-      this.extract(data, "navigation.anchor.maxRadius") ??
+      this.extract(data, "navigation.anchor.maxRadius", false) ??
       this.anchor.maxRadius;
-
     this.anchor.notification =
       this.extract(data, "notifications.navigation.anchor", false) ??
       this.anchor.notification;

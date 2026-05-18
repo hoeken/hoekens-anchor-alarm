@@ -98,8 +98,9 @@ export class SignalKClient {
         ? Math.round((Date.now() - new Date(node.timestamp).getTime()) / 1000)
         : "unknown";
       const msg = `Stale SignalK value: ${path || "(root)"} — Age ${ageSec}s, Max ${maxAge}s`;
-      console.warn(msg);
       SignalKClient.errorHandler?.(msg);
+      console.warn(msg);
+      console.trace();
       return fallback;
     }
     return node.value;

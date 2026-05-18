@@ -97,8 +97,8 @@ export class AnchorController {
   // === helpers ==================================================================
 
   estimateAnchorPosition(appState) {
-    if (!this.state.currentCoordinates) return;
-    if (this.anchorController.state !== AnchorState.UP) return;
+    if (!appState.currentCoordinates) return;
+    if (this.state !== AnchorState.UP) return;
 
     const distance = appState.calculateScope(5);
     this.setRadius(
@@ -109,20 +109,18 @@ export class AnchorController {
       ),
     );
     const bow = GeoMath.calculateBowCoordinates(
-      this.currentCoordinates,
-      this.boatConfig.heading,
-      this.boatConfig.gpsBowXDistance,
-      this.boatConfig.gpsBowYDistance,
+      appState.getPosition(),
+      appState.boatConfig.heading,
+      appState.boatConfig.gpsBowXDistance,
+      appState.boatConfig.gpsBowYDistance,
     );
     const guess = GeoMath.calculateDestinationPoint(
       bow.lat,
       bow.lng,
-      this.boatConfig.heading,
+      appState.boatConfig.heading,
       distance,
     );
-    this.anchorController.restoreRaised(
-      L.latLng(guess.latitude, guess.longitude),
-    );
+    this.restoreRaised(L.latLng(guess.latitude, guess.longitude));
   }
 
   // Default radius = 5:1 scope + GPS-to-bow vector, ×1.5 safety, rounded to a
@@ -145,7 +143,7 @@ export class AnchorController {
     if (this.state !== AnchorState.UP && this.state !== AnchorState.ANCHORED)
       return;
 
-    if (appState.anchor.position) {
+    if (appState.anchor.position && appState.anchor.position.value) {
       this.anchorCoordinates = appState.getAnchorPosition();
       this.maxRadius = appState.anchor.maxRadius.value;
       if (this.state === AnchorState.UP) {

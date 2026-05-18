@@ -8,6 +8,7 @@ import { SignalKClient } from "./SignalKClient.js";
 import { ShipIcons } from "./ShipIcons.js";
 
 const DEFAULTS = {
+  name: "Unknown",
   loa: 14,
   beam: 4,
   anchorRollerHeight: 0,
@@ -41,22 +42,33 @@ export class BoatConfig {
 
   static extract(data) {
     let config = {};
+
+    config.name = data.name ?? DEFAULTS.name;
+    config.mmsi = data.mmsi ?? DEFAULTS.mmsi;
+
     config.loa =
       SignalKClient.value(data, "design.length")?.overall ?? DEFAULTS.loa;
     config.beam = SignalKClient.value(data, "design.beam") ?? DEFAULTS.beam;
     config.anchorRollerHeight =
       SignalKClient.value(data, "design.bowAnchorRollerHeight") ??
       DEFAULTS.rollerHeight;
-    config.gpsBowXDistance =
-      SignalKClient.value(data, "sensors.gps.fromCenter") ??
-      DEFAULTS.gpsBowXDistance;
-    config.gpsBowYDistance =
-      SignalKClient.value(data, "sensors.gps.fromBow") ??
-      DEFAULTS.gpsBowYDistance;
+    if (data.sensors.gps) {
+      config.gpsBowXDistance =
+        SignalKClient.value(data, "sensors.gps.fromCenter") ??
+        DEFAULTS.gpsBowXDistance;
+      config.gpsBowYDistance =
+        SignalKClient.value(data, "sensors.gps.fromBow") ??
+        DEFAULTS.gpsBowYDistance;
+    } else if (data.sensors.ais) {
+      config.gpsBowXDistance =
+        SignalKClient.value(data, "sensors.ais.fromCenter") ??
+        DEFAULTS.gpsBowXDistance;
+      config.gpsBowYDistance =
+        SignalKClient.value(data, "sensors.ais.fromBow") ?? config.loa / 2;
+    }
     config.aisShipType =
       SignalKClient.value(data, "design.aisShipType")?.id ??
       DEFAULTS.aisShipType;
-    config.mmsi = data.mmsi;
 
     return new BoatConfig(config);
   }

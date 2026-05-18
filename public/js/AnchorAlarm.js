@@ -19,7 +19,6 @@ import { AnchorController } from "./AnchorController.js";
 import { ControlToolbar } from "./ControlToolbar.js";
 
 const POLL_INTERVAL_MS = 1000;
-const FLEET_POLL_INTERVAL_MS = 5000;
 const INITIAL_LOAD_RETRY_MS = 5000;
 
 class AnchorAlarm {
@@ -27,13 +26,10 @@ class AnchorAlarm {
     this.signalK = new SignalKClient({ pluginName: "hoekens-anchor-alarm" });
     this.state = new AppState();
 
-    this.filterRadius = 500;
-
     this.map = undefined;
     this.fleetLayer = undefined;
     this.anchorOverlay = undefined;
     this.anchorController = undefined;
-
     this.infoPanel = undefined;
     this.scopePanel = undefined;
     this.windPanel = undefined;
@@ -41,9 +37,7 @@ class AnchorAlarm {
     this.toolbar = undefined;
 
     this.pollTimer = null;
-    this.fleetTimer = null;
-    this._pollSelfInFlight = false;
-    this._pollFleetInFlight = false;
+    this._pollInFlight = false;
   }
 
   static startup() {
@@ -118,29 +112,7 @@ class AnchorAlarm {
         this.updateMap();
         this.map.fitBounds(this.anchorOverlay.getBounds());
 
-        this.pollTimer = setInterval(() => this.pollSelf(), POLL_INTERVAL_MS);
-
-        //todo: move this to fleet layer
-        this.signalK
-          .fetchTracks(this.filterRadius)
-          .then((tracks) => {
-            this.fleetLayer.loadHistoricalTracks(
-              tracks,
-              this.state.getPosition(),
-              this.filterRadius,
-            );
-          })
-          .catch((err) => {
-            const detail = err.statusText || err.message || "unknown error";
-            this.statusBar.setWarning(`Tracks plugin not available: ${detail}`);
-          });
-
-        //todo: move this to fleet layer
-        this.fleetTimer = setInterval(
-          () => this.pollFleet(),
-          FLEET_POLL_INTERVAL_MS,
-        );
-        this.pollFleet();
+        this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
       })
       .catch((error) => {
         const detail = error.statusText || error.message || "unknown error";
@@ -186,13 +158,10 @@ class AnchorAlarm {
     L.control.scale({ position: "topleft" }).addTo(this.map);
 
     this.fleetLayer = new FleetLayer({
+      app: this,
       map: this.map,
       ownMmsi: this.state.boatConfig.mmsi,
     });
-    this.fleetLayer.setOwnVessel(
-      this.state.getPosition(),
-      this.state.boatConfig,
-    );
 
     this.buildAnchorWidgets();
   }
@@ -220,7 +189,7 @@ class AnchorAlarm {
       this.anchorController.updateCrosshairPosition(pos),
     );
 
-    this.anchorController.estimateAnchorPosition();
+    this.anchorController.estimateAnchorPosition(this.state);
   }
 
   updateMap() {
@@ -237,11 +206,11 @@ class AnchorAlarm {
   // One GET of vessels/self per tick feeds position, depth, wind, anchor state,
   // and the anchor alarm — they're all subtrees of the same document. The fleet
   // poll runs on its own slower timer.
-  pollSelf() {
+  poll() {
     // Skip the tick if the previous fetch is still in flight; otherwise a slow
     // response can land after a newer one and stomp fresher state.
-    if (this._pollSelfInFlight) return;
-    this._pollSelfInFlight = true;
+    if (this._pollInFlight) return;
+    this._pollInFlight = true;
 
     this.signalK
       .fetchSelf()
@@ -250,38 +219,16 @@ class AnchorAlarm {
         this.state.calculate();
         this.updateMap();
       })
-      .catch((err) => {
-        const detail = err.statusText || err.message || "unknown error";
-        this.statusBar.setWarning(`Self update failed: ${detail}`);
-      })
-      .finally(() => {
-        this._pollSelfInFlight = false;
-      });
-  }
-
-  //todo: move to fleetlayer
-  pollFleet() {
-    if (this._pollFleetInFlight) return;
-    this._pollFleetInFlight = true;
-    this.signalK
-      .fetchAllVessels()
-      .then((vessels) => {
-        this.fleetLayer.syncOtherVessels(vessels, {
-          ownLatLng: this.state.getPosition(),
-          filterRadius: this.filterRadius,
-          twa: this.twa,
-        });
-      })
       .catch((error) => {
         const detail = error.statusText || error.message || "unknown error";
         const status = error.status ? `${error.status} ` : "";
-        const msg = `Fleet update failed: ${status}${detail}`;
+        const msg = `Self update failed: ${status}${detail}`;
 
         this.statusBar.setWarning(msg);
         console.error(msg, error);
       })
       .finally(() => {
-        this._pollFleetInFlight = false;
+        this._pollInFlight = false;
       });
   }
 
@@ -289,10 +236,6 @@ class AnchorAlarm {
     if (this.pollTimer) {
       clearInterval(this.pollTimer);
       this.pollTimer = null;
-    }
-    if (this.fleetTimer) {
-      clearInterval(this.fleetTimer);
-      this.fleetTimer = null;
     }
   }
 }
