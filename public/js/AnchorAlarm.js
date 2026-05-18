@@ -5,7 +5,7 @@
 
 import { GeoMath } from "./GeoMath.js";
 import { SignalKClient } from "./SignalKClient.js";
-import { BoatConfig } from "./BoatConfig.js";
+import { AppState } from "./AppState.js";
 import { FleetLayer } from "./FleetLayer.js";
 import {
   StatusBar,
@@ -26,16 +26,9 @@ const INITIAL_LOAD_RETRY_MS = 5000;
 class AnchorAlarm {
   constructor() {
     this.signalK = new SignalKClient({ pluginName: "hoekens-anchor-alarm" });
+    this.state = new AppState();
 
-    this.currentCoordinates = undefined;
     this.filterRadius = 500;
-
-    this.twa = null;
-    this.aws = null;
-
-    this.boatConfig = undefined;
-    this.tidalRise = 0;
-    this.tidalFall = 0;
 
     this.map = undefined;
     this.fleetLayer = undefined;
@@ -112,50 +105,24 @@ class AnchorAlarm {
     this.signalK
       .fetchSelf()
       .then((data) => {
-        this.currentCoordinates = this.extractPosition(
-          data,
-          "navigation.position",
-        );
-        if (!this.currentCoordinates) {
-          this.statusBar.setError("Waiting for GPS position…");
+        this.state.extractAll(data);
+
+        if (!this.state.currentCoordinates) {
+          this.statusBar.setError("Waiting for GPS position...");
           setTimeout(() => this.loadInitialData(), INITIAL_LOAD_RETRY_MS);
           return;
         }
 
-        this.boatConfig = BoatConfig.fromSelf(data);
+        this.state.calculate();
+        console.log(this.state);
 
-        const belowKeel = SignalKClient.freshValue(
-          data,
-          "environment.depth.belowKeel",
-          { fallback: 0 },
-        );
-
-        const belowSurface = SignalKClient.freshValue(
-          data,
-          "environment.depth.belowSurface",
-          { fallback: 0 },
-        );
-
-        this.applyInitialWindState(data);
-        this.applyInitialTide(data);
-
-        this.buildMap(this.currentCoordinates);
-
-        this.paintInitialReadings(belowSurface, belowKeel, data);
-
-        this.boatConfig.heading = this.computeInitialHeading(data);
-
-        this.fleetLayer = new FleetLayer({
-          map: this.map,
-          ownMmsi: this.boatConfig.mmsi,
-        });
-        this.fleetLayer.setOwnVessel(this.currentCoordinates, this.boatConfig);
-
-        this.placeAnchorWidgets();
-        this.restoreAnchorState(data);
-
+        this.buildMap();
+        this.updateMap();
         this.map.fitBounds(this.anchorOverlay.getBounds());
 
+        this.pollTimer = setInterval(() => this.pollSelf(), POLL_INTERVAL_MS);
+
+        //todo: move this to fleet layer
         this.signalK
           .fetchTracks(this.filterRadius)
           .then((tracks) => {
@@ -170,72 +137,29 @@ class AnchorAlarm {
             this.statusBar.setWarning(`Tracks plugin not available: ${detail}`);
           });
 
-        this.pollTimer = setInterval(() => this.pollSelf(), POLL_INTERVAL_MS);
+        //todo: move this to fleet layer
         this.fleetTimer = setInterval(
           () => this.pollFleet(),
           FLEET_POLL_INTERVAL_MS,
         );
         this.pollFleet();
       })
-      .catch((response) => {
-        const detail =
-          response.statusText || response.message || "unknown error";
-        const status = response.status ? `${response.status} ` : "";
+      .catch((error) => {
+        const detail = error.statusText || error.message || "unknown error";
+        const status = error.status ? `${error.status} ` : "";
         const msg = `Failed to load initial data: ${status}${detail}`;
-        console.error(msg);
+
         this.statusBar.setError(msg);
+        console.error(msg, error);
+
         setTimeout(() => this.loadInitialData(), INITIAL_LOAD_RETRY_MS);
       });
   }
 
-  applyInitialWindState(data) {
-    const directionTrue = SignalKClient.freshValue(
-      data,
-      "environment.wind.directionTrue",
-    );
-    if (directionTrue !== undefined) this.twa = GeoMath.rad2deg(directionTrue);
-  }
-
-  applyInitialTide(data) {
-    const tide = SignalKClient.extract(data, "environment.tide");
-    if (!tide) return;
-    const currentTide = GeoMath.estimateTideHeightSmooth(
-      tide.timeLow.value,
-      tide.heightLow.value,
-      tide.timeHigh.value,
-      tide.heightHigh.value,
-    );
-    this.tidalRise = tide.heightHigh.value - currentTide;
-    this.tidalFall = currentTide - tide.heightLow.value;
-  }
-
-  // Default radius = 5:1 scope + GPS-to-bow vector, ×1.5 safety, rounded to a
-  // 5-meter step and clamped to [0, 200].
-  computeDefaultRadius(anchorDistanceGuess) {
-    let r = anchorDistanceGuess;
-    r += GeoMath.calculateVectorDistance(
-      this.boatConfig.gpsBowXDistance,
-      this.boatConfig.gpsBowYDistance,
-    );
-    r *= 1.5;
-    r = Math.round(r / 5) * 5;
-    r = Math.max(0, r);
-    r = Math.min(200, r);
-    return r;
-  }
-
-  extractPosition(tree, path = "position", { fresh = false } = {}) {
-    const pos = fresh
-      ? SignalKClient.freshValue(tree, path)
-      : SignalKClient.value(tree, path);
-    if (!pos || pos.latitude == null || pos.longitude == null) return null;
-    return L.latLng(pos.latitude, pos.longitude);
-  }
-
   // Decorates the map shell built in init() with the rest of the controls.
   // Splitting it this way lets the status bar exist before any data fetch.
-  buildMap(initialCenter) {
-    this.map.setView(initialCenter, 5);
+  buildMap() {
+    this.map.setView(this.state.currentCoordinates, 5);
 
     this.satelliteLayer.addTo(this.map);
 
@@ -243,7 +167,7 @@ class AnchorAlarm {
 
     this.homeButton = new HomeButtonControl({
       onHome: (map) => {
-        if (!this.currentCoordinates) return;
+        if (!this.state.currentCoordinates) return;
         if (this.anchorController.state === AnchorState.UP)
           this.estimateAnchorPosition();
         map.fitBounds(this.anchorOverlay.getBounds());
@@ -264,68 +188,27 @@ class AnchorAlarm {
     this.map.addControl(this.windPanel);
 
     L.control.scale({ position: "topleft" }).addTo(this.map);
-  }
 
-  paintInitialReadings(belowSurface, belowKeel, data) {
-    this.paintDepth(belowSurface, belowKeel);
-
-    const speedApparent = SignalKClient.freshValue(
-      data,
-      "environment.wind.speedApparent",
-    );
-    if (speedApparent !== undefined)
-      this.windPanel.setSpeed(speedApparent, this.twa);
-    if (this.twa !== null) this.windPanel.setAngle(this.twa);
-  }
-
-  paintDepth(belowSurface, belowKeel) {
-    this.infoPanel.setBelowSurface(belowSurface);
-    this.scopePanel.setScopeData({
-      depthBelowSurface: parseFloat(belowSurface),
-      depthBelowKeel: parseFloat(belowKeel),
-      bowHeight: this.boatConfig.anchorRollerHeight,
-      tidalRise: this.tidalRise,
-      tidalFall: this.tidalFall,
-      scopes: {
-        7: this.calculateScope(7, belowSurface),
-        5: this.calculateScope(5, belowSurface),
-        4: this.calculateScope(4, belowSurface),
-        3: this.calculateScope(3, belowSurface),
-      },
+    this.fleetLayer = new FleetLayer({
+      map: this.map,
+      ownMmsi: this.state.boatConfig.mmsi,
     });
+    this.fleetLayer.setOwnVessel(
+      this.state.currentCoordinates,
+      this.state.boatConfig,
+    );
+
+    this.buildAnchorWidgets();
   }
 
-  // Heading priority: SignalK headingTrue > bearing-to-anchor (if dropped) >
-  // last-known TWA > 0.
-  computeInitialHeading(data) {
-    const nav = data.navigation;
-    let heading = SignalKClient.value(nav, "headingTrue");
-    const initialAnchorPos = this.extractPosition(nav, "anchor.position");
-
-    if (heading != null) return GeoMath.rad2deg(heading);
-
-    if (initialAnchorPos) {
-      return Math.round(
-        GeoMath.calculateBearing(
-          this.currentCoordinates.lat,
-          this.currentCoordinates.lng,
-          initialAnchorPos.lat,
-          initialAnchorPos.lng,
-        ),
-      );
-    }
-
-    return this.twa ?? 0;
-  }
-
-  placeAnchorWidgets() {
+  buildAnchorWidgets() {
     this.anchorOverlay = new AnchorOverlay({
       map: this.map,
       radius: 0,
     }).setBoatPosition(
-      this.currentCoordinates,
-      this.boatConfig.heading,
-      this.boatConfig.gpsOffset,
+      this.state.currentCoordinates,
+      this.state.boatConfig.heading,
+      this.state.boatConfig.gpsOffset,
     );
 
     this.anchorController = new AnchorController({
@@ -340,38 +223,16 @@ class AnchorAlarm {
     this.anchorOverlay.onCrosshairDrag((pos) =>
       this.anchorController.updateCrosshairPosition(pos),
     );
+
+    this.anchorOverlay.estimateAnchorPosition();
   }
 
-  restoreAnchorState(data) {
-    const nav = data.navigation;
-    const pos = this.extractPosition(nav, "anchor.position");
-
-    if (pos) {
-      const radius = parseInt(SignalKClient.value(nav, "anchor.maxRadius"), 10);
-      this.anchorController.restoreDropped(pos, radius);
-    } else {
-      this.estimateAnchorPosition();
-    }
-  }
-
-  estimateAnchorPosition() {
-    const distance = this.scopePanel.getScope(5);
-    this.anchorController.setRadius(this.computeDefaultRadius(distance));
-    const bow = GeoMath.calculateBowCoordinates(
-      this.currentCoordinates,
-      this.boatConfig.heading,
-      this.boatConfig.gpsBowXDistance,
-      this.boatConfig.gpsBowYDistance,
-    );
-    const guess = GeoMath.calculateDestinationPoint(
-      bow.lat,
-      bow.lng,
-      this.boatConfig.heading,
-      distance,
-    );
-    this.anchorController.restoreRaised(
-      L.latLng(guess.latitude, guess.longitude),
-    );
+  updateMap() {
+    this.windPanel.update(this.state);
+    this.infoPanel.update(this.state);
+    this.scopePanel.update(this.state);
+    this.anchorOverlay.update(this.state);
+    this.fleetLayer.update(this.state);
   }
 
   // === Live polling ================================================================
@@ -384,18 +245,13 @@ class AnchorAlarm {
     // response can land after a newer one and stomp fresher state.
     if (this._pollSelfInFlight) return;
     this._pollSelfInFlight = true;
+
     this.signalK
       .fetchSelf()
       .then((data) => {
-        this.updatePosition(data.navigation);
-        this.updateAnchorStatus(
-          SignalKClient.extract(data, "notifications.navigation.anchor"),
-        );
-        this.updateDepth(SignalKClient.extract(data, "environment.depth"));
-        this.updateWind(SignalKClient.extract(data, "environment.wind"));
-        this.updateAnchorReconcile(
-          SignalKClient.extract(data, "navigation.anchor"),
-        );
+        this.state.extractAll(data);
+        this.state.calculate();
+        this.updateMap();
       })
       .catch((err) => {
         const detail = err.statusText || err.message || "unknown error";
@@ -406,30 +262,8 @@ class AnchorAlarm {
       });
   }
 
-  updatePosition(nav) {
-    if (!nav) return;
-
-    const position = this.extractPosition(nav, "position", { fresh: true });
-    if (!position) return;
-
-    this.currentCoordinates = position;
-
-    const headingTrue = SignalKClient.freshValue(nav, "headingTrue");
-    if (headingTrue !== undefined) {
-      this.boatConfig.heading = GeoMath.rad2deg(headingTrue);
-    } else {
-      // No live heading — point at the anchor instead.
-      const anchor = this.anchorController.anchorCoordinates;
-      this.boatConfig.heading = Math.round(
-        GeoMath.calculateBearing(
-          this.currentCoordinates.lat,
-          this.currentCoordinates.lng,
-          anchor.lat,
-          anchor.lng,
-        ),
-      );
-    }
-
+  //todo: move to panel.update
+  updatePosition() {
     this.fleetLayer.updateOwnPosition(this.currentCoordinates);
     this.fleetLayer.appendOwnTrack(this.currentCoordinates);
 
@@ -440,39 +274,19 @@ class AnchorAlarm {
     );
   }
 
-  updateAnchorStatus(alarm) {
-    const v = SignalKClient.value(alarm);
-    if (!v) return;
+  //todo: move to panel.update
+  updateAnchorStatus() {
     this.infoPanel.setStatus(v.message, v.state);
   }
 
-  updateDepth(depth) {
-    if (!depth) return;
-    const belowSurface = SignalKClient.freshValue(depth, "belowSurface");
-    if (belowSurface === undefined) return;
-    const belowKeel = SignalKClient.freshValue(depth, "belowKeel", {
-      fallback: 0,
-    });
-
-    this.paintDepth(belowSurface, belowKeel);
+  //todo: move to panel.update
+  updateWind() {
+    this.windPanel.setSpeed(speedApparent, this.twa);
+    this.twa = GeoMath.rad2deg(directionTrue);
+    this.windPanel.setAngle(this.twa);
   }
 
-  updateWind(wind) {
-    if (!wind) return;
-
-    const speedApparent = SignalKClient.freshValue(wind, "speedApparent");
-    if (speedApparent !== undefined) {
-      this.aws = speedApparent;
-      this.windPanel.setSpeed(speedApparent, this.twa);
-    }
-
-    const directionTrue = SignalKClient.freshValue(wind, "directionTrue");
-    if (directionTrue !== undefined) {
-      this.twa = GeoMath.rad2deg(directionTrue);
-      this.windPanel.setAngle(this.twa);
-    }
-  }
-
+  //todo: move to panel.update
   updateAnchorReconcile(anchorStatus) {
     if (!anchorStatus) return;
     const on = SignalKClient.value(anchorStatus, "state") === "on";
@@ -482,6 +296,7 @@ class AnchorAlarm {
     this.anchorController.reconcile({ on, position, maxRadius });
   }
 
+  //todo: move to fleetlayer
   pollFleet() {
     if (this._pollFleetInFlight) return;
     this._pollFleetInFlight = true;
@@ -512,15 +327,6 @@ class AnchorAlarm {
       clearInterval(this.fleetTimer);
       this.fleetTimer = null;
     }
-  }
-
-  // === Calculations ================================================================
-
-  calculateScope(scope, dbs) {
-    let maxHeight = dbs;
-    maxHeight += this.boatConfig.anchorRollerHeight; // height of the bow roller
-    maxHeight += this.tidalRise; // delta to high tide
-    return maxHeight * scope;
   }
 }
 

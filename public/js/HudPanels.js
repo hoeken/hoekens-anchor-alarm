@@ -290,10 +290,6 @@ export const ScopePanel = L.Control.extend({
     }
   },
 
-  getScope: function (n) {
-    return this._scopes && this._scopes[n];
-  },
-
   show: function () {
     if (this._container) this._container.style.display = "";
   },

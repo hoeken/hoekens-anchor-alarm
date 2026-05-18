@@ -7,6 +7,17 @@
 import { SignalKClient } from "./SignalKClient.js";
 import { ShipIcons } from "./ShipIcons.js";
 
+const DEFAULTS = {
+  loa: 14,
+  beam: 4,
+  anchorRollerHeight: 0,
+  gpsBowXDistance: 0,
+  gpsBowYDistance: 0,
+  aisShipType: 0,
+  mmsi: "",
+  heading: 0,
+};
+
 export class BoatConfig {
   constructor({
     loa,
@@ -29,39 +40,25 @@ export class BoatConfig {
   }
 
   static fromSelf(data) {
-    let loa = 0,
-      beam = 0,
-      anchorRollerHeight = 0;
-    let gpsBowXDistance = 0,
-      gpsBowYDistance = 0;
-    let aisShipType = 0;
+    let config = {};
+    config.loa = SignalKClient.value(data, "design.length") ?? DEFAULTS.loa;
+    config.beam = SignalKClient.value(data, "design.beam") ?? DEFAULTS.beam;
+    config.anchorRollerHeight =
+      SignalKClient.value(data, "design.bowAnchorRollerHeight") ??
+      DEFAULTS.rollerHeight;
+    config.gpsBowXDistance =
+      SignalKClient.value(data, "sensors.gps.fromBow") ??
+      DEFAULTS.gpsBowXDistance;
+    config.gpsBowYDistance =
+      SignalKClient.value(data, "sensors.gps.fromCenter") ??
+      DEFAULTS.gpsBowYDistance;
+    config.aisShipType =
+      SignalKClient.value(data, "design.aisShipType") ?? DEFAULTS.aisShipType;
+    config.mmsi = data.mmsi;
 
-    const designLength = SignalKClient.value(data, "design.length");
-    if (designLength !== undefined) loa = parseFloat(designLength.overall);
-    const designBeam = SignalKClient.value(data, "design.beam");
-    if (designBeam !== undefined) beam = parseFloat(designBeam);
-    const rollerHeight = SignalKClient.value(
-      data,
-      "design.bowAnchorRollerHeight",
-    );
-    if (rollerHeight !== undefined)
-      anchorRollerHeight = parseFloat(rollerHeight);
-    const fromBow = SignalKClient.value(data, "sensors.gps.fromBow");
-    if (fromBow !== undefined) gpsBowYDistance = parseFloat(fromBow);
-    const fromCenter = SignalKClient.value(data, "sensors.gps.fromCenter");
-    if (fromCenter !== undefined) gpsBowXDistance = parseFloat(fromCenter);
-    const shipType = SignalKClient.value(data, "design.aisShipType");
-    if (shipType?.id !== undefined) aisShipType = shipType.id;
+    console.log(config);
 
-    return new BoatConfig({
-      loa,
-      beam,
-      anchorRollerHeight,
-      gpsBowXDistance,
-      gpsBowYDistance,
-      aisShipType,
-      mmsi: data.mmsi,
-    });
+    return new BoatConfig(config);
   }
 
   // AIS broadcasts are often partial; degrade gracefully rather than refuse

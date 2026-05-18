@@ -9,6 +9,8 @@
 //   - Server-initiated (reconcile): transitions UP↔ANCHORED directly, no POST,
 //     ignored entirely while a user request is in flight.
 
+import { GeoMath } from "./GeoMath.js";
+
 export const AnchorState = Object.freeze({
   UP: "UP",
   DROPPING: "DROPPING",
@@ -90,6 +92,43 @@ export class AnchorController {
         .setRadius(newRadius)
         .catch((err) => this._reportError("Failed to set radius", err));
     }
+  }
+
+  // === helpers ==================================================================
+
+  estimateAnchorPosition(appState) {
+    const distance = appState.calculateScope(5);
+    this.anchorController.setRadius(this.computeDefaultRadius(distance));
+    const bow = GeoMath.calculateBowCoordinates(
+      this.currentCoordinates,
+      this.boatConfig.heading,
+      this.boatConfig.gpsBowXDistance,
+      this.boatConfig.gpsBowYDistance,
+    );
+    const guess = GeoMath.calculateDestinationPoint(
+      bow.lat,
+      bow.lng,
+      this.boatConfig.heading,
+      distance,
+    );
+    this.anchorController.restoreRaised(
+      L.latLng(guess.latitude, guess.longitude),
+    );
+  }
+
+  // Default radius = 5:1 scope + GPS-to-bow vector, ×1.5 safety, rounded to a
+  // 5-meter step and clamped to [0, 200].
+  computeDefaultRadius(anchorDistanceGuess) {
+    let r = anchorDistanceGuess;
+    r += GeoMath.calculateVectorDistance(
+      this.boatConfig.gpsBowXDistance,
+      this.boatConfig.gpsBowYDistance,
+    );
+    r *= 1.5;
+    r = Math.round(r / 5) * 5;
+    r = Math.max(0, r);
+    r = Math.min(200, r);
+    return r;
   }
 
   // === Server-initiated ===========================================================
