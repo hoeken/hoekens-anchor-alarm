@@ -3,6 +3,7 @@
 // HudPanels (Info/Scope/Wind/Home), and hands the anchor state machine to
 // AnchorController.
 
+import Client from "@signalk/client";
 import { SignalKClient } from "./SignalKClient.js";
 import { AppState } from "./AppState.js";
 import { FleetLayer } from "./FleetLayer.js";
@@ -18,8 +19,12 @@ import { AnchorOverlay } from "./AnchorOverlay.js";
 import { AnchorController } from "./AnchorController.js";
 import { ControlToolbar } from "./ControlToolbar.js";
 
+const UPDATE_INTERVAL_MS = 500;
 const POLL_INTERVAL_MS = 1000;
 const INITIAL_LOAD_RETRY_MS = 5000;
+
+const DELTA_FAST_SPEED = 250;
+const DELTA_SLOW_SPEED = 1000;
 
 class AnchorAlarm {
   constructor() {
@@ -36,6 +41,9 @@ class AnchorAlarm {
     this.homeButton = undefined;
     this.toolbar = undefined;
 
+    this.useWebsockets = true;
+
+    this.updateTimer = null;
     this.pollTimer = null;
     this._pollInFlight = false;
   }
@@ -45,7 +53,107 @@ class AnchorAlarm {
     app.init();
   }
 
+  setupWebsockets() {
+    this.client = new Client({
+      hostname: window.location.hostname,
+      port:
+        Number(window.location.port) ||
+        (window.location.protocol === "https:" ? 443 : 80),
+      useTLS: window.location.protocol === "https:",
+      reconnect: true,
+      autoConnect: true,
+      notifications: false,
+      sendMeta: true,
+    });
+    this.client.on("delta", (delta) => this.handleDeltas(delta));
+
+    this.client.on("connect", () => {
+      this.client.subscribe([
+        {
+          context: "vessels.self",
+          subscribe: [
+            {
+              path: "navigation.position",
+              policy: "fixed",
+              period: DELTA_FAST_SPEED,
+            },
+            {
+              path: "navigation.headingTrue",
+              policy: "fixed",
+              period: DELTA_FAST_SPEED,
+            },
+            {
+              path: "environment.depth.belowKeel",
+              policy: "fixed",
+              period: DELTA_SLOW_SPEED,
+            },
+            {
+              path: "environment.depth.belowSurface",
+              policy: "fixed",
+              period: DELTA_SLOW_SPEED,
+            },
+            {
+              path: "environment.wind.directionTrue",
+              policy: "fixed",
+              period: DELTA_SLOW_SPEED,
+            },
+            {
+              path: "environment.wind.speedApparent",
+              policy: "fixed",
+              period: DELTA_SLOW_SPEED,
+            },
+            {
+              path: "environment.tide",
+              policy: "fixed",
+              period: 15 * 60 * 1000,
+            },
+            {
+              path: "navigation.anchor.position",
+              policy: "instant",
+              minPeriod: DELTA_FAST_SPEED,
+            },
+            {
+              path: "navigation.anchor.state",
+              policy: "instant",
+              minPeriod: DELTA_FAST_SPEED,
+            },
+            {
+              path: "navigation.anchor.maxRadius",
+              policy: "instant",
+              minPeriod: DELTA_FAST_SPEED,
+            },
+            {
+              path: "notifications.navigation.anchor",
+              policy: "instant",
+              minPeriod: DELTA_FAST_SPEED,
+            },
+          ],
+        },
+      ]);
+    });
+  }
+
+  handleDeltas(delta) {
+    if (delta.updates) {
+      for (const update of delta.updates) {
+        if (update.values) {
+          let timestamp = update.timestamp;
+          for (const value of update.values) {
+            this.state.handleDelta(timestamp, value);
+          }
+        }
+      }
+    }
+  }
+
   init() {
+    if (this.useWebsockets) {
+      console.log("Using Websockets");
+      this.setupWebsockets();
+    } else {
+      console.log("Using REST Polling");
+    }
+
     new StaleReloader({ staleThresholdMs: 5 * 60 * 1000 }).start();
 
     this.satelliteLayer = L.tileLayer(
@@ -112,7 +220,12 @@ class AnchorAlarm {
         this.updateMap();
         this.map.fitBounds(this.anchorOverlay.getBounds());
 
-        this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
+        if (this.useWebsockets)
+          this.updateTimer = setInterval(
+            () => this.update(),
+            UPDATE_INTERVAL_MS,
+          );
+        else this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
       })
       .catch((error) => {
         const detail = error.statusText || error.message || "unknown error";
@@ -230,6 +343,20 @@ class AnchorAlarm {
       .finally(() => {
         this._pollInFlight = false;
       });
+  }
+
+  update() {
+    try {
+      this.state.calculate();
+      this.updateMap();
+    } catch (error) {
+      const detail = error.statusText || error.message || "unknown error";
+      const status = error.status ? `${error.status} ` : "";
+      const msg = `Update failed: ${status}${detail}`;
+
+      this.statusBar.setWarning(msg);
+      console.error(msg, error);
+    }
   }
 
   destroy() {

@@ -74,6 +74,31 @@ export class AppState {
       this.anchor.notification;
   }
 
+  handleDelta(timestamp, delta) {
+    // console.log(delta);
+    let data = null;
+    const path = delta.path;
+    if (path == "navigation.position") data = this.currentCoordinates;
+    else if (path == "navigation.headingTrue") data = this.heading;
+    else if (path == "environment.depth.belowKeel") data = this.belowKeel;
+    else if (path == "environment.depth.belowSurface") data = this.belowSurface;
+    else if (path == "environment.wind.directionTrue") data = this.twa;
+    else if (path == "environment.wind.speedApparent") data = this.aws;
+    else if (path == "environment.tide") data = this.tide;
+    else if (path == "navigation.anchor.position") data = this.anchor.position;
+    else if (path == "navigation.anchor.state") data = this.anchor.state;
+    else if (path == "navigation.anchor.maxRadius")
+      data = this.anchor.maxRadius;
+    else if (path == "notifications.navigation.anchor")
+      data = this.anchor.notification;
+    else console.log(delta);
+
+    if (data) {
+      data.timestamp = timestamp;
+      data.value = delta.value;
+    }
+  }
+
   calculate() {
     this.calculateTides();
     this.boatConfig.heading = this.computeOwnHeading();
