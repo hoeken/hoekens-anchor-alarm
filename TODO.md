@@ -3,12 +3,9 @@
 - add AppState.checkFreshness() to AnchorAlarm.update()
 
 - convert to websocket instead of rest polling
-  - add websocket connection
-  - subscribe to relevant topics
-  - on update (websockets)
-    - each trigger updates AppState
-  - redraw map on interval?
-
+  - notification anchor up / down isnt working.
+  - tides updates?
+  
 - respect units (kts / meters / etc)
 
 - make FleetLayer.filterRadius a configurable option

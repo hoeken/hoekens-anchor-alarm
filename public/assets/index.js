@@ -5095,8 +5095,8 @@ var DELTA_SLOW_SPEED = 1e3;
             },
             {
               path: "environment.tide",
-              policy: "fixed",
-              period: 900 * 1e3,
+              policy: "instant",
+              minPeriod: 60 * 1e3,
             },
             {
               path: "navigation.anchor.position",
