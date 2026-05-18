@@ -19,7 +19,16 @@ export const AnchorState = Object.freeze({
 });
 
 export class AnchorController {
-  constructor({ overlay, toolbar, signalK, infoPanel, scopePanel, onError }) {
+  constructor({
+    appState,
+    overlay,
+    toolbar,
+    signalK,
+    infoPanel,
+    scopePanel,
+    onError,
+  }) {
+    this._appState = appState;
     this._overlay = overlay;
     this._toolbar = toolbar;
     this._signalK = signalK;
@@ -84,6 +93,7 @@ export class AnchorController {
 
   setRadius(newRadius) {
     this.maxRadius = newRadius;
+    this._appState.anchor.maxRadius.value = this.maxRadius;
     this._toolbar.setRadius(newRadius);
     this._overlay.setRadius(newRadius);
 
@@ -96,28 +106,28 @@ export class AnchorController {
 
   // === helpers ==================================================================
 
-  estimateAnchorPosition(appState) {
-    if (!appState.currentCoordinates) return;
+  estimateAnchorPosition() {
+    if (!this._appState.currentCoordinates) return;
     if (this.state !== AnchorState.UP) return;
 
-    const distance = appState.calculateScope(5);
+    const distance = this._appState.calculateScope(5);
     this.setRadius(
       this.computeDefaultRadius(
         distance,
-        appState.boatConfig.gpsBowXDistance,
-        appState.boatConfig.gpsBowYDistance,
+        this._appState.boatConfig.gpsBowXDistance,
+        this._appState.boatConfig.gpsBowYDistance,
       ),
     );
     const bow = GeoMath.calculateBowCoordinates(
-      appState.getPosition(),
-      appState.boatConfig.heading,
-      appState.boatConfig.gpsBowXDistance,
-      appState.boatConfig.gpsBowYDistance,
+      this._appState.getPosition(),
+      this._appState.boatConfig.heading,
+      this._appState.boatConfig.gpsBowXDistance,
+      this._appState.boatConfig.gpsBowYDistance,
     );
     const guess = GeoMath.calculateDestinationPoint(
       bow.lat,
       bow.lng,
-      appState.boatConfig.heading,
+      this._appState.boatConfig.heading,
       distance,
     );
     this.restoreRaised(L.latLng(guess.latitude, guess.longitude));
@@ -139,13 +149,16 @@ export class AnchorController {
 
   // Apply server-side anchor state. Skipped while a drop/raise POST is in flight —
   // the server doesn't reflect our pending change yet and would flip us back.
-  reconcile(appState) {
+  reconcile() {
     if (this.state !== AnchorState.UP && this.state !== AnchorState.ANCHORED)
       return;
 
-    if (appState.anchor.position && appState.anchor.position.value) {
-      this.anchorCoordinates = appState.getAnchorPosition();
-      this.maxRadius = appState.anchor.maxRadius.value;
+    if (
+      this._appState.anchor.position &&
+      this._appState.anchor.position.value
+    ) {
+      this.anchorCoordinates = this._appState.getAnchorPosition();
+      this.maxRadius = this._appState.anchor.maxRadius.value;
       if (this.state === AnchorState.UP) {
         this.state = AnchorState.ANCHORED;
         this._enterDropped(this.anchorCoordinates, this.maxRadius);

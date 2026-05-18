@@ -4847,7 +4847,16 @@ var AnchorState = Object.freeze({
   RAISING: "RAISING",
 });
 var AnchorController = class {
-  constructor({ overlay, toolbar, signalK, infoPanel, scopePanel, onError }) {
+  constructor({
+    appState,
+    overlay,
+    toolbar,
+    signalK,
+    infoPanel,
+    scopePanel,
+    onError,
+  }) {
+    this._appState = appState;
     this._overlay = overlay;
     this._toolbar = toolbar;
     this._signalK = signalK;
@@ -4906,6 +4915,7 @@ var AnchorController = class {
   }
   setRadius(newRadius) {
     this.maxRadius = newRadius;
+    this._appState.anchor.maxRadius.value = this.maxRadius;
     this._toolbar.setRadius(newRadius);
     this._overlay.setRadius(newRadius);
     if (this.state === AnchorState.ANCHORED)
@@ -4913,27 +4923,27 @@ var AnchorController = class {
         .setRadius(newRadius)
         .catch((err) => this._reportError("Failed to set radius", err));
   }
-  estimateAnchorPosition(appState) {
-    if (!appState.currentCoordinates) return;
+  estimateAnchorPosition() {
+    if (!this._appState.currentCoordinates) return;
     if (this.state !== AnchorState.UP) return;
-    const distance = appState.calculateScope(5);
+    const distance = this._appState.calculateScope(5);
     this.setRadius(
       this.computeDefaultRadius(
         distance,
-        appState.boatConfig.gpsBowXDistance,
-        appState.boatConfig.gpsBowYDistance,
+        this._appState.boatConfig.gpsBowXDistance,
+        this._appState.boatConfig.gpsBowYDistance,
       ),
     );
     const bow = GeoMath.calculateBowCoordinates(
-      appState.getPosition(),
-      appState.boatConfig.heading,
-      appState.boatConfig.gpsBowXDistance,
-      appState.boatConfig.gpsBowYDistance,
+      this._appState.getPosition(),
+      this._appState.boatConfig.heading,
+      this._appState.boatConfig.gpsBowXDistance,
+      this._appState.boatConfig.gpsBowYDistance,
     );
     const guess = GeoMath.calculateDestinationPoint(
       bow.lat,
       bow.lng,
-      appState.boatConfig.heading,
+      this._appState.boatConfig.heading,
       distance,
     );
     this.restoreRaised(L.latLng(guess.latitude, guess.longitude));
@@ -4947,12 +4957,15 @@ var AnchorController = class {
     r = Math.min(200, r);
     return r;
   }
-  reconcile(appState) {
+  reconcile() {
     if (this.state !== AnchorState.UP && this.state !== AnchorState.ANCHORED)
       return;
-    if (appState.anchor.position && appState.anchor.position.value) {
-      this.anchorCoordinates = appState.getAnchorPosition();
-      this.maxRadius = appState.anchor.maxRadius.value;
+    if (
+      this._appState.anchor.position &&
+      this._appState.anchor.position.value
+    ) {
+      this.anchorCoordinates = this._appState.getAnchorPosition();
+      this.maxRadius = this._appState.anchor.maxRadius.value;
       if (this.state === AnchorState.UP) {
         this.state = AnchorState.ANCHORED;
         this._enterDropped(this.anchorCoordinates, this.maxRadius);
@@ -5128,7 +5141,7 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
       useTLS: window.location.protocol === "https:",
       reconnect: true,
       autoConnect: true,
-      notifications: false,
+      notifications: true,
       sendMeta: true,
     });
     this.client.on("connect", () => this.state.websocketSubscribe(this.client));
@@ -5197,6 +5210,7 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
           return;
         }
         this.state.calculate();
+        console.log(this.state);
         this.buildMap();
         this.checkFreshness();
         this.updateMap();
@@ -5222,7 +5236,7 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
     L.control.zoom({ position: "topright" }).addTo(this.map);
     this.homeButton = new HomeButtonControl({
       onHome: (map) => {
-        this.anchorController.estimateAnchorPosition(this.state);
+        this.anchorController.estimateAnchorPosition();
         map.fitBounds(this.anchorOverlay.getBounds());
       },
     });
@@ -5254,6 +5268,7 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
       this.state.boatConfig.gpsOffset,
     );
     this.anchorController = new AnchorController({
+      appState: this.state,
       overlay: this.anchorOverlay,
       toolbar: this.toolbar,
       signalK: this.signalK,
@@ -5264,13 +5279,13 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
     this.anchorOverlay.onCrosshairDrag((pos) =>
       this.anchorController.updateCrosshairPosition(pos),
     );
-    this.anchorController.estimateAnchorPosition(this.state);
+    this.anchorController.estimateAnchorPosition();
   }
   updateMap() {
     this.windPanel.update(this.state);
     this.infoPanel.update(this.state);
     this.scopePanel.update(this.state);
-    this.anchorController.reconcile(this.state);
+    this.anchorController.reconcile();
     this.anchorOverlay.update(this.state);
     this.fleetLayer.update(this.state);
   }

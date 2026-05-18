@@ -57,7 +57,7 @@ class AnchorAlarm {
       useTLS: window.location.protocol === "https:",
       reconnect: true,
       autoConnect: true,
-      notifications: false,
+      notifications: true,
       sendMeta: true,
     });
     this.client.on("connect", () => this.state.websocketSubscribe(this.client));
@@ -147,6 +147,8 @@ class AnchorAlarm {
 
         this.state.calculate();
 
+        console.log(this.state);
+
         this.buildMap();
         this.checkFreshness();
         this.updateMap();
@@ -182,7 +184,7 @@ class AnchorAlarm {
 
     this.homeButton = new HomeButtonControl({
       onHome: (map) => {
-        this.anchorController.estimateAnchorPosition(this.state);
+        this.anchorController.estimateAnchorPosition();
         map.fitBounds(this.anchorOverlay.getBounds());
       },
     });
@@ -222,6 +224,7 @@ class AnchorAlarm {
     );
 
     this.anchorController = new AnchorController({
+      appState: this.state,
       overlay: this.anchorOverlay,
       toolbar: this.toolbar,
       signalK: this.signalK,
@@ -234,14 +237,14 @@ class AnchorAlarm {
       this.anchorController.updateCrosshairPosition(pos),
     );
 
-    this.anchorController.estimateAnchorPosition(this.state);
+    this.anchorController.estimateAnchorPosition();
   }
 
   updateMap() {
     this.windPanel.update(this.state);
     this.infoPanel.update(this.state);
     this.scopePanel.update(this.state);
-    this.anchorController.reconcile(this.state);
+    this.anchorController.reconcile();
     this.anchorOverlay.update(this.state);
     this.fleetLayer.update(this.state);
   }
