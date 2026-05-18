@@ -132,9 +132,11 @@ export const ScopePanel = L.Control.extend({
   },
 
   show: function () {
-    if (this._container) this._container.style.display = "";
+    if (this._container)
+      this._container.style.display = "";
   },
   hide: function () {
-    if (this._container) this._container.style.display = "none";
+    if (this._container)
+      this._container.style.display = "none";
   },
 });

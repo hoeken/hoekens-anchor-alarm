@@ -57,7 +57,8 @@ export class FleetLayer {
   }
 
   poll() {
-    if (this._pollInFlight) return;
+    if (this._pollInFlight)
+      return;
     this._pollInFlight = true;
     this.app.signalK
       .fetchAllVessels()
@@ -114,12 +115,14 @@ export class FleetLayer {
     const mmsiRegex = /urn:mrn:imo:mmsi:(\d+)$/;
     for (let uri in tracks) {
       const match = uri.match(mmsiRegex);
-      if (!match) continue;
+      if (!match)
+        continue;
       const mmsi = match[1];
       const data = tracks[uri];
 
       const history = data.coordinates?.[0];
-      if (!history || !history.length) continue;
+      if (!history || !history.length)
+        continue;
 
       const points = [];
       let i = 0;
@@ -138,7 +141,8 @@ export class FleetLayer {
         }
       }
 
-      if (!points.length) continue;
+      if (!points.length)
+        continue;
       this.vesselTracks[mmsi] = this.createTrack(points, points.length);
     }
   }
@@ -146,7 +150,8 @@ export class FleetLayer {
   // Append a point to the own-boat track and trim to MAX_OWN_TRACK_POINTS.
   appendOwnTrack(latLng) {
     const ownTrack = this.vesselTracks[this.ownMmsi];
-    if (!ownTrack) return;
+    if (!ownTrack)
+      return;
 
     ownTrack.addLatLng([latLng.lat, latLng.lng, ownTrack.getLatLngs().length]);
     ownTrack.options.max++;
@@ -166,7 +171,8 @@ export class FleetLayer {
 
     for (let key in vessels) {
       const vessel = vessels[key];
-      if (vessel.mmsi == this.ownMmsi) continue;
+      if (vessel.mmsi == this.ownMmsi)
+        continue;
       if (!("navigation" in vessel) || !("position" in vessel.navigation))
         continue;
 
@@ -177,7 +183,8 @@ export class FleetLayer {
         ownLatLng.lat,
         ownLatLng.lng,
       );
-      if (distance > filterRadius) continue;
+      if (distance > filterRadius)
+        continue;
 
       detected.push(vessel.mmsi);
       const heading = this.deriveVesselHeading(vessel, twa);
@@ -212,15 +219,19 @@ export class FleetLayer {
   deriveVesselHeading(vessel, twa) {
     let sog = 0;
     const sogVal = SignalKHelper.value(vessel, "navigation.speedOverGround");
-    if (sogVal !== undefined) sog = sogVal * MPS_TO_KNOTS;
+    if (sogVal !== undefined)
+      sog = sogVal * MPS_TO_KNOTS;
 
     const headingTrue = SignalKHelper.value(vessel, "navigation.headingTrue");
-    if (headingTrue !== undefined) return GeoMath.rad2deg(headingTrue);
+    if (headingTrue !== undefined)
+      return GeoMath.rad2deg(headingTrue);
 
     const cog = SignalKHelper.value(vessel, "navigation.courseOverGroundTrue");
-    if (cog !== undefined && sog > 1) return GeoMath.rad2deg(cog);
+    if (cog !== undefined && sog > 1)
+      return GeoMath.rad2deg(cog);
 
-    if (twa) return GeoMath.rad2deg(twa.value);
+    if (twa)
+      return GeoMath.rad2deg(twa.value);
     return 0;
   }
 
@@ -232,7 +243,8 @@ export class FleetLayer {
     marker.gpsAntennaMarker.setLatLng([position.latitude, position.longitude]);
 
     const track = this.vesselTracks[vessel.mmsi];
-    if (!track) return;
+    if (!track)
+      return;
     const last = track.getLatLngs().at(-1);
     if (
       last &&

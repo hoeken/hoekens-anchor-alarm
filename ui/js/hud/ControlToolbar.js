@@ -40,35 +40,44 @@ export class ControlToolbar {
     this._container
       .querySelector("#raiseAnchor")
       .addEventListener("click", () => {
-        if (this._state !== AnchorState.ANCHORED) return;
+        if (this._state !== AnchorState.ANCHORED)
+          return;
         if (!confirm("Do you really want to disable your anchor alarm?"))
           return;
-        if (this._onRaise) this._onRaise();
+        if (this._onRaise)
+          this._onRaise();
       });
     this._container
       .querySelector("#dropAnchor")
       .addEventListener("click", () => {
-        if (this._onDrop) this._onDrop();
+        if (this._onDrop)
+          this._onDrop();
       });
     this._container
       .querySelector("#setRadius")
       .addEventListener("click", () => {
         const input = prompt("Enter Radius (m)", this._radius);
-        if (input === null) return;
+        if (input === null)
+          return;
         const newRadius = parseInt(input, 10);
-        if (isNaN(newRadius) || newRadius <= 0) return;
-        if (this._onSetRadius) this._onSetRadius(newRadius);
+        if (isNaN(newRadius) || newRadius <= 0)
+          return;
+        if (this._onSetRadius)
+          this._onSetRadius(newRadius);
       });
     this._container
       .querySelector("#increaseRadius")
       .addEventListener("click", () => {
-        if (this._onSetRadius) this._onSetRadius(this._radius + 5);
+        if (this._onSetRadius)
+          this._onSetRadius(this._radius + 5);
       });
     this._container
       .querySelector("#decreaseRadius")
       .addEventListener("click", () => {
-        if (this._radius <= 5) return;
-        if (this._onSetRadius) this._onSetRadius(this._radius - 5);
+        if (this._radius <= 5)
+          return;
+        if (this._onSetRadius)
+          this._onSetRadius(this._radius - 5);
       });
 
     // macOS Chrome delivers trackpad pinch as a wheel event with ctrlKey=true.
@@ -77,10 +86,12 @@ export class ControlToolbar {
     this._container.addEventListener(
       "wheel",
       (e) => {
-        if (!e.ctrlKey) return;
+        if (!e.ctrlKey)
+          return;
         e.preventDefault();
         const target = this._getMapContainer && this._getMapContainer();
-        if (!target) return;
+        if (!target)
+          return;
         target.dispatchEvent(
           new WheelEvent("wheel", {
             deltaX: e.deltaX,

@@ -51,9 +51,11 @@ export class AnchorController {
   // === User-initiated transitions =================================================
 
   requestDrop() {
-    if (this.state !== AnchorState.UP) return;
+    if (this.state !== AnchorState.UP)
+      return;
     const pos = this._overlay.getCrosshairPosition();
-    if (!pos) return;
+    if (!pos)
+      return;
 
     this.state = AnchorState.DROPPING;
     this._enterDropped(pos, this.maxRadius);
@@ -73,7 +75,8 @@ export class AnchorController {
   }
 
   requestRaise() {
-    if (this.state !== AnchorState.ANCHORED) return;
+    if (this.state !== AnchorState.ANCHORED)
+      return;
 
     const previousAnchor = this.anchorCoordinates;
     const previousRadius = this.maxRadius;
@@ -109,8 +112,10 @@ export class AnchorController {
   // === helpers ==================================================================
 
   estimateAnchorPosition() {
-    if (!this._appState.currentCoordinates) return;
-    if (this.state !== AnchorState.UP) return;
+    if (!this._appState.currentCoordinates)
+      return;
+    if (this.state !== AnchorState.UP)
+      return;
 
     console.log(this.state);
     console.log(this._appState);
@@ -193,7 +198,8 @@ export class AnchorController {
   // === Crosshair drag (overlay-driven while raised) ===============================
 
   updateCrosshairPosition(pos) {
-    if (this.state === AnchorState.ANCHORED) return;
+    if (this.state === AnchorState.ANCHORED)
+      return;
     this.anchorCoordinates = pos;
   }
 
@@ -203,7 +209,8 @@ export class AnchorController {
     this.anchorCoordinates = position;
 
     this.maxRadius = parseInt(radius, 10);
-    if (!(this.maxRadius > 0)) this.maxRadius = 20;
+    if (!(this.maxRadius > 0))
+      this.maxRadius = 20;
 
     this._toolbar.setState(this.state);
     this._toolbar.setRadius(this.maxRadius);

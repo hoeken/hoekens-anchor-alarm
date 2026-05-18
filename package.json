@@ -7,15 +7,16 @@
     "test": "$NODE $npm_package_main",
     "release": "git tag -d v$npm_package_version; git tag v$npm_package_version && git push --tags && git push && npm publish",
     "lint": "eslint .",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "lint:fix": "eslint --fix .",
+    "format": "eslint --fix . && prettier --write .",
+    "format:check": "eslint . && prettier --check .",
     "prepare": "husky",
     "build:ui": "vite build",
     "prepublishOnly": "npm run build:ui"
   },
   "lint-staged": {
-    "*.{js,json,css,html}": "prettier --write",
-    "*.js": "eslint --fix"
+    "*.js": "eslint --fix",
+    "*.{json,css,html}": "prettier --write"
   },
   "keywords": [
     "signalk-node-server-plugin",
@@ -40,8 +41,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@stylistic/eslint-plugin": "^5.10.0",
     "eslint": "^10.4.0",
-    "eslint-config-prettier": "^10.1.8",
     "globals": "^17.6.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",

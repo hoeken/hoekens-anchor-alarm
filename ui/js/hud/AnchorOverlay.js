@@ -59,7 +59,8 @@ export class AnchorOverlay {
     this.dropped = true;
     this.anchorPosition = position;
     this.radius = parseInt(radius, 10);
-    if (!(this.radius > 0)) this.radius = 20;
+    if (!(this.radius > 0))
+      this.radius = 20;
 
     this._removeCrosshair();
     this._removeAnchorMarker();
@@ -93,7 +94,8 @@ export class AnchorOverlay {
       this.radiusCircle.setLatLng(this.anchorPosition);
       this._refreshLine();
       this._refreshColor();
-      if (this.dragHandler) this.dragHandler(this.anchorPosition);
+      if (this.dragHandler)
+        this.dragHandler(this.anchorPosition);
     });
 
     this.radiusCircle.setLatLng(position);
@@ -141,7 +143,8 @@ export class AnchorOverlay {
   }
 
   _refreshLine() {
-    if (!this.boatPosition) return;
+    if (!this.boatPosition)
+      return;
 
     const bow = GeoMath.calculateBowCoordinates(
       this.boatPosition,

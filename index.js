@@ -373,7 +373,8 @@ module.exports = function (app) {
   };
 
   function startWatchingPosition() {
-    if (onStop.length > 0) return;
+    if (onStop.length > 0)
+      return;
 
     alarm_state = "normal";
     let delta = getAnchorAlarmDelta(app, alarm_state, "Watching");
@@ -381,7 +382,8 @@ module.exports = function (app) {
 
     app.setPluginStatus("Watching");
 
-    if (positionWatchdogTimer) positionWatchdogTimer.start();
+    if (positionWatchdogTimer)
+      positionWatchdogTimer.start();
 
     app.subscriptionmanager.subscribe(
       {
@@ -414,7 +416,8 @@ module.exports = function (app) {
         }
 
         if (vesselPosition) {
-          if (positionWatchdogTimer) positionWatchdogTimer.reset();
+          if (positionWatchdogTimer)
+            positionWatchdogTimer.reset();
           checkPosition(app, plugin, vesselPosition, configuration);
         }
       },
@@ -426,7 +429,8 @@ module.exports = function (app) {
     let delta = getAnchorAlarmDelta(app, alarm_state, "Off");
     app.handleMessage(plugin.id, delta);
 
-    if (positionWatchdogTimer) positionWatchdogTimer.stop();
+    if (positionWatchdogTimer)
+      positionWatchdogTimer.stop();
 
     app.setPluginStatus("Off");
 
@@ -472,7 +476,8 @@ module.exports = function (app) {
             position.longitude,
         );
         var radius = req.body["radius"];
-        if (typeof radius == "undefined") radius = null;
+        if (typeof radius == "undefined")
+          radius = null;
 
         let delta = getAnchorDelta({
           app: app,
@@ -515,7 +520,8 @@ module.exports = function (app) {
 
     router.post("/setRadius", (req, res) => {
       let position = app.getSelfPath("navigation.position");
-      if (position.value) position = position.value;
+      if (position.value)
+        position = position.value;
       if (typeof position == "undefined") {
         app.debug("no position supplied");
         res.status(403);
@@ -716,7 +722,8 @@ module.exports = function (app) {
       //how often should we send it?
       let interval = configuration["anchorAlarmInterval"];
       if (typeof interval !== "undefined")
-        if (lastAlarmSent + interval * 1000 < Date.now()) do_update = true;
+        if (lastAlarmSent + interval * 1000 < Date.now())
+          do_update = true;
 
       //wait, do we have engines on?
       if (configuration.enableEngineCheck) {
@@ -739,7 +746,8 @@ module.exports = function (app) {
       app.debug("alarm state change: %j", delta);
       app.handleMessage(plugin.id, delta);
 
-      if (alarm_state == "normal") app.setPluginStatus("Watching");
+      if (alarm_state == "normal")
+        app.setPluginStatus("Watching");
       else {
         lastAlarmSent = Date.now();
         app.setPluginError("Dragging");
@@ -794,9 +802,11 @@ function calc_distance(lat1, lon1, lat2, lon2) {
 }
 
 function getAnchorAlarmDelta(app, state, msg, method) {
-  if (!msg) msg = state.charAt(0).toUpperCase() + state.slice(1);
+  if (!msg)
+    msg = state.charAt(0).toUpperCase() + state.slice(1);
 
-  if (!method) method = ["visual", "sound"];
+  if (!method)
+    method = ["visual", "sound"];
 
   let delta = {
     updates: [
@@ -822,7 +832,8 @@ function degsToRad(degrees) {
 }
 
 function isFresh(data, max_age = 300) {
-  if (!data) return false;
+  if (!data)
+    return false;
   const date = new Date(data.timestamp);
   const ageInSecs = (Date.now() - date) / 1000;
   return ageInSecs <= max_age;

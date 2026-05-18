@@ -40,18 +40,21 @@ export const WindPanel = L.Control.extend({
     const svg = this._barb.querySelector("svg");
     if (svg) {
       let angle = 0;
-      if (twa) angle = GeoMath.rad2deg(Math.round(twa.value));
+      if (twa)
+        angle = GeoMath.rad2deg(Math.round(twa.value));
       svg.style.transform = `rotate(${Math.round(angle)}deg)`;
     }
   },
 
   // Re-rotates the existing barb SVG. No-op if setSpeed hasn't rendered one yet.
   setAngle: function (twa) {
-    if (!twa) return;
+    if (!twa)
+      return;
 
     const angle = GeoMath.rad2deg(Math.round(twa.value));
     const svg = this._barb.querySelector("svg");
-    if (svg) svg.style.transform = `rotate(${angle}deg)`;
+    if (svg)
+      svg.style.transform = `rotate(${angle}deg)`;
   },
 
   update: function (state) {

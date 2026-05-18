@@ -36,7 +36,8 @@ export const InfoPanel = L.Control.extend({
   setBelowSurface: function (dbs) {
     if (dbs)
       this._belowSurface.textContent = `${parseFloat(dbs.value).toFixed(1)}m`;
-    else this._belowSurface.textContent = "~";
+    else
+      this._belowSurface.textContent = "~";
   },
 
   setStatus: function (notification) {
@@ -46,13 +47,16 @@ export const InfoPanel = L.Control.extend({
       if (notification.value.message !== "Off" && notification.value.state) {
         this._pluginStatus.classList.add(notification.value.state);
       }
-    } else this._pluginStatus.textContent = "Unknown";
+    } else
+      this._pluginStatus.textContent = "Unknown";
   },
 
   show: function () {
-    if (this._container) this._container.style.display = "";
+    if (this._container)
+      this._container.style.display = "";
   },
   hide: function () {
-    if (this._container) this._container.style.display = "none";
+    if (this._container)
+      this._container.style.display = "none";
   },
 });

@@ -26,16 +26,19 @@ export const StatusBar = L.Control.extend({
   },
 
   _render: function (text, color) {
-    if (!this._container) return;
+    if (!this._container)
+      return;
     this._container.textContent = text;
     this._container.style.color = color;
     this._container.style.display = "";
   },
 
   show: function () {
-    if (this._container) this._container.style.display = "";
+    if (this._container)
+      this._container.style.display = "";
   },
   hide: function () {
-    if (this._container) this._container.style.display = "none";
+    if (this._container)
+      this._container.style.display = "none";
   },
 });

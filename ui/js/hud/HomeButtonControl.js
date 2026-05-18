@@ -24,7 +24,8 @@ export const HomeButtonControl = L.Control.extend({
     L.DomEvent.on(homeButton, "click", function (e) {
       L.DomEvent.stopPropagation(e);
       L.DomEvent.preventDefault(e);
-      if (onHome) onHome(map);
+      if (onHome)
+        onHome(map);
     });
 
     return container;

@@ -43,7 +43,8 @@ export class SignalKHelper {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data ?? {}),
     }).then((response) => {
-      if (response.status === 401) location.href = "/admin/#/login";
+      if (response.status === 401)
+        location.href = "/admin/#/login";
       return SignalKHelper._toJsonOrReject(response);
     });
   }
@@ -71,11 +72,14 @@ export class SignalKHelper {
   // Walk a subtree by dot-separated path. An empty path returns the tree itself
   // so callers can pass a notification envelope and read its `.value` via value().
   static extract(tree, path = "") {
-    if (!tree) return null;
-    if (!path) return tree;
+    if (!tree)
+      return null;
+    if (!path)
+      return tree;
     let node = tree;
     for (const key of path.split(".")) {
-      if (node == null || typeof node !== "object") return null;
+      if (node == null || typeof node !== "object")
+        return null;
       node = node[key];
     }
     return node ?? null;
@@ -92,7 +96,8 @@ export class SignalKHelper {
     { maxAge = SIGNALK_DEFAULT_FRESHNESS_SEC, fallback = undefined } = {},
   ) {
     const node = this.extract(tree, path);
-    if (!node || node.value === undefined) return fallback;
+    if (!node || node.value === undefined)
+      return fallback;
     if (!this.isFresh(node, maxAge)) {
       const ageSec = node.timestamp
         ? Math.round((Date.now() - new Date(node.timestamp).getTime()) / 1000)
@@ -107,7 +112,8 @@ export class SignalKHelper {
   }
 
   static isFresh(delta, maxAge = SIGNALK_DEFAULT_FRESHNESS_SEC) {
-    if (!delta || !delta.timestamp) return false;
+    if (!delta || !delta.timestamp)
+      return false;
     const ageSec = (Date.now() - new Date(delta.timestamp).getTime()) / 1000;
     return ageSec <= maxAge;
   }

@@ -159,7 +159,8 @@ class AnchorAlarm {
             () => this.update(),
             UPDATE_INTERVAL_MS,
           );
-        else this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
+        else
+          this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
       })
       .catch((error) => {
         const detail = error.statusText || error.message || "unknown error";
@@ -272,7 +273,8 @@ class AnchorAlarm {
   poll() {
     // Skip the tick if the previous fetch is still in flight; otherwise a slow
     // response can land after a newer one and stomp fresher state.
-    if (this._pollInFlight) return;
+    if (this._pollInFlight)
+      return;
     this._pollInFlight = true;
 
     this.signalK

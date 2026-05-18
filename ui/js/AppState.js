@@ -85,7 +85,8 @@ export class AppState {
         this.currentCoordinates.value.latitude,
         this.currentCoordinates.value.longitude,
       );
-    else return L.latLng(0, 0);
+    else
+      return L.latLng(0, 0);
   }
 
   getAnchorPosition() {
@@ -94,13 +95,15 @@ export class AppState {
         this.anchor.position.value.latitude,
         this.anchor.position.value.longitude,
       );
-    else return L.latLng(0, 0);
+    else
+      return L.latLng(0, 0);
   }
 
   extract(tree, path, fresh = true, maxAge = DEFAULT_FRESHNESS_SEC) {
     let data = SignalKHelper.extract(tree, path);
 
-    if (!data) return null;
+    if (!data)
+      return null;
 
     // check for freshness.
     if (fresh && !SignalKHelper.isFresh(data, maxAge)) {
@@ -130,7 +133,8 @@ export class AppState {
     this.aws = this.extract(data, "environment.wind.speedApparent") ?? this.aws;
     this.tide = this.extract(data, "environment.tide", false) ?? this.tide;
 
-    if (!this.anchor) this.anchor = {};
+    if (!this.anchor)
+      this.anchor = {};
     this.anchor.position =
       this.extract(data, "navigation.anchor.position", false) ??
       this.anchor.position;
@@ -148,26 +152,40 @@ export class AppState {
     // console.log(delta);
     let data = null;
     const path = delta.path;
-    if (path == "navigation.position") data = this.currentCoordinates;
-    else if (path == "navigation.headingTrue") data = this.heading;
-    else if (path == "environment.depth.belowKeel") data = this.belowKeel;
-    else if (path == "environment.depth.belowSurface") data = this.belowSurface;
-    else if (path == "environment.wind.directionTrue") data = this.twa;
-    else if (path == "environment.wind.speedApparent") data = this.aws;
-    else if (path == "environment.tide.heightHigh") data = this.tide.heightHigh;
-    else if (path == "environment.tide.heightLow") data = this.tide.heightLow;
-    else if (path == "environment.tide.heightNow") data = this.tide.heightNow;
+    if (path == "navigation.position")
+      data = this.currentCoordinates;
+    else if (path == "navigation.headingTrue")
+      data = this.heading;
+    else if (path == "environment.depth.belowKeel")
+      data = this.belowKeel;
+    else if (path == "environment.depth.belowSurface")
+      data = this.belowSurface;
+    else if (path == "environment.wind.directionTrue")
+      data = this.twa;
+    else if (path == "environment.wind.speedApparent")
+      data = this.aws;
+    else if (path == "environment.tide.heightHigh")
+      data = this.tide.heightHigh;
+    else if (path == "environment.tide.heightLow")
+      data = this.tide.heightLow;
+    else if (path == "environment.tide.heightNow")
+      data = this.tide.heightNow;
     else if (path == "environment.tide.stationName")
       data = this.tide.stationName;
-    else if (path == "environment.tide.timeHigh") data = this.tide.timeHigh;
-    else if (path == "environment.tide.timeLow") data = this.tide.timeLow;
-    else if (path == "navigation.anchor.position") data = this.anchor.position;
-    else if (path == "navigation.anchor.state") data = this.anchor.state;
+    else if (path == "environment.tide.timeHigh")
+      data = this.tide.timeHigh;
+    else if (path == "environment.tide.timeLow")
+      data = this.tide.timeLow;
+    else if (path == "navigation.anchor.position")
+      data = this.anchor.position;
+    else if (path == "navigation.anchor.state")
+      data = this.anchor.state;
     else if (path == "navigation.anchor.maxRadius")
       data = this.anchor.maxRadius;
     else if (path == "notifications.navigation.anchor")
       data = this.anchor.notification;
-    else console.log(`[websocket] Ignoring: ${path}`);
+    else
+      console.log(`[websocket] Ignoring: ${path}`);
 
     if (data) {
       data.timestamp = timestamp;
@@ -182,7 +200,8 @@ export class AppState {
   }
 
   calculateTides() {
-    if (!this.tide) return;
+    if (!this.tide)
+      return;
 
     this.currentTide = GeoMath.estimateTideHeightSmooth(
       this.tide.timeLow.value,
@@ -215,7 +234,8 @@ export class AppState {
   // last-known TWA
   // 0
   computeOwnHeading() {
-    if (this.heading) return GeoMath.rad2deg(this.heading.value);
+    if (this.heading)
+      return GeoMath.rad2deg(this.heading.value);
 
     if (this.anchorPosition && this.currentCoordinates) {
       return Math.round(
@@ -228,7 +248,8 @@ export class AppState {
       );
     }
 
-    if (this.twa) return GeoMath.rad2deg(this.twa.value);
+    if (this.twa)
+      return GeoMath.rad2deg(this.twa.value);
 
     return 0;
   }
