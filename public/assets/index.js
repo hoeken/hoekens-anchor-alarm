@@ -3269,7 +3269,7 @@ var import_client = /* @__PURE__ */ __toESM(
     module.exports = require_dist();
   })(),
 );
-var SIGNALK_DEFAULT_FRESHNESS_SEC = 300;
+var SIGNALK_DEFAULT_FRESHNESS_SEC = 60;
 var SignalKClient = class SignalKClient {
   constructor({ baseUrl = "", pluginName = null } = {}) {
     this.baseUrl = baseUrl;
@@ -3726,8 +3726,76 @@ var GeoMath = class GeoMath {
 //#endregion
 //#region ui/js/AppState.js
 var DEFAULT_FRESHNESS_SEC = 300;
+var DELTA_FAST_SPEED = 250;
+var DELTA_SLOW_SPEED = 1e3;
 var AppState = class {
-  constructor() {}
+  constructor() {
+    this.anchor = {};
+  }
+  websocketSubscribe(client) {
+    client.subscribe([
+      {
+        context: "vessels.self",
+        subscribe: [
+          {
+            path: "navigation.position",
+            policy: "fixed",
+            period: DELTA_FAST_SPEED,
+          },
+          {
+            path: "navigation.headingTrue",
+            policy: "fixed",
+            period: DELTA_FAST_SPEED,
+          },
+          {
+            path: "environment.depth.belowKeel",
+            policy: "fixed",
+            period: DELTA_SLOW_SPEED,
+          },
+          {
+            path: "environment.depth.belowSurface",
+            policy: "fixed",
+            period: DELTA_SLOW_SPEED,
+          },
+          {
+            path: "environment.wind.directionTrue",
+            policy: "fixed",
+            period: DELTA_SLOW_SPEED,
+          },
+          {
+            path: "environment.wind.speedApparent",
+            policy: "fixed",
+            period: DELTA_SLOW_SPEED,
+          },
+          {
+            path: "environment.tide",
+            policy: "instant",
+            minPeriod: 60 * 1e3,
+          },
+          {
+            path: "navigation.anchor.position",
+            policy: "instant",
+            minPeriod: DELTA_FAST_SPEED,
+          },
+          {
+            path: "navigation.anchor.state",
+            policy: "instant",
+            minPeriod: DELTA_FAST_SPEED,
+          },
+          {
+            path: "navigation.anchor.maxRadius",
+            policy: "instant",
+            minPeriod: DELTA_FAST_SPEED,
+          },
+          {
+            path: "notifications.navigation.anchor",
+            policy: "instant",
+            minPeriod: DELTA_FAST_SPEED,
+          },
+        ],
+      },
+    ]);
+  }
   getPosition() {
     if (this.currentCoordinates)
       return L.latLng(
@@ -5022,8 +5090,6 @@ var ControlToolbar = class {
 var UPDATE_INTERVAL_MS = 500;
 var POLL_INTERVAL_MS = 1e3;
 var INITIAL_LOAD_RETRY_MS = 5e3;
-var DELTA_FAST_SPEED = 250;
-var DELTA_SLOW_SPEED = 1e3;
 (class AnchorAlarm {
   constructor() {
     this.signalK = new SignalKClient({ pluginName: "hoekens-anchor-alarm" });
@@ -5057,71 +5123,8 @@ var DELTA_SLOW_SPEED = 1e3;
       notifications: false,
       sendMeta: true,
     });
+    this.client.on("connect", () => this.state.websocketSubscribe(this.client));
     this.client.on("delta", (delta) => this.handleDeltas(delta));
-    this.client.on("connect", () => {
-      this.client.subscribe([
-        {
-          context: "vessels.self",
-          subscribe: [
-            {
-              path: "navigation.position",
-              policy: "fixed",
-              period: DELTA_FAST_SPEED,
-            },
-            {
-              path: "navigation.headingTrue",
-              policy: "fixed",
-              period: DELTA_FAST_SPEED,
-            },
-            {
-              path: "environment.depth.belowKeel",
-              policy: "fixed",
-              period: DELTA_SLOW_SPEED,
-            },
-            {
-              path: "environment.depth.belowSurface",
-              policy: "fixed",
-              period: DELTA_SLOW_SPEED,
-            },
-            {
-              path: "environment.wind.directionTrue",
-              policy: "fixed",
-              period: DELTA_SLOW_SPEED,
-            },
-            {
-              path: "environment.wind.speedApparent",
-              policy: "fixed",
-              period: DELTA_SLOW_SPEED,
-            },
-            {
-              path: "environment.tide",
-              policy: "instant",
-              minPeriod: 60 * 1e3,
-            },
-            {
-              path: "navigation.anchor.position",
-              policy: "instant",
-              minPeriod: DELTA_FAST_SPEED,
-            },
-            {
-              path: "navigation.anchor.state",
-              policy: "instant",
-              minPeriod: DELTA_FAST_SPEED,
-            },
-            {
-              path: "navigation.anchor.maxRadius",
-              policy: "instant",
-              minPeriod: DELTA_FAST_SPEED,
-            },
-            {
-              path: "notifications.navigation.anchor",
-              policy: "instant",
-              minPeriod: DELTA_FAST_SPEED,
-            },
-          ],
-        },
-      ]);
-    });
   }
   handleDeltas(delta) {
     if (delta.updates) {
@@ -5187,6 +5190,7 @@ var DELTA_SLOW_SPEED = 1e3;
         }
         this.state.calculate();
         this.buildMap();
+        this.checkFreshness();
         this.updateMap();
         this.map.fitBounds(this.anchorOverlay.getBounds());
         if (this.useWebsockets)
@@ -5262,6 +5266,20 @@ var DELTA_SLOW_SPEED = 1e3;
     this.anchorOverlay.update(this.state);
     this.fleetLayer.update(this.state);
   }
+  checkFreshness() {
+    if (SignalKClient.isStale(this.state.currentCoordinates))
+      this.statusBar.setError("Current Position data is stale.");
+    if (SignalKClient.isStale(this.state.heading))
+      this.statusBar.setError("Heading data is stale.");
+    if (SignalKClient.isStale(this.state.belowKeel))
+      this.statusBar.setError("Depth Below Keel data is stale.");
+    if (SignalKClient.isStale(this.state.belowSurface))
+      this.statusBar.setError("Depth Below Surface data is stale.");
+    if (SignalKClient.isStale(this.state.twa))
+      this.statusBar.setError("True Wind Angle data is stale.");
+    if (SignalKClient.isStale(this.state.aws))
+      this.statusBar.setError("Apparent Wind Speed data is stale.");
+  }
   poll() {
     if (this._pollInFlight) return;
     this._pollInFlight = true;
@@ -5270,6 +5288,7 @@ var DELTA_SLOW_SPEED = 1e3;
       .then((data) => {
         this.state.extractAll(data);
         this.state.calculate();
+        this.checkFreshness();
         this.updateMap();
       })
       .catch((error) => {
@@ -5285,6 +5304,7 @@ var DELTA_SLOW_SPEED = 1e3;
   update() {
     try {
       this.state.calculate();
+      this.checkFreshness();
       this.updateMap();
     } catch (error) {
       const detail = error.statusText || error.message || "unknown error";

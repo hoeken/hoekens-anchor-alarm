@@ -4,7 +4,7 @@
 // replace the REST fetchers (subscribing to deltas and serving values from a
 // local cache) without changing the static helpers or call sites that use them.
 
-const SIGNALK_DEFAULT_FRESHNESS_SEC = 300;
+const SIGNALK_DEFAULT_FRESHNESS_SEC = 60;
 
 export class SignalKClient {
   constructor({ baseUrl = "", pluginName = null } = {}) {

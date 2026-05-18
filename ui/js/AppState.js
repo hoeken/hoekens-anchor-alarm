@@ -6,8 +6,78 @@ import { GeoMath } from "./GeoMath.js";
 
 const DEFAULT_FRESHNESS_SEC = 300;
 
+const DELTA_FAST_SPEED = 250;
+const DELTA_SLOW_SPEED = 1000;
+
 export class AppState {
-  constructor() {}
+  constructor() {
+    this.anchor = {};
+  }
+
+  websocketSubscribe(client) {
+    client.subscribe([
+      {
+        context: "vessels.self",
+        subscribe: [
+          {
+            path: "navigation.position",
+            policy: "fixed",
+            period: DELTA_FAST_SPEED,
+          },
+          {
+            path: "navigation.headingTrue",
+            policy: "fixed",
+            period: DELTA_FAST_SPEED,
+          },
+          {
+            path: "environment.depth.belowKeel",
+            policy: "fixed",
+            period: DELTA_SLOW_SPEED,
+          },
+          {
+            path: "environment.depth.belowSurface",
+            policy: "fixed",
+            period: DELTA_SLOW_SPEED,
+          },
+          {
+            path: "environment.wind.directionTrue",
+            policy: "fixed",
+            period: DELTA_SLOW_SPEED,
+          },
+          {
+            path: "environment.wind.speedApparent",
+            policy: "fixed",
+            period: DELTA_SLOW_SPEED,
+          },
+          {
+            path: "environment.tide",
+            policy: "instant",
+            minPeriod: 60 * 1000,
+          },
+          {
+            path: "navigation.anchor.position",
+            policy: "instant",
+            minPeriod: DELTA_FAST_SPEED,
+          },
+          {
+            path: "navigation.anchor.state",
+            policy: "instant",
+            minPeriod: DELTA_FAST_SPEED,
+          },
+          {
+            path: "navigation.anchor.maxRadius",
+            policy: "instant",
+            minPeriod: DELTA_FAST_SPEED,
+          },
+          {
+            path: "notifications.navigation.anchor",
+            policy: "instant",
+            minPeriod: DELTA_FAST_SPEED,
+          },
+        ],
+      },
+    ]);
+  }
 
   getPosition() {
     if (this.currentCoordinates)

@@ -23,9 +23,6 @@ const UPDATE_INTERVAL_MS = 500;
 const POLL_INTERVAL_MS = 1000;
 const INITIAL_LOAD_RETRY_MS = 5000;
 
-const DELTA_FAST_SPEED = 250;
-const DELTA_SLOW_SPEED = 1000;
-
 class AnchorAlarm {
   constructor() {
     this.signalK = new SignalKClient({ pluginName: "hoekens-anchor-alarm" });
@@ -65,72 +62,8 @@ class AnchorAlarm {
       notifications: false,
       sendMeta: true,
     });
+    this.client.on("connect", () => this.state.websocketSubscribe(this.client));
     this.client.on("delta", (delta) => this.handleDeltas(delta));
-
-    this.client.on("connect", () => {
-      this.client.subscribe([
-        {
-          context: "vessels.self",
-          subscribe: [
-            {
-              path: "navigation.position",
-              policy: "fixed",
-              period: DELTA_FAST_SPEED,
-            },
-            {
-              path: "navigation.headingTrue",
-              policy: "fixed",
-              period: DELTA_FAST_SPEED,
-            },
-            {
-              path: "environment.depth.belowKeel",
-              policy: "fixed",
-              period: DELTA_SLOW_SPEED,
-            },
-            {
-              path: "environment.depth.belowSurface",
-              policy: "fixed",
-              period: DELTA_SLOW_SPEED,
-            },
-            {
-              path: "environment.wind.directionTrue",
-              policy: "fixed",
-              period: DELTA_SLOW_SPEED,
-            },
-            {
-              path: "environment.wind.speedApparent",
-              policy: "fixed",
-              period: DELTA_SLOW_SPEED,
-            },
-            {
-              path: "environment.tide",
-              policy: "instant",
-              minPeriod: 60 * 1000,
-            },
-            {
-              path: "navigation.anchor.position",
-              policy: "instant",
-              minPeriod: DELTA_FAST_SPEED,
-            },
-            {
-              path: "navigation.anchor.state",
-              policy: "instant",
-              minPeriod: DELTA_FAST_SPEED,
-            },
-            {
-              path: "navigation.anchor.maxRadius",
-              policy: "instant",
-              minPeriod: DELTA_FAST_SPEED,
-            },
-            {
-              path: "notifications.navigation.anchor",
-              policy: "instant",
-              minPeriod: DELTA_FAST_SPEED,
-            },
-          ],
-        },
-      ]);
-    });
   }
 
   handleDeltas(delta) {
@@ -217,6 +150,7 @@ class AnchorAlarm {
         this.state.calculate();
 
         this.buildMap();
+        this.checkFreshness();
         this.updateMap();
         this.map.fitBounds(this.anchorOverlay.getBounds());
 
@@ -314,6 +248,21 @@ class AnchorAlarm {
     this.fleetLayer.update(this.state);
   }
 
+  checkFreshness() {
+    if (SignalKClient.isStale(this.state.currentCoordinates))
+      this.statusBar.setError("Current Position data is stale.");
+    if (SignalKClient.isStale(this.state.heading))
+      this.statusBar.setError("Heading data is stale.");
+    if (SignalKClient.isStale(this.state.belowKeel))
+      this.statusBar.setError("Depth Below Keel data is stale.");
+    if (SignalKClient.isStale(this.state.belowSurface))
+      this.statusBar.setError("Depth Below Surface data is stale.");
+    if (SignalKClient.isStale(this.state.twa))
+      this.statusBar.setError("True Wind Angle data is stale.");
+    if (SignalKClient.isStale(this.state.aws))
+      this.statusBar.setError("Apparent Wind Speed data is stale.");
+  }
+
   // === Live polling ================================================================
 
   // One GET of vessels/self per tick feeds position, depth, wind, anchor state,
@@ -330,6 +279,7 @@ class AnchorAlarm {
       .then((data) => {
         this.state.extractAll(data);
         this.state.calculate();
+        this.checkFreshness();
         this.updateMap();
       })
       .catch((error) => {
@@ -348,6 +298,7 @@ class AnchorAlarm {
   update() {
     try {
       this.state.calculate();
+      this.checkFreshness();
       this.updateMap();
     } catch (error) {
       const detail = error.statusText || error.message || "unknown error";
