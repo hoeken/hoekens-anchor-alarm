@@ -1,20 +1,18 @@
 # v2.1
 
-- convert to websocket instead of rest polling
-  - first convert to a currentState / redraw() system
-  - on load:
-    - populate currentState with all the important variables
-    - buildMap()
-    - redrawMap(); 
-  - on update (polling)
-    - update currentState with new data
-    - redrawMap();
-  - on update (websockets)
-    - each trigger updates currentState
-    - redraw map w/ throttle?
+- add AppState.checkFreshness() to AnchorAlarm.update()
 
-- make filterRadius a plugin option
+- convert to websocket instead of rest polling
+  - add websocket connection
+  - subscribe to relevant topics
+  - on update (websockets)
+    - each trigger updates AppState
+  - redraw map on interval?
+
 - respect units (kts / meters / etc)
+
+- make FleetLayer.filterRadius a configurable option
+- make Polling / Websocket a configurable option
 
 # LONG TERM
 
