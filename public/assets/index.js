@@ -3860,7 +3860,13 @@ var AppState = class {
     else if (path == "environment.depth.belowSurface") data = this.belowSurface;
     else if (path == "environment.wind.directionTrue") data = this.twa;
     else if (path == "environment.wind.speedApparent") data = this.aws;
-    else if (path == "environment.tide") data = this.tide;
+    else if (path == "environment.tide.heightHigh") data = this.tide.heightHigh;
+    else if (path == "environment.tide.heightLow") data = this.tide.heightLow;
+    else if (path == "environment.tide.heightNow") data = this.tide.heightNow;
+    else if (path == "environment.tide.stationName")
+      data = this.tide.stationName;
+    else if (path == "environment.tide.timeHigh") data = this.tide.timeHigh;
+    else if (path == "environment.tide.timeLow") data = this.tide.timeLow;
     else if (path == "navigation.anchor.position") data = this.anchor.position;
     else if (path == "navigation.anchor.state") data = this.anchor.state;
     else if (path == "navigation.anchor.maxRadius")
