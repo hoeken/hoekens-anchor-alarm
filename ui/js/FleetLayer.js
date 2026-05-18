@@ -73,7 +73,7 @@ export class FleetLayer {
         const status = error.status ? `${error.status} ` : "";
         const msg = `Fleet update failed: ${status}${detail}`;
 
-        this.statusBar.setWarning(msg);
+        this.app.statusBar.setWarning(msg);
         console.error(msg, error);
       })
       .finally(() => {

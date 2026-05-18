@@ -3974,7 +3974,7 @@ var FleetLayer = class {
       .catch((error) => {
         const detail = error.statusText || error.message || "unknown error";
         const msg = `Fleet update failed: ${error.status ? `${error.status} ` : ""}${detail}`;
-        this.statusBar.setWarning(msg);
+        this.app.statusBar.setWarning(msg);
         console.error(msg, error);
       })
       .finally(() => {
