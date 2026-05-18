@@ -146,11 +146,9 @@ class AnchorAlarm {
         }
 
         this.state.calculate();
-
-        console.log(this.state);
+        this.checkFreshness();
 
         this.buildMap();
-        this.checkFreshness();
         this.updateMap();
         this.map.fitBounds(this.anchorOverlay.getBounds());
 
@@ -253,16 +251,19 @@ class AnchorAlarm {
   checkFreshness() {
     if (SignalKHelper.isStale(this.state.currentCoordinates))
       this.statusBar.setError("Current Position data is stale.");
-    if (SignalKHelper.isStale(this.state.heading))
+    else if (SignalKHelper.isStale(this.state.heading))
       this.statusBar.setError("Heading data is stale.");
-    if (SignalKHelper.isStale(this.state.belowKeel))
+    else if (SignalKHelper.isStale(this.state.belowKeel))
       this.statusBar.setError("Depth Below Keel data is stale.");
-    if (SignalKHelper.isStale(this.state.belowSurface))
+    else if (SignalKHelper.isStale(this.state.belowSurface))
       this.statusBar.setError("Depth Below Surface data is stale.");
-    if (SignalKHelper.isStale(this.state.twa))
+    else if (SignalKHelper.isStale(this.state.twa))
       this.statusBar.setError("True Wind Angle data is stale.");
-    if (SignalKHelper.isStale(this.state.aws))
+    else if (SignalKHelper.isStale(this.state.aws))
       this.statusBar.setError("Apparent Wind Speed data is stale.");
+    else
+      this.statusBar.hide();
+
   }
 
   // === Live polling ================================================================

@@ -3243,7 +3243,7 @@ var AppState = class {
 		else if (path == "navigation.anchor.state") data = this.anchor.state;
 		else if (path == "navigation.anchor.maxRadius") data = this.anchor.maxRadius;
 		else if (path == "notifications.navigation.anchor") data = this.anchor.notification;
-		else console.log(`[websocket] Ignoring: ${path}`);
+		else if (!path.startsWith("notifications")) console.log(`[websocket] Ignoring: ${path}`);
 		if (data) {
 			data.timestamp = timestamp;
 			data.value = delta.value;
@@ -4532,9 +4532,8 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 				return;
 			}
 			this.state.calculate();
-			console.log(this.state);
-			this.buildMap();
 			this.checkFreshness();
+			this.buildMap();
 			this.updateMap();
 			this.map.fitBounds(this.anchorOverlay.getBounds());
 			if (this.useWebsockets) this.updateTimer = setInterval(() => this.update(), UPDATE_INTERVAL_MS);
@@ -4598,11 +4597,12 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 	}
 	checkFreshness() {
 		if (SignalKHelper.isStale(this.state.currentCoordinates)) this.statusBar.setError("Current Position data is stale.");
-		if (SignalKHelper.isStale(this.state.heading)) this.statusBar.setError("Heading data is stale.");
-		if (SignalKHelper.isStale(this.state.belowKeel)) this.statusBar.setError("Depth Below Keel data is stale.");
-		if (SignalKHelper.isStale(this.state.belowSurface)) this.statusBar.setError("Depth Below Surface data is stale.");
-		if (SignalKHelper.isStale(this.state.twa)) this.statusBar.setError("True Wind Angle data is stale.");
-		if (SignalKHelper.isStale(this.state.aws)) this.statusBar.setError("Apparent Wind Speed data is stale.");
+		else if (SignalKHelper.isStale(this.state.heading)) this.statusBar.setError("Heading data is stale.");
+		else if (SignalKHelper.isStale(this.state.belowKeel)) this.statusBar.setError("Depth Below Keel data is stale.");
+		else if (SignalKHelper.isStale(this.state.belowSurface)) this.statusBar.setError("Depth Below Surface data is stale.");
+		else if (SignalKHelper.isStale(this.state.twa)) this.statusBar.setError("True Wind Angle data is stale.");
+		else if (SignalKHelper.isStale(this.state.aws)) this.statusBar.setError("Apparent Wind Speed data is stale.");
+		else this.statusBar.hide();
 	}
 	poll() {
 		if (this._pollInFlight) return;
