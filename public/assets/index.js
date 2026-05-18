@@ -3867,7 +3867,7 @@ var AppState = class {
       data = this.anchor.maxRadius;
     else if (path == "notifications.navigation.anchor")
       data = this.anchor.notification;
-    else console.log(delta);
+    else console.log(`[websocket] Ignoring: ${path}`);
     if (data) {
       data.timestamp = timestamp;
       data.value = delta.value;
@@ -4866,6 +4866,7 @@ var AnchorController = class {
     this.state = AnchorState.UP;
     this.anchorCoordinates = null;
     this.maxRadius = 0;
+    this.reconcile();
   }
   _reportError(prefix, err) {
     const detail = err?.statusText || err?.message || "unknown error";
@@ -4926,6 +4927,9 @@ var AnchorController = class {
   estimateAnchorPosition() {
     if (!this._appState.currentCoordinates) return;
     if (this.state !== AnchorState.UP) return;
+    console.log(this.state);
+    console.log(this._appState);
+    console.trace();
     const distance = this._appState.calculateScope(5);
     this.setRadius(
       this.computeDefaultRadius(

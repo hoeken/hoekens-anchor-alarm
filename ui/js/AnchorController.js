@@ -39,6 +39,8 @@ export class AnchorController {
     this.state = AnchorState.UP;
     this.anchorCoordinates = null;
     this.maxRadius = 0;
+
+    this.reconcile();
   }
 
   _reportError(prefix, err) {
@@ -109,6 +111,10 @@ export class AnchorController {
   estimateAnchorPosition() {
     if (!this._appState.currentCoordinates) return;
     if (this.state !== AnchorState.UP) return;
+
+    console.log(this.state);
+    console.log(this._appState);
+    console.trace();
 
     const distance = this._appState.calculateScope(5);
     this.setRadius(

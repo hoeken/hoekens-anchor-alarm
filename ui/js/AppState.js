@@ -161,7 +161,7 @@ export class AppState {
       data = this.anchor.maxRadius;
     else if (path == "notifications.navigation.anchor")
       data = this.anchor.notification;
-    else console.log(delta);
+    else console.log(`[websocket] Ignoring: ${path}`);
 
     if (data) {
       data.timestamp = timestamp;
