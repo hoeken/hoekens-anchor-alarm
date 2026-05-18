@@ -9,16 +9,37 @@ const DEFAULT_FRESHNESS_SEC = 300;
 export class AppState {
   constructor() {}
 
+  getPosition() {
+    if (this.currentCoordinates)
+      return L.latLng(
+        this.currentCoordinates.value.latitude,
+        this.currentCoordinates.value.longitude,
+      );
+    else return L.latLng(0, 0);
+  }
+
+  getAnchorPosition() {
+    if (this.anchor.position)
+      return L.latLng(
+        this.anchor.position.value.latitude,
+        this.anchor.position.value.longitude,
+      );
+    else return L.latLng(0, 0);
+  }
+
   extract(tree, path, fresh = true, maxAge = DEFAULT_FRESHNESS_SEC) {
     let data = SignalKClient.extract(tree, path);
 
+    if (!data) return null;
+
     // check for freshness.
-    if (data !== null && fresh && !SignalKClient.isFresh(data, maxAge)) {
+    if (fresh && !SignalKClient.isFresh(data, maxAge)) {
       const ageSec = data.timestamp
         ? Math.round((Date.now() - new Date(data.timestamp).getTime()) / 1000)
         : "unknown";
       const msg = `Stale SignalK value: ${path || "(root)"} — Age ${ageSec}s, Max ${maxAge}s`;
       SignalKClient.errorHandler?.(msg);
+      console.warn(msg);
       return null;
     }
 
@@ -26,7 +47,7 @@ export class AppState {
   }
 
   extractAll(data) {
-    this.boatConfig = BoatConfig.fromSelf(data);
+    this.boatConfig = BoatConfig.extract(data);
 
     this.currentCoordinates = this.extract(data, "navigation.position");
     this.heading = this.extract(data, "navigation.headingTrue") ?? this.heading;
@@ -36,7 +57,7 @@ export class AppState {
       this.extract(data, "environment.depth.belowSurface") ?? this.belowSurface;
     this.twa = this.extract(data, "environment.wind.directionTrue") ?? this.twa;
     this.aws = this.extract(data, "environment.wind.speedApparent") ?? this.aws;
-    this.tide = this.extract(data, "environment.tide") ?? this.tide;
+    this.tide = this.extract(data, "environment.tide", false) ?? this.tide;
 
     if (!this.anchor) this.anchor = {};
     this.anchor.position =
@@ -46,8 +67,9 @@ export class AppState {
     this.anchor.maxRadius =
       this.extract(data, "navigation.anchor.maxRadius") ??
       this.anchor.maxRadius;
+
     this.anchor.notification =
-      this.extract(data, "notifications.navigation.anchor") ??
+      this.extract(data, "notifications.navigation.anchor", false) ??
       this.anchor.notification;
   }
 

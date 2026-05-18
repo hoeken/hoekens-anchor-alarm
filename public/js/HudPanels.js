@@ -96,20 +96,25 @@ export const InfoPanel = L.Control.extend({
     return container;
   },
 
-  setBelowSurface: function (value) {
-    if (value === undefined || value === null) {
-      this._belowSurface.textContent = "~";
-      return;
-    }
-    this._belowSurface.textContent = `${parseFloat(value).toFixed(1)}m`;
+  update: function (state) {
+    this.setBelowSurface(state.belowSurface);
+    this.setStatus(state.anchor.notification);
   },
 
-  setStatus: function (message, state) {
-    this._pluginStatus.textContent = message;
-    this._pluginStatus.className = "";
-    if (message !== "Off" && state) {
-      this._pluginStatus.classList.add(state);
-    }
+  setBelowSurface: function (dbs) {
+    if (dbs)
+      this._belowSurface.textContent = `${parseFloat(dbs.value).toFixed(1)}m`;
+    else this._belowSurface.textContent = "~";
+  },
+
+  setStatus: function (notification) {
+    if (notification) {
+      this._pluginStatus.textContent = notification.value.message;
+      this._pluginStatus.className = "";
+      if (notification.value.message !== "Off" && notification.value.state) {
+        this._pluginStatus.classList.add(notification.value.state);
+      }
+    } else this._pluginStatus.textContent = "Unknown";
   },
 
   show: function () {
@@ -141,30 +146,36 @@ export const WindPanel = L.Control.extend({
   // Renders the AWS readout AND a fresh barb SVG. The SVG's rotation is set
   // from `twa` so that a setSpeed without a subsequent setAngle still points
   // the barb in the right direction.
-  setSpeed: function (speedApparent, twa) {
-    if (speedApparent === undefined || speedApparent === null) {
+  setSpeed: function (aws, twa) {
+    if (!aws) {
       this._aws.innerHTML = "~";
       return;
     }
-    const kts = Math.round(speedApparent * MPS_TO_KNOTS);
+    const kts = Math.round(aws.value * MPS_TO_KNOTS);
     this._aws.innerHTML = `${kts}kts`;
 
-    const windBarbIcon = getWindBarb(speedApparent);
+    const windBarbIcon = getWindBarb(aws.value);
     this._barb.innerHTML = windBarbIcon;
     const svg = this._barb.querySelector("svg");
     if (svg) {
-      // Math.round(null) === 0, matching the original; before the first wind
-      // angle arrives this paints the barb at 0° rather than no transform.
-      svg.style.transform = `rotate(${Math.round(twa)}deg)`;
+      let angle = 0;
+      if (twa) angle = GeoMath.rad2deg(Math.round(twa.value));
+      svg.style.transform = `rotate(${Math.round(angle)}deg)`;
     }
   },
 
   // Re-rotates the existing barb SVG. No-op if setSpeed hasn't rendered one yet.
-  setAngle: function (directionTrueDeg) {
-    if (directionTrueDeg === undefined || directionTrueDeg === null) return;
-    const angle = GeoMath.normalizeAngle(Math.round(directionTrueDeg));
+  setAngle: function (twa) {
+    if (!twa) return;
+
+    const angle = GeoMath.rad2deg(Math.round(twa.value));
     const svg = this._barb.querySelector("svg");
     if (svg) svg.style.transform = `rotate(${angle}deg)`;
+  },
+
+  update: function (state) {
+    this.setSpeed(state.aws, state.twa);
+    // this.setAngle(state.twa);
   },
 
   clearSpeed: function () {
@@ -253,41 +264,51 @@ export const ScopePanel = L.Control.extend({
 
   // Render a whole scope snapshot. Caller does the math; this is pure rendering
   // plus the green/orange/red warning on the minimum-depth row.
-  setScopeData: function (data) {
-    const {
-      depthBelowSurface,
-      depthBelowKeel,
-      bowHeight,
-      tidalRise,
-      tidalFall,
-      scopes,
-    } = data;
+  update: function (state) {
+    if (state.belowSurface && state.belowKeel) {
+      const maxHeight =
+        state.belowSurface.value +
+        state.boatConfig.anchorRollerHeight +
+        state.tidalRise;
 
-    this._belowSurface = depthBelowSurface;
-    this._scopes = scopes;
-
-    const maxHeight = depthBelowSurface + bowHeight + tidalRise;
-    const minimumDepth = depthBelowKeel - tidalFall;
-
-    this._refs.scope7to1.innerHTML = `${scopes[7].toFixed(1)}m`;
-    this._refs.scope5to1.innerHTML = `${scopes[5].toFixed(1)}m`;
-    this._refs.scope4to1.innerHTML = `${scopes[4].toFixed(1)}m`;
-    this._refs.scope3to1.innerHTML = `${scopes[3].toFixed(1)}m`;
-    this._refs.scopeDepth.innerHTML = `${depthBelowSurface.toFixed(1)}m`;
-    this._refs.bowHeight.innerHTML = `${bowHeight.toFixed(1)}m`;
-    this._refs.tidalRise.innerHTML = `${tidalRise.toFixed(1)}m`;
-    this._refs.scopeTotal.innerHTML = `${maxHeight.toFixed(1)}m`;
-    this._refs.belowKeel.innerHTML = `${depthBelowKeel.toFixed(1)}m`;
-    this._refs.tidalFall.innerHTML = `${tidalFall.toFixed(1)}m`;
-    this._refs.minimumDepth.innerHTML = `${minimumDepth.toFixed(1)}m`;
-
-    if (minimumDepth > 1) {
-      this._refs.minimumDepthRow.style.color = "green";
-    } else if (minimumDepth > 0) {
-      this._refs.minimumDepthRow.style.color = "orange";
+      this._refs.scopeTotal.innerHTML = `${maxHeight.toFixed(1)}m`;
+      this._refs.scopeDepth.innerHTML = `${state.belowSurface.value.toFixed(1)}m`;
+      this._refs.belowKeel.innerHTML = `${state.belowKeel.value.toFixed(1)}m`;
     } else {
-      this._refs.minimumDepthRow.style.color = "red";
+      this._refs.scopeTotal.innerHTML = "~";
+      this._refs.scopeDepth.innerHTML = "~";
+      this._refs.belowKeel.innerHTML = "~";
     }
+
+    if (state.tide && state.belowKeel) {
+      const minimumDepth = state.belowKeel.value - state.tidalFall;
+
+      this._refs.minimumDepth.innerHTML = `${minimumDepth.toFixed(1)}m`;
+
+      if (minimumDepth > 1) {
+        this._refs.minimumDepthRow.style.color = "green";
+      } else if (minimumDepth > 0) {
+        this._refs.minimumDepthRow.style.color = "orange";
+      } else {
+        this._refs.minimumDepthRow.style.color = "red";
+      }
+    } else {
+      this._refs.minimumDepth.innerHTML = "~";
+    }
+
+    if (state.tide) {
+      this._refs.tidalRise.innerHTML = `${state.tidalRise.toFixed(1)}m`;
+      this._refs.tidalFall.innerHTML = `${state.tidalFall.toFixed(1)}m`;
+    } else {
+      this._refs.tidalRise.innerHTML = "~";
+      this._refs.tidalFall.innerHTML = "~";
+    }
+
+    this._refs.scope7to1.innerHTML = `${state.scope7.toFixed(1)}m`;
+    this._refs.scope5to1.innerHTML = `${state.scope5.toFixed(1)}m`;
+    this._refs.scope4to1.innerHTML = `${state.scope4.toFixed(1)}m`;
+    this._refs.scope3to1.innerHTML = `${state.scope3.toFixed(1)}m`;
+    this._refs.bowHeight.innerHTML = `${state.boatConfig.anchorRollerHeight.toFixed(1)}m`;
   },
 
   show: function () {

@@ -3,7 +3,6 @@
 // HudPanels (Info/Scope/Wind/Home), and hands the anchor state machine to
 // AnchorController.
 
-import { GeoMath } from "./GeoMath.js";
 import { SignalKClient } from "./SignalKClient.js";
 import { AppState } from "./AppState.js";
 import { FleetLayer } from "./FleetLayer.js";
@@ -16,7 +15,7 @@ import {
 } from "./HudPanels.js";
 import { StaleReloader } from "./StaleReloader.js";
 import { AnchorOverlay } from "./AnchorOverlay.js";
-import { AnchorController, AnchorState } from "./AnchorController.js";
+import { AnchorController } from "./AnchorController.js";
 import { ControlToolbar } from "./ControlToolbar.js";
 
 const POLL_INTERVAL_MS = 1000;
@@ -114,7 +113,6 @@ class AnchorAlarm {
         }
 
         this.state.calculate();
-        console.log(this.state);
 
         this.buildMap();
         this.updateMap();
@@ -128,7 +126,7 @@ class AnchorAlarm {
           .then((tracks) => {
             this.fleetLayer.loadHistoricalTracks(
               tracks,
-              this.currentCoordinates,
+              this.state.getPosition(),
               this.filterRadius,
             );
           })
@@ -159,7 +157,7 @@ class AnchorAlarm {
   // Decorates the map shell built in init() with the rest of the controls.
   // Splitting it this way lets the status bar exist before any data fetch.
   buildMap() {
-    this.map.setView(this.state.currentCoordinates, 5);
+    this.map.setView(this.state.getPosition(), 5);
 
     this.satelliteLayer.addTo(this.map);
 
@@ -167,9 +165,7 @@ class AnchorAlarm {
 
     this.homeButton = new HomeButtonControl({
       onHome: (map) => {
-        if (!this.state.currentCoordinates) return;
-        if (this.anchorController.state === AnchorState.UP)
-          this.estimateAnchorPosition();
+        this.anchorController.estimateAnchorPosition(this.state);
         map.fitBounds(this.anchorOverlay.getBounds());
       },
     });
@@ -194,7 +190,7 @@ class AnchorAlarm {
       ownMmsi: this.state.boatConfig.mmsi,
     });
     this.fleetLayer.setOwnVessel(
-      this.state.currentCoordinates,
+      this.state.getPosition(),
       this.state.boatConfig,
     );
 
@@ -206,7 +202,7 @@ class AnchorAlarm {
       map: this.map,
       radius: 0,
     }).setBoatPosition(
-      this.state.currentCoordinates,
+      this.state.getPosition(),
       this.state.boatConfig.heading,
       this.state.boatConfig.gpsOffset,
     );
@@ -224,13 +220,14 @@ class AnchorAlarm {
       this.anchorController.updateCrosshairPosition(pos),
     );
 
-    this.anchorOverlay.estimateAnchorPosition();
+    this.anchorController.estimateAnchorPosition();
   }
 
   updateMap() {
     this.windPanel.update(this.state);
     this.infoPanel.update(this.state);
     this.scopePanel.update(this.state);
+    this.anchorController.reconcile(this.state);
     this.anchorOverlay.update(this.state);
     this.fleetLayer.update(this.state);
   }
@@ -262,40 +259,6 @@ class AnchorAlarm {
       });
   }
 
-  //todo: move to panel.update
-  updatePosition() {
-    this.fleetLayer.updateOwnPosition(this.currentCoordinates);
-    this.fleetLayer.appendOwnTrack(this.currentCoordinates);
-
-    this.anchorOverlay.setBoatPosition(
-      this.currentCoordinates,
-      this.boatConfig.heading,
-      this.boatConfig.gpsOffset,
-    );
-  }
-
-  //todo: move to panel.update
-  updateAnchorStatus() {
-    this.infoPanel.setStatus(v.message, v.state);
-  }
-
-  //todo: move to panel.update
-  updateWind() {
-    this.windPanel.setSpeed(speedApparent, this.twa);
-    this.twa = GeoMath.rad2deg(directionTrue);
-    this.windPanel.setAngle(this.twa);
-  }
-
-  //todo: move to panel.update
-  updateAnchorReconcile(anchorStatus) {
-    if (!anchorStatus) return;
-    const on = SignalKClient.value(anchorStatus, "state") === "on";
-    const position = on ? this.extractPosition(anchorStatus, "position") : null;
-    const maxRadius = SignalKClient.value(anchorStatus, "maxRadius");
-
-    this.anchorController.reconcile({ on, position, maxRadius });
-  }
-
   //todo: move to fleetlayer
   pollFleet() {
     if (this._pollFleetInFlight) return;
@@ -304,14 +267,18 @@ class AnchorAlarm {
       .fetchAllVessels()
       .then((vessels) => {
         this.fleetLayer.syncOtherVessels(vessels, {
-          ownLatLng: this.currentCoordinates,
+          ownLatLng: this.state.getPosition(),
           filterRadius: this.filterRadius,
           twa: this.twa,
         });
       })
-      .catch((err) => {
-        const detail = err.statusText || err.message || "unknown error";
-        this.statusBar.setWarning(`Fleet update failed: ${detail}`);
+      .catch((error) => {
+        const detail = error.statusText || error.message || "unknown error";
+        const status = error.status ? `${error.status} ` : "";
+        const msg = `Fleet update failed: ${status}${detail}`;
+
+        this.statusBar.setWarning(msg);
+        console.error(msg, error);
       })
       .finally(() => {
         this._pollFleetInFlight = false;

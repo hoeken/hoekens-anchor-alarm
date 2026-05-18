@@ -132,6 +132,14 @@ export class AnchorOverlay {
     return this.radiusCircle.getBounds();
   }
 
+  update(state) {
+    this.setBoatPosition(
+      state.getPosition(),
+      state.boatConfig.heading,
+      state.boatConfig.gpsOffset,
+    );
+  }
+
   _refreshLine() {
     if (!this.boatPosition) return;
 

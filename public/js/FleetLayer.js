@@ -27,6 +27,11 @@ export class FleetLayer {
     this.ownBoatConfig = undefined;
   }
 
+  update(state) {
+    this.updateOwnPosition(state.getPosition());
+    this.appendOwnTrack(state.getPosition());
+  }
+
   // Own boat is kept outside the AIS vessels dict so syncOtherVessels never
   // removes it.
   setOwnVessel(coords, boatConfig) {
@@ -192,7 +197,7 @@ export class FleetLayer {
   }
 
   addNewVessel(vessel, position, heading, distance) {
-    const config = BoatConfig.fromVessel(vessel);
+    const config = BoatConfig.extract(vessel);
 
     const marker = new L.BoatMarker([position.latitude, position.longitude], {
       beam: config.beam,

@@ -97,8 +97,17 @@ export class AnchorController {
   // === helpers ==================================================================
 
   estimateAnchorPosition(appState) {
+    if (!this.state.currentCoordinates) return;
+    if (this.anchorController.state !== AnchorState.UP) return;
+
     const distance = appState.calculateScope(5);
-    this.anchorController.setRadius(this.computeDefaultRadius(distance));
+    this.setRadius(
+      this.computeDefaultRadius(
+        distance,
+        appState.boatConfig.gpsBowXDistance,
+        appState.boatConfig.gpsBowYDistance,
+      ),
+    );
     const bow = GeoMath.calculateBowCoordinates(
       this.currentCoordinates,
       this.boatConfig.heading,
@@ -118,12 +127,9 @@ export class AnchorController {
 
   // Default radius = 5:1 scope + GPS-to-bow vector, ×1.5 safety, rounded to a
   // 5-meter step and clamped to [0, 200].
-  computeDefaultRadius(anchorDistanceGuess) {
+  computeDefaultRadius(anchorDistanceGuess, xOffset, yOffset) {
     let r = anchorDistanceGuess;
-    r += GeoMath.calculateVectorDistance(
-      this.boatConfig.gpsBowXDistance,
-      this.boatConfig.gpsBowYDistance,
-    );
+    r += GeoMath.calculateVectorDistance(xOffset, yOffset);
     r *= 1.5;
     r = Math.round(r / 5) * 5;
     r = Math.max(0, r);
@@ -135,19 +141,19 @@ export class AnchorController {
 
   // Apply server-side anchor state. Skipped while a drop/raise POST is in flight —
   // the server doesn't reflect our pending change yet and would flip us back.
-  reconcile({ on, position, maxRadius }) {
+  reconcile(appState) {
     if (this.state !== AnchorState.UP && this.state !== AnchorState.ANCHORED)
       return;
 
-    if (on) {
-      this.anchorCoordinates = position;
-      this.maxRadius = maxRadius;
+    if (appState.anchor.position) {
+      this.anchorCoordinates = appState.getAnchorPosition();
+      this.maxRadius = appState.anchor.maxRadius.value;
       if (this.state === AnchorState.UP) {
         this.state = AnchorState.ANCHORED;
-        this._enterDropped(position, maxRadius);
+        this._enterDropped(this.anchorCoordinates, this.maxRadius);
       } else {
-        this._toolbar.setRadius(maxRadius);
-        this._overlay.setRadius(maxRadius);
+        this._toolbar.setRadius(this.maxRadius);
+        this._overlay.setRadius(this.maxRadius);
       }
     } else if (this.state === AnchorState.ANCHORED) {
       this.state = AnchorState.UP;

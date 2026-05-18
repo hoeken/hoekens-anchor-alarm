@@ -105,13 +105,13 @@ export class SignalKClient {
     return node.value;
   }
 
-  static isFresh(sample, maxAge = SIGNALK_DEFAULT_FRESHNESS_SEC) {
-    if (!sample || !sample.timestamp) return false;
-    const ageSec = (Date.now() - new Date(sample.timestamp).getTime()) / 1000;
+  static isFresh(delta, maxAge = SIGNALK_DEFAULT_FRESHNESS_SEC) {
+    if (!delta || !delta.timestamp) return false;
+    const ageSec = (Date.now() - new Date(delta.timestamp).getTime()) / 1000;
     return ageSec <= maxAge;
   }
 
-  static isStale(sample, maxAge = SIGNALK_DEFAULT_FRESHNESS_SEC) {
-    return !this.isFresh(sample, maxAge);
+  static isStale(delta, maxAge = SIGNALK_DEFAULT_FRESHNESS_SEC) {
+    return !this.isFresh(delta, maxAge);
   }
 }
