@@ -3,8 +3,8 @@
 // touching the document directly. Element IDs are preserved for CSS hooks
 // in style.css; do not rename without updating the stylesheet.
 
-import { GeoMath, MPS_TO_KNOTS } from "./GeoMath.js";
-import { getWindBarb } from "./WindBarb.js";
+import { GeoMath, MPS_TO_KNOTS } from "../GeoMath.js";
+import { getWindBarb } from "../WindBarb.js";
 
 export const WindPanel = L.Control.extend({
   options: { position: "bottomright" },

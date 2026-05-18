@@ -4,7 +4,7 @@
 // setRadius(r) update methods. Element IDs are preserved for CSS hooks in
 // style.css; do not rename without updating it.
 
-import { AnchorState } from "./AnchorController.js";
+import { AnchorState } from "../AnchorController.js";
 
 export class ControlToolbar {
   constructor({ parent, getMapContainer, onDrop, onRaise, onSetRadius }) {

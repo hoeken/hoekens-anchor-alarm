@@ -4,9 +4,9 @@
 // sync from /vessels. Out-of-range AIS vessels are removed on each sync; the
 // own boat is never auto-removed (its mmsi key never appears in the AIS list).
 
-import { GeoMath, MPS_TO_KNOTS } from "./GeoMath.js";
-import { SignalKClient } from "./SignalKClient.js";
-import { BoatConfig } from "./BoatConfig.js";
+import { GeoMath, MPS_TO_KNOTS } from "../GeoMath.js";
+import { SignalKClient } from "../SignalKClient.js";
+import { BoatConfig } from "../BoatConfig.js";
 
 const MAX_OWN_TRACK_POINTS = 3600 * 24; // 24 hours at 1Hz
 const POLL_INTERVAL_MS = 5000;

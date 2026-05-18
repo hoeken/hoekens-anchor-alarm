@@ -4,7 +4,7 @@
 // The host drives it with drop/raise transitions and per-tick boat updates;
 // alarm color is recomputed internally on any state or position change.
 
-import { GeoMath } from "./GeoMath.js";
+import { GeoMath } from "../GeoMath.js";
 
 const ANCHOR_ICON = L.icon({
   iconUrl: "icons/anchor.png",

@@ -3917,7 +3917,7 @@ var AppState = class {
   }
 };
 //#endregion
-//#region ui/js/FleetLayer.js
+//#region ui/js/hud/FleetLayer.js
 var MAX_OWN_TRACK_POINTS = 3600 * 24;
 var POLL_INTERVAL_MS$1 = 5e3;
 var DEFAULT_FILTER_RADIUS = 500;
@@ -4146,7 +4146,7 @@ var FleetLayer = class {
   }
 };
 //#endregion
-//#region ui/js/StatusBar.js
+//#region ui/js/hud/StatusBar.js
 var StatusBar = L.Control.extend({
   options: { position: "bottomright" },
   onAdd: function () {
@@ -4180,7 +4180,7 @@ var StatusBar = L.Control.extend({
   },
 });
 //#endregion
-//#region ui/js/HomeButtonControl.js
+//#region ui/js/hud/HomeButtonControl.js
 var HomeButtonControl = L.Control.extend({
   options: {
     position: "topright",
@@ -4206,7 +4206,7 @@ var HomeButtonControl = L.Control.extend({
   },
 });
 //#endregion
-//#region ui/js/InfoPanel.js
+//#region ui/js/hud/InfoPanel.js
 var InfoPanel = L.Control.extend({
   options: { position: "bottomright" },
   onAdd: function () {
@@ -4470,7 +4470,7 @@ var getWindBarb = function (windSpeed) {
     `;
 };
 //#endregion
-//#region ui/js/WindPanel.js
+//#region ui/js/hud/WindPanel.js
 var WindPanel = L.Control.extend({
   options: { position: "bottomright" },
   onAdd: function () {
@@ -4517,7 +4517,7 @@ var WindPanel = L.Control.extend({
   },
 });
 //#endregion
-//#region ui/js/ScopePanel.js
+//#region ui/js/hud/ScopePanel.js
 var ScopePanel = L.Control.extend({
   options: { position: "bottomright" },
   onAdd: function () {
@@ -4659,7 +4659,7 @@ var StaleReloader = class {
   }
 };
 //#endregion
-//#region ui/js/AnchorOverlay.js
+//#region ui/js/hud/AnchorOverlay.js
 var ANCHOR_ICON = L.icon({
   iconUrl: "icons/anchor.png",
   iconSize: [24, 24],
@@ -4995,7 +4995,7 @@ var AnchorController = class {
   }
 };
 //#endregion
-//#region ui/js/ControlToolbar.js
+//#region ui/js/hud/ControlToolbar.js
 var ControlToolbar = class {
   constructor({ parent, getMapContainer, onDrop, onRaise, onSetRadius }) {
     this._getMapContainer = getMapContainer;

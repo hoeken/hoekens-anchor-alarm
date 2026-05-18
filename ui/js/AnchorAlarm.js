@@ -6,16 +6,16 @@
 import Client from "@signalk/client";
 import { SignalKClient } from "./SignalKClient.js";
 import { AppState } from "./AppState.js";
-import { FleetLayer } from "./FleetLayer.js";
-import { StatusBar } from "./StatusBar.js";
-import { HomeButtonControl } from "./HomeButtonControl.js";
-import { InfoPanel } from "./InfoPanel.js";
-import { WindPanel } from "./WindPanel.js";
-import { ScopePanel } from "./ScopePanel.js";
+import { FleetLayer } from "./hud/FleetLayer.js";
+import { StatusBar } from "./hud/StatusBar.js";
+import { HomeButtonControl } from "./hud/HomeButtonControl.js";
+import { InfoPanel } from "./hud/InfoPanel.js";
+import { WindPanel } from "./hud/WindPanel.js";
+import { ScopePanel } from "./hud/ScopePanel.js";
 import { StaleReloader } from "./StaleReloader.js";
-import { AnchorOverlay } from "./AnchorOverlay.js";
+import { AnchorOverlay } from "./hud/AnchorOverlay.js";
 import { AnchorController } from "./AnchorController.js";
-import { ControlToolbar } from "./ControlToolbar.js";
+import { ControlToolbar } from "./hud/ControlToolbar.js";
 
 const UPDATE_INTERVAL_MS = 500;
 const POLL_INTERVAL_MS = 1000;
