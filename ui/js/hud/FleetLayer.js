@@ -4,13 +4,17 @@
 // sync from /vessels. Out-of-range AIS vessels are removed on each sync; the
 // own boat is never auto-removed (its mmsi key never appears in the AIS list).
 
+import simplify from "simplify-js";
 import { GeoMath, MPS_TO_KNOTS } from "../GeoMath.js";
 import { SignalKHelper } from "../SignalKHelper.js";
 import { BoatConfig } from "../BoatConfig.js";
 
-const MAX_OWN_TRACK_POINTS = 3600 * 24; // 24 hours at 1Hz
 const POLL_INTERVAL_MS = 5000;
 const DEFAULT_FILTER_RADIUS = 500;
+const SIMPLIFY_TOLERANCE_SELF = 0.000002;
+const SIMPLIFY_TOLERANCE_OTHERS = 0.00001;
+const SIMPLIFY_THRESHOLD_SELF = 10000;
+const SIMPLIFY_THRESHOLD_OTHERS = 1000;
 
 const GPS_ANTENNA_ICON = L.icon({
   iconUrl: "icons/antenna.svg",
@@ -25,6 +29,7 @@ export class FleetLayer {
     this.ownMmsi = ownMmsi;
     this.vessels = {}; // mmsi -> L.BoatMarker (with .gpsAntennaMarker attached)
     this.vesselTracks = {}; // mmsi -> L.hotline
+    this.trackPointCounts = {}; // mmsi -> current point count in the hotline
     this.ownVessel = undefined;
     this.ownAntenna = undefined;
     this.ownBoatConfig = undefined;
@@ -84,7 +89,8 @@ export class FleetLayer {
 
   update(state) {
     this.updateOwnPosition(state.getPosition(), state.boatConfig.heading);
-    this.appendOwnTrack(state.getPosition());
+    const pos = state.getPosition();
+    this.addPointToTrack(this.ownMmsi, pos.lat, pos.lng);
   }
 
   // Own boat is kept outside the AIS vessels dict so syncOtherVessels never
@@ -143,26 +149,40 @@ export class FleetLayer {
 
       if (!points.length)
         continue;
-      this.vesselTracks[mmsi] = this.createTrack(points, points.length);
+      this.vesselTracks[mmsi] = this.createTrack(points, points.length, mmsi);
+      this.trackPointCounts[mmsi] = this.vesselTracks[mmsi].getLatLngs().length;
     }
   }
 
-  // Append a point to the own-boat track and trim to MAX_OWN_TRACK_POINTS.
-  appendOwnTrack(latLng) {
-    const ownTrack = this.vesselTracks[this.ownMmsi];
-    if (!ownTrack)
+  // Single entry point for extending any vessel track. Handles dedupe,
+  // threshold-triggered simplification
+  addPointToTrack(mmsi, lat, lng) {
+    const track = this.vesselTracks[mmsi];
+    if (!track)
       return;
 
-    ownTrack.addLatLng([latLng.lat, latLng.lng, ownTrack.getLatLngs().length]);
-    ownTrack.options.max++;
+    const last = track.getLatLngs().at(-1);
+    if (last && last.lat === lat && last.lng === lng)
+      return;
 
-    // Trim oldest points so the track doesn't grow unbounded over a long watch.
-    const pts = ownTrack.getLatLngs();
-    if (pts.length > MAX_OWN_TRACK_POINTS) {
-      const trimmed = pts.slice(-MAX_OWN_TRACK_POINTS);
-      ownTrack.setLatLngs(trimmed);
-      ownTrack.options.min = trimmed[0].alt;
-    }
+    track.addLatLng([lat, lng, track.options.max]);
+    track.options.max++;
+    this.trackPointCounts[mmsi] = (this.trackPointCounts[mmsi] || 0) + 1;
+
+    if (this.trackPointCounts[mmsi] >= this.getSimplifyThreshold())
+      this.simplifyTrack(mmsi);
+  }
+
+  simplifyTrack(mmsi) {
+    const track = this.vesselTracks[mmsi];
+    if (!track)
+      return;
+    const simplified = simplifyHotlinePoints(
+      track.getLatLngs(),
+      this.getSimplifyTolerance(mmsi),
+    );
+    track.setLatLngs(simplified);
+    this.trackPointCounts[mmsi] = simplified.length;
   }
 
   // Reconcile other-vessel markers and tracks against a fresh /vessels payload.
@@ -209,6 +229,7 @@ export class FleetLayer {
         if (this.vesselTracks[mmsi]) {
           this.map.removeLayer(this.vesselTracks[mmsi]);
           delete this.vesselTracks[mmsi];
+          delete this.trackPointCounts[mmsi];
         }
       }
     }
@@ -242,21 +263,7 @@ export class FleetLayer {
     marker.setPopupContent(`${vessel.name} at ${distance} meters`);
     marker.gpsAntennaMarker.setLatLng([position.latitude, position.longitude]);
 
-    const track = this.vesselTracks[vessel.mmsi];
-    if (!track)
-      return;
-    const last = track.getLatLngs().at(-1);
-    if (
-      last &&
-      (last.lat != position.latitude || last.lng != position.longitude)
-    ) {
-      track.addLatLng([
-        position.latitude,
-        position.longitude,
-        track.options.max,
-      ]);
-      track.options.max++;
-    }
+    this.addPointToTrack(vessel.mmsi, position.latitude, position.longitude);
   }
 
   addNewVessel(vessel, position, heading, distance) {
@@ -285,12 +292,17 @@ export class FleetLayer {
       this.vesselTracks[vessel.mmsi] = this.createTrack(
         [[position.latitude, position.longitude, 0]],
         1,
+        vessel.mmsi,
       );
+      this.trackPointCounts[vessel.mmsi] = 1;
     }
   }
 
-  createTrack(points, max) {
-    return L.hotline(points, {
+  // Bulk-load entry: pre-simplifies the input so a long history (e.g. a 24h
+  // own-boat dwell with thousands of jitter samples) doesn't get drawn raw.
+  createTrack(points, max, mmsi) {
+    const simplified = simplifyHotlinePoints(points, this.getSimplifyTolerance(mmsi));
+    return L.hotline(simplified, {
       color: "red",
       weight: 1,
       min: 0,
@@ -300,4 +312,37 @@ export class FleetLayer {
       text: "",
     }).addTo(this.map);
   }
+
+  getSimplifyTolerance(mmsi) {
+    if (mmsi === this.ownMmsi)
+      return SIMPLIFY_TOLERANCE_SELF;
+    else
+      return SIMPLIFY_TOLERANCE_OTHERS;
+
+  }
+
+  getSimplifyThreshold(mmsi) {
+    if (mmsi === this.ownMmsi)
+      return SIMPLIFY_THRESHOLD_SELF;
+    else
+      return SIMPLIFY_THRESHOLD_OTHERS;
+  }
+}
+
+// Accepts either [lat, lng, alt] tuples (from bulk history) or L.LatLng
+// objects (from .getLatLngs()) and returns [lat, lng, alt] tuples preserving
+// each retained point's original gradient index in alt.
+function simplifyHotlinePoints(points, tolerance) {
+  if (points.length < 3)
+    return points.map(toTuple);
+  const xy = points.map((p) => {
+    const tuple = toTuple(p);
+    return { x: tuple[0], y: tuple[1], alt: tuple[2] };
+  });
+  const simplified = simplify(xy, tolerance, true);
+  return simplified.map((p) => [p.x, p.y, p.alt]);
+}
+
+function toTuple(p) {
+  return Array.isArray(p) ? p : [p.lat, p.lng, p.alt];
 }

@@ -21,6 +21,10 @@ export const WindPanel = L.Control.extend({
     this._container = container;
     this._aws = container.querySelector("#awsValue");
     this._barb = container.querySelector("#windBarbContainer");
+    this._lastAwsText = "~";
+    this._lastBarbIcon = null;
+    this._barbSvg = null;
+    this._lastTransform = null;
     return container;
   },
 
@@ -29,32 +33,49 @@ export const WindPanel = L.Control.extend({
   // the barb in the right direction.
   setSpeed: function (aws, twa) {
     if (!aws) {
-      this._aws.innerHTML = "~";
+      if (this._lastAwsText !== "~") {
+        this._aws.innerHTML = "~";
+        this._lastAwsText = "~";
+      }
       return;
     }
     const kts = Math.round(aws.value * MPS_TO_KNOTS);
-    this._aws.innerHTML = `${kts}kts`;
+    const awsText = `${kts}kts`;
+    if (awsText !== this._lastAwsText) {
+      this._aws.innerHTML = awsText;
+      this._lastAwsText = awsText;
+    }
 
     const windBarbIcon = getWindBarb(aws.value);
-    this._barb.innerHTML = windBarbIcon;
-    const svg = this._barb.querySelector("svg");
-    if (svg) {
+    if (windBarbIcon !== this._lastBarbIcon) {
+      this._barb.innerHTML = windBarbIcon;
+      this._barbSvg = this._barb.querySelector("svg");
+      this._lastBarbIcon = windBarbIcon;
+      this._lastTransform = null;
+    }
+    if (this._barbSvg) {
       let angle = 0;
       if (twa)
         angle = GeoMath.rad2deg(Math.round(twa.value));
-      svg.style.transform = `rotate(${Math.round(angle)}deg)`;
+      const transform = `rotate(${Math.round(angle)}deg)`;
+      if (transform !== this._lastTransform) {
+        this._barbSvg.style.transform = transform;
+        this._lastTransform = transform;
+      }
     }
   },
 
   // Re-rotates the existing barb SVG. No-op if setSpeed hasn't rendered one yet.
   setAngle: function (twa) {
-    if (!twa)
+    if (!twa || !this._barbSvg)
       return;
 
     const angle = GeoMath.rad2deg(Math.round(twa.value));
-    const svg = this._barb.querySelector("svg");
-    if (svg)
-      svg.style.transform = `rotate(${angle}deg)`;
+    const transform = `rotate(${angle}deg)`;
+    if (transform !== this._lastTransform) {
+      this._barbSvg.style.transform = transform;
+      this._lastTransform = transform;
+    }
   },
 
   update: function (state) {
@@ -63,6 +84,9 @@ export const WindPanel = L.Control.extend({
   },
 
   clearSpeed: function () {
-    this._aws.innerHTML = "~";
+    if (this._lastAwsText !== "~") {
+      this._aws.innerHTML = "~";
+      this._lastAwsText = "~";
+    }
   },
 });

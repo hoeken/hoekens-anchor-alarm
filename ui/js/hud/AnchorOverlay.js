@@ -53,6 +53,11 @@ export class AnchorOverlay {
 
     this.anchorMarker = null;
     this.crosshairMarker = null;
+
+    this._cachedDistanceLabel = null;
+    this._cachedBearingLabel = null;
+    this._cachedFlip = null;
+    this._cachedColor = null;
   }
 
   drop(position, radius) {
@@ -168,14 +173,7 @@ export class AnchorOverlay {
       this.anchorPosition.lng,
     );
     distance = Math.round(distance * 10) / 10;
-
-    this.anchorLine.setText("");
-    this.anchorLine.setText(`${distance}m`, {
-      orientation: flip ? "flip" : 0,
-      offset: 12,
-      center: true,
-      attributes: { class: "anchorLineLabel" },
-    });
+    const distanceLabel = `${distance}m`;
 
     const bearing = Math.round(
       GeoMath.calculateBearing(
@@ -185,31 +183,56 @@ export class AnchorOverlay {
         this.anchorPosition.lng,
       ),
     );
+    const bearingLabel = `${bearing}°`;
+
+    // Skip textpath rebuilds when the rendered label hasn't changed. Leaflet
+    // re-runs _textRedraw on every _updatePath, so the labels still follow
+    // the moving line without an explicit setText here.
+    if (
+      distanceLabel === this._cachedDistanceLabel &&
+      bearingLabel === this._cachedBearingLabel &&
+      flip === this._cachedFlip
+    )
+      return;
+
+    this.anchorLine.setText("");
+    this.anchorLine.setText(distanceLabel, {
+      orientation: flip ? "flip" : 0,
+      offset: 12,
+      center: true,
+      attributes: { class: "anchorLineLabel" },
+    });
 
     this.anchorLineAngle.setText("");
-    this.anchorLineAngle.setText(`${bearing}°`, {
+    this.anchorLineAngle.setText(bearingLabel, {
       orientation: flip ? "flip" : 0,
       offset: -3,
       center: true,
       attributes: { class: "anchorLineLabel" },
     });
+
+    this._cachedDistanceLabel = distanceLabel;
+    this._cachedBearingLabel = bearingLabel;
+    this._cachedFlip = flip;
   }
 
   _refreshColor() {
     const baseColor = this.dropped ? "green" : "blue";
-    if (!this.boatPosition) {
-      this.radiusCircle.setStyle({ color: baseColor });
-      return;
+    let color = baseColor;
+    if (this.boatPosition) {
+      const distance = GeoMath.calculateDistance(
+        this.anchorPosition.lat,
+        this.anchorPosition.lng,
+        this.boatPosition.lat,
+        this.boatPosition.lng,
+      );
+      if (distance > this.radius)
+        color = "red";
     }
-    const distance = GeoMath.calculateDistance(
-      this.anchorPosition.lat,
-      this.anchorPosition.lng,
-      this.boatPosition.lat,
-      this.boatPosition.lng,
-    );
-    this.radiusCircle.setStyle({
-      color: distance > this.radius ? "red" : baseColor,
-    });
+    if (color === this._cachedColor)
+      return;
+    this.radiusCircle.setStyle({ color });
+    this._cachedColor = color;
   }
 
   _removeAnchorMarker() {

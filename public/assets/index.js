@@ -3281,9 +3281,86 @@ var AppState = class {
 };
 //#endregion
 //#region ui/js/hud/FleetLayer.js
-var MAX_OWN_TRACK_POINTS = 3600 * 24;
+var import_simplify = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
+	(function() {
+		"use strict";
+		function getSqDist(p1, p2) {
+			var dx = p1.x - p2.x, dy = p1.y - p2.y;
+			return dx * dx + dy * dy;
+		}
+		function getSqSegDist(p, p1, p2) {
+			var x = p1.x, y = p1.y, dx = p2.x - x, dy = p2.y - y;
+			if (dx !== 0 || dy !== 0) {
+				var t = ((p.x - x) * dx + (p.y - y) * dy) / (dx * dx + dy * dy);
+				if (t > 1) {
+					x = p2.x;
+					y = p2.y;
+				} else if (t > 0) {
+					x += dx * t;
+					y += dy * t;
+				}
+			}
+			dx = p.x - x;
+			dy = p.y - y;
+			return dx * dx + dy * dy;
+		}
+		function simplifyRadialDist(points, sqTolerance) {
+			var prevPoint = points[0], newPoints = [prevPoint], point;
+			for (var i = 1, len = points.length; i < len; i++) {
+				point = points[i];
+				if (getSqDist(point, prevPoint) > sqTolerance) {
+					newPoints.push(point);
+					prevPoint = point;
+				}
+			}
+			if (prevPoint !== point) newPoints.push(point);
+			return newPoints;
+		}
+		function simplifyDPStep(points, first, last, sqTolerance, simplified) {
+			var maxSqDist = sqTolerance, index;
+			for (var i = first + 1; i < last; i++) {
+				var sqDist = getSqSegDist(points[i], points[first], points[last]);
+				if (sqDist > maxSqDist) {
+					index = i;
+					maxSqDist = sqDist;
+				}
+			}
+			if (maxSqDist > sqTolerance) {
+				if (index - first > 1) simplifyDPStep(points, first, index, sqTolerance, simplified);
+				simplified.push(points[index]);
+				if (last - index > 1) simplifyDPStep(points, index, last, sqTolerance, simplified);
+			}
+		}
+		function simplifyDouglasPeucker(points, sqTolerance) {
+			var last = points.length - 1;
+			var simplified = [points[0]];
+			simplifyDPStep(points, 0, last, sqTolerance, simplified);
+			simplified.push(points[last]);
+			return simplified;
+		}
+		function simplify(points, tolerance, highestQuality) {
+			if (points.length <= 2) return points;
+			var sqTolerance = tolerance !== void 0 ? tolerance * tolerance : 1;
+			points = highestQuality ? points : simplifyRadialDist(points, sqTolerance);
+			points = simplifyDouglasPeucker(points, sqTolerance);
+			return points;
+		}
+		if (typeof define === "function" && define.amd) define(function() {
+			return simplify;
+		});
+		else if (typeof module !== "undefined") {
+			module.exports = simplify;
+			module.exports.default = simplify;
+		} else if (typeof self !== "undefined") self.simplify = simplify;
+		else window.simplify = simplify;
+	})();
+})))());
 var POLL_INTERVAL_MS$1 = 5e3;
 var DEFAULT_FILTER_RADIUS = 500;
+var SIMPLIFY_TOLERANCE_SELF = 2e-6;
+var SIMPLIFY_TOLERANCE_OTHERS = 1e-5;
+var SIMPLIFY_THRESHOLD_SELF = 1e4;
+var SIMPLIFY_THRESHOLD_OTHERS = 1e3;
 var GPS_ANTENNA_ICON = L.icon({
 	iconUrl: "icons/antenna.svg",
 	iconSize: [25, 25],
@@ -3296,6 +3373,7 @@ var FleetLayer = class {
 		this.ownMmsi = ownMmsi;
 		this.vessels = {};
 		this.vesselTracks = {};
+		this.trackPointCounts = {};
 		this.ownVessel = void 0;
 		this.ownAntenna = void 0;
 		this.ownBoatConfig = void 0;
@@ -3335,7 +3413,8 @@ var FleetLayer = class {
 	}
 	update(state) {
 		this.updateOwnPosition(state.getPosition(), state.boatConfig.heading);
-		this.appendOwnTrack(state.getPosition());
+		const pos = state.getPosition();
+		this.addPointToTrack(this.ownMmsi, pos.lat, pos.lng);
 	}
 	setOwnVessel(coords, boatConfig) {
 		this.ownBoatConfig = boatConfig;
@@ -3376,24 +3455,30 @@ var FleetLayer = class {
 				}
 			}
 			if (!points.length) continue;
-			this.vesselTracks[mmsi] = this.createTrack(points, points.length);
+			this.vesselTracks[mmsi] = this.createTrack(points, points.length, mmsi);
+			this.trackPointCounts[mmsi] = this.vesselTracks[mmsi].getLatLngs().length;
 		}
 	}
-	appendOwnTrack(latLng) {
-		const ownTrack = this.vesselTracks[this.ownMmsi];
-		if (!ownTrack) return;
-		ownTrack.addLatLng([
-			latLng.lat,
-			latLng.lng,
-			ownTrack.getLatLngs().length
+	addPointToTrack(mmsi, lat, lng) {
+		const track = this.vesselTracks[mmsi];
+		if (!track) return;
+		const last = track.getLatLngs().at(-1);
+		if (last && last.lat === lat && last.lng === lng) return;
+		track.addLatLng([
+			lat,
+			lng,
+			track.options.max
 		]);
-		ownTrack.options.max++;
-		const pts = ownTrack.getLatLngs();
-		if (pts.length > MAX_OWN_TRACK_POINTS) {
-			const trimmed = pts.slice(-MAX_OWN_TRACK_POINTS);
-			ownTrack.setLatLngs(trimmed);
-			ownTrack.options.min = trimmed[0].alt;
-		}
+		track.options.max++;
+		this.trackPointCounts[mmsi] = (this.trackPointCounts[mmsi] || 0) + 1;
+		if (this.trackPointCounts[mmsi] >= this.getSimplifyThreshold()) this.simplifyTrack(mmsi);
+	}
+	simplifyTrack(mmsi) {
+		const track = this.vesselTracks[mmsi];
+		if (!track) return;
+		const simplified = simplifyHotlinePoints(track.getLatLngs(), this.getSimplifyTolerance(mmsi));
+		track.setLatLngs(simplified);
+		this.trackPointCounts[mmsi] = simplified.length;
 	}
 	syncOtherVessels(vessels, { ownLatLng, filterRadius, twa }) {
 		const detected = [];
@@ -3419,6 +3504,7 @@ var FleetLayer = class {
 			if (this.vesselTracks[mmsi]) {
 				this.map.removeLayer(this.vesselTracks[mmsi]);
 				delete this.vesselTracks[mmsi];
+				delete this.trackPointCounts[mmsi];
 			}
 		}
 	}
@@ -3439,17 +3525,7 @@ var FleetLayer = class {
 		marker.setHeading(heading);
 		marker.setPopupContent(`${vessel.name} at ${distance} meters`);
 		marker.gpsAntennaMarker.setLatLng([position.latitude, position.longitude]);
-		const track = this.vesselTracks[vessel.mmsi];
-		if (!track) return;
-		const last = track.getLatLngs().at(-1);
-		if (last && (last.lat != position.latitude || last.lng != position.longitude)) {
-			track.addLatLng([
-				position.latitude,
-				position.longitude,
-				track.options.max
-			]);
-			track.options.max++;
-		}
+		this.addPointToTrack(vessel.mmsi, position.latitude, position.longitude);
 	}
 	addNewVessel(vessel, position, heading, distance) {
 		const config = BoatConfig.extract(vessel);
@@ -3463,14 +3539,18 @@ var FleetLayer = class {
 		marker.addTo(this.map).bindPopup(`${vessel.name} at ${distance} meters`);
 		marker.gpsAntennaMarker = L.marker([position.latitude, position.longitude], { icon: GPS_ANTENNA_ICON }).addTo(this.map);
 		this.vessels[vessel.mmsi] = marker;
-		if (!(vessel.mmsi in this.vesselTracks)) this.vesselTracks[vessel.mmsi] = this.createTrack([[
-			position.latitude,
-			position.longitude,
-			0
-		]], 1);
+		if (!(vessel.mmsi in this.vesselTracks)) {
+			this.vesselTracks[vessel.mmsi] = this.createTrack([[
+				position.latitude,
+				position.longitude,
+				0
+			]], 1, vessel.mmsi);
+			this.trackPointCounts[vessel.mmsi] = 1;
+		}
 	}
-	createTrack(points, max) {
-		return L.hotline(points, {
+	createTrack(points, max, mmsi) {
+		const simplified = simplifyHotlinePoints(points, this.getSimplifyTolerance(mmsi));
+		return L.hotline(simplified, {
 			color: "red",
 			weight: 1,
 			min: 0,
@@ -3484,7 +3564,37 @@ var FleetLayer = class {
 			text: ""
 		}).addTo(this.map);
 	}
+	getSimplifyTolerance(mmsi) {
+		if (mmsi === this.ownMmsi) return SIMPLIFY_TOLERANCE_SELF;
+		else return SIMPLIFY_TOLERANCE_OTHERS;
+	}
+	getSimplifyThreshold(mmsi) {
+		if (mmsi === this.ownMmsi) return SIMPLIFY_THRESHOLD_SELF;
+		else return SIMPLIFY_THRESHOLD_OTHERS;
+	}
 };
+function simplifyHotlinePoints(points, tolerance) {
+	if (points.length < 3) return points.map(toTuple);
+	return (0, import_simplify.default)(points.map((p) => {
+		const tuple = toTuple(p);
+		return {
+			x: tuple[0],
+			y: tuple[1],
+			alt: tuple[2]
+		};
+	}), tolerance, true).map((p) => [
+		p.x,
+		p.y,
+		p.alt
+	]);
+}
+function toTuple(p) {
+	return Array.isArray(p) ? p : [
+		p.lat,
+		p.lng,
+		p.alt
+	];
+}
 //#endregion
 //#region ui/js/hud/StatusBar.js
 var StatusBar = L.Control.extend({
@@ -3772,35 +3882,58 @@ var WindPanel = L.Control.extend({
 		this._container = container;
 		this._aws = container.querySelector("#awsValue");
 		this._barb = container.querySelector("#windBarbContainer");
+		this._lastAwsText = "~";
+		this._lastBarbIcon = null;
+		this._barbSvg = null;
+		this._lastTransform = null;
 		return container;
 	},
 	setSpeed: function(aws, twa) {
 		if (!aws) {
-			this._aws.innerHTML = "~";
+			if (this._lastAwsText !== "~") {
+				this._aws.innerHTML = "~";
+				this._lastAwsText = "~";
+			}
 			return;
 		}
-		const kts = Math.round(aws.value * MPS_TO_KNOTS);
-		this._aws.innerHTML = `${kts}kts`;
+		const awsText = `${Math.round(aws.value * MPS_TO_KNOTS)}kts`;
+		if (awsText !== this._lastAwsText) {
+			this._aws.innerHTML = awsText;
+			this._lastAwsText = awsText;
+		}
 		const windBarbIcon = getWindBarb(aws.value);
-		this._barb.innerHTML = windBarbIcon;
-		const svg = this._barb.querySelector("svg");
-		if (svg) {
+		if (windBarbIcon !== this._lastBarbIcon) {
+			this._barb.innerHTML = windBarbIcon;
+			this._barbSvg = this._barb.querySelector("svg");
+			this._lastBarbIcon = windBarbIcon;
+			this._lastTransform = null;
+		}
+		if (this._barbSvg) {
 			let angle = 0;
 			if (twa) angle = GeoMath.rad2deg(Math.round(twa.value));
-			svg.style.transform = `rotate(${Math.round(angle)}deg)`;
+			const transform = `rotate(${Math.round(angle)}deg)`;
+			if (transform !== this._lastTransform) {
+				this._barbSvg.style.transform = transform;
+				this._lastTransform = transform;
+			}
 		}
 	},
 	setAngle: function(twa) {
-		if (!twa) return;
-		const angle = GeoMath.rad2deg(Math.round(twa.value));
-		const svg = this._barb.querySelector("svg");
-		if (svg) svg.style.transform = `rotate(${angle}deg)`;
+		if (!twa || !this._barbSvg) return;
+		const transform = `rotate(${GeoMath.rad2deg(Math.round(twa.value))}deg)`;
+		if (transform !== this._lastTransform) {
+			this._barbSvg.style.transform = transform;
+			this._lastTransform = transform;
+		}
 	},
 	update: function(state) {
 		this.setSpeed(state.aws, state.twa);
 	},
 	clearSpeed: function() {
-		this._aws.innerHTML = "~";
+		if (this._lastAwsText !== "~") {
+			this._aws.innerHTML = "~";
+			this._lastAwsText = "~";
+		}
 	}
 });
 //#endregion
@@ -3977,6 +4110,10 @@ var AnchorOverlay = class {
 		}).addTo(map);
 		this.anchorMarker = null;
 		this.crosshairMarker = null;
+		this._cachedDistanceLabel = null;
+		this._cachedBearingLabel = null;
+		this._cachedFlip = null;
+		this._cachedColor = null;
 	}
 	drop(position, radius) {
 		this.dropped = true;
@@ -4048,30 +4185,35 @@ var AnchorOverlay = class {
 		const flip = bow.lng > this.anchorPosition.lng;
 		let distance = GeoMath.calculateDistance(bow.lat, bow.lng, this.anchorPosition.lat, this.anchorPosition.lng);
 		distance = Math.round(distance * 10) / 10;
+		const distanceLabel = `${distance}m`;
+		const bearingLabel = `${Math.round(GeoMath.calculateBearing(bow.lat, bow.lng, this.anchorPosition.lat, this.anchorPosition.lng))}°`;
+		if (distanceLabel === this._cachedDistanceLabel && bearingLabel === this._cachedBearingLabel && flip === this._cachedFlip) return;
 		this.anchorLine.setText("");
-		this.anchorLine.setText(`${distance}m`, {
+		this.anchorLine.setText(distanceLabel, {
 			orientation: flip ? "flip" : 0,
 			offset: 12,
 			center: true,
 			attributes: { class: "anchorLineLabel" }
 		});
-		const bearing = Math.round(GeoMath.calculateBearing(bow.lat, bow.lng, this.anchorPosition.lat, this.anchorPosition.lng));
 		this.anchorLineAngle.setText("");
-		this.anchorLineAngle.setText(`${bearing}°`, {
+		this.anchorLineAngle.setText(bearingLabel, {
 			orientation: flip ? "flip" : 0,
 			offset: -3,
 			center: true,
 			attributes: { class: "anchorLineLabel" }
 		});
+		this._cachedDistanceLabel = distanceLabel;
+		this._cachedBearingLabel = bearingLabel;
+		this._cachedFlip = flip;
 	}
 	_refreshColor() {
-		const baseColor = this.dropped ? "green" : "blue";
-		if (!this.boatPosition) {
-			this.radiusCircle.setStyle({ color: baseColor });
-			return;
+		let color = this.dropped ? "green" : "blue";
+		if (this.boatPosition) {
+			if (GeoMath.calculateDistance(this.anchorPosition.lat, this.anchorPosition.lng, this.boatPosition.lat, this.boatPosition.lng) > this.radius) color = "red";
 		}
-		const distance = GeoMath.calculateDistance(this.anchorPosition.lat, this.anchorPosition.lng, this.boatPosition.lat, this.boatPosition.lng);
-		this.radiusCircle.setStyle({ color: distance > this.radius ? "red" : baseColor });
+		if (color === this._cachedColor) return;
+		this.radiusCircle.setStyle({ color });
+		this._cachedColor = color;
 	}
 	_removeAnchorMarker() {
 		if (this.anchorMarker) {
