@@ -1,11 +1,11 @@
 L.BoatMarker = L.Marker.extend({
   options: {
     zoomAnimation: false,
-    beam: 0,              // metres beam (x-axis, left→right)
-    loa: 0,              // metres length (y-axis, top→bottom)
+    beam: 0, // metres beam (x-axis, left→right)
+    loa: 0, // metres length (y-axis, top→bottom)
     gpsOffset: { x: 0, y: 0 }, // metres from SVG top-left to antenna
-    icon: '',             // path or URL to your SVG
-    heading: 0               // initial rotation in degrees
+    icon: "", // path or URL to your SVG
+    heading: 0, // initial rotation in degrees
   },
 
   initialize(latlng, options) {
@@ -15,10 +15,10 @@ L.BoatMarker = L.Marker.extend({
 
     // Build a tiny DivIcon; we'll size it dynamically later
     const icon = L.divIcon({
-      className: 'leaflet-boat-marker',
+      className: "leaflet-boat-marker",
       html: `<img src="${this.options.icon}" style="width:100%; height:100%; display:block;" />`,
       iconSize: [1, 1],
-      iconAnchor: [0, 0]
+      iconAnchor: [0, 0],
     });
 
     options.icon = icon;
@@ -27,12 +27,12 @@ L.BoatMarker = L.Marker.extend({
 
   onAdd(map) {
     L.Marker.prototype.onAdd.call(this, map);
-    this._update();                     // initial sizing & rotation
-    map.on('zoom viewreset', this._update, this);
+    this._update(); // initial sizing & rotation
+    map.on("zoom viewreset", this._update, this);
   },
 
   onRemove(map) {
-    map.off('zoom viewreset', this._update, this);
+    map.off("zoom viewreset", this._update, this);
     L.Marker.prototype.onRemove.call(this, map);
   },
 
@@ -41,9 +41,8 @@ L.BoatMarker = L.Marker.extend({
     this.options.heading = deg;
 
     // now rotate just the image
-    const img = this._icon.querySelector('img');
-    if (img)
-      img.style.transform = `rotate(${deg}deg)`;
+    const img = this._icon.querySelector("img");
+    if (img) img.style.transform = `rotate(${deg}deg)`;
 
     return this;
   },
@@ -57,13 +56,19 @@ L.BoatMarker = L.Marker.extend({
     const p0 = map.latLngToLayerPoint(ll);
 
     // Approx metres-per-degree at this latitude
-    const cosLat = Math.cos(ll.lat * Math.PI / 180);
+    const cosLat = Math.cos((ll.lat * Math.PI) / 180);
     const mPerDegLon = 111320 * cosLat;
     const mPerDegLat = 110574;
 
     // Compute px width & height from metre dims
-    const pW = map.latLngToLayerPoint([ll.lat, ll.lng + this.options.beam / mPerDegLon]);
-    const pH = map.latLngToLayerPoint([ll.lat + this.options.loa / mPerDegLat, ll.lng]);
+    const pW = map.latLngToLayerPoint([
+      ll.lat,
+      ll.lng + this.options.beam / mPerDegLon,
+    ]);
+    const pH = map.latLngToLayerPoint([
+      ll.lat + this.options.loa / mPerDegLat,
+      ll.lng,
+    ]);
     let wPx = Math.abs(pW.x - p0.x);
     let hPx = Math.abs(pH.y - p0.y);
 
@@ -71,7 +76,7 @@ L.BoatMarker = L.Marker.extend({
     let minHeight = 32;
     if (hPx < minHeight) {
       hPx = minHeight;
-      wPx = hPx * this.options.beam / this.options.loa;
+      wPx = (hPx * this.options.beam) / this.options.loa;
     }
 
     hPx = Math.round(hPx);
@@ -85,13 +90,13 @@ L.BoatMarker = L.Marker.extend({
     Object.assign(this._icon.style, {
       width: `${wPx}px`,
       height: `${hPx}px`,
-      marginLeft: `${-oX}px`,     // shift so the GPS point aligns at (0,0)
+      marginLeft: `${-oX}px`, // shift so the GPS point aligns at (0,0)
       marginTop: `${-oY}px`,
     });
 
-    const img = this._icon.querySelector('img');
+    const img = this._icon.querySelector("img");
     img.style.transformOrigin = `${oX}px ${oY}px`;
 
     this.setHeading(this.options.heading);
-  }
+  },
 });
