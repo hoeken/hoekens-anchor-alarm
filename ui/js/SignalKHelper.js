@@ -6,7 +6,7 @@
 
 const SIGNALK_DEFAULT_FRESHNESS_SEC = 60;
 
-export class SignalKClient {
+export class SignalKHelper {
   constructor({ baseUrl = "", pluginName = null } = {}) {
     this.baseUrl = baseUrl;
     this.pluginName = pluginName;
@@ -22,7 +22,7 @@ export class SignalKClient {
       signal: controller.signal,
     })
       .finally(() => clearTimeout(timer))
-      .then(SignalKClient._toJsonOrReject);
+      .then(SignalKHelper._toJsonOrReject);
   }
 
   raiseAnchor() {
@@ -44,7 +44,7 @@ export class SignalKClient {
       body: JSON.stringify(data ?? {}),
     }).then((response) => {
       if (response.status === 401) location.href = "/admin/#/login";
-      return SignalKClient._toJsonOrReject(response);
+      return SignalKHelper._toJsonOrReject(response);
     });
   }
 
@@ -98,7 +98,7 @@ export class SignalKClient {
         ? Math.round((Date.now() - new Date(node.timestamp).getTime()) / 1000)
         : "unknown";
       const msg = `Stale SignalK value: ${path || "(root)"} — Age ${ageSec}s, Max ${maxAge}s`;
-      SignalKClient.errorHandler?.(msg);
+      SignalKHelper.errorHandler?.(msg);
       console.warn(msg);
       console.trace();
       return fallback;

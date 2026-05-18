@@ -1,6 +1,6 @@
 // AppState is our single source of truth for the current state of the application.
 
-import { SignalKClient } from "./SignalKClient.js";
+import { SignalKHelper } from "./SignalKHelper.js";
 import { BoatConfig } from "./BoatConfig.js";
 import { GeoMath } from "./GeoMath.js";
 
@@ -98,17 +98,17 @@ export class AppState {
   }
 
   extract(tree, path, fresh = true, maxAge = DEFAULT_FRESHNESS_SEC) {
-    let data = SignalKClient.extract(tree, path);
+    let data = SignalKHelper.extract(tree, path);
 
     if (!data) return null;
 
     // check for freshness.
-    if (fresh && !SignalKClient.isFresh(data, maxAge)) {
+    if (fresh && !SignalKHelper.isFresh(data, maxAge)) {
       const ageSec = data.timestamp
         ? Math.round((Date.now() - new Date(data.timestamp).getTime()) / 1000)
         : "unknown";
       const msg = `Stale SignalK value: ${path || "(root)"} — Age ${ageSec}s, Max ${maxAge}s`;
-      SignalKClient.errorHandler?.(msg);
+      SignalKHelper.errorHandler?.(msg);
       console.warn(msg);
       console.trace();
       return null;

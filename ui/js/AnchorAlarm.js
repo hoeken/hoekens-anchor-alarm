@@ -4,7 +4,7 @@
 // AnchorController.
 
 import Client from "@signalk/client";
-import { SignalKClient } from "./SignalKClient.js";
+import { SignalKHelper } from "./SignalKHelper.js";
 import { AppState } from "./AppState.js";
 import { FleetLayer } from "./hud/FleetLayer.js";
 import { StatusBar } from "./hud/StatusBar.js";
@@ -23,7 +23,7 @@ const INITIAL_LOAD_RETRY_MS = 5000;
 
 class AnchorAlarm {
   constructor() {
-    this.signalK = new SignalKClient({ pluginName: "hoekens-anchor-alarm" });
+    this.signalK = new SignalKHelper({ pluginName: "hoekens-anchor-alarm" });
     this.state = new AppState();
 
     this.map = undefined;
@@ -118,7 +118,7 @@ class AnchorAlarm {
     this.map = L.map("map", { zoomControl: false }).setView([0, 0], 5);
     this.statusBar = new StatusBar();
     this.map.addControl(this.statusBar);
-    SignalKClient.errorHandler = (msg) => this.statusBar.setWarning(msg);
+    SignalKHelper.errorHandler = (msg) => this.statusBar.setWarning(msg);
 
     this.toolbar = new ControlToolbar({
       parent: document.getElementById("map_container"),
@@ -247,17 +247,17 @@ class AnchorAlarm {
   }
 
   checkFreshness() {
-    if (SignalKClient.isStale(this.state.currentCoordinates))
+    if (SignalKHelper.isStale(this.state.currentCoordinates))
       this.statusBar.setError("Current Position data is stale.");
-    if (SignalKClient.isStale(this.state.heading))
+    if (SignalKHelper.isStale(this.state.heading))
       this.statusBar.setError("Heading data is stale.");
-    if (SignalKClient.isStale(this.state.belowKeel))
+    if (SignalKHelper.isStale(this.state.belowKeel))
       this.statusBar.setError("Depth Below Keel data is stale.");
-    if (SignalKClient.isStale(this.state.belowSurface))
+    if (SignalKHelper.isStale(this.state.belowSurface))
       this.statusBar.setError("Depth Below Surface data is stale.");
-    if (SignalKClient.isStale(this.state.twa))
+    if (SignalKHelper.isStale(this.state.twa))
       this.statusBar.setError("True Wind Angle data is stale.");
-    if (SignalKClient.isStale(this.state.aws))
+    if (SignalKHelper.isStale(this.state.aws))
       this.statusBar.setError("Apparent Wind Speed data is stale.");
   }
 

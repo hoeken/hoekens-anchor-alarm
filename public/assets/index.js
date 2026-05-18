@@ -3263,14 +3263,14 @@ var require_dist = /* @__PURE__ */ __commonJSMin((exports) => {
   exports.default = _client.default;
 });
 //#endregion
-//#region ui/js/SignalKClient.js
+//#region ui/js/SignalKHelper.js
 var import_client = /* @__PURE__ */ __toESM(
   /* @__PURE__ */ __commonJSMin((exports, module) => {
     module.exports = require_dist();
   })(),
 );
 var SIGNALK_DEFAULT_FRESHNESS_SEC = 60;
-var SignalKClient = class SignalKClient {
+var SignalKHelper = class SignalKHelper {
   constructor({ baseUrl = "", pluginName = null } = {}) {
     this.baseUrl = baseUrl;
     this.pluginName = pluginName;
@@ -3282,7 +3282,7 @@ var SignalKClient = class SignalKClient {
       signal: controller.signal,
     })
       .finally(() => clearTimeout(timer))
-      .then(SignalKClient._toJsonOrReject);
+      .then(SignalKHelper._toJsonOrReject);
   }
   raiseAnchor() {
     return this.pluginPost("raiseAnchor");
@@ -3303,7 +3303,7 @@ var SignalKClient = class SignalKClient {
       body: JSON.stringify(data ?? {}),
     }).then((response) => {
       if (response.status === 401) location.href = "/admin/#/login";
-      return SignalKClient._toJsonOrReject(response);
+      return SignalKHelper._toJsonOrReject(response);
     });
   }
   static _toJsonOrReject(response) {
@@ -3349,7 +3349,7 @@ var SignalKClient = class SignalKClient {
         ? Math.round((Date.now() - new Date(node.timestamp).getTime()) / 1e3)
         : "unknown";
       const msg = `Stale SignalK value: ${path || "(root)"} — Age ${ageSec}s, Max ${maxAge}s`;
-      SignalKClient.errorHandler?.(msg);
+      SignalKHelper.errorHandler?.(msg);
       console.warn(msg);
       console.trace();
       return fallback;
@@ -3521,27 +3521,27 @@ var BoatConfig = class BoatConfig {
     config.name = data.name ?? DEFAULTS.name;
     config.mmsi = data.mmsi ?? DEFAULTS.mmsi;
     config.loa =
-      SignalKClient.value(data, "design.length")?.overall ?? DEFAULTS.loa;
-    config.beam = SignalKClient.value(data, "design.beam") ?? DEFAULTS.beam;
+      SignalKHelper.value(data, "design.length")?.overall ?? DEFAULTS.loa;
+    config.beam = SignalKHelper.value(data, "design.beam") ?? DEFAULTS.beam;
     config.anchorRollerHeight =
-      SignalKClient.value(data, "design.bowAnchorRollerHeight") ??
+      SignalKHelper.value(data, "design.bowAnchorRollerHeight") ??
       DEFAULTS.rollerHeight;
     if (data.sensors.gps) {
       config.gpsBowXDistance =
-        SignalKClient.value(data, "sensors.gps.fromCenter") ??
+        SignalKHelper.value(data, "sensors.gps.fromCenter") ??
         DEFAULTS.gpsBowXDistance;
       config.gpsBowYDistance =
-        SignalKClient.value(data, "sensors.gps.fromBow") ??
+        SignalKHelper.value(data, "sensors.gps.fromBow") ??
         DEFAULTS.gpsBowYDistance;
     } else if (data.sensors.ais) {
       config.gpsBowXDistance =
-        SignalKClient.value(data, "sensors.ais.fromCenter") ??
+        SignalKHelper.value(data, "sensors.ais.fromCenter") ??
         DEFAULTS.gpsBowXDistance;
       config.gpsBowYDistance =
-        SignalKClient.value(data, "sensors.ais.fromBow") ?? config.loa / 2;
+        SignalKHelper.value(data, "sensors.ais.fromBow") ?? config.loa / 2;
     }
     config.aisShipType =
-      SignalKClient.value(data, "design.aisShipType")?.id ??
+      SignalKHelper.value(data, "design.aisShipType")?.id ??
       DEFAULTS.aisShipType;
     return new BoatConfig(config);
   }
@@ -3813,14 +3813,14 @@ var AppState = class {
     else return L.latLng(0, 0);
   }
   extract(tree, path, fresh = true, maxAge = DEFAULT_FRESHNESS_SEC) {
-    let data = SignalKClient.extract(tree, path);
+    let data = SignalKHelper.extract(tree, path);
     if (!data) return null;
-    if (fresh && !SignalKClient.isFresh(data, maxAge)) {
+    if (fresh && !SignalKHelper.isFresh(data, maxAge)) {
       const ageSec = data.timestamp
         ? Math.round((Date.now() - new Date(data.timestamp).getTime()) / 1e3)
         : "unknown";
       const msg = `Stale SignalK value: ${path || "(root)"} — Age ${ageSec}s, Max ${maxAge}s`;
-      SignalKClient.errorHandler?.(msg);
+      SignalKHelper.errorHandler?.(msg);
       console.warn(msg);
       console.trace();
       return null;
@@ -4078,11 +4078,11 @@ var FleetLayer = class {
   }
   deriveVesselHeading(vessel, twa) {
     let sog = 0;
-    const sogVal = SignalKClient.value(vessel, "navigation.speedOverGround");
+    const sogVal = SignalKHelper.value(vessel, "navigation.speedOverGround");
     if (sogVal !== void 0) sog = sogVal * MPS_TO_KNOTS;
-    const headingTrue = SignalKClient.value(vessel, "navigation.headingTrue");
+    const headingTrue = SignalKHelper.value(vessel, "navigation.headingTrue");
     if (headingTrue !== void 0) return GeoMath.rad2deg(headingTrue);
-    const cog = SignalKClient.value(vessel, "navigation.courseOverGroundTrue");
+    const cog = SignalKHelper.value(vessel, "navigation.courseOverGroundTrue");
     if (cog !== void 0 && sog > 1) return GeoMath.rad2deg(cog);
     if (twa) return GeoMath.rad2deg(twa.value);
     return 0;
@@ -5100,7 +5100,7 @@ var POLL_INTERVAL_MS = 1e3;
 var INITIAL_LOAD_RETRY_MS = 5e3;
 (class AnchorAlarm {
   constructor() {
-    this.signalK = new SignalKClient({ pluginName: "hoekens-anchor-alarm" });
+    this.signalK = new SignalKHelper({ pluginName: "hoekens-anchor-alarm" });
     this.state = new AppState();
     this.map = void 0;
     this.fleetLayer = void 0;
@@ -5176,7 +5176,7 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
     this.map = L.map("map", { zoomControl: false }).setView([0, 0], 5);
     this.statusBar = new StatusBar();
     this.map.addControl(this.statusBar);
-    SignalKClient.errorHandler = (msg) => this.statusBar.setWarning(msg);
+    SignalKHelper.errorHandler = (msg) => this.statusBar.setWarning(msg);
     this.toolbar = new ControlToolbar({
       parent: document.getElementById("map_container"),
       getMapContainer: () => this.map && this.map.getContainer(),
@@ -5275,17 +5275,17 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
     this.fleetLayer.update(this.state);
   }
   checkFreshness() {
-    if (SignalKClient.isStale(this.state.currentCoordinates))
+    if (SignalKHelper.isStale(this.state.currentCoordinates))
       this.statusBar.setError("Current Position data is stale.");
-    if (SignalKClient.isStale(this.state.heading))
+    if (SignalKHelper.isStale(this.state.heading))
       this.statusBar.setError("Heading data is stale.");
-    if (SignalKClient.isStale(this.state.belowKeel))
+    if (SignalKHelper.isStale(this.state.belowKeel))
       this.statusBar.setError("Depth Below Keel data is stale.");
-    if (SignalKClient.isStale(this.state.belowSurface))
+    if (SignalKHelper.isStale(this.state.belowSurface))
       this.statusBar.setError("Depth Below Surface data is stale.");
-    if (SignalKClient.isStale(this.state.twa))
+    if (SignalKHelper.isStale(this.state.twa))
       this.statusBar.setError("True Wind Angle data is stale.");
-    if (SignalKClient.isStale(this.state.aws))
+    if (SignalKHelper.isStale(this.state.aws))
       this.statusBar.setError("Apparent Wind Speed data is stale.");
   }
   poll() {
