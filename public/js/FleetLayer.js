@@ -82,7 +82,7 @@ export class FleetLayer {
   }
 
   update(state) {
-    this.updateOwnPosition(state.getPosition());
+    this.updateOwnPosition(state.getPosition(), state.boatConfig.heading);
     this.appendOwnTrack(state.getPosition());
   }
 
@@ -103,9 +103,9 @@ export class FleetLayer {
     }).addTo(this.map);
   }
 
-  updateOwnPosition(coords) {
+  updateOwnPosition(coords, heading) {
     this.ownVessel.setLatLng(coords);
-    this.ownVessel.setHeading(this.ownBoatConfig.heading);
+    this.ownVessel.setHeading(heading);
     this.ownAntenna.setLatLng(coords);
   }
 
