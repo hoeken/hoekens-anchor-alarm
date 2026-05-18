@@ -17,7 +17,7 @@ export class SignalKClient {
   // these for delta-fed cache reads without changing call sites.
   request(path) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 5000);
+    const timer = setTimeout(() => controller.abort("Request timed out"), 5000);
     return fetch(`${this.baseUrl}/signalk/v1/api/${path}`, {
       signal: controller.signal,
     })
