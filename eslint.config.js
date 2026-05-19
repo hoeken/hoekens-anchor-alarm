@@ -34,7 +34,7 @@ module.exports = [
     rules: stylisticRules,
   },
   {
-    files: ["index.js", "eslint.config.js"],
+    files: ["src/index.js", "eslint.config.js"],
     languageOptions: {
       sourceType: "commonjs",
       globals: { ...globals.node },
