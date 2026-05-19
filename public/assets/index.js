@@ -29524,77 +29524,88 @@ var AppState = class {
 		this.scope3 = 0;
 	}
 	websocketSubscribe(client) {
-		client.subscribe([{
+		client.subscribe({
 			context: "vessels.self",
 			subscribe: [
 				{
 					path: "navigation.position",
-					policy: "fixed",
 					period: DELTA_FAST_SPEED,
+					format: "full",
+					policy: "fixed",
 					sendMeta: "all"
 				},
 				{
 					path: "navigation.headingTrue",
-					policy: "fixed",
 					period: DELTA_FAST_SPEED,
+					format: "full",
+					policy: "fixed",
 					sendMeta: "all"
 				},
 				{
 					path: "environment.depth.belowKeel",
-					policy: "fixed",
 					period: DELTA_SLOW_SPEED,
+					format: "full",
+					policy: "fixed",
 					sendMeta: "all"
 				},
 				{
 					path: "environment.depth.belowSurface",
-					policy: "fixed",
 					period: DELTA_SLOW_SPEED,
+					format: "full",
+					policy: "fixed",
 					sendMeta: "all"
 				},
 				{
 					path: "environment.wind.directionTrue",
-					policy: "fixed",
 					period: DELTA_SLOW_SPEED,
+					format: "full",
+					policy: "fixed",
 					sendMeta: "all"
 				},
 				{
 					path: "environment.wind.speedApparent",
-					policy: "fixed",
 					period: DELTA_SLOW_SPEED,
+					format: "full",
+					policy: "fixed",
 					sendMeta: "all"
 				},
 				{
 					path: "environment.tide",
-					policy: "instant",
 					minPeriod: 60 * 1e3,
+					format: "full",
+					policy: "instant",
 					sendMeta: "all"
 				},
 				{
 					path: "navigation.anchor.position",
-					policy: "instant",
 					minPeriod: DELTA_FAST_SPEED,
+					format: "full",
+					policy: "instant",
 					sendMeta: "all"
 				},
 				{
 					path: "navigation.anchor.state",
-					policy: "instant",
 					minPeriod: DELTA_FAST_SPEED,
+					format: "full",
+					policy: "instant",
 					sendMeta: "all"
 				},
 				{
 					path: "navigation.anchor.maxRadius",
-					policy: "instant",
 					minPeriod: DELTA_FAST_SPEED,
+					format: "full",
+					policy: "instant",
 					sendMeta: "all"
 				},
 				{
 					path: "notifications.navigation.anchor",
-					policy: "instant",
 					minPeriod: DELTA_FAST_SPEED,
+					format: "full",
+					policy: "instant",
 					sendMeta: "all"
 				}
 			]
-		}]);
+		});
 	}
 	getPosition() {
 		if (this.currentCoordinates) return L.latLng(this.currentCoordinates.value.latitude, this.currentCoordinates.value.longitude);
@@ -29634,6 +29645,7 @@ var AppState = class {
 	}
 	handleDelta(timestamp, delta) {
 		const path = delta.path;
+		if (delta.meta) console.log(delta);
 		const apply = (current) => {
 			if (current) {
 				current.value = delta.value;
@@ -30953,12 +30965,12 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 			port: Number(window.location.port) || (window.location.protocol === "https:" ? 443 : 80),
 			useTLS: window.location.protocol === "https:",
 			reconnect: true,
-			autoConnect: true,
-			notifications: true,
-			sendMeta: true
+			autoConnect: false,
+			notifications: true
 		});
-		this.client.on("connect", () => this.state.websocketSubscribe(this.client));
 		this.client.on("delta", (delta) => this.handleDeltas(delta));
+		this.client.on("connect", () => this.state.websocketSubscribe(this.client));
+		this.client.connect();
 	}
 	handleDeltas(delta) {
 		if (delta.updates) {

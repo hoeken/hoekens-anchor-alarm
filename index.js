@@ -21,8 +21,38 @@ module.exports = function (app) {
 
   plugin.id = "hoekens-anchor-alarm";
   plugin.name = "Hoeken's Anchor Alarm";
-  plugin.description =
-    "Web app based anchor alarm with scope calculator, scribble tracks, engine override, and physically accurate icons.";
+  plugin.description = "Anchor alarm with scope calculator, scribble tracks, engine override, and physically accurate icons.";
+  plugin.metaQueue = [];
+  plugin.deltaQueue = [];
+
+  plugin.metas = {
+    "design.bowAnchorRollerHeight": {
+      units: "m",
+      displayUnits: {
+        category: "length",
+      },
+      description: "Height of the bow anchor roller above the water",
+    },
+    "navigation.anchor.currentRadius": {
+      units: "m",
+      displayUnits: {
+        category: "length",
+      },
+      description: "Current distance from gps antenna to anchor",
+    },
+    "navigation.anchor.maxRadius": {
+      units: "m",
+      displayUnits: {
+        category: "length",
+      },
+      description: "Current distance from gps antenna to anchor",
+    },
+    // "navigation.anchor.meta": { "units": "", "description": "Whether this channel hardware is capable of PWM (duty cycle, dimming, etc)" },
+    "navigation.anchor.position": {
+      description: "Anchor position, probably an estimate at best",
+    },
+    "navigation.anchor.state": { "description": "Anchor alarm state: 'on' or 'off'" },
+  };
 
   let requiredPaths = [
     {
@@ -176,29 +206,14 @@ module.exports = function (app) {
     let delta = getAnchorAlarmDelta(app, alarm_state, "Started", ["visual"]);
     app.handleMessage(plugin.id, delta);
 
+    for (const [key, value] of Object.entries(this.metas))
+      this.queueMeta(key, value);
+
     configuration = props;
     try {
       //save our anchor roller height to the tree so we can access it from the web side
-      if (typeof configuration["bowAnchorRollerHeight"] != "undefined") {
-        app.handleMessage(plugin.id, {
-          updates: [
-            {
-              meta: [
-                {
-                  path: "design.bowAnchorRollerHeight",
-                  value: { units: "m" },
-                },
-              ],
-              values: [
-                {
-                  path: "design.bowAnchorRollerHeight",
-                  value: parseFloat(configuration["bowAnchorRollerHeight"]),
-                },
-              ],
-            },
-          ],
-        });
-      }
+      if (typeof configuration["bowAnchorRollerHeight"] != "undefined")
+        this.queueDelta("design.bowAnchorRollerHeight", parseFloat(configuration["bowAnchorRollerHeight"]));
 
       //setup our watchdog timer
       let noPositionAlarmTime = configuration["noPositionAlarmTime"];
@@ -246,30 +261,58 @@ module.exports = function (app) {
           putRadius,
         );
       }
-
-      //set some units
-      app.handleMessage(plugin.id, {
-        updates: [
-          {
-            meta: [
-              {
-                path: "navigation.anchor.bearingTrue",
-                value: { units: "rad" },
-              },
-              {
-                path: "navigation.anchor.apparentBearing",
-                value: { units: "rad" },
-              },
-            ],
-          },
-        ],
-      });
     } catch (e) {
       plugin.started = false;
       app.error("error: " + e);
       console.error(e.stack);
       return e;
     }
+
+    this.sendUpdates();
+  };
+
+  plugin.queueDelta = function (path, value) {
+    this.deltaQueue.push({ "path": path, "value": value });
+  };
+
+  plugin.queueMeta = function (path, value) {
+    let meta = {
+      "path": path,
+      "value": value,
+    };
+
+    this.metaQueue.push(meta);
+  };
+
+  plugin.sendDeltas = function () {
+    if (!this.deltaQueue.length)
+      return;
+
+    app.handleMessage(plugin.id, {
+      "updates": [{
+        "values": this.deltaQueue,
+      }],
+    });
+
+    this.deltaQueue = [];
+  };
+
+  plugin.sendMetas = function () {
+    if (!this.metaQueue.length)
+      return;
+
+    app.handleMessage(plugin.id, {
+      "updates": [{
+        "meta": this.metaQueue,
+      }],
+    });
+
+    this.metaQueue = [];
+  };
+
+  plugin.sendUpdates = function () {
+    this.sendDeltas();
+    this.sendMetas();
   };
 
   function savePluginOptions() {
@@ -471,9 +514,9 @@ module.exports = function (app) {
       } else {
         app.debug(
           "set anchor position to: " +
-            position.latitude +
-            " " +
-            position.longitude,
+          position.latitude +
+          " " +
+          position.longitude,
         );
         var radius = req.body["radius"];
         if (typeof radius == "undefined")
@@ -793,9 +836,9 @@ function calc_distance(lat1, lon1, lat2, lon2) {
   var a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(degsToRad(lat1)) *
-      Math.cos(degsToRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos(degsToRad(lat2)) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   var d = R * c; // Distance in m
   return d;

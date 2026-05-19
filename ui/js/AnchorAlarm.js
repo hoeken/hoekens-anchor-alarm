@@ -56,15 +56,16 @@ class AnchorAlarm {
         (window.location.protocol === "https:" ? 443 : 80),
       useTLS: window.location.protocol === "https:",
       reconnect: true,
-      autoConnect: true,
+      autoConnect: false,
       notifications: true,
-      sendMeta: true,
     });
-    this.client.on("connect", () => this.state.websocketSubscribe(this.client));
     this.client.on("delta", (delta) => this.handleDeltas(delta));
+    this.client.on("connect", () => this.state.websocketSubscribe(this.client));
+    this.client.connect();
   }
 
   handleDeltas(delta) {
+    // console.log(delta);
     if (delta.updates) {
       for (const update of delta.updates) {
         if (update.values) {

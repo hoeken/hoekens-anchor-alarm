@@ -21,79 +21,90 @@ export class AppState {
   }
 
   websocketSubscribe(client) {
-    client.subscribe([
+    client.subscribe(
       {
         context: "vessels.self",
         subscribe: [
           {
             path: "navigation.position",
-            policy: "fixed",
             period: DELTA_FAST_SPEED,
+            format: "full",
+            policy: "fixed",
             sendMeta: "all",
           },
           {
             path: "navigation.headingTrue",
-            policy: "fixed",
             period: DELTA_FAST_SPEED,
+            format: "full",
+            policy: "fixed",
             sendMeta: "all",
           },
           {
             path: "environment.depth.belowKeel",
-            policy: "fixed",
             period: DELTA_SLOW_SPEED,
+            format: "full",
+            policy: "fixed",
             sendMeta: "all",
           },
           {
             path: "environment.depth.belowSurface",
-            policy: "fixed",
             period: DELTA_SLOW_SPEED,
+            format: "full",
+            policy: "fixed",
             sendMeta: "all",
           },
           {
             path: "environment.wind.directionTrue",
-            policy: "fixed",
             period: DELTA_SLOW_SPEED,
+            format: "full",
+            policy: "fixed",
             sendMeta: "all",
           },
           {
             path: "environment.wind.speedApparent",
-            policy: "fixed",
             period: DELTA_SLOW_SPEED,
+            format: "full",
+            policy: "fixed",
             sendMeta: "all",
           },
           {
             path: "environment.tide",
-            policy: "instant",
             minPeriod: 60 * 1000,
+            format: "full",
+            policy: "instant",
             sendMeta: "all",
           },
           {
             path: "navigation.anchor.position",
-            policy: "instant",
             minPeriod: DELTA_FAST_SPEED,
+            format: "full",
+            policy: "instant",
             sendMeta: "all",
           },
           {
             path: "navigation.anchor.state",
-            policy: "instant",
             minPeriod: DELTA_FAST_SPEED,
+            format: "full",
+            policy: "instant",
             sendMeta: "all",
           },
           {
             path: "navigation.anchor.maxRadius",
-            policy: "instant",
             minPeriod: DELTA_FAST_SPEED,
+            format: "full",
+            policy: "instant",
             sendMeta: "all",
           },
           {
             path: "notifications.navigation.anchor",
-            policy: "instant",
             minPeriod: DELTA_FAST_SPEED,
+            format: "full",
+            policy: "instant",
             sendMeta: "all",
           },
         ],
       },
-    ]);
+    );
   }
 
   getPosition() {
@@ -167,6 +178,10 @@ export class AppState {
 
   handleDelta(timestamp, delta) {
     const path = delta.path;
+
+    if (delta.meta) {
+      console.log(delta);
+    }
 
     // Mutate the existing envelope so meta/$source/pgn/values populated by
     // extractAll survive delta updates. Only create a new envelope the first
