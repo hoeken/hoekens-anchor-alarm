@@ -29,56 +29,67 @@ export class AppState {
             path: "navigation.position",
             policy: "fixed",
             period: DELTA_FAST_SPEED,
+            sendMeta: "all",
           },
           {
             path: "navigation.headingTrue",
             policy: "fixed",
             period: DELTA_FAST_SPEED,
+            sendMeta: "all",
           },
           {
             path: "environment.depth.belowKeel",
             policy: "fixed",
             period: DELTA_SLOW_SPEED,
+            sendMeta: "all",
           },
           {
             path: "environment.depth.belowSurface",
             policy: "fixed",
             period: DELTA_SLOW_SPEED,
+            sendMeta: "all",
           },
           {
             path: "environment.wind.directionTrue",
             policy: "fixed",
             period: DELTA_SLOW_SPEED,
+            sendMeta: "all",
           },
           {
             path: "environment.wind.speedApparent",
             policy: "fixed",
             period: DELTA_SLOW_SPEED,
+            sendMeta: "all",
           },
           {
             path: "environment.tide",
             policy: "instant",
             minPeriod: 60 * 1000,
+            sendMeta: "all",
           },
           {
             path: "navigation.anchor.position",
             policy: "instant",
             minPeriod: DELTA_FAST_SPEED,
+            sendMeta: "all",
           },
           {
             path: "navigation.anchor.state",
             policy: "instant",
             minPeriod: DELTA_FAST_SPEED,
+            sendMeta: "all",
           },
           {
             path: "navigation.anchor.maxRadius",
             policy: "instant",
             minPeriod: DELTA_FAST_SPEED,
+            sendMeta: "all",
           },
           {
             path: "notifications.navigation.anchor",
             policy: "instant",
             minPeriod: DELTA_FAST_SPEED,
+            sendMeta: "all",
           },
         ],
       },
@@ -164,6 +175,8 @@ export class AppState {
       if (current) {
         current.value = delta.value;
         current.timestamp = timestamp;
+        if (delta.meta)
+          current.meta = delta.meta;
         return current;
       }
       return { value: delta.value, timestamp };

@@ -2795,6 +2795,40 @@ var SignalKHelper = class SignalKHelper {
 		const node = this.extract(tree, path);
 		return node && node.value !== void 0 ? node.value : fallback;
 	}
+	static convertToDisplay(delta, value = false) {
+		if (value === false) value = delta.value;
+		let symbol = delta.meta?.units ?? "";
+		let format = null;
+		const displayUnits = delta.meta?.displayUnits;
+		if (displayUnits) {
+			if (displayUnits.formula && typeof value === "number") value = new Function("value", `return ${displayUnits.formula};`)(value);
+			if (displayUnits.symbol) symbol = displayUnits.symbol;
+			if (displayUnits.displayFormat) format = displayUnits.displayFormat;
+		}
+		if (symbol == "foot") symbol = "ft";
+		return {
+			value,
+			symbol,
+			format
+		};
+	}
+	static convertFromDisplay(delta, value) {
+		const displayUnits = delta.meta?.displayUnits;
+		if (displayUnits?.inverseFormula && typeof value === "number") value = new Function("value", `return ${displayUnits.inverseFormula};`)(value);
+		return value;
+	}
+	static formatDisplay(delta, decimals = false, value = false) {
+		if (!delta) return "";
+		if (value === false && (delta.value === void 0 || delta.value === null)) return "";
+		const { value: converted, symbol, format } = this.convertToDisplay(delta, value);
+		if (symbol == "ft") decimals = 0;
+		let text;
+		if (format && typeof converted === "number") {
+			if (decimals === false) decimals = (format.split(".")[1] || "").length;
+			text = converted.toFixed(decimals);
+		} else text = String(converted);
+		return symbol ? `${text} ${symbol}` : text;
+	}
 	static freshValue(tree, path = "", { maxAge = SIGNALK_DEFAULT_FRESHNESS_SEC, fallback = void 0 } = {}) {
 		const node = this.extract(tree, path);
 		if (!node || node.value === void 0) return fallback;
@@ -2992,7 +3026,6 @@ var BoatConfig = class BoatConfig {
 };
 //#endregion
 //#region ui/js/GeoMath.js
-var MPS_TO_KNOTS = 1.94384;
 var GeoMath = class GeoMath {
 	static deg2rad(deg) {
 		return deg * (Math.PI / 180);
@@ -3141,57 +3174,68 @@ var AppState = class {
 				{
 					path: "navigation.position",
 					policy: "fixed",
-					period: DELTA_FAST_SPEED
+					period: DELTA_FAST_SPEED,
+					sendMeta: "all"
 				},
 				{
 					path: "navigation.headingTrue",
 					policy: "fixed",
-					period: DELTA_FAST_SPEED
+					period: DELTA_FAST_SPEED,
+					sendMeta: "all"
 				},
 				{
 					path: "environment.depth.belowKeel",
 					policy: "fixed",
-					period: DELTA_SLOW_SPEED
+					period: DELTA_SLOW_SPEED,
+					sendMeta: "all"
 				},
 				{
 					path: "environment.depth.belowSurface",
 					policy: "fixed",
-					period: DELTA_SLOW_SPEED
+					period: DELTA_SLOW_SPEED,
+					sendMeta: "all"
 				},
 				{
 					path: "environment.wind.directionTrue",
 					policy: "fixed",
-					period: DELTA_SLOW_SPEED
+					period: DELTA_SLOW_SPEED,
+					sendMeta: "all"
 				},
 				{
 					path: "environment.wind.speedApparent",
 					policy: "fixed",
-					period: DELTA_SLOW_SPEED
+					period: DELTA_SLOW_SPEED,
+					sendMeta: "all"
 				},
 				{
 					path: "environment.tide",
 					policy: "instant",
-					minPeriod: 60 * 1e3
+					minPeriod: 60 * 1e3,
+					sendMeta: "all"
 				},
 				{
 					path: "navigation.anchor.position",
 					policy: "instant",
-					minPeriod: DELTA_FAST_SPEED
+					minPeriod: DELTA_FAST_SPEED,
+					sendMeta: "all"
 				},
 				{
 					path: "navigation.anchor.state",
 					policy: "instant",
-					minPeriod: DELTA_FAST_SPEED
+					minPeriod: DELTA_FAST_SPEED,
+					sendMeta: "all"
 				},
 				{
 					path: "navigation.anchor.maxRadius",
 					policy: "instant",
-					minPeriod: DELTA_FAST_SPEED
+					minPeriod: DELTA_FAST_SPEED,
+					sendMeta: "all"
 				},
 				{
 					path: "notifications.navigation.anchor",
 					policy: "instant",
-					minPeriod: DELTA_FAST_SPEED
+					minPeriod: DELTA_FAST_SPEED,
+					sendMeta: "all"
 				}
 			]
 		}]);
@@ -3238,6 +3282,7 @@ var AppState = class {
 			if (current) {
 				current.value = delta.value;
 				current.timestamp = timestamp;
+				if (delta.meta) current.meta = delta.meta;
 				return current;
 			}
 			return {
@@ -3526,13 +3571,11 @@ var FleetLayer = class {
 		}
 	}
 	deriveVesselHeading(vessel, twa) {
-		let sog = 0;
 		const sogVal = SignalKHelper.value(vessel, "navigation.speedOverGround");
-		if (sogVal !== void 0) sog = sogVal * MPS_TO_KNOTS;
 		const headingTrue = SignalKHelper.value(vessel, "navigation.headingTrue");
 		if (headingTrue !== void 0) return GeoMath.rad2deg(headingTrue);
 		const cog = SignalKHelper.value(vessel, "navigation.courseOverGroundTrue");
-		if (cog !== void 0 && sog > 1) return GeoMath.rad2deg(cog);
+		if (cog !== void 0 && sogVal > .5) return GeoMath.rad2deg(cog);
 		if (twa) return GeoMath.rad2deg(twa.value);
 		return 0;
 	}
@@ -3723,7 +3766,7 @@ var InfoPanel = L.Control.extend({
 		this.setStatus(state.anchor.notification);
 	},
 	setBelowSurface: function(dbs) {
-		if (dbs) this._belowSurface.textContent = `${parseFloat(dbs.value).toFixed(1)}m`;
+		if (dbs) this._belowSurface.textContent = SignalKHelper.formatDisplay(dbs);
 		else this._belowSurface.textContent = "~";
 	},
 	setStatus: function(notification) {
@@ -3934,7 +3977,7 @@ var WindPanel = L.Control.extend({
 			}
 			return;
 		}
-		const awsText = `${Math.round(aws.value * MPS_TO_KNOTS)}kts`;
+		const awsText = SignalKHelper.formatDisplay(aws, 0);
 		if (awsText !== this._lastAwsText) {
 			this._aws.innerHTML = awsText;
 			this._lastAwsText = awsText;
@@ -4056,9 +4099,9 @@ var ScopePanel = L.Control.extend({
 	update: function(state) {
 		if (state.belowSurface && state.belowKeel) {
 			const maxHeight = state.belowSurface.value + state.boatConfig.anchorRollerHeight + state.tidalRise;
-			this._refs.scopeTotal.innerHTML = `${maxHeight.toFixed(1)}m`;
-			this._refs.scopeDepth.innerHTML = `${state.belowSurface.value.toFixed(1)}m`;
-			this._refs.belowKeel.innerHTML = `${state.belowKeel.value.toFixed(1)}m`;
+			this._refs.scopeTotal.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, maxHeight);
+			this._refs.scopeDepth.innerHTML = SignalKHelper.formatDisplay(state.belowSurface);
+			this._refs.belowKeel.innerHTML = SignalKHelper.formatDisplay(state.belowKeel);
 		} else {
 			this._refs.scopeTotal.innerHTML = "~";
 			this._refs.scopeDepth.innerHTML = "~";
@@ -4066,23 +4109,23 @@ var ScopePanel = L.Control.extend({
 		}
 		if (state.tide && state.belowKeel) {
 			const minimumDepth = state.belowKeel.value - state.tidalFall;
-			this._refs.minimumDepth.innerHTML = `${minimumDepth.toFixed(1)}m`;
+			this._refs.minimumDepth.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, minimumDepth);
 			if (minimumDepth > 1) this._refs.minimumDepthRow.style.color = "green";
 			else if (minimumDepth > 0) this._refs.minimumDepthRow.style.color = "orange";
 			else this._refs.minimumDepthRow.style.color = "red";
 		} else this._refs.minimumDepth.innerHTML = "~";
 		if (state.tide) {
-			this._refs.tidalRise.innerHTML = `${state.tidalRise.toFixed(1)}m`;
-			this._refs.tidalFall.innerHTML = `${state.tidalFall.toFixed(1)}m`;
+			this._refs.tidalRise.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.tidalRise);
+			this._refs.tidalFall.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.tidalFall);
 		} else {
 			this._refs.tidalRise.innerHTML = "~";
 			this._refs.tidalFall.innerHTML = "~";
 		}
-		this._refs.scope7to1.innerHTML = `${state.scope7.toFixed(1)}m`;
-		this._refs.scope5to1.innerHTML = `${state.scope5.toFixed(1)}m`;
-		this._refs.scope4to1.innerHTML = `${state.scope4.toFixed(1)}m`;
-		this._refs.scope3to1.innerHTML = `${state.scope3.toFixed(1)}m`;
-		this._refs.bowHeight.innerHTML = `${state.boatConfig.anchorRollerHeight.toFixed(1)}m`;
+		this._refs.scope7to1.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.scope7);
+		this._refs.scope5to1.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.scope5);
+		this._refs.scope4to1.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.scope4);
+		this._refs.scope3to1.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.scope3);
+		this._refs.bowHeight.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.boatConfig.anchorRollerHeight);
 	},
 	show: function() {
 		if (this._container) this._container.style.display = "";
@@ -4125,7 +4168,8 @@ var CROSSHAIR_ICON = L.icon({
 	iconAnchor: [12, 12]
 });
 var AnchorOverlay = class {
-	constructor({ map, radius }) {
+	constructor({ state, map, radius }) {
+		this.state = state;
 		this.map = map;
 		this.radius = radius;
 		this.dropped = false;
@@ -4223,7 +4267,8 @@ var AnchorOverlay = class {
 		const flip = bow.lng > this.anchorPosition.lng;
 		let distance = GeoMath.calculateDistance(bow.lat, bow.lng, this.anchorPosition.lat, this.anchorPosition.lng);
 		distance = Math.round(distance * 10) / 10;
-		const distanceLabel = `${distance}m`;
+		let distanceLabel = `${distance}m`;
+		if (this.state.anchor?.maxRadius) distanceLabel = SignalKHelper.formatDisplay(this.state.anchor.maxRadius, false, distance);
 		const bearingLabel = `${Math.round(GeoMath.calculateBearing(bow.lat, bow.lng, this.anchorPosition.lat, this.anchorPosition.lng))}°`;
 		if (distanceLabel === this._cachedDistanceLabel && bearingLabel === this._cachedBearingLabel && flip === this._cachedFlip) return;
 		this.anchorLine.setText("");
@@ -4331,7 +4376,8 @@ var AnchorController = class {
 			this._statusBar.set("anchor-raise", `Failed to raise anchor: ${detail}`, "error");
 		});
 	}
-	setRadius(newRadius) {
+	setRadius(newRadius, convert = false) {
+		if (convert && this._appState.anchor?.maxRadius) newRadius = SignalKHelper.convertFromDisplay(this._appState.anchor.maxRadius, newRadius);
 		this.maxRadius = newRadius;
 		if (!this._appState.anchor.maxRadius) this._appState.anchor.maxRadius = { value: newRadius };
 		else this._appState.anchor.maxRadius.value = newRadius;
@@ -4457,7 +4503,7 @@ var ControlToolbar = class {
       </div>
       <div id="radiusControl">
         <button id="decreaseRadius">-</button>
-        <button id="setRadius"><span id="radius">0</span>m</button>
+        <button id="setRadius"><span id="radius">0</span></button>
         <button id="increaseRadius">+</button>
       </div>
     `;
@@ -4474,18 +4520,18 @@ var ControlToolbar = class {
 			if (this._onDrop) this._onDrop();
 		});
 		this._container.querySelector("#setRadius").addEventListener("click", () => {
-			const input = prompt("Enter Radius (m)", this._radius);
+			const input = prompt("Enter Radius:", parseInt(this._radiusEl.innerHTML, 10));
 			if (input === null) return;
 			const newRadius = parseInt(input, 10);
 			if (isNaN(newRadius) || newRadius <= 0) return;
-			if (this._onSetRadius) this._onSetRadius(newRadius);
+			if (this._onSetRadius) this._onSetRadius(newRadius, true);
 		});
 		this._container.querySelector("#increaseRadius").addEventListener("click", () => {
-			if (this._onSetRadius) this._onSetRadius(this._radius + 5);
+			if (this._onSetRadius) this._onSetRadius(this._radius + 5, false);
 		});
 		this._container.querySelector("#decreaseRadius").addEventListener("click", () => {
 			if (this._radius <= 5) return;
-			if (this._onSetRadius) this._onSetRadius(this._radius - 5);
+			if (this._onSetRadius) this._onSetRadius(this._radius - 5, false);
 		});
 		this._container.addEventListener("wheel", (e) => {
 			if (!e.ctrlKey) return;
@@ -4513,7 +4559,10 @@ var ControlToolbar = class {
 	}
 	setRadius(radius) {
 		this._radius = radius;
-		this._radiusEl.innerHTML = radius;
+	}
+	update(appState) {
+		if (appState.anchor?.maxRadius) this._radiusEl.innerHTML = SignalKHelper.formatDisplay(appState.anchor.maxRadius, false, this._radius);
+		else this._radiusEl.innerHTML = this._radius;
 	}
 };
 //#endregion
@@ -4593,7 +4642,7 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 			getMapContainer: () => this.map && this.map.getContainer(),
 			onRaise: () => this.anchorController.requestRaise(),
 			onDrop: () => this.anchorController.requestDrop(),
-			onSetRadius: (newRadius) => this.anchorController.setRadius(newRadius)
+			onSetRadius: (newRadius, convert) => this.anchorController.setRadius(newRadius, convert)
 		});
 		this.loadInitialData();
 	}
@@ -4647,6 +4696,7 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 	}
 	buildAnchorWidgets() {
 		this.anchorOverlay = new AnchorOverlay({
+			state: this.state,
 			map: this.map,
 			radius: 0
 		}).setBoatPosition(this.state.getPosition(), this.state.boatConfig.heading, this.state.boatConfig.gpsOffset);
@@ -4663,6 +4713,7 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 		this.anchorController.estimateAnchorPosition();
 	}
 	updateMap() {
+		this.toolbar.update(this.state);
 		this.windPanel.update(this.state);
 		this.infoPanel.update(this.state);
 		this.statusBar.update(this.state);

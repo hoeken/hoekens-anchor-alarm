@@ -5,6 +5,7 @@
 // style.css; do not rename without updating it.
 
 import { AnchorState } from "../AnchorController.js";
+import { SignalKHelper } from "../SignalKHelper.js";
 
 export class ControlToolbar {
   constructor({ parent, getMapContainer, onDrop, onRaise, onSetRadius }) {
@@ -27,7 +28,7 @@ export class ControlToolbar {
       </div>
       <div id="radiusControl">
         <button id="decreaseRadius">-</button>
-        <button id="setRadius"><span id="radius">0</span>m</button>
+        <button id="setRadius"><span id="radius">0</span></button>
         <button id="increaseRadius">+</button>
       </div>
     `;
@@ -56,20 +57,20 @@ export class ControlToolbar {
     this._container
       .querySelector("#setRadius")
       .addEventListener("click", () => {
-        const input = prompt("Enter Radius (m)", this._radius);
+        const input = prompt("Enter Radius:", parseInt(this._radiusEl.innerHTML, 10));
         if (input === null)
           return;
         const newRadius = parseInt(input, 10);
         if (isNaN(newRadius) || newRadius <= 0)
           return;
         if (this._onSetRadius)
-          this._onSetRadius(newRadius);
+          this._onSetRadius(newRadius, true);
       });
     this._container
       .querySelector("#increaseRadius")
       .addEventListener("click", () => {
         if (this._onSetRadius)
-          this._onSetRadius(this._radius + 5);
+          this._onSetRadius(this._radius + 5, false);
       });
     this._container
       .querySelector("#decreaseRadius")
@@ -77,7 +78,7 @@ export class ControlToolbar {
         if (this._radius <= 5)
           return;
         if (this._onSetRadius)
-          this._onSetRadius(this._radius - 5);
+          this._onSetRadius(this._radius - 5, false);
       });
 
     // macOS Chrome delivers trackpad pinch as a wheel event with ctrlKey=true.
@@ -124,6 +125,12 @@ export class ControlToolbar {
 
   setRadius(radius) {
     this._radius = radius;
-    this._radiusEl.innerHTML = radius;
+  }
+
+  update(appState) {
+    if (appState.anchor?.maxRadius)
+      this._radiusEl.innerHTML = SignalKHelper.formatDisplay(appState.anchor.maxRadius, false, this._radius);
+    else
+      this._radiusEl.innerHTML = this._radius;
   }
 }

@@ -3,7 +3,8 @@
 // touching the document directly. Element IDs are preserved for CSS hooks
 // in style.css; do not rename without updating the stylesheet.
 
-import { GeoMath, MPS_TO_KNOTS } from "../GeoMath.js";
+import { GeoMath } from "../GeoMath.js";
+import { SignalKHelper } from "../SignalKHelper.js";
 import { getWindBarb } from "../WindBarb.js";
 
 export const WindPanel = L.Control.extend({
@@ -39,8 +40,8 @@ export const WindPanel = L.Control.extend({
       }
       return;
     }
-    const kts = Math.round(aws.value * MPS_TO_KNOTS);
-    const awsText = `${kts}kts`;
+
+    const awsText = SignalKHelper.formatDisplay(aws, 0);
     if (awsText !== this._lastAwsText) {
       this._aws.innerHTML = awsText;
       this._lastAwsText = awsText;

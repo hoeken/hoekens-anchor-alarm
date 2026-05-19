@@ -5,6 +5,7 @@
 // alarm color is recomputed internally on any state or position change.
 
 import { GeoMath } from "../GeoMath.js";
+import { SignalKHelper } from "../SignalKHelper.js";
 
 const ANCHOR_ICON = L.icon({
   iconUrl: "icons/anchor.png",
@@ -19,7 +20,8 @@ const CROSSHAIR_ICON = L.icon({
 });
 
 export class AnchorOverlay {
-  constructor({ map, radius }) {
+  constructor({ state, map, radius }) {
+    this.state = state;
     this.map = map;
     this.radius = radius;
     this.dropped = false;
@@ -173,7 +175,10 @@ export class AnchorOverlay {
       this.anchorPosition.lng,
     );
     distance = Math.round(distance * 10) / 10;
-    const distanceLabel = `${distance}m`;
+
+    let distanceLabel = `${distance}m`;
+    if (this.state.anchor?.maxRadius)
+      distanceLabel = SignalKHelper.formatDisplay(this.state.anchor.maxRadius, false, distance);
 
     const bearing = Math.round(
       GeoMath.calculateBearing(

@@ -3,6 +3,8 @@
 // touching the document directly. Element IDs are preserved for CSS hooks
 // in style.css; do not rename without updating the stylesheet.
 
+import { SignalKHelper } from "../SignalKHelper";
+
 export const ScopePanel = L.Control.extend({
   options: { position: "bottomright" },
 
@@ -91,9 +93,9 @@ export const ScopePanel = L.Control.extend({
         state.boatConfig.anchorRollerHeight +
         state.tidalRise;
 
-      this._refs.scopeTotal.innerHTML = `${maxHeight.toFixed(1)}m`;
-      this._refs.scopeDepth.innerHTML = `${state.belowSurface.value.toFixed(1)}m`;
-      this._refs.belowKeel.innerHTML = `${state.belowKeel.value.toFixed(1)}m`;
+      this._refs.scopeTotal.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, maxHeight);
+      this._refs.scopeDepth.innerHTML = SignalKHelper.formatDisplay(state.belowSurface);
+      this._refs.belowKeel.innerHTML = SignalKHelper.formatDisplay(state.belowKeel);
     } else {
       this._refs.scopeTotal.innerHTML = "~";
       this._refs.scopeDepth.innerHTML = "~";
@@ -102,8 +104,7 @@ export const ScopePanel = L.Control.extend({
 
     if (state.tide && state.belowKeel) {
       const minimumDepth = state.belowKeel.value - state.tidalFall;
-
-      this._refs.minimumDepth.innerHTML = `${minimumDepth.toFixed(1)}m`;
+      this._refs.minimumDepth.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, minimumDepth);
 
       if (minimumDepth > 1) {
         this._refs.minimumDepthRow.style.color = "green";
@@ -117,18 +118,18 @@ export const ScopePanel = L.Control.extend({
     }
 
     if (state.tide) {
-      this._refs.tidalRise.innerHTML = `${state.tidalRise.toFixed(1)}m`;
-      this._refs.tidalFall.innerHTML = `${state.tidalFall.toFixed(1)}m`;
+      this._refs.tidalRise.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.tidalRise);
+      this._refs.tidalFall.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.tidalFall);
     } else {
       this._refs.tidalRise.innerHTML = "~";
       this._refs.tidalFall.innerHTML = "~";
     }
 
-    this._refs.scope7to1.innerHTML = `${state.scope7.toFixed(1)}m`;
-    this._refs.scope5to1.innerHTML = `${state.scope5.toFixed(1)}m`;
-    this._refs.scope4to1.innerHTML = `${state.scope4.toFixed(1)}m`;
-    this._refs.scope3to1.innerHTML = `${state.scope3.toFixed(1)}m`;
-    this._refs.bowHeight.innerHTML = `${state.boatConfig.anchorRollerHeight.toFixed(1)}m`;
+    this._refs.scope7to1.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.scope7);
+    this._refs.scope5to1.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.scope5);
+    this._refs.scope4to1.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.scope4);
+    this._refs.scope3to1.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.scope3);
+    this._refs.bowHeight.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.boatConfig.anchorRollerHeight);
   },
 
   show: function () {

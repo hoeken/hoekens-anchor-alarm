@@ -124,7 +124,7 @@ class AnchorAlarm {
       getMapContainer: () => this.map && this.map.getContainer(),
       onRaise: () => this.anchorController.requestRaise(),
       onDrop: () => this.anchorController.requestDrop(),
-      onSetRadius: (newRadius) => this.anchorController.setRadius(newRadius),
+      onSetRadius: (newRadius, convert) => this.anchorController.setRadius(newRadius, convert),
     });
 
     this.loadInitialData();
@@ -214,6 +214,7 @@ class AnchorAlarm {
 
   buildAnchorWidgets() {
     this.anchorOverlay = new AnchorOverlay({
+      state: this.state,
       map: this.map,
       radius: 0,
     }).setBoatPosition(
@@ -240,6 +241,7 @@ class AnchorAlarm {
   }
 
   updateMap() {
+    this.toolbar.update(this.state);
     this.windPanel.update(this.state);
     this.infoPanel.update(this.state);
     this.statusBar.update(this.state);

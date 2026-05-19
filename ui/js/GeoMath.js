@@ -1,5 +1,3 @@
-export const MPS_TO_KNOTS = 1.94384;
-
 export class GeoMath {
   static deg2rad(deg) {
     return deg * (Math.PI / 180);
@@ -31,9 +29,9 @@ export class GeoMath {
     let a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(GeoMath.deg2rad(lat1)) *
-        Math.cos(GeoMath.deg2rad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos(GeoMath.deg2rad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     let d = R * c; // Distance in m
     return d;

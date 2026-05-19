@@ -5,7 +5,7 @@
 // own boat is never auto-removed (its mmsi key never appears in the AIS list).
 
 import simplify from "simplify-js";
-import { GeoMath, MPS_TO_KNOTS } from "../GeoMath.js";
+import { GeoMath } from "../GeoMath.js";
 import { SignalKHelper } from "../SignalKHelper.js";
 import { BoatConfig } from "../BoatConfig.js";
 
@@ -244,17 +244,14 @@ export class FleetLayer {
   // Heading preference: true heading > COG (only if moving) > observer's TWA > 0.
   // COG is wonky at low speed, so we gate it on SOG > 1 knot.
   deriveVesselHeading(vessel, twa) {
-    let sog = 0;
     const sogVal = SignalKHelper.value(vessel, "navigation.speedOverGround");
-    if (sogVal !== undefined)
-      sog = sogVal * MPS_TO_KNOTS;
 
     const headingTrue = SignalKHelper.value(vessel, "navigation.headingTrue");
     if (headingTrue !== undefined)
       return GeoMath.rad2deg(headingTrue);
 
     const cog = SignalKHelper.value(vessel, "navigation.courseOverGroundTrue");
-    if (cog !== undefined && sog > 1)
+    if (cog !== undefined && sogVal > 0.5)
       return GeoMath.rad2deg(cog);
 
     if (twa)

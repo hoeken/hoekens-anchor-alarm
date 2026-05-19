@@ -90,6 +90,71 @@ export class SignalKHelper {
     return node && node.value !== undefined ? node.value : fallback;
   }
 
+  // Apply meta.displayUnits (formula + symbol + displayFormat) to a delta's
+  // value. Returns { value, symbol, format } so callers can either format the
+  // result or use the converted numeric value directly.
+  static convertToDisplay(delta, value = false) {
+    if (value === false)
+      value = delta.value;
+    let symbol = delta.meta?.units ?? "";
+    let format = null;
+
+    const displayUnits = delta.meta?.displayUnits;
+    if (displayUnits) {
+      if (displayUnits.formula && typeof value === "number") {
+        const fn = new Function("value", `return ${displayUnits.formula};`);
+        value = fn(value);
+      }
+      if (displayUnits.symbol)
+        symbol = displayUnits.symbol;
+      if (displayUnits.displayFormat)
+        format = displayUnits.displayFormat;
+    }
+
+    if (symbol == "foot")
+      symbol = "ft";
+
+    return { value, symbol, format };
+  }
+
+  // Apply meta.displayUnits.inverseFormula to convert a display-unit value
+  // back to the delta's base unit. Returns the converted numeric value, or
+  // the input unchanged when no inverseFormula is defined.
+  static convertFromDisplay(delta, value) {
+    const displayUnits = delta.meta?.displayUnits;
+    if (displayUnits?.inverseFormula && typeof value === "number") {
+      const fn = new Function("value", `return ${displayUnits.inverseFormula};`);
+      value = fn(value);
+    }
+    return value;
+  }
+
+  // Apply meta.displayUnits (formula + symbol + displayFormat) to a delta and
+  // return a display-ready string. Falls back to meta.units when displayUnits
+  // is absent, and to a bare String(value) when neither side specifies units.
+  static formatDisplay(delta, decimals = false, value = false) {
+    if (!delta)
+      return "";
+    if (value === false && (delta.value === undefined || delta.value === null))
+      return "";
+
+    const { value: converted, symbol, format } = this.convertToDisplay(delta, value);
+
+    if (symbol == "ft")
+      decimals = 0;
+
+    let text;
+    if (format && typeof converted === "number") {
+      if (decimals === false)
+        decimals = (format.split(".")[1] || "").length;
+      text = converted.toFixed(decimals);
+    } else {
+      text = String(converted);
+    }
+
+    return symbol ? `${text} ${symbol}` : text;
+  }
+
   static freshValue(
     tree,
     path = "",

@@ -3,6 +3,8 @@
 // touching the document directly. Element IDs are preserved for CSS hooks
 // in style.css; do not rename without updating the stylesheet.
 
+import { SignalKHelper } from "../SignalKHelper";
+
 export const InfoPanel = L.Control.extend({
   options: { position: "bottomright" },
 
@@ -35,7 +37,7 @@ export const InfoPanel = L.Control.extend({
 
   setBelowSurface: function (dbs) {
     if (dbs)
-      this._belowSurface.textContent = `${parseFloat(dbs.value).toFixed(1)}m`;
+      this._belowSurface.textContent = SignalKHelper.formatDisplay(dbs);
     else
       this._belowSurface.textContent = "~";
   },
