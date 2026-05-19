@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+const Utils = require("./utils");
+const Watchdog = require("./watchdog");
+
 module.exports = function (app) {
   var plugin = {};
 
@@ -235,7 +238,7 @@ module.exports = function (app) {
       let noPositionAlarmTime = plugin.configuration["noPositionAlarmTime"];
       if (typeof noPositionAlarmTime != "undefined") {
         if (noPositionAlarmTime > 0) {
-          plugin.positionWatchdogTimer = new plugin.Watchdog(
+          plugin.positionWatchdogTimer = new Watchdog(
             noPositionAlarmTime * 1000,
             () => {
               plugin.alarm_state = "warn";
@@ -509,7 +512,7 @@ module.exports = function (app) {
     let maxRadius = configuration.radius;
     let anchorPosition = configuration.position;
 
-    var currentRadius = plugin.calc_distance(
+    var currentRadius = Utils.calc_distance(
       vesselPosition.latitude,
       vesselPosition.longitude,
       anchorPosition.latitude,
@@ -544,7 +547,7 @@ module.exports = function (app) {
 
       //wait, do we have engines on?
       if (configuration.enableEngineCheck) {
-        if (plugin.checkEngineState(app)) {
+        if (Utils.checkEngineState(app)) {
           app.debug("anchor alarm disabled due to engines on");
           do_update = true;
           new_state = "normal";
@@ -789,91 +792,6 @@ module.exports = function (app) {
         app.error(err);
       }
     });
-  };
-
-  // ============================================================
-  // UTILITIES
-  // ============================================================
-
-  plugin.checkEngineState = function (app) {
-    const propulsion = app.getSelfPath("propulsion");
-
-    if (typeof propulsion !== "undefined") {
-      const propulsionKeys = Object.keys(propulsion);
-
-      for (let key of propulsionKeys) {
-        if (
-          propulsion[key] &&
-          propulsion[key].revolutions &&
-          plugin.isFresh(propulsion[key].revolutions) &&
-          propulsion[key].revolutions.value > 0
-        )
-          return true;
-        if (
-          propulsion[key] &&
-          propulsion[key].state &&
-          plugin.isFresh(propulsion[key].state) &&
-          propulsion[key].state.value === "started"
-        )
-          return true;
-      }
-    }
-
-    return false;
-  };
-
-  plugin.calc_distance = function (lat1, lon1, lat2, lon2) {
-    //app.debug("calc_distance: " + lat1 + ", " + lon1 + ", " + lat2 + ", " + lon2)
-    var R = 6371000; // Radius of the earth in m
-    var dLat = plugin.degsToRad(lat2 - lat1); // deg2rad below
-    var dLon = plugin.degsToRad(lon2 - lon1);
-    var a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(plugin.degsToRad(lat1)) *
-      Math.cos(plugin.degsToRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    var d = R * c; // Distance in m
-    return d;
-  };
-
-  plugin.degsToRad = function (degrees) {
-    return degrees * (Math.PI / 180.0);
-  };
-
-  plugin.isFresh = function (data, max_age = 300) {
-    if (!data)
-      return false;
-    const date = new Date(data.timestamp);
-    const ageInSecs = (Date.now() - date) / 1000;
-    return ageInSecs <= max_age;
-  };
-
-  plugin.Watchdog = class {
-    constructor(timeout, onTimeout) {
-      this.timeout = timeout;
-      this.onTimeout = onTimeout;
-      this.timer = null;
-    }
-
-    start() {
-      this.stop(); // Clear any existing timer
-      this.timer = setTimeout(() => {
-        this.onTimeout();
-      }, this.timeout);
-    }
-
-    reset() {
-      this.start(); // Restart the timer
-    }
-
-    stop() {
-      if (this.timer !== null) {
-        clearTimeout(this.timer);
-        this.timer = null;
-      }
-    }
   };
 
   return plugin;

@@ -6,9 +6,6 @@
 - make FleetLayer.filterRadius a configurable option
 - make Polling / Websocket a configurable option
 
-# v2.1 - Server
-
-
 # LONG TERM
 
 - different anchor shapes (arc, polygon, etc)
