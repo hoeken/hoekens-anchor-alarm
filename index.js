@@ -204,8 +204,7 @@ module.exports = function (app) {
     app.setPluginStatus("Started");
 
     plugin.alarm_state = "normal";
-    let delta = plugin.getAnchorAlarmDelta(app, plugin.alarm_state, "Started", ["visual"]);
-    app.handleMessage(plugin.id, delta);
+    plugin.updateAnchorAlarm(plugin.alarm_state, "Started", ["visual"]);
 
     for (const [key, value] of Object.entries(plugin.metas))
       plugin.queueMeta(key, value);
@@ -224,12 +223,10 @@ module.exports = function (app) {
             noPositionAlarmTime * 1000,
             () => {
               plugin.alarm_state = "warn";
-              let delta = plugin.getAnchorAlarmDelta(
-                app,
+              plugin.updateAnchorAlarm(
                 plugin.alarm_state,
                 `No position data received for ${noPositionAlarmTime} seconds.`,
               );
-              app.handleMessage(plugin.id, delta);
             },
           );
         }
@@ -333,14 +330,12 @@ module.exports = function (app) {
         // Emit the full anchor delta so navigation.anchor.meta.zones gets the
         // new threshold — pushing maxRadius alone leaves dragging detection
         // pinned to the old value.
-        let delta = plugin.getAnchorDelta({
-          app: app,
+        plugin.updateAnchorState({
           vesselPosition: app.getSelfPath("navigation.position.value"),
           anchorPosition: plugin.configuration.position,
           maxRadius: radius,
           isSet: false,
         });
-        app.handleMessage(plugin.id, delta);
       } else {
         app.handleMessage(plugin.id, {
           updates: [
@@ -370,13 +365,11 @@ module.exports = function (app) {
       if (value == null) {
         plugin.raiseAnchor();
       } else {
-        let delta = plugin.getAnchorDelta({
-          app: app,
+        plugin.updateAnchorState({
           anchorPosition: value,
           maxRadius: plugin.configuration["radius"],
           isSet: true,
         });
-        app.handleMessage(plugin.id, delta);
 
         plugin.configuration["position"] = {
           latitude: parseFloat(value.latitude),
@@ -401,15 +394,12 @@ module.exports = function (app) {
   plugin.stop = function () {
     if (plugin.alarm_state != "normal") {
       plugin.alarm_state = "normal";
-      let delta = plugin.getAnchorAlarmDelta(app, plugin.alarm_state, "Stopped");
-      app.handleMessage(plugin.id, delta);
+      plugin.updateAnchorAlarm(plugin.alarm_state, "Stopped");
     }
 
-    let delta = plugin.getAnchorDelta({
-      app: app,
+    plugin.updateAnchorState({
       isSet: false,
     });
-    app.handleMessage(plugin.id, delta);
 
     plugin.stopWatchingPosition();
 
@@ -421,8 +411,7 @@ module.exports = function (app) {
       return;
 
     plugin.alarm_state = "normal";
-    let delta = plugin.getAnchorAlarmDelta(app, plugin.alarm_state, "Watching");
-    app.handleMessage(plugin.id, delta);
+    plugin.updateAnchorAlarm(plugin.alarm_state, "Watching");
 
     app.setPluginStatus("Watching");
 
@@ -470,8 +459,7 @@ module.exports = function (app) {
 
   plugin.stopWatchingPosition = function () {
     plugin.alarm_state = "normal";
-    let delta = plugin.getAnchorAlarmDelta(app, plugin.alarm_state, "Off");
-    app.handleMessage(plugin.id, delta);
+    plugin.updateAnchorAlarm(plugin.alarm_state, "Off");
 
     if (plugin.positionWatchdogTimer)
       plugin.positionWatchdogTimer.stop();
@@ -485,11 +473,9 @@ module.exports = function (app) {
   plugin.raiseAnchor = function () {
     app.debug("raise anchor");
 
-    let delta = plugin.getAnchorDelta({
-      app: app,
+    plugin.updateAnchorState({
       isSet: false,
     });
-    app.handleMessage(plugin.id, delta);
 
     delete plugin.configuration["position"];
     delete plugin.configuration["radius"];
@@ -523,17 +509,12 @@ module.exports = function (app) {
         if (typeof radius == "undefined")
           radius = null;
 
-        let delta = plugin.getAnchorDelta({
-          app: app,
+        plugin.updateAnchorState({
           anchorPosition: position,
           currentRadius: 0,
           maxRadius: radius,
           isSet: true,
         });
-
-        app.handleMessage(plugin.id, delta);
-
-        //app.debug("anchor delta: " + JSON.stringify(delta))
 
         plugin.configuration["position"] = {
           latitude: parseFloat(position.latitude),
@@ -589,14 +570,12 @@ module.exports = function (app) {
 
         app.debug("set anchor radius: " + radius);
 
-        let delta = plugin.getAnchorDelta({
-          app: app,
+        plugin.updateAnchorState({
           vesselPosition: position,
           anchorPosition: plugin.configuration.position,
           maxRadius: radius,
           isSet: false,
         });
-        app.handleMessage(plugin.id, delta);
 
         plugin.configuration["radius"] = parseFloat(radius);
 
@@ -637,13 +616,9 @@ module.exports = function (app) {
     });
   };
 
-  plugin.getAnchorDelta = function (params) {
-    var values;
-
+  plugin.updateAnchorState = function (params) {
     if (params.vesselPosition == null) {
-      params.vesselPosition = params.app.getSelfPath(
-        "navigation.position.value",
-      );
+      params.vesselPosition = app.getSelfPath("navigation.position.value");
     }
 
     if (params.anchorPosition) {
@@ -652,30 +627,19 @@ module.exports = function (app) {
         longitude: parseFloat(params.anchorPosition.longitude),
       };
 
-      values = [
-        {
-          path: "navigation.anchor.position",
-          value: anchorPosition,
-        },
-        {
-          path: "navigation.anchor.state",
-          value: "on",
-        },
-      ];
+      plugin.queueDelta("navigation.anchor.position", anchorPosition);
+      plugin.queueDelta("navigation.anchor.state", "on");
 
       if (params.currentRadius != null) {
-        values.push({
-          path: "navigation.anchor.currentRadius",
-          value: parseFloat(params.currentRadius),
-        });
+        plugin.queueDelta(
+          "navigation.anchor.currentRadius",
+          parseFloat(params.currentRadius),
+        );
       }
 
       if (params.maxRadius != null) {
         var maxRadius = parseFloat(params.maxRadius);
-        values.push({
-          path: "navigation.anchor.maxRadius",
-          value: maxRadius,
-        });
+        plugin.queueDelta("navigation.anchor.maxRadius", maxRadius);
         var zones = [
           {
             state: "normal",
@@ -687,45 +651,16 @@ module.exports = function (app) {
             lower: maxRadius,
           },
         ];
-
-        values.push({
-          path: "navigation.anchor.meta",
-          value: {
-            zones: zones,
-          },
-        });
+        plugin.queueDelta("navigation.anchor.meta", { zones: zones });
       }
     } else {
-      values = [
-        {
-          path: "navigation.anchor.position",
-          value: null, //{ latitude: null, longitude: null}
-        },
-        {
-          path: "navigation.anchor.state",
-          value: "off",
-        },
-        {
-          path: "navigation.anchor.currentRadius",
-          value: null,
-        },
-        {
-          path: "navigation.anchor.maxRadius",
-          value: null,
-        },
-      ];
+      plugin.queueDelta("navigation.anchor.position", null);
+      plugin.queueDelta("navigation.anchor.state", "off");
+      plugin.queueDelta("navigation.anchor.currentRadius", null);
+      plugin.queueDelta("navigation.anchor.maxRadius", null);
     }
 
-    let delta = {
-      updates: [
-        {
-          values: values,
-        },
-      ],
-    };
-
-    // params.app.debug("anchor delta: " + util.inspect(delta, { showHidden: false, depth: 6 }))
-    return delta;
+    plugin.sendUpdates();
   };
 
   plugin.checkPosition = function (app, plugin, vesselPosition, configuration) {
@@ -743,15 +678,13 @@ module.exports = function (app) {
 
     //app.debug("currentRadius: " + currentRadius + ", maxRadius: " + maxRadius);
 
-    let delta = plugin.getAnchorDelta({
-      app: app,
+    plugin.updateAnchorState({
       vesselPosition: vesselPosition,
       anchorPosition: anchorPosition,
       currentRadius: currentRadius,
       maxRadius: maxRadius,
       isSet: false,
     });
-    app.handleMessage(plugin.id, delta);
 
     let new_state = "normal";
     let do_update = false;
@@ -772,7 +705,7 @@ module.exports = function (app) {
       //wait, do we have engines on?
       if (configuration.enableEngineCheck) {
         if (plugin.checkEngineState(app)) {
-          app.debug("anchor alarm disabled due to engines on: %j", delta);
+          app.debug("anchor alarm disabled due to engines on");
           do_update = true;
           new_state = "normal";
           message = "Engines on, alarm disabled.";
@@ -786,9 +719,8 @@ module.exports = function (app) {
 
     if (new_state !== plugin.alarm_state || do_update) {
       plugin.alarm_state = new_state;
-      let delta = plugin.getAnchorAlarmDelta(app, plugin.alarm_state, message);
-      app.debug("alarm state change: %j", delta);
-      app.handleMessage(plugin.id, delta);
+      app.debug("alarm state change: %s -> %s", plugin.alarm_state, message);
+      plugin.updateAnchorAlarm(plugin.alarm_state, message);
 
       if (plugin.alarm_state == "normal")
         app.setPluginStatus("Watching");
@@ -842,30 +774,20 @@ module.exports = function (app) {
     return d;
   };
 
-  plugin.getAnchorAlarmDelta = function (app, state, msg, method) {
-    if (!msg)
-      msg = state.charAt(0).toUpperCase() + state.slice(1);
+  plugin.updateAnchorAlarm = function (state, message, method) {
+    if (!message)
+      message = state.charAt(0).toUpperCase() + state.slice(1);
 
     if (!method)
       method = ["visual", "sound"];
 
-    let delta = {
-      updates: [
-        {
-          values: [
-            {
-              path: "notifications.navigation.anchor",
-              value: {
-                state: state,
-                method,
-                message: msg,
-              },
-            },
-          ],
-        },
-      ],
-    };
-    return delta;
+    plugin.queueDelta("notifications.navigation.anchor", {
+      state: state,
+      method: method,
+      message: message,
+    });
+
+    plugin.sendUpdates();
   };
 
   plugin.degsToRad = function (degrees) {
