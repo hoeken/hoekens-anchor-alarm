@@ -175,7 +175,7 @@ export class FleetLayer {
     track.options.max++;
     this.trackPointCounts[mmsi] = (this.trackPointCounts[mmsi] || 0) + 1;
 
-    if (this.trackPointCounts[mmsi] >= this.getSimplifyThreshold())
+    if (this.trackPointCounts[mmsi] >= this.getSimplifyThreshold(mmsi))
       this.simplifyTrack(mmsi);
   }
 
