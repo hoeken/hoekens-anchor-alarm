@@ -1,7 +1,6 @@
 # v2.1
 
 - respect units (kts / meters / etc)
-  - use Math.js
   - server side - update metadata with category
 - rotate anchor icon to match anchor line
 - make FleetLayer.filterRadius a configurable option

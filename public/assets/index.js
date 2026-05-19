@@ -1662,7 +1662,7 @@ var init_validate = __esmMin((() => {
 }));
 //#endregion
 //#region node_modules/uuid/dist/esm-browser/stringify.js
-function stringify(arr) {
+function stringify$1(arr) {
 	var offset = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 0;
 	var uuid = (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + "-" + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + "-" + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + "-" + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + "-" + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase();
 	if (!validate(uuid)) throw TypeError("Stringified UUID is invalid");
@@ -1717,7 +1717,7 @@ function v1(options, buf, offset) {
 	b[i++] = clockseq >>> 8 | 128;
 	b[i++] = clockseq & 255;
 	for (var n = 0; n < 6; ++n) b[i + n] = node[n];
-	return buf || stringify(b);
+	return buf || stringify$1(b);
 }
 var _nodeId, _clockseq, _lastMSecs, _lastNSecs;
 var init_v1 = __esmMin((() => {
@@ -1728,7 +1728,7 @@ var init_v1 = __esmMin((() => {
 }));
 //#endregion
 //#region node_modules/uuid/dist/esm-browser/parse.js
-function parse(uuid) {
+function parse$1(uuid) {
 	if (!validate(uuid)) throw TypeError("Invalid UUID");
 	var v;
 	var arr = new Uint8Array(16);
@@ -1764,7 +1764,7 @@ function stringToBytes(str) {
 function v35_default(name, version, hashfunc) {
 	function generateUUID(value, namespace, buf, offset) {
 		if (typeof value === "string") value = stringToBytes(value);
-		if (typeof namespace === "string") namespace = parse(namespace);
+		if (typeof namespace === "string") namespace = parse$1(namespace);
 		if (namespace.length !== 16) throw TypeError("Namespace must be array-like (16 iterable integer values, 0-255)");
 		var bytes = new Uint8Array(16 + value.length);
 		bytes.set(namespace);
@@ -1777,7 +1777,7 @@ function v35_default(name, version, hashfunc) {
 			for (var i = 0; i < 16; ++i) buf[offset + i] = bytes[i];
 			return buf;
 		}
-		return stringify(bytes);
+		return stringify$1(bytes);
 	}
 	try {
 		generateUUID.name = name;
@@ -1958,7 +1958,7 @@ function v4(options, buf, offset) {
 		for (var i = 0; i < 16; ++i) buf[offset + i] = rnds[i];
 		return buf;
 	}
-	return stringify(rnds);
+	return stringify$1(rnds);
 }
 var init_v4 = __esmMin((() => {
 	init_rng();
@@ -2072,7 +2072,7 @@ var init_nil = __esmMin((() => {
 }));
 //#endregion
 //#region node_modules/uuid/dist/esm-browser/version.js
-function version(uuid) {
+function version$2(uuid) {
 	if (!validate(uuid)) throw TypeError("Invalid UUID");
 	return parseInt(uuid.substr(14, 1), 16);
 }
@@ -2083,14 +2083,14 @@ var init_version = __esmMin((() => {
 //#region node_modules/uuid/dist/esm-browser/index.js
 var esm_browser_exports = /* @__PURE__ */ __exportAll({
 	NIL: () => nil_default,
-	parse: () => parse,
-	stringify: () => stringify,
+	parse: () => parse$1,
+	stringify: () => stringify$1,
 	v1: () => v1,
 	v3: () => v3,
 	v4: () => v4,
 	v5: () => v5,
 	validate: () => validate,
-	version: () => version
+	version: () => version$2
 });
 var init_esm_browser = __esmMin((() => {
 	init_v1();
@@ -2709,7 +2709,7 @@ var require_discovery = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 //#endregion
 //#region node_modules/@signalk/client/dist/index.js
-var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_dist$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.default = exports.Discovery = exports.Client = void 0;
 	var _client = _interopRequireDefault(require_client$1());
@@ -2728,10 +2728,26366 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.default = _client.default;
 }));
 //#endregion
+//#region node_modules/@signalk/client/index.js
+var require_client = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	module.exports = require_dist$1();
+}));
+//#endregion
+//#region node_modules/@babel/runtime/helpers/esm/extends.js
+function _extends() {
+	return _extends = Object.assign ? Object.assign.bind() : function(n) {
+		for (var e = 1; e < arguments.length; e++) {
+			var t = arguments[e];
+			for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]);
+		}
+		return n;
+	}, _extends.apply(null, arguments);
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/core/config.js
+var DEFAULT_CONFIG = {
+	relTol: 1e-12,
+	absTol: 1e-15,
+	matrix: "Matrix",
+	number: "number",
+	numberFallback: "number",
+	precision: 64,
+	predictable: false,
+	randomSeed: null,
+	legacySubset: false
+};
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/customs.js
+/**
+* Get a property of a plain object or array
+* Throws an error in case the object is not a plain object or the
+* property is not defined on the object itself
+* @param {Object} object
+* @param {string} prop
+* @return {*} Returns the property value when safe
+*/
+function getSafeProperty(object, prop) {
+	if (isSafeObjectProperty(object, prop) || isSafeArrayProperty(object, prop)) return object[prop];
+	if (isSafeMethod(object, prop)) throw new Error("Cannot access method \"".concat(prop, "\" as a property"));
+	if (object === null || object === void 0) throw new TypeError("Cannot access property \"".concat(prop, "\": object is ").concat(object));
+	throw new Error("No access to property \"" + prop + "\"");
+}
+/**
+* Set a property on a plain object or array.
+* Throws an error in case the object is not a plain object or the
+* property would override an inherited property like .constructor or .toString
+* @param {Object} object
+* @param {string} prop
+* @param {*} value
+* @return {*} Returns the value
+*/
+function setSafeProperty(object, prop, value) {
+	if (isSafeObjectProperty(object, prop) || isSafeArrayProperty(object, prop)) {
+		object[prop] = value;
+		return value;
+	}
+	throw new Error("No access to property \"".concat(prop, "\""));
+}
+/**
+* Test whether a property is safe for reading and writing on an object
+* For example .constructor and .__proto__ are not safe
+* @param {Object} object
+* @param {string} prop
+* @return {boolean} Returns true when safe
+*/
+function isSafeObjectProperty(object, prop) {
+	if (!isPlainObject(object)) return false;
+	return !(prop in Object.prototype);
+}
+/**
+* Test whether a property is safe for reading and writing on an Array
+* For example .__proto__ and .constructor are not safe
+* @param {unknown} array
+* @param {string | number} prop
+* @return {boolean} Returns true when safe
+*/
+function isSafeArrayProperty(array, prop) {
+	if (!Array.isArray(array)) return false;
+	return typeof prop === "number" || typeof prop === "string" && isInteger$2(prop) || prop === "length";
+}
+function isInteger$2(prop) {
+	return /^\d+$/.test(prop);
+}
+/**
+* Validate whether a method is safe.
+* Throws an error when that's not the case.
+* @param {Object} object
+* @param {string} method
+* @return {function} Returns the method when valid
+*/
+function getSafeMethod(object, method) {
+	if (!isSafeMethod(object, method)) throw new Error("No access to method \"" + method + "\"");
+	return object[method];
+}
+/**
+* Check whether a method is safe.
+* Throws an error when that's not the case (for example for `constructor`).
+* @param {Object} object
+* @param {string} method
+* @return {boolean} Returns true when safe, false otherwise
+*/
+function isSafeMethod(object, method) {
+	if (object === null || object === void 0 || typeof object[method] !== "function") return false;
+	if (hasOwnProperty(object, method) && Object.getPrototypeOf && method in Object.getPrototypeOf(object)) return false;
+	if (safeNativeMethods.has(method)) return true;
+	if (method in Object.prototype) return false;
+	if (method in Function.prototype) return false;
+	return true;
+}
+function isPlainObject(object) {
+	return typeof object === "object" && object && object.constructor === Object;
+}
+var safeNativeMethods = new Set([
+	"toString",
+	"valueOf",
+	"toLocaleString"
+]);
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/map.js
+/**
+* A map facade on a bare object.
+*
+* The small number of methods needed to implement a scope,
+* forwarding on to the SafeProperty functions. Over time, the codebase
+* will stop using this method, as all objects will be Maps, rather than
+* more security prone objects.
+*/
+var ObjectWrappingMap = class {
+	constructor(object) {
+		this.wrappedObject = object;
+		this[Symbol.iterator] = this.entries;
+	}
+	keys() {
+		return Object.keys(this.wrappedObject).filter((key) => this.has(key)).values();
+	}
+	get(key) {
+		return getSafeProperty(this.wrappedObject, key);
+	}
+	set(key, value) {
+		setSafeProperty(this.wrappedObject, key, value);
+		return this;
+	}
+	has(key) {
+		return isSafeObjectProperty(this.wrappedObject, key) && key in this.wrappedObject;
+	}
+	entries() {
+		return mapIterator(this.keys(), (key) => [key, this.get(key)]);
+	}
+	forEach(callback) {
+		for (var key of this.keys()) callback(this.get(key), key, this);
+	}
+	delete(key) {
+		if (isSafeObjectProperty(this.wrappedObject, key)) delete this.wrappedObject[key];
+	}
+	clear() {
+		for (var key of this.keys()) this.delete(key);
+	}
+	get size() {
+		return Object.keys(this.wrappedObject).length;
+	}
+};
+/**
+* Create a map with two partitions: a and b.
+* The set with bKeys determines which keys/values are read/written to map b,
+* all other values are read/written to map a
+*
+* For example:
+*
+*   const a = new Map()
+*   const b = new Map()
+*   const p = new PartitionedMap(a, b, new Set(['x', 'y']))
+*
+* In this case, values `x` and `y` are read/written to map `b`,
+* all other values are read/written to map `a`.
+*/
+var PartitionedMap = class {
+	/**
+	* @param {Map} a
+	* @param {Map} b
+	* @param {Set} bKeys
+	*/
+	constructor(a, b, bKeys) {
+		this.a = a;
+		this.b = b;
+		this.bKeys = bKeys;
+		this[Symbol.iterator] = this.entries;
+	}
+	get(key) {
+		return this.bKeys.has(key) ? this.b.get(key) : this.a.get(key);
+	}
+	set(key, value) {
+		if (this.bKeys.has(key)) this.b.set(key, value);
+		else this.a.set(key, value);
+		return this;
+	}
+	has(key) {
+		return this.b.has(key) || this.a.has(key);
+	}
+	keys() {
+		return new Set([...this.a.keys(), ...this.b.keys()])[Symbol.iterator]();
+	}
+	entries() {
+		return mapIterator(this.keys(), (key) => [key, this.get(key)]);
+	}
+	forEach(callback) {
+		for (var key of this.keys()) callback(this.get(key), key, this);
+	}
+	delete(key) {
+		return this.bKeys.has(key) ? this.b.delete(key) : this.a.delete(key);
+	}
+	clear() {
+		this.a.clear();
+		this.b.clear();
+	}
+	get size() {
+		return [...this.keys()].length;
+	}
+};
+/**
+* Create a new iterator that maps over the provided iterator, applying a mapping function to each item
+*/
+function mapIterator(it, callback) {
+	return { next: () => {
+		var n = it.next();
+		return n.done ? n : {
+			value: callback(n.value),
+			done: false
+		};
+	} };
+}
+/**
+* Creates an empty map, or whatever your platform's polyfill is.
+*
+* @returns an empty Map or Map like object.
+*/
+function createEmptyMap() {
+	return /* @__PURE__ */ new Map();
+}
+/**
+* Creates a Map from the given object.
+*
+* @param { Map | { [key: string]: unknown } | undefined } mapOrObject
+* @returns
+*/
+function createMap$1(mapOrObject) {
+	if (!mapOrObject) return createEmptyMap();
+	if (isMap(mapOrObject)) return mapOrObject;
+	if (isObject(mapOrObject)) return new ObjectWrappingMap(mapOrObject);
+	throw new Error("createMap can create maps from objects or Maps");
+}
+/**
+* Unwraps a map into an object.
+*
+* @param {Map} map
+* @returns { [key: string]: unknown }
+*/
+function toObject(map) {
+	if (map instanceof ObjectWrappingMap) return map.wrappedObject;
+	var object = {};
+	for (var key of map.keys()) setSafeProperty(object, key, map.get(key));
+	return object;
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/is.js
+function isNumber(x) {
+	return typeof x === "number";
+}
+function isBigNumber(x) {
+	if (!x || typeof x !== "object" || typeof x.constructor !== "function") return false;
+	if (x.isBigNumber === true && typeof x.constructor.prototype === "object" && x.constructor.prototype.isBigNumber === true) return true;
+	if (typeof x.constructor.isDecimal === "function" && x.constructor.isDecimal(x) === true) return true;
+	return false;
+}
+function isBigInt(x) {
+	return typeof x === "bigint";
+}
+function isComplex(x) {
+	return x && typeof x === "object" && Object.getPrototypeOf(x).isComplex === true || false;
+}
+function isFraction(x) {
+	return x && typeof x === "object" && Object.getPrototypeOf(x).isFraction === true || false;
+}
+function isUnit(x) {
+	return x && x.constructor.prototype.isUnit === true || false;
+}
+function isString(x) {
+	return typeof x === "string";
+}
+var isArray = Array.isArray;
+function isMatrix(x) {
+	return x && x.constructor.prototype.isMatrix === true || false;
+}
+/**
+* Test whether a value is a collection: an Array or Matrix
+* @param {*} x
+* @returns {boolean} isCollection
+*/
+function isCollection(x) {
+	return Array.isArray(x) || isMatrix(x);
+}
+function isDenseMatrix(x) {
+	return x && x.isDenseMatrix && x.constructor.prototype.isMatrix === true || false;
+}
+function isSparseMatrix(x) {
+	return x && x.isSparseMatrix && x.constructor.prototype.isMatrix === true || false;
+}
+function isRange(x) {
+	return x && x.constructor.prototype.isRange === true || false;
+}
+function isIndex(x) {
+	return x && x.constructor.prototype.isIndex === true || false;
+}
+function isBoolean(x) {
+	return typeof x === "boolean";
+}
+function isResultSet(x) {
+	return x && x.constructor.prototype.isResultSet === true || false;
+}
+function isHelp(x) {
+	return x && x.constructor.prototype.isHelp === true || false;
+}
+function isFunction(x) {
+	return typeof x === "function";
+}
+function isDate(x) {
+	return x instanceof Date;
+}
+function isRegExp(x) {
+	return x instanceof RegExp;
+}
+function isObject(x) {
+	return !!(x && typeof x === "object" && x.constructor === Object && !isComplex(x) && !isFraction(x));
+}
+/**
+* Returns `true` if the passed object appears to be a Map (i.e. duck typing).
+*
+* Methods looked for are `get`, `set`, `keys` and `has`.
+*
+* @param {Map | object} object
+* @returns
+*/
+function isMap(object) {
+	if (!object) return false;
+	return object instanceof Map || object instanceof ObjectWrappingMap || typeof object.set === "function" && typeof object.get === "function" && typeof object.keys === "function" && typeof object.has === "function";
+}
+function isNull(x) {
+	return x === null;
+}
+function isUndefined(x) {
+	return x === void 0;
+}
+function isAccessorNode(x) {
+	return x && x.isAccessorNode === true && x.constructor.prototype.isNode === true || false;
+}
+function isArrayNode(x) {
+	return x && x.isArrayNode === true && x.constructor.prototype.isNode === true || false;
+}
+function isAssignmentNode(x) {
+	return x && x.isAssignmentNode === true && x.constructor.prototype.isNode === true || false;
+}
+function isBlockNode(x) {
+	return x && x.isBlockNode === true && x.constructor.prototype.isNode === true || false;
+}
+function isConditionalNode(x) {
+	return x && x.isConditionalNode === true && x.constructor.prototype.isNode === true || false;
+}
+function isConstantNode(x) {
+	return x && x.isConstantNode === true && x.constructor.prototype.isNode === true || false;
+}
+function rule2Node(node) {
+	return isConstantNode(node) || isOperatorNode(node) && node.args.length === 1 && isConstantNode(node.args[0]) && "-+~".includes(node.op);
+}
+function isFunctionAssignmentNode(x) {
+	return x && x.isFunctionAssignmentNode === true && x.constructor.prototype.isNode === true || false;
+}
+function isFunctionNode(x) {
+	return x && x.isFunctionNode === true && x.constructor.prototype.isNode === true || false;
+}
+function isIndexNode(x) {
+	return x && x.isIndexNode === true && x.constructor.prototype.isNode === true || false;
+}
+function isNode(x) {
+	return x && x.isNode === true && x.constructor.prototype.isNode === true || false;
+}
+function isObjectNode(x) {
+	return x && x.isObjectNode === true && x.constructor.prototype.isNode === true || false;
+}
+function isOperatorNode(x) {
+	return x && x.isOperatorNode === true && x.constructor.prototype.isNode === true || false;
+}
+function isParenthesisNode(x) {
+	return x && x.isParenthesisNode === true && x.constructor.prototype.isNode === true || false;
+}
+function isRangeNode(x) {
+	return x && x.isRangeNode === true && x.constructor.prototype.isNode === true || false;
+}
+function isRelationalNode(x) {
+	return x && x.isRelationalNode === true && x.constructor.prototype.isNode === true || false;
+}
+function isSymbolNode(x) {
+	return x && x.isSymbolNode === true && x.constructor.prototype.isNode === true || false;
+}
+function isChain(x) {
+	return x && x.constructor.prototype.isChain === true || false;
+}
+function typeOf$1(x) {
+	var t = typeof x;
+	if (t === "object") {
+		if (x === null) return "null";
+		if (isBigNumber(x)) return "BigNumber";
+		if (x.constructor && x.constructor.name) return x.constructor.name;
+		return "Object";
+	}
+	return t;
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/object.js
+/**
+* Clone an object
+*
+*     clone(x)
+*
+* Can clone any primitive type, array, and object.
+* If x has a function clone, this function will be invoked to clone the object.
+*
+* @param {*} x
+* @return {*} clone
+*/
+function clone$3(x) {
+	var type = typeof x;
+	if (type === "number" || type === "bigint" || type === "string" || type === "boolean" || x === null || x === void 0) return x;
+	if (typeof x.clone === "function") return x.clone();
+	if (Array.isArray(x)) return x.map(function(value) {
+		return clone$3(value);
+	});
+	if (x instanceof Date) return new Date(x.valueOf());
+	if (isBigNumber(x)) return x;
+	if (isObject(x)) return mapObject(x, clone$3);
+	if (type === "function") return x;
+	throw new TypeError("Cannot clone: unknown type of value (value: ".concat(x, ")"));
+}
+/**
+* Apply map to all properties of an object
+* @param {Object} object
+* @param {function} callback
+* @return {Object} Returns a copy of the object with mapped properties
+*/
+function mapObject(object, callback) {
+	var clone = {};
+	for (var key in object) if (hasOwnProperty(object, key)) clone[key] = callback(object[key]);
+	return clone;
+}
+/**
+* Deep test equality of all fields in two pairs of arrays or objects.
+* Compares values and functions strictly (ie. 2 is not the same as '2').
+* @param {Array | Object} a
+* @param {Array | Object} b
+* @returns {boolean}
+*/
+function deepStrictEqual(a, b) {
+	var prop, i, len;
+	if (Array.isArray(a)) {
+		if (!Array.isArray(b)) return false;
+		if (a.length !== b.length) return false;
+		for (i = 0, len = a.length; i < len; i++) if (!deepStrictEqual(a[i], b[i])) return false;
+		return true;
+	} else if (typeof a === "function") return a === b;
+	else if (a instanceof Object) {
+		if (Array.isArray(b) || !(b instanceof Object)) return false;
+		for (prop in a) if (!(prop in b) || !deepStrictEqual(a[prop], b[prop])) return false;
+		for (prop in b) if (!(prop in a)) return false;
+		return true;
+	} else return a === b;
+}
+/**
+* Attach a lazy loading property to a constant.
+* The given function `fn` is called once when the property is first requested.
+*
+* @param {Object} object         Object where to add the property
+* @param {string} prop           Property name
+* @param {Function} valueResolver Function returning the property value. Called
+*                                without arguments.
+*/
+function lazy(object, prop, valueResolver) {
+	var _uninitialized = true;
+	var _value;
+	Object.defineProperty(object, prop, {
+		get: function get() {
+			if (_uninitialized) {
+				_value = valueResolver();
+				_uninitialized = false;
+			}
+			return _value;
+		},
+		set: function set(value) {
+			_value = value;
+			_uninitialized = false;
+		},
+		configurable: true,
+		enumerable: true
+	});
+}
+/**
+* A safe hasOwnProperty
+* @param {Object} object
+* @param {string} property
+*/
+function hasOwnProperty(object, property) {
+	return object && Object.hasOwnProperty.call(object, property);
+}
+/**
+* Shallow version of pick, creating an object composed of the picked object properties
+* but not for nested properties
+* @param {Object} object
+* @param {string[]} properties
+* @return {Object}
+*/
+function pickShallow(object, properties) {
+	var copy = {};
+	for (var i = 0; i < properties.length; i++) {
+		var key = properties[i];
+		var value = object[key];
+		if (value !== void 0) copy[key] = value;
+	}
+	return copy;
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/core/function/config.js
+var MATRIX_OPTIONS = ["Matrix", "Array"];
+var NUMBER_OPTIONS = [
+	"number",
+	"BigNumber",
+	"bigint",
+	"Fraction"
+];
+//#endregion
+//#region node_modules/mathjs/lib/esm/entry/configReadonly.js
+var config$1 = function config(options) {
+	if (options) throw new Error("The global config is readonly. \nPlease create a mathjs instance if you want to change the default configuration. \nExample:\n\n  import { create, all } from 'mathjs';\n  const mathjs = create(all);\n  mathjs.config({ number: 'BigNumber' });\n");
+	return Object.freeze(DEFAULT_CONFIG);
+};
+_extends(config$1, DEFAULT_CONFIG, {
+	MATRIX_OPTIONS,
+	NUMBER_OPTIONS
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/number.js
+/**
+* @typedef {{sign: '+' | '-' | '', coefficients: number[], exponent: number}} SplitValue
+*/
+/**
+* Check if a number is integer
+* @param {number | boolean} value
+* @return {boolean} isInteger
+*/
+function isInteger$1(value) {
+	if (typeof value === "boolean") return true;
+	return Number.isFinite(value) ? value === Math.round(value) : false;
+}
+/**
+* Ensure the number type is compatible with the provided value.
+* If not, return 'number' instead.
+*
+* For example:
+*
+*     safeNumberType('2.3', { number: 'bigint', numberFallback: 'number' })
+*
+* will return 'number' and not 'bigint' because trying to create a bigint with
+* value 2.3 would throw an exception.
+*
+* @param {string} numberStr
+* @param {{
+*   number: 'number' | 'BigNumber' | 'bigint' | 'Fraction'
+*   numberFallback: 'number' | 'BigNumber'
+* }} config
+* @returns {'number' | 'BigNumber' | 'bigint' | 'Fraction'}
+*/
+function safeNumberType(numberStr, config) {
+	if (config.number === "bigint") try {
+		BigInt(numberStr);
+	} catch (_unused) {
+		return config.numberFallback;
+	}
+	return config.number;
+}
+/**
+* Calculate the sign of a number
+* @param {number} x
+* @returns {number}
+*/
+var sign$2 = Math.sign || function(x) {
+	if (x > 0) return 1;
+	else if (x < 0) return -1;
+	else return 0;
+};
+/**
+* Calculate the base-2 logarithm of a number
+* @param {number} x
+* @returns {number}
+*/
+var log2$2 = Math.log2 || function log2(x) {
+	return Math.log(x) / Math.LN2;
+};
+/**
+* Calculate the base-10 logarithm of a number
+* @param {number} x
+* @returns {number}
+*/
+var log10$2 = Math.log10 || function log10(x) {
+	return Math.log(x) / Math.LN10;
+};
+/**
+* Calculate the natural logarithm of a number + 1
+* @param {number} x
+* @returns {number}
+*/
+var log1p$1 = Math.log1p || function(x) {
+	return Math.log(x + 1);
+};
+/**
+* Calculate cubic root for a number
+*
+* Code from es6-shim.js:
+*   https://github.com/paulmillr/es6-shim/blob/master/es6-shim.js#L1564-L1577
+*
+* @param {number} x
+* @returns {number} Returns the cubic root of x
+*/
+var cbrt$2 = Math.cbrt || function cbrt(x) {
+	if (x === 0) return x;
+	var negate = x < 0;
+	var result;
+	if (negate) x = -x;
+	if (Number.isFinite(x)) {
+		result = Math.exp(Math.log(x) / 3);
+		result = (x / (result * result) + 2 * result) / 3;
+	} else result = x;
+	return negate ? -result : result;
+};
+/**
+* Calculates exponentiation minus 1
+* @param {number} x
+* @return {number} res
+*/
+var expm1$1 = Math.expm1 || function expm1(x) {
+	return x >= 2e-4 || x <= -2e-4 ? Math.exp(x) - 1 : x + x * x / 2 + x * x * x / 6;
+};
+/**
+* Formats a number in a given base
+* @param {number} n
+* @param {number} base
+* @param {number} size
+* @returns {string}
+*/
+function formatNumberToBase(n, base, size) {
+	var prefix = {
+		2: "0b",
+		8: "0o",
+		16: "0x"
+	}[base];
+	var suffix = "";
+	if (size) {
+		if (size < 1) throw new Error("size must be in greater than 0");
+		if (!isInteger$1(size)) throw new Error("size must be an integer");
+		if (n > 2 ** (size - 1) - 1 || n < -(2 ** (size - 1))) throw new Error("Value must be in range [-2^".concat(size - 1, ", 2^").concat(size - 1, "-1]"));
+		if (!isInteger$1(n)) throw new Error("Value must be an integer");
+		if (n < 0) n = n + 2 ** size;
+		suffix = "i".concat(size);
+	}
+	var sign = "";
+	if (n < 0) {
+		n = -n;
+		sign = "-";
+	}
+	return "".concat(sign).concat(prefix).concat(n.toString(base)).concat(suffix);
+}
+/**
+* Convert a number to a formatted string representation.
+*
+* Syntax:
+*
+*    format(value)
+*    format(value, options)
+*    format(value, precision)
+*    format(value, fn)
+*
+* Where:
+*
+*    {number} value   The value to be formatted
+*    {Object} options An object with formatting options. Available options:
+*                     {string} notation
+*                         Number notation. Choose from:
+*                         'fixed'          Always use regular number notation.
+*                                          For example '123.40' and '14000000'
+*                         'exponential'    Always use exponential notation.
+*                                          For example '1.234e+2' and '1.4e+7'
+*                         'engineering'    Always use engineering notation.
+*                                          For example '123.4e+0' and '14.0e+6'
+*                         'auto' (default) Regular number notation for numbers
+*                                          having an absolute value between
+*                                          `lowerExp` and `upperExp` bounds, and
+*                                          uses exponential notation elsewhere.
+*                                          Lower bound is included, upper bound
+*                                          is excluded.
+*                                          For example '123.4' and '1.4e7'.
+*                         'bin', 'oct, or
+*                         'hex'            Format the number using binary, octal,
+*                                          or hexadecimal notation.
+*                                          For example '0b1101' and '0x10fe'.
+*                     {number} wordSize    The word size in bits to use for formatting
+*                                          in binary, octal, or hexadecimal notation.
+*                                          To be used only with 'bin', 'oct', or 'hex'
+*                                          values for 'notation' option. When this option
+*                                          is defined the value is formatted as a signed
+*                                          twos complement integer of the given word size
+*                                          and the size suffix is appended to the output.
+*                                          For example
+*                                          format(-1, {notation: 'hex', wordSize: 8}) === '0xffi8'.
+*                                          Default value is undefined.
+*                     {number} precision   A number between 0 and 16 to round
+*                                          the digits of the number.
+*                                          In case of notations 'exponential',
+*                                          'engineering', and 'auto',
+*                                          `precision` defines the total
+*                                          number of significant digits returned.
+*                                          In case of notation 'fixed',
+*                                          `precision` defines the number of
+*                                          significant digits after the decimal
+*                                          point.
+*                                          `precision` is undefined by default,
+*                                          not rounding any digits.
+*                     {number} lowerExp    Exponent determining the lower boundary
+*                                          for formatting a value with an exponent
+*                                          when `notation='auto`.
+*                                          Default value is `-3`.
+*                     {number} upperExp    Exponent determining the upper boundary
+*                                          for formatting a value with an exponent
+*                                          when `notation='auto`.
+*                                          Default value is `5`.
+*    {Function} fn    A custom formatting function. Can be used to override the
+*                     built-in notations. Function `fn` is called with `value` as
+*                     parameter and must return a string. Is useful for example to
+*                     format all values inside a matrix in a particular way.
+*
+* Examples:
+*
+*    format(6.4)                                        // '6.4'
+*    format(1240000)                                    // '1.24e6'
+*    format(1/3)                                        // '0.3333333333333333'
+*    format(1/3, 3)                                     // '0.333'
+*    format(21385, 2)                                   // '21000'
+*    format(12.071, {notation: 'fixed'})                // '12'
+*    format(2.3,    {notation: 'fixed', precision: 2})  // '2.30'
+*    format(52.8,   {notation: 'exponential'})          // '5.28e+1'
+*    format(12345678, {notation: 'engineering'})        // '12.345678e+6'
+*
+* @param {number} value
+* @param {Object | Function | number} [options]
+* @return {string} str The formatted value
+*/
+function format$3(value, options) {
+	if (typeof options === "function") return options(value);
+	if (value === Infinity) return "Infinity";
+	else if (value === -Infinity) return "-Infinity";
+	else if (isNaN(value)) return "NaN";
+	var { notation, precision, wordSize } = normalizeFormatOptions(options);
+	switch (notation) {
+		case "fixed": return toFixed$1(value, precision);
+		case "exponential": return toExponential$1(value, precision);
+		case "engineering": return toEngineering$1(value, precision);
+		case "bin": return formatNumberToBase(value, 2, wordSize);
+		case "oct": return formatNumberToBase(value, 8, wordSize);
+		case "hex": return formatNumberToBase(value, 16, wordSize);
+		case "auto": return toPrecision(value, precision, options).replace(/((\.\d*?)(0+))($|e)/, function() {
+			var digits = arguments[2];
+			var e = arguments[4];
+			return digits !== "." ? digits + e : e;
+		});
+		default: throw new Error("Unknown notation \"" + notation + "\". Choose \"auto\", \"exponential\", \"fixed\", \"bin\", \"oct\", or \"hex.");
+	}
+}
+/**
+* Normalize format options into an object:
+*   {
+*     notation: string,
+*     precision: number | undefined,
+*     wordSize: number | undefined
+*   }
+*/
+function normalizeFormatOptions(options) {
+	var notation = "auto";
+	var precision;
+	var wordSize;
+	if (options !== void 0) if (isNumber(options)) precision = options;
+	else if (isBigNumber(options)) precision = options.toNumber();
+	else if (isObject(options)) {
+		if (options.precision !== void 0) precision = _toNumberOrThrow(options.precision, () => {
+			throw new Error("Option \"precision\" must be a number or BigNumber");
+		});
+		if (options.wordSize !== void 0) wordSize = _toNumberOrThrow(options.wordSize, () => {
+			throw new Error("Option \"wordSize\" must be a number or BigNumber");
+		});
+		if (options.notation) notation = options.notation;
+	} else throw new Error("Unsupported type of options, number, BigNumber, or object expected");
+	return {
+		notation,
+		precision,
+		wordSize
+	};
+}
+/**
+* Split a number into sign, coefficients, and exponent
+* @param {number | string} value
+* @return {SplitValue}
+*              Returns an object containing sign, coefficients, and exponent
+*/
+function splitNumber(value) {
+	var match = String(value).toLowerCase().match(/^(-?)(\d+\.?\d*)(e([+-]?\d+))?$/);
+	if (!match) throw new SyntaxError("Invalid number " + value);
+	var sign = match[1];
+	var digits = match[2];
+	var exponent = parseFloat(match[4] || "0");
+	var dot = digits.indexOf(".");
+	exponent += dot !== -1 ? dot - 1 : digits.length - 1;
+	var coefficients = digits.replace(".", "").replace(/^0*/, function(zeros) {
+		exponent -= zeros.length;
+		return "";
+	}).replace(/0*$/, "").split("").map(function(d) {
+		return parseInt(d);
+	});
+	if (coefficients.length === 0) {
+		coefficients.push(0);
+		exponent++;
+	}
+	return {
+		sign,
+		coefficients,
+		exponent
+	};
+}
+/**
+* Format a number in engineering notation. Like '1.23e+6', '2.3e+0', '3.500e-3'
+* @param {number | string} value
+* @param {number} [precision]        Optional number of significant figures to return.
+*/
+function toEngineering$1(value, precision) {
+	if (isNaN(value) || !Number.isFinite(value)) return String(value);
+	var rounded = roundDigits(splitNumber(value), precision);
+	var e = rounded.exponent;
+	var c = rounded.coefficients;
+	var newExp = e % 3 === 0 ? e : e < 0 ? e - 3 - e % 3 : e - e % 3;
+	if (isNumber(precision)) while (precision > c.length || e - newExp + 1 > c.length) c.push(0);
+	else {
+		var missingZeros = Math.abs(e - newExp) - (c.length - 1);
+		for (var i = 0; i < missingZeros; i++) c.push(0);
+	}
+	var expDiff = Math.abs(e - newExp);
+	var decimalIdx = 1;
+	while (expDiff > 0) {
+		decimalIdx++;
+		expDiff--;
+	}
+	var decimals = c.slice(decimalIdx).join("");
+	var decimalVal = isNumber(precision) && decimals.length || decimals.match(/[1-9]/) ? "." + decimals : "";
+	var str = c.slice(0, decimalIdx).join("") + decimalVal + "e" + (e >= 0 ? "+" : "") + newExp.toString();
+	return rounded.sign + str;
+}
+/**
+* Format a number with fixed notation.
+* @param {number | string} value
+* @param {number} [precision=undefined]  Optional number of decimals after the
+*                                        decimal point. null by default.
+*/
+function toFixed$1(value, precision) {
+	if (isNaN(value) || !Number.isFinite(value)) return String(value);
+	var splitValue = splitNumber(value);
+	var rounded = typeof precision === "number" ? roundDigits(splitValue, splitValue.exponent + 1 + precision) : splitValue;
+	var c = rounded.coefficients;
+	var p = rounded.exponent + 1;
+	var pp = p + (precision || 0);
+	if (c.length < pp) c = c.concat(zeros(pp - c.length));
+	if (p < 0) {
+		c = zeros(-p + 1).concat(c);
+		p = 1;
+	}
+	if (p < c.length) c.splice(p, 0, p === 0 ? "0." : ".");
+	return rounded.sign + c.join("");
+}
+/**
+* Format a number in exponential notation. Like '1.23e+5', '2.3e+0', '3.500e-3'
+* @param {number | string} value
+* @param {number} [precision]  Number of digits in formatted output.
+*                              If not provided, the maximum available digits
+*                              is used.
+*/
+function toExponential$1(value, precision) {
+	if (isNaN(value) || !Number.isFinite(Number(value))) return String(value);
+	var split = splitNumber(value);
+	var rounded = precision ? roundDigits(split, precision) : split;
+	var c = rounded.coefficients;
+	var e = rounded.exponent;
+	if (c.length < precision) c = c.concat(zeros(precision - c.length));
+	var first = c.shift();
+	return rounded.sign + first + (c.length > 0 ? "." + c.join("") : "") + "e" + (e >= 0 ? "+" : "") + e;
+}
+/**
+* Format a number with a certain precision
+* @param {number | string} value
+* @param {number} [precision=undefined] Optional number of digits.
+* @param {{lowerExp: number | undefined, upperExp: number | undefined}} [options]
+*                                       By default:
+*                                         lowerExp = -3 (incl)
+*                                         upper = +5 (excl)
+* @return {string}
+*/
+function toPrecision(value, precision, options) {
+	if (isNaN(value) || !Number.isFinite(value)) return String(value);
+	var lowerExp = _toNumberOrDefault$1(options === null || options === void 0 ? void 0 : options.lowerExp, -3);
+	var upperExp = _toNumberOrDefault$1(options === null || options === void 0 ? void 0 : options.upperExp, 5);
+	var split = splitNumber(value);
+	var rounded = precision ? roundDigits(split, precision) : split;
+	if (rounded.exponent < lowerExp || rounded.exponent >= upperExp) return toExponential$1(value, precision);
+	else {
+		var c = rounded.coefficients;
+		var e = rounded.exponent;
+		if (c.length < precision) c = c.concat(zeros(precision - c.length));
+		c = c.concat(zeros(e - c.length + 1 + (c.length < precision ? precision - c.length : 0)));
+		c = zeros(-e).concat(c);
+		var dot = e > 0 ? e : 0;
+		if (dot < c.length - 1) c.splice(dot + 1, 0, ".");
+		return rounded.sign + c.join("");
+	}
+}
+/**
+* Round the number of digits of a number *
+* @param {SplitValue} split       A value split with .splitNumber(value)
+* @param {number} precision  A positive integer
+* @return {SplitValue}
+*              Returns an object containing sign, coefficients, and exponent
+*              with rounded digits
+*/
+function roundDigits(split, precision) {
+	var rounded = {
+		sign: split.sign,
+		coefficients: split.coefficients,
+		exponent: split.exponent
+	};
+	var c = rounded.coefficients;
+	while (precision <= 0) {
+		c.unshift(0);
+		rounded.exponent++;
+		precision++;
+	}
+	if (c.length > precision) {
+		if (c.splice(precision, c.length - precision)[0] >= 5) {
+			var i = precision - 1;
+			c[i]++;
+			while (c[i] === 10) {
+				c.pop();
+				if (i === 0) {
+					c.unshift(0);
+					rounded.exponent++;
+					i++;
+				}
+				i--;
+				c[i]++;
+			}
+		}
+	}
+	return rounded;
+}
+/**
+* Create an array filled with zeros.
+* @param {number} length
+* @return {Array}
+*/
+function zeros(length) {
+	var arr = [];
+	for (var i = 0; i < length; i++) arr.push(0);
+	return arr;
+}
+/**
+* Count the number of significant digits of a number.
+*
+* For example:
+*   2.34 returns 3
+*   0.0034 returns 2
+*   120.5e+30 returns 4
+*
+* @param {number} value
+* @return {number} digits   Number of significant digits
+*/
+function digits(value) {
+	return value.toExponential().replace(/e.*$/, "").replace(/^0\.?0*|\./, "").length;
+}
+/**
+* Compares two floating point numbers.
+* @param {number} a - First value to compare
+* @param {number} b - Second value to compare
+* @param {number} [relTol=1e-09] - The relative tolerance, indicating the maximum allowed difference relative to the larger absolute value. Must be greater than 0.
+* @param {number} [absTol=1e-12] - The minimum absolute tolerance, useful for comparisons near zero. Must be at least 0.
+* @return {boolean} whether the two numbers are nearly equal
+*
+* @throws {Error} If `relTol` is less than or equal to 0.
+* @throws {Error} If `absTol` is less than 0.
+*
+* @example
+* nearlyEqual(1.000000001, 1.0, 1e-8);            // true
+* nearlyEqual(1.000000002, 1.0, 0);            // false
+* nearlyEqual(1.0, 1.009, undefined, 0.01);       // true
+* nearlyEqual(0.000000001, 0.0, undefined, 1e-8); // true
+*/
+function nearlyEqual(a, b) {
+	var relTol = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : 1e-8;
+	var absTol = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : 0;
+	if (relTol <= 0) throw new Error("Relative tolerance must be greater than 0");
+	if (absTol < 0) throw new Error("Absolute tolerance must be at least 0");
+	if (isNaN(a) || isNaN(b)) return false;
+	if (!Number.isFinite(a) || !Number.isFinite(b)) return a === b;
+	if (a === b) return true;
+	return Math.abs(a - b) <= Math.max(relTol * Math.max(Math.abs(a), Math.abs(b)), absTol);
+}
+/**
+* Calculate the hyperbolic arccos of a number
+* @param {number} x
+* @return {number}
+*/
+var acosh$2 = Math.acosh || function(x) {
+	return Math.log(Math.sqrt(x * x - 1) + x);
+};
+var asinh$2 = Math.asinh || function(x) {
+	return Math.log(Math.sqrt(x * x + 1) + x);
+};
+/**
+* Calculate the hyperbolic arctangent of a number
+* @param {number} x
+* @return {number}
+*/
+var atanh$2 = Math.atanh || function(x) {
+	return Math.log((1 + x) / (1 - x)) / 2;
+};
+/**
+* Calculate the hyperbolic cosine of a number
+* @param {number} x
+* @returns {number}
+*/
+var cosh$2 = Math.cosh || function(x) {
+	return (Math.exp(x) + Math.exp(-x)) / 2;
+};
+/**
+* Calculate the hyperbolic sine of a number
+* @param {number} x
+* @returns {number}
+*/
+var sinh$2 = Math.sinh || function(x) {
+	return (Math.exp(x) - Math.exp(-x)) / 2;
+};
+/**
+* Calculate the hyperbolic tangent of a number
+* @param {number} x
+* @returns {number}
+*/
+var tanh$2 = Math.tanh || function(x) {
+	var e = Math.exp(2 * x);
+	return (e - 1) / (e + 1);
+};
+function _toNumberOrThrow(value, onError) {
+	if (isNumber(value)) return value;
+	else if (isBigNumber(value)) return value.toNumber();
+	else onError();
+}
+function _toNumberOrDefault$1(value, defaultValue) {
+	if (isNumber(value)) return value;
+	else if (isBigNumber(value)) return value.toNumber();
+	else return defaultValue;
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/plain/number/arithmetic.js
+var n1$4 = "number";
+var n2$3 = "number, number";
+function absNumber(a) {
+	return Math.abs(a);
+}
+absNumber.signature = n1$4;
+function addNumber(a, b) {
+	return a + b;
+}
+addNumber.signature = n2$3;
+function subtractNumber(a, b) {
+	return a - b;
+}
+subtractNumber.signature = n2$3;
+function multiplyNumber(a, b) {
+	return a * b;
+}
+multiplyNumber.signature = n2$3;
+function divideNumber(a, b) {
+	return a / b;
+}
+divideNumber.signature = n2$3;
+function unaryMinusNumber(x) {
+	return -x;
+}
+unaryMinusNumber.signature = n1$4;
+function unaryPlusNumber(x) {
+	return x;
+}
+unaryPlusNumber.signature = n1$4;
+function cbrtNumber(x) {
+	return cbrt$2(x);
+}
+cbrtNumber.signature = n1$4;
+function cubeNumber(x) {
+	return x * x * x;
+}
+cubeNumber.signature = n1$4;
+function expNumber(x) {
+	return Math.exp(x);
+}
+expNumber.signature = n1$4;
+function expm1Number(x) {
+	return expm1$1(x);
+}
+expm1Number.signature = n1$4;
+/**
+* Calculate gcd for numbers
+* @param {number} a
+* @param {number} b
+* @returns {number} Returns the greatest common denominator of a and b
+*/
+function gcdNumber(a, b) {
+	if (!isInteger$1(a) || !isInteger$1(b)) throw new Error("Parameters in function gcd must be integer numbers");
+	var r;
+	while (b !== 0) {
+		r = a % b;
+		a = b;
+		b = r;
+	}
+	return a < 0 ? -a : a;
+}
+gcdNumber.signature = n2$3;
+/**
+* Calculate lcm for two numbers
+* @param {number} a
+* @param {number} b
+* @returns {number} Returns the least common multiple of a and b
+*/
+function lcmNumber(a, b) {
+	if (!isInteger$1(a) || !isInteger$1(b)) throw new Error("Parameters in function lcm must be integer numbers");
+	if (a === 0 || b === 0) return 0;
+	var t;
+	var prod = a * b;
+	while (b !== 0) {
+		t = b;
+		b = a % t;
+		a = t;
+	}
+	return Math.abs(prod / a);
+}
+lcmNumber.signature = n2$3;
+/**
+* Calculate the logarithm of a value, optionally to a given base.
+* @param {number} x
+* @param {number | null | undefined} base
+* @return {number}
+*/
+function logNumber(x, y) {
+	if (y) return Math.log(x) / Math.log(y);
+	return Math.log(x);
+}
+/**
+* Calculate the 10-base logarithm of a number
+* @param {number} x
+* @return {number}
+*/
+function log10Number(x) {
+	return log10$2(x);
+}
+log10Number.signature = n1$4;
+/**
+* Calculate the 2-base logarithm of a number
+* @param {number} x
+* @return {number}
+*/
+function log2Number(x) {
+	return log2$2(x);
+}
+log2Number.signature = n1$4;
+/**
+* Calculate the natural logarithm of a `number+1`
+* @param {number} x
+* @returns {number}
+*/
+function log1pNumber(x) {
+	return log1p$1(x);
+}
+log1pNumber.signature = n1$4;
+/**
+* Calculate the modulus of two numbers
+* @param {number} x
+* @param {number} y
+* @returns {number} res
+* @private
+*/
+function modNumber(x, y) {
+	return y === 0 ? x : x - y * Math.floor(x / y);
+}
+modNumber.signature = n2$3;
+/**
+* Calculate the nth root of a, solve x^root == a
+* http://rosettacode.org/wiki/Nth_root#JavaScript
+* @param {number} a
+* @param {number} [2] root
+* @private
+*/
+function nthRootNumber(a) {
+	var root = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 2;
+	var inv = root < 0;
+	if (inv) root = -root;
+	if (root === 0) throw new Error("Root must be non-zero");
+	if (a < 0 && Math.abs(root) % 2 !== 1) throw new Error("Root must be odd when a is negative.");
+	if (a === 0) return inv ? Infinity : 0;
+	if (!isFinite(a)) return inv ? 0 : a;
+	var x = Math.pow(Math.abs(a), 1 / root);
+	x = a < 0 ? -x : x;
+	return inv ? 1 / x : x;
+}
+function signNumber(x) {
+	return sign$2(x);
+}
+signNumber.signature = n1$4;
+function sqrtNumber(x) {
+	return Math.sqrt(x);
+}
+sqrtNumber.signature = n1$4;
+function squareNumber(x) {
+	return x * x;
+}
+squareNumber.signature = n1$4;
+/**
+* Calculate xgcd for two numbers
+* @param {number} a
+* @param {number} b
+* @return {number} result
+* @private
+*/
+function xgcdNumber(a, b) {
+	var t;
+	var q;
+	var r;
+	var x = 0;
+	var lastx = 1;
+	var y = 1;
+	var lasty = 0;
+	if (!isInteger$1(a) || !isInteger$1(b)) throw new Error("Parameters in function xgcd must be integer numbers");
+	while (b) {
+		q = Math.floor(a / b);
+		r = a - q * b;
+		t = x;
+		x = lastx - q * x;
+		lastx = t;
+		t = y;
+		y = lasty - q * y;
+		lasty = t;
+		a = b;
+		b = r;
+	}
+	var res;
+	if (a < 0) res = [
+		-a,
+		-lastx,
+		-lasty
+	];
+	else res = [
+		a,
+		a ? lastx : 0,
+		lasty
+	];
+	return res;
+}
+xgcdNumber.signature = n2$3;
+/**
+* Calculates the power of x to y, x^y, for two numbers.
+* @param {number} x
+* @param {number} y
+* @return {number} res
+*/
+function powNumber(x, y) {
+	if (x * x < 1 && y === Infinity || x * x > 1 && y === -Infinity) return 0;
+	return Math.pow(x, y);
+}
+powNumber.signature = n2$3;
+/**
+* round a number to the given number of decimals, or to zero if decimals is
+* not provided
+* @param {number} value
+* @param {number} decimals       number of decimals, between 0 and 15 (0 by default)
+* @return {number} roundedValue
+*/
+function roundNumber(value) {
+	var decimals = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 0;
+	if (!isInteger$1(decimals) || decimals < 0 || decimals > 15) throw new Error("Number of decimals in function round must be an integer from 0 to 15 inclusive");
+	return parseFloat(toFixed$1(value, decimals));
+}
+/**
+* Calculate the norm of a number, the absolute value.
+* @param {number} x
+* @return {number}
+*/
+function normNumber(x) {
+	return Math.abs(x);
+}
+normNumber.signature = n1$4;
+//#endregion
+//#region node_modules/mathjs/lib/esm/plain/number/bitwise.js
+var n1$3 = "number";
+var n2$2 = "number, number";
+function bitAndNumber(x, y) {
+	if (!isInteger$1(x) || !isInteger$1(y)) throw new Error("Integers expected in function bitAnd");
+	return x & y;
+}
+bitAndNumber.signature = n2$2;
+function bitNotNumber(x) {
+	if (!isInteger$1(x)) throw new Error("Integer expected in function bitNot");
+	return ~x;
+}
+bitNotNumber.signature = n1$3;
+function bitOrNumber(x, y) {
+	if (!isInteger$1(x) || !isInteger$1(y)) throw new Error("Integers expected in function bitOr");
+	return x | y;
+}
+bitOrNumber.signature = n2$2;
+function bitXorNumber(x, y) {
+	if (!isInteger$1(x) || !isInteger$1(y)) throw new Error("Integers expected in function bitXor");
+	return x ^ y;
+}
+bitXorNumber.signature = n2$2;
+function leftShiftNumber(x, y) {
+	if (!isInteger$1(x) || !isInteger$1(y)) throw new Error("Integers expected in function leftShift");
+	return x << y;
+}
+leftShiftNumber.signature = n2$2;
+function rightArithShiftNumber(x, y) {
+	if (!isInteger$1(x) || !isInteger$1(y)) throw new Error("Integers expected in function rightArithShift");
+	return x >> y;
+}
+rightArithShiftNumber.signature = n2$2;
+function rightLogShiftNumber(x, y) {
+	if (!isInteger$1(x) || !isInteger$1(y)) throw new Error("Integers expected in function rightLogShift");
+	return x >>> y;
+}
+rightLogShiftNumber.signature = n2$2;
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/product.js
+/** @param {number} i
+*  @param {number} n
+*  @returns {number} product of i to n
+*/
+function product$1(i, n) {
+	if (n < i) return 1;
+	if (n === i) return n;
+	var half = n + i >> 1;
+	return product$1(i, half) * product$1(half + 1, n);
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/plain/number/combinations.js
+function combinationsNumber(n, k) {
+	if (!isInteger$1(n) || n < 0) throw new TypeError("Positive integer value expected in function combinations");
+	if (!isInteger$1(k) || k < 0) throw new TypeError("Positive integer value expected in function combinations");
+	if (k > n) throw new TypeError("k must be less than or equal to n");
+	var nMinusk = n - k;
+	var answer = 1;
+	var firstnumerator = k < nMinusk ? nMinusk + 1 : k + 1;
+	var nextdivisor = 2;
+	var lastdivisor = k < nMinusk ? k : nMinusk;
+	for (var nextnumerator = firstnumerator; nextnumerator <= n; ++nextnumerator) {
+		answer *= nextnumerator;
+		while (nextdivisor <= lastdivisor && answer % nextdivisor === 0) {
+			answer /= nextdivisor;
+			++nextdivisor;
+		}
+	}
+	if (nextdivisor <= lastdivisor) answer /= product$1(nextdivisor, lastdivisor);
+	return answer;
+}
+combinationsNumber.signature = "number, number";
+//#endregion
+//#region node_modules/mathjs/lib/esm/plain/number/constants.js
+var pi$1 = Math.PI;
+var tau$1 = 2 * Math.PI;
+var e$1 = Math.E;
+var phi$1 = 1.618033988749895;
+//#endregion
+//#region node_modules/mathjs/lib/esm/plain/number/logical.js
+var n1$2 = "number";
+var n2$1 = "number, number";
+function notNumber(x) {
+	return !x;
+}
+notNumber.signature = n1$2;
+function orNumber(x, y) {
+	return !!(x || y);
+}
+orNumber.signature = n2$1;
+function xorNumber(x, y) {
+	return !!x !== !!y;
+}
+xorNumber.signature = n2$1;
+function andNumber(x, y) {
+	return !!(x && y);
+}
+andNumber.signature = n2$1;
+//#endregion
+//#region node_modules/mathjs/lib/esm/plain/number/probability.js
+function gammaNumber(n) {
+	var x;
+	if (isInteger$1(n)) {
+		if (n <= 0) return Number.isFinite(n) ? Infinity : NaN;
+		if (n > 171) return Infinity;
+		return product$1(1, n - 1);
+	}
+	if (n < .5) return Math.PI / (Math.sin(Math.PI * n) * gammaNumber(1 - n));
+	if (n >= 171.35) return Infinity;
+	if (n > 85) {
+		var twoN = n * n;
+		var threeN = twoN * n;
+		var fourN = threeN * n;
+		var fiveN = fourN * n;
+		return Math.sqrt(2 * Math.PI / n) * Math.pow(n / Math.E, n) * (1 + 1 / (12 * n) + 1 / (288 * twoN) - 139 / (51840 * threeN) - 571 / (2488320 * fourN) + 163879 / (209018880 * fiveN) + 5246819 / (75246796800 * fiveN * n));
+	}
+	--n;
+	x = gammaP[0];
+	for (var i = 1; i < gammaP.length; ++i) x += gammaP[i] / (n + i);
+	var t = n + gammaG + .5;
+	return Math.sqrt(2 * Math.PI) * Math.pow(t, n + .5) * Math.exp(-t) * x;
+}
+gammaNumber.signature = "number";
+var gammaG = 4.7421875;
+var gammaP = [
+	.9999999999999971,
+	57.15623566586292,
+	-59.59796035547549,
+	14.136097974741746,
+	-.4919138160976202,
+	3399464998481189e-20,
+	4652362892704858e-20,
+	-9837447530487956e-20,
+	.0001580887032249125,
+	-.00021026444172410488,
+	.00021743961811521265,
+	-.0001643181065367639,
+	8441822398385275e-20,
+	-26190838401581408e-21,
+	36899182659531625e-22
+];
+var lnSqrt2PI = .9189385332046728;
+var lgammaSeries = [
+	1.000000000190015,
+	76.18009172947146,
+	-86.50532032941678,
+	24.01409824083091,
+	-1.231739572450155,
+	.001208650973866179,
+	-5395239384953e-18
+];
+function lgammaNumber(n) {
+	if (n < 0) return NaN;
+	if (n === 0) return Infinity;
+	if (!Number.isFinite(n)) return n;
+	if (n < .5) return Math.log(Math.PI / Math.sin(Math.PI * n)) - lgammaNumber(1 - n);
+	n = n - 1;
+	var base = n + 5 + .5;
+	var sum = lgammaSeries[0];
+	for (var i = 6; i >= 1; i--) sum += lgammaSeries[i] / (n + i);
+	return lnSqrt2PI + (n + .5) * Math.log(base) - base + Math.log(sum);
+}
+lgammaNumber.signature = "number";
+//#endregion
+//#region node_modules/mathjs/lib/esm/plain/number/trigonometry.js
+var n1$1 = "number";
+var n2 = "number, number";
+function acosNumber(x) {
+	return Math.acos(x);
+}
+acosNumber.signature = n1$1;
+function acoshNumber(x) {
+	return acosh$2(x);
+}
+acoshNumber.signature = n1$1;
+function acotNumber(x) {
+	return Math.atan(1 / x);
+}
+acotNumber.signature = n1$1;
+function acothNumber(x) {
+	return Number.isFinite(x) ? (Math.log((x + 1) / x) + Math.log(x / (x - 1))) / 2 : 0;
+}
+acothNumber.signature = n1$1;
+function acscNumber(x) {
+	return Math.asin(1 / x);
+}
+acscNumber.signature = n1$1;
+function acschNumber(x) {
+	var xInv = 1 / x;
+	return Math.log(xInv + Math.sqrt(xInv * xInv + 1));
+}
+acschNumber.signature = n1$1;
+function asecNumber(x) {
+	return Math.acos(1 / x);
+}
+asecNumber.signature = n1$1;
+function asechNumber(x) {
+	var xInv = 1 / x;
+	var ret = Math.sqrt(xInv * xInv - 1);
+	return Math.log(ret + xInv);
+}
+asechNumber.signature = n1$1;
+function asinNumber(x) {
+	return Math.asin(x);
+}
+asinNumber.signature = n1$1;
+function asinhNumber(x) {
+	return asinh$2(x);
+}
+asinhNumber.signature = n1$1;
+function atanNumber(x) {
+	return Math.atan(x);
+}
+atanNumber.signature = n1$1;
+function atan2Number(y, x) {
+	return Math.atan2(y, x);
+}
+atan2Number.signature = n2;
+function atanhNumber(x) {
+	return atanh$2(x);
+}
+atanhNumber.signature = n1$1;
+function cosNumber(x) {
+	return Math.cos(x);
+}
+cosNumber.signature = n1$1;
+function coshNumber(x) {
+	return cosh$2(x);
+}
+coshNumber.signature = n1$1;
+function cotNumber(x) {
+	return 1 / Math.tan(x);
+}
+cotNumber.signature = n1$1;
+function cothNumber(x) {
+	var e = Math.exp(2 * x);
+	return (e + 1) / (e - 1);
+}
+cothNumber.signature = n1$1;
+function cscNumber(x) {
+	return 1 / Math.sin(x);
+}
+cscNumber.signature = n1$1;
+function cschNumber(x) {
+	if (x === 0) return Number.POSITIVE_INFINITY;
+	else return Math.abs(2 / (Math.exp(x) - Math.exp(-x))) * sign$2(x);
+}
+cschNumber.signature = n1$1;
+function secNumber(x) {
+	return 1 / Math.cos(x);
+}
+secNumber.signature = n1$1;
+function sechNumber(x) {
+	return 2 / (Math.exp(x) + Math.exp(-x));
+}
+sechNumber.signature = n1$1;
+function sinNumber(x) {
+	return Math.sin(x);
+}
+sinNumber.signature = n1$1;
+function sinhNumber(x) {
+	return sinh$2(x);
+}
+sinhNumber.signature = n1$1;
+function tanNumber(x) {
+	return Math.tan(x);
+}
+tanNumber.signature = n1$1;
+function tanhNumber(x) {
+	return tanh$2(x);
+}
+tanhNumber.signature = n1$1;
+//#endregion
+//#region node_modules/mathjs/lib/esm/plain/number/utils.js
+var n1 = "number";
+function isIntegerNumber(x) {
+	return isInteger$1(x);
+}
+isIntegerNumber.signature = n1;
+function isNegativeNumber(x) {
+	return x < 0;
+}
+isNegativeNumber.signature = n1;
+function isPositiveNumber(x) {
+	return x > 0;
+}
+isPositiveNumber.signature = n1;
+function isZeroNumber(x) {
+	return x === 0;
+}
+isZeroNumber.signature = n1;
+function isNaNNumber(x) {
+	return Number.isNaN(x);
+}
+isNaNNumber.signature = n1;
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/factory.js
+/**
+* Create a factory function, which can be used to inject dependencies.
+*
+* The created functions are memoized, a consecutive call of the factory
+* with the exact same inputs will return the same function instance.
+* The memoized cache is exposed on `factory.cache` and can be cleared
+* if needed.
+*
+* Example:
+*
+*     const name = 'log'
+*     const dependencies = ['config', 'typed', 'divideScalar', 'Complex']
+*
+*     export const createLog = factory(name, dependencies, ({ typed, config, divideScalar, Complex }) => {
+*       // ... create the function log here and return it
+*     }
+*
+* @param {string} name           Name of the function to be created
+* @param {string[]} dependencies The names of all required dependencies
+* @param {function} create       Callback function called with an object with all dependencies
+* @param {Object} [meta]
+*     Optional object with meta information that will be attached
+*     to the created factory function as property `meta`. For explanation
+*     of what meta properties can be specified and what they mean, see
+*     docs/core/extension.md.
+* @returns {function}
+*/
+function factory(name, dependencies, create, meta) {
+	function assertAndCreate(scope) {
+		var deps = pickShallow(scope, dependencies.map(stripOptionalNotation));
+		assertDependencies(name, dependencies, scope);
+		return create(deps);
+	}
+	assertAndCreate.isFactory = true;
+	assertAndCreate.fn = name;
+	assertAndCreate.dependencies = dependencies.slice().sort();
+	if (meta) assertAndCreate.meta = meta;
+	return assertAndCreate;
+}
+/**
+* Assert that all dependencies of a list with dependencies are available in the provided scope.
+*
+* Will throw an exception when there are dependencies missing.
+*
+* @param {string} name   Name for the function to be created. Used to generate a useful error message
+* @param {string[]} dependencies
+* @param {Object} scope
+*/
+function assertDependencies(name, dependencies, scope) {
+	if (!dependencies.filter((dependency) => !isOptionalDependency(dependency)).every((dependency) => scope[dependency] !== void 0)) {
+		var missingDependencies = dependencies.filter((dependency) => scope[dependency] === void 0);
+		throw new Error("Cannot create function \"".concat(name, "\", ") + "some dependencies are missing: ".concat(missingDependencies.map((d) => "\"".concat(d, "\"")).join(", "), "."));
+	}
+}
+function isOptionalDependency(dependency) {
+	return dependency && dependency[0] === "?";
+}
+function stripOptionalNotation(dependency) {
+	return dependency && dependency[0] === "?" ? dependency.slice(1) : dependency;
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/noop.js
+function noBignumber() {
+	throw new Error("No \"bignumber\" implementation available");
+}
+function noFraction() {
+	throw new Error("No \"fraction\" implementation available");
+}
+function noMatrix() {
+	throw new Error("No \"matrix\" implementation available");
+}
+function noIndex() {
+	throw new Error("No \"index\" implementation available");
+}
+function noSubset() {
+	throw new Error("No \"matrix\" implementation available");
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/core/function/typed.js
+var import_typed_function = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
+	(function(global, factory) {
+		typeof exports === "object" && typeof module !== "undefined" ? module.exports = factory() : typeof define === "function" && define.amd ? define(factory) : (global = typeof globalThis !== "undefined" ? globalThis : global || self, global.typed = factory());
+	})(exports, (function() {
+		"use strict";
+		function ok() {
+			return true;
+		}
+		function notOk() {
+			return false;
+		}
+		function undef() {}
+		const NOT_TYPED_FUNCTION = "Argument is not a typed-function.";
+		/**
+		* @typedef {{
+		*   params: Param[],
+		*   fn: function,
+		*   test: function,
+		*   implementation: function
+		* }} Signature
+		*
+		* @typedef {{
+		*   types: Type[],
+		*   hasAny: boolean,
+		*   hasConversion: boolean,
+		*   restParam: boolean
+		* }} Param
+		*
+		* @typedef {{
+		*   name: string,
+		*   typeIndex: number,
+		*   test: function,
+		*   isAny: boolean,
+		*   conversion?: ConversionDef,
+		*   conversionIndex: number,
+		* }} Type
+		*
+		* @typedef {{
+		*   from: string,
+		*   to: string,
+		*   convert: function (*) : *
+		* }} ConversionDef
+		*
+		* @typedef {{
+		*   name: string,
+		*   test: function(*) : boolean,
+		*   isAny?: boolean
+		* }} TypeDef
+		*/
+		/**
+		* @returns {() => function}
+		*/
+		function create() {
+			/**
+			* Returns true if the argument is a non-null "plain" object
+			*/
+			function isPlainObject(x) {
+				return typeof x === "object" && x !== null && x.constructor === Object;
+			}
+			const _types = [
+				{
+					name: "number",
+					test: function(x) {
+						return typeof x === "number";
+					}
+				},
+				{
+					name: "string",
+					test: function(x) {
+						return typeof x === "string";
+					}
+				},
+				{
+					name: "boolean",
+					test: function(x) {
+						return typeof x === "boolean";
+					}
+				},
+				{
+					name: "Function",
+					test: function(x) {
+						return typeof x === "function";
+					}
+				},
+				{
+					name: "Array",
+					test: Array.isArray
+				},
+				{
+					name: "Date",
+					test: function(x) {
+						return x instanceof Date;
+					}
+				},
+				{
+					name: "RegExp",
+					test: function(x) {
+						return x instanceof RegExp;
+					}
+				},
+				{
+					name: "Object",
+					test: isPlainObject
+				},
+				{
+					name: "null",
+					test: function(x) {
+						return x === null;
+					}
+				},
+				{
+					name: "undefined",
+					test: function(x) {
+						return x === void 0;
+					}
+				}
+			];
+			const anyType = {
+				name: "any",
+				test: ok,
+				isAny: true
+			};
+			let typeMap;
+			let typeList;
+			let nConversions = 0;
+			let typed = { createCount: 0 };
+			/**
+			* Takes a type name and returns the corresponding official type object
+			* for that type.
+			*
+			* @param {string} typeName
+			* @returns {TypeDef} type
+			*/
+			function findType(typeName) {
+				const type = typeMap.get(typeName);
+				if (type) return type;
+				let message = "Unknown type \"" + typeName + "\"";
+				const name = typeName.toLowerCase();
+				let otherName;
+				for (otherName of typeList) if (otherName.toLowerCase() === name) {
+					message += ". Did you mean \"" + otherName + "\" ?";
+					break;
+				}
+				throw new TypeError(message);
+			}
+			/**
+			* Adds an array `types` of type definitions to this typed instance.
+			* Each type definition should be an object with properties:
+			* 'name' - a string giving the name of the type; 'test' - function
+			* returning a boolean that tests membership in the type; and optionally
+			* 'isAny' - true only for the 'any' type.
+			*
+			* The second optional argument, `before`, gives the name of a type that
+			* these types should be added before. The new types are added in the
+			* order specified.
+			* @param {TypeDef[]} types
+			* @param {string | boolean} [beforeSpec='any'] before
+			*/
+			function addTypes(types) {
+				let beforeSpec = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : "any";
+				const beforeIndex = beforeSpec ? findType(beforeSpec).index : typeList.length;
+				const newTypes = [];
+				for (let i = 0; i < types.length; ++i) {
+					if (!types[i] || typeof types[i].name !== "string" || typeof types[i].test !== "function") throw new TypeError("Object with properties {name: string, test: function} expected");
+					const typeName = types[i].name;
+					if (typeMap.has(typeName)) throw new TypeError("Duplicate type name \"" + typeName + "\"");
+					newTypes.push(typeName);
+					typeMap.set(typeName, {
+						name: typeName,
+						test: types[i].test,
+						isAny: types[i].isAny,
+						index: beforeIndex + i,
+						conversionsTo: []
+					});
+				}
+				const affectedTypes = typeList.slice(beforeIndex);
+				typeList = typeList.slice(0, beforeIndex).concat(newTypes).concat(affectedTypes);
+				for (let i = beforeIndex + newTypes.length; i < typeList.length; ++i) typeMap.get(typeList[i]).index = i;
+			}
+			/**
+			* Removes all types and conversions from this typed instance.
+			* May cause previously constructed typed-functions to throw
+			* strange errors when they are called with types that do not
+			* match any of their signatures.
+			*/
+			function clear() {
+				typeMap = /* @__PURE__ */ new Map();
+				typeList = [];
+				nConversions = 0;
+				addTypes([anyType], false);
+			}
+			clear();
+			addTypes(_types);
+			/**
+			* Removes all conversions, leaving the types alone.
+			*/
+			function clearConversions() {
+				let typeName;
+				for (typeName of typeList) typeMap.get(typeName).conversionsTo = [];
+				nConversions = 0;
+			}
+			/**
+			* Find the type names that match a value.
+			* @param {*} value
+			* @return {string[]} Array of names of types for which
+			*                  the type test matches the value.
+			*/
+			function findTypeNames(value) {
+				const matches = typeList.filter((name) => {
+					const type = typeMap.get(name);
+					return !type.isAny && type.test(value);
+				});
+				if (matches.length) return matches;
+				return ["any"];
+			}
+			/**
+			* Check if an entity is a typed function created by any instance
+			* @param {any} entity
+			* @returns {boolean}
+			*/
+			function isTypedFunction(entity) {
+				return entity && typeof entity === "function" && "_typedFunctionData" in entity;
+			}
+			/**
+			* Find a specific signature from a (composed) typed function, for example:
+			*
+			*   typed.findSignature(fn, ['number', 'string'])
+			*   typed.findSignature(fn, 'number, string')
+			*   typed.findSignature(fn, 'number,string', {exact: true})
+			*
+			* This function findSignature will by default return the best match to
+			* the given signature, possibly employing type conversions.
+			*
+			* The (optional) third argument is a plain object giving options
+			* controlling the signature search. Currently the only implemented
+			* option is `exact`: if specified as true (default is false), only
+			* exact matches will be returned (i.e. signatures for which `fn` was
+			* directly defined). Note that a (possibly different) type matching
+			* `any`, or one or more instances of TYPE matching `...TYPE` are
+			* considered exact matches in this regard, as no conversions are used.
+			*
+			* This function returns a "signature" object, as does `typed.resolve()`,
+			* which is a plain object with four keys: `params` (the array of parameters
+			* for this signature), `fn` (the originally supplied function for this
+			* signature), `test` (a generated function that determines if an argument
+			* list matches this signature, and `implementation` (the function to call
+			* on a matching argument list, that performs conversions if necessary and
+			* then calls the originally supplied function).
+			*
+			* @param {Function} fn                   A typed-function
+			* @param {string | string[]} signature
+			*     Signature to be found, can be an array or a comma separated string.
+			* @param {object} options  Controls the signature search as documented
+			* @return {{ params: Param[], fn: function, test: function, implementation: function }}
+			*     Returns the matching signature, or throws an error when no signature
+			*     is found.
+			*/
+			function findSignature(fn, signature, options) {
+				if (!isTypedFunction(fn)) throw new TypeError(NOT_TYPED_FUNCTION);
+				const exact = options && options.exact;
+				const params = parseSignature(Array.isArray(signature) ? signature.join(",") : signature);
+				const canonicalSignature = stringifyParams(params);
+				if (!exact || canonicalSignature in fn.signatures) {
+					const match = fn._typedFunctionData.signatureMap.get(canonicalSignature);
+					if (match) return match;
+				}
+				const nParams = params.length;
+				let remainingSignatures;
+				if (exact) {
+					remainingSignatures = [];
+					let name;
+					for (name in fn.signatures) remainingSignatures.push(fn._typedFunctionData.signatureMap.get(name));
+				} else remainingSignatures = fn._typedFunctionData.signatures;
+				for (let i = 0; i < nParams; ++i) {
+					const want = params[i];
+					const filteredSignatures = [];
+					let possibility;
+					for (possibility of remainingSignatures) {
+						const have = getParamAtIndex(possibility.params, i);
+						if (!have || want.restParam && !have.restParam) continue;
+						if (!have.hasAny) {
+							const haveTypes = paramTypeSet(have);
+							if (want.types.some((wtype) => !haveTypes.has(wtype.name))) continue;
+						}
+						filteredSignatures.push(possibility);
+					}
+					remainingSignatures = filteredSignatures;
+					if (remainingSignatures.length === 0) break;
+				}
+				let candidate;
+				for (candidate of remainingSignatures) if (candidate.params.length <= nParams) return candidate;
+				throw new TypeError("Signature not found (signature: " + (fn.name || "unnamed") + "(" + stringifyParams(params, ", ") + "))");
+			}
+			/**
+			* Find the proper function to call for a specific signature from
+			* a (composed) typed function, for example:
+			*
+			*   typed.find(fn, ['number', 'string'])
+			*   typed.find(fn, 'number, string')
+			*   typed.find(fn, 'number,string', {exact: true})
+			*
+			* This function find will by default return the best match to
+			* the given signature, possibly employing type conversions (and returning
+			* a function that will perform those conversions as needed). The
+			* (optional) third argument is a plain object giving options contolling
+			* the signature search. Currently only the option `exact` is implemented,
+			* which defaults to "false". If `exact` is specified as true, then only
+			* exact matches will be returned (i.e. signatures for which `fn` was
+			* directly defined). Uses of `any` and `...TYPE` are considered exact if
+			* no conversions are necessary to apply the corresponding function.
+			*
+			* @param {Function} fn                   A typed-function
+			* @param {string | string[]} signature
+			*     Signature to be found, can be an array or a comma separated string.
+			* @param {object} options  Controls the signature match as documented
+			* @return {function}
+			*     Returns the function to call for the given signature, or throws an
+			*     error if no match is found.
+			*/
+			function find(fn, signature, options) {
+				return findSignature(fn, signature, options).implementation;
+			}
+			/**
+			* Convert a given value to another data type, specified by type name.
+			*
+			* @param {*} value
+			* @param {string} typeName
+			*/
+			function convert(value, typeName) {
+				const type = findType(typeName);
+				if (type.test(value)) return value;
+				const conversions = type.conversionsTo;
+				if (conversions.length === 0) throw new Error("There are no conversions to " + typeName + " defined.");
+				for (let i = 0; i < conversions.length; i++) if (findType(conversions[i].from).test(value)) return conversions[i].convert(value);
+				throw new Error("Cannot convert " + value + " to " + typeName);
+			}
+			/**
+			* Stringify parameters in a normalized way
+			* @param {Param[]} params
+			* @param {string} [','] separator
+			* @return {string}
+			*/
+			function stringifyParams(params) {
+				let separator = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : ",";
+				return params.map((p) => p.name).join(separator);
+			}
+			/**
+			* Parse a parameter, like "...number | boolean"
+			* @param {string} param
+			* @return {Param} param
+			*/
+			function parseParam(param) {
+				const restParam = param.indexOf("...") === 0;
+				const typeDefs = (!restParam ? param : param.length > 3 ? param.slice(3) : "any").split("|").map((s) => findType(s.trim()));
+				let hasAny = false;
+				let paramName = restParam ? "..." : "";
+				return {
+					types: typeDefs.map(function(type) {
+						hasAny = type.isAny || hasAny;
+						paramName += type.name + "|";
+						return {
+							name: type.name,
+							typeIndex: type.index,
+							test: type.test,
+							isAny: type.isAny,
+							conversion: null,
+							conversionIndex: -1
+						};
+					}),
+					name: paramName.slice(0, -1),
+					hasAny,
+					hasConversion: false,
+					restParam
+				};
+			}
+			/**
+			* Expands a parsed parameter with the types available from currently
+			* defined conversions.
+			* @param {Param} param
+			* @return {Param} param
+			*/
+			function expandParam(param) {
+				const matchingConversions = availableConversions(param.types.map((t) => t.name));
+				let hasAny = param.hasAny;
+				let newName = param.name;
+				const convertibleTypes = matchingConversions.map(function(conversion) {
+					const type = findType(conversion.from);
+					hasAny = type.isAny || hasAny;
+					newName += "|" + conversion.from;
+					return {
+						name: conversion.from,
+						typeIndex: type.index,
+						test: type.test,
+						isAny: type.isAny,
+						conversion,
+						conversionIndex: conversion.index
+					};
+				});
+				return {
+					types: param.types.concat(convertibleTypes),
+					name: newName,
+					hasAny,
+					hasConversion: convertibleTypes.length > 0,
+					restParam: param.restParam
+				};
+			}
+			/**
+			* Return the set of type names in a parameter.
+			* Caches the result for efficiency
+			*
+			* @param {Param} param
+			* @return {Set<string>} typenames
+			*/
+			function paramTypeSet(param) {
+				if (!param.typeSet) {
+					param.typeSet = /* @__PURE__ */ new Set();
+					param.types.forEach((type) => param.typeSet.add(type.name));
+				}
+				return param.typeSet;
+			}
+			/**
+			* Parse a signature with comma separated parameters,
+			* like "number | boolean, ...string"
+			*
+			* @param {string} signature
+			* @return {Param[]} params
+			*/
+			function parseSignature(rawSignature) {
+				const params = [];
+				if (typeof rawSignature !== "string") throw new TypeError("Signatures must be strings");
+				const signature = rawSignature.trim();
+				if (signature === "") return params;
+				const rawParams = signature.split(",");
+				for (let i = 0; i < rawParams.length; ++i) {
+					const parsedParam = parseParam(rawParams[i].trim());
+					if (parsedParam.restParam && i !== rawParams.length - 1) throw new SyntaxError("Unexpected rest parameter \"" + rawParams[i] + "\": only allowed for the last parameter");
+					if (parsedParam.types.length === 0) return null;
+					params.push(parsedParam);
+				}
+				return params;
+			}
+			/**
+			* Test whether a set of params contains a restParam
+			* @param {Param[]} params
+			* @return {boolean} Returns true when the last parameter is a restParam
+			*/
+			function hasRestParam(params) {
+				const param = last(params);
+				return param ? param.restParam : false;
+			}
+			/**
+			* Create a type test for a single parameter, which can have one or multiple
+			* types.
+			* @param {Param} param
+			* @return {function(x: *) : boolean} Returns a test function
+			*/
+			function compileTest(param) {
+				if (!param || param.types.length === 0) return ok;
+				else if (param.types.length === 1) return findType(param.types[0].name).test;
+				else if (param.types.length === 2) {
+					const test0 = findType(param.types[0].name).test;
+					const test1 = findType(param.types[1].name).test;
+					return function or(x) {
+						return test0(x) || test1(x);
+					};
+				} else {
+					const tests = param.types.map(function(type) {
+						return findType(type.name).test;
+					});
+					return function or(x) {
+						for (let i = 0; i < tests.length; i++) if (tests[i](x)) return true;
+						return false;
+					};
+				}
+			}
+			/**
+			* Create a test for all parameters of a signature
+			* @param {Param[]} params
+			* @return {function(args: Array<*>) : boolean}
+			*/
+			function compileTests(params) {
+				let tests, test0, test1;
+				if (hasRestParam(params)) {
+					tests = initial(params).map(compileTest);
+					const varIndex = tests.length;
+					const lastTest = compileTest(last(params));
+					const testRestParam = function(args) {
+						for (let i = varIndex; i < args.length; i++) if (!lastTest(args[i])) return false;
+						return true;
+					};
+					return function testArgs(args) {
+						for (let i = 0; i < tests.length; i++) if (!tests[i](args[i])) return false;
+						return testRestParam(args) && args.length >= varIndex + 1;
+					};
+				} else if (params.length === 0) return function testArgs(args) {
+					return args.length === 0;
+				};
+				else if (params.length === 1) {
+					test0 = compileTest(params[0]);
+					return function testArgs(args) {
+						return test0(args[0]) && args.length === 1;
+					};
+				} else if (params.length === 2) {
+					test0 = compileTest(params[0]);
+					test1 = compileTest(params[1]);
+					return function testArgs(args) {
+						return test0(args[0]) && test1(args[1]) && args.length === 2;
+					};
+				} else {
+					tests = params.map(compileTest);
+					return function testArgs(args) {
+						for (let i = 0; i < tests.length; i++) if (!tests[i](args[i])) return false;
+						return args.length === tests.length;
+					};
+				}
+			}
+			/**
+			* Find the parameter at a specific index of a Params list.
+			* Handles rest parameters.
+			* @param {Param[]} params
+			* @param {number} index
+			* @return {Param | null} Returns the matching parameter when found,
+			*                        null otherwise.
+			*/
+			function getParamAtIndex(params, index) {
+				return index < params.length ? params[index] : hasRestParam(params) ? last(params) : null;
+			}
+			/**
+			* Get all type names of a parameter
+			* @param {Params[]} params
+			* @param {number} index
+			* @return {string[]} Returns an array with type names
+			*/
+			function getTypeSetAtIndex(params, index) {
+				const param = getParamAtIndex(params, index);
+				if (!param) return /* @__PURE__ */ new Set();
+				return paramTypeSet(param);
+			}
+			/**
+			* Test whether a type is an exact type or conversion
+			* @param {Type} type
+			* @return {boolean} Returns true when
+			*/
+			function isExactType(type) {
+				return type.conversion === null || type.conversion === void 0;
+			}
+			/**
+			* Helper function for creating error messages: create an array with
+			* all available types on a specific argument index.
+			* @param {Signature[]} signatures
+			* @param {number} index
+			* @return {string[]} Returns an array with available types
+			*/
+			function mergeExpectedParams(signatures, index) {
+				const typeSet = /* @__PURE__ */ new Set();
+				signatures.forEach((signature) => {
+					const paramSet = getTypeSetAtIndex(signature.params, index);
+					let name;
+					for (name of paramSet) typeSet.add(name);
+				});
+				return typeSet.has("any") ? ["any"] : Array.from(typeSet);
+			}
+			/**
+			* Create
+			* @param {string} name             The name of the function
+			* @param {array.<*>} args          The actual arguments passed to the function
+			* @param {Signature[]} signatures  A list with available signatures
+			* @return {TypeError} Returns a type error with additional data
+			*                     attached to it in the property `data`
+			*/
+			function createError(name, args, signatures) {
+				let err, expected;
+				const _name = name || "unnamed";
+				let matchingSignatures = signatures;
+				let index;
+				for (index = 0; index < args.length; index++) {
+					const nextMatchingDefs = [];
+					matchingSignatures.forEach((signature) => {
+						const test = compileTest(getParamAtIndex(signature.params, index));
+						if ((index < signature.params.length || hasRestParam(signature.params)) && test(args[index])) nextMatchingDefs.push(signature);
+					});
+					if (nextMatchingDefs.length === 0) {
+						expected = mergeExpectedParams(matchingSignatures, index);
+						if (expected.length > 0) {
+							const actualTypes = findTypeNames(args[index]);
+							err = /* @__PURE__ */ new TypeError("Unexpected type of argument in function " + _name + " (expected: " + expected.join(" or ") + ", actual: " + actualTypes.join(" | ") + ", index: " + index + ")");
+							err.data = {
+								category: "wrongType",
+								fn: _name,
+								index,
+								actual: actualTypes,
+								expected
+							};
+							return err;
+						}
+					} else matchingSignatures = nextMatchingDefs;
+				}
+				const lengths = matchingSignatures.map(function(signature) {
+					return hasRestParam(signature.params) ? Infinity : signature.params.length;
+				});
+				if (args.length < Math.min.apply(null, lengths)) {
+					expected = mergeExpectedParams(matchingSignatures, index);
+					err = /* @__PURE__ */ new TypeError("Too few arguments in function " + _name + " (expected: " + expected.join(" or ") + ", index: " + args.length + ")");
+					err.data = {
+						category: "tooFewArgs",
+						fn: _name,
+						index: args.length,
+						expected
+					};
+					return err;
+				}
+				const maxLength = Math.max.apply(null, lengths);
+				if (args.length > maxLength) {
+					err = /* @__PURE__ */ new TypeError("Too many arguments in function " + _name + " (expected: " + maxLength + ", actual: " + args.length + ")");
+					err.data = {
+						category: "tooManyArgs",
+						fn: _name,
+						index: args.length,
+						expectedLength: maxLength
+					};
+					return err;
+				}
+				const argTypes = [];
+				for (let i = 0; i < args.length; ++i) argTypes.push(findTypeNames(args[i]).join("|"));
+				err = /* @__PURE__ */ new TypeError("Arguments of type \"" + argTypes.join(", ") + "\" do not match any of the defined signatures of function " + _name + ".");
+				err.data = {
+					category: "mismatch",
+					actual: argTypes
+				};
+				return err;
+			}
+			/**
+			* Find the lowest index of all types of a parameter
+			* @param {Param} param
+			* @return {number} Returns the index of the lowest type in typed.types
+			*/
+			function getLowestTypeIndex(param) {
+				let min = typeList.length + 1;
+				for (let i = 0; i < param.types.length; i++) min = Math.min(min, param.types[i].typeIndex);
+				return min;
+			}
+			/**
+			* Find the lowest index of the conversion of all types of the parameter
+			* having a conversion
+			* @param {Param} param
+			* @return {number} Returns the lowest index of the conversions of this type
+			*/
+			function getLowestConversionIndex(param) {
+				let min = nConversions + 1;
+				for (let i = 0; i < param.types.length; i++) if (!isExactType(param.types[i])) min = Math.min(min, param.types[i].conversionIndex);
+				return min;
+			}
+			/**
+			* Compare two params. The return value is a number that is
+			* negative when param1 should be considered first, positive
+			* when param2 should be considered first, and zero when the
+			* params are indistinguishable. Primarily as a debugging aid,
+			* the value is always less than one in absolute value, and
+			* a smaller absolute value indicates a less important distinction
+			* between the parameters.
+			* @param {Param} param1
+			* @param {Param} param2
+			* @return {number} negative, positive, or zero depending on whether
+			*                  param1 should be ordered before, after, or equivalently
+			*                  to param2
+			*/
+			function compareParams(param1, param2) {
+				if (param1.hasAny) {
+					if (!param2.hasAny) return .1;
+				} else if (param2.hasAny) return -.1;
+				if (param1.restParam) {
+					if (!param2.restParam) return .01;
+				} else if (param2.restParam) return -.01;
+				const typeDiff = getLowestTypeIndex(param1) - getLowestTypeIndex(param2);
+				if (typeDiff < 0) return -.001;
+				if (typeDiff > 0) return .001;
+				const conv1 = getLowestConversionIndex(param1);
+				const conv2 = getLowestConversionIndex(param2);
+				if (param1.hasConversion) {
+					if (!param2.hasConversion) return (1 + conv1) * 1e-6;
+				} else if (param2.hasConversion) return -(1 + conv2) * 1e-6;
+				const convDiff = conv1 - conv2;
+				if (convDiff < 0) return -1e-7;
+				if (convDiff > 0) return 1e-7;
+				return 0;
+			}
+			/**
+			* Compare two signatures. The result is a number that is negative
+			* when the first signature should be preferred to the second, positive
+			* when the second signature should be preferred, and zero in case the
+			* two signatures are essentially equivalent. Primarily as a debugging
+			* aid, a larger absolute value indicates a more "important" difference.
+			*
+			* @param {Signature} signature1
+			* @param {Signature} signature2
+			* @return {number} returns a negative number when signature1 must get a
+			*                  lower index than signature2, a positive number when the
+			*                  opposite holds, or zero when both are equivalent.
+			*/
+			function compareSignatures(signature1, signature2) {
+				const pars1 = signature1.params;
+				const pars2 = signature2.params;
+				const last1 = last(pars1);
+				const last2 = last(pars2);
+				const hasRest1 = hasRestParam(pars1);
+				const hasRest2 = hasRestParam(pars2);
+				if (hasRest1 && last1.hasAny) {
+					if (!hasRest2 || !last2.hasAny) return 1e7;
+				} else if (hasRest2 && last2.hasAny) return -1e7;
+				let any1 = 0;
+				let conv1 = 0;
+				let par;
+				for (par of pars1) {
+					if (par.hasAny) ++any1;
+					if (par.hasConversion) ++conv1;
+				}
+				let any2 = 0;
+				let conv2 = 0;
+				for (par of pars2) {
+					if (par.hasAny) ++any2;
+					if (par.hasConversion) ++conv2;
+				}
+				if (any1 !== any2) return (any1 - any2) * 1e6;
+				if (hasRest1 && last1.hasConversion) {
+					if (!hasRest2 || !last2.hasConversion) return 1e5;
+				} else if (hasRest2 && last2.hasConversion) return -1e5;
+				if (conv1 !== conv2) return (conv1 - conv2) * 1e4;
+				if (hasRest1) {
+					if (!hasRest2) return 1e3;
+				} else if (hasRest2) return -1e3;
+				const lengthCriterion = (pars1.length - pars2.length) * (hasRest1 ? -100 : 100);
+				if (lengthCriterion !== 0) return lengthCriterion;
+				const comparisons = [];
+				let tc = 0;
+				for (let i = 0; i < pars1.length; ++i) {
+					const thisComparison = compareParams(pars1[i], pars2[i]);
+					comparisons.push(thisComparison);
+					tc += thisComparison;
+				}
+				if (tc !== 0) return (tc < 0 ? -10 : 10) + tc;
+				let c;
+				let bonus = 9;
+				const decrement = bonus / (comparisons.length + 1);
+				for (c of comparisons) {
+					if (c !== 0) return (c < 0 ? -bonus : bonus) + c;
+					bonus -= decrement;
+				}
+				return 0;
+			}
+			/**
+			* Produce a list of all conversions from distinct types to one of
+			* the given types.
+			*
+			* @param {string[]} typeNames
+			* @return {ConversionDef[]} Returns the conversions that are available
+			*                        resulting in any given type (if any)
+			*/
+			function availableConversions(typeNames) {
+				if (typeNames.length === 0) return [];
+				const types = typeNames.map(findType);
+				if (typeNames.length === 1) return types[0].conversionsTo;
+				const knownTypes = new Set(typeNames);
+				const convertibleTypes = /* @__PURE__ */ new Set();
+				for (let i = 0; i < types.length; ++i) for (const match of types[i].conversionsTo) if (!knownTypes.has(match.from)) convertibleTypes.add(match.from);
+				const matches = [];
+				for (const typeName of convertibleTypes) {
+					let bestIndex = nConversions + 1;
+					let bestConversion = null;
+					for (let i = 0; i < types.length; ++i) for (const match of types[i].conversionsTo) if (match.from === typeName && match.index < bestIndex) {
+						bestIndex = match.index;
+						bestConversion = match;
+					}
+					matches.push(bestConversion);
+				}
+				return matches;
+			}
+			/**
+			* Preprocess arguments before calling the original function:
+			* - if needed convert the parameters
+			* - in case of rest parameters, move the rest parameters into an Array
+			* @param {Param[]} params
+			* @param {function} fn
+			* @return {function} Returns fn or a wrapped function if needed. If it
+			*                    has conversions, the function will be named to indicate
+			*                    what conversions are occurring.
+			*/
+			function compileArgsPreprocessing(params, fn) {
+				let fnConvert = fn;
+				let name = "";
+				if (params.some((p) => p.hasConversion)) {
+					const restParam = hasRestParam(params);
+					const compiledConversions = params.map(compileArgConversion);
+					name = compiledConversions.map((conv) => conv.name).join(";");
+					fnConvert = function convertArgs() {
+						const args = [];
+						const last = restParam ? arguments.length - 1 : arguments.length;
+						for (let i = 0; i < last; i++) args[i] = compiledConversions[i](arguments[i]);
+						if (restParam) args[last] = arguments[last].map(compiledConversions[last]);
+						return fn.apply(this, args);
+					};
+				}
+				let fnPreprocess = fnConvert;
+				if (hasRestParam(params)) {
+					const offset = params.length - 1;
+					fnPreprocess = function preprocessRestParams() {
+						return fnConvert.apply(this, slice(arguments, 0, offset).concat([slice(arguments, offset)]));
+					};
+				}
+				if (name) Object.defineProperty(fnPreprocess, "name", { value: name });
+				return fnPreprocess;
+			}
+			/**
+			* Compile conversion for a parameter to the right type
+			* @param {Param} param
+			* @return {function} Returns the wrapped function that will convert arguments
+			*
+			*/
+			function compileArgConversion(param) {
+				let test0, test1, conversion0, conversion1;
+				const tests = [];
+				const conversions = [];
+				let name = "";
+				param.types.forEach(function(type) {
+					if (type.conversion) {
+						name += type.conversion.from + "~>" + type.conversion.to + ",";
+						tests.push(findType(type.conversion.from).test);
+						conversions.push(type.conversion.convert);
+					}
+				});
+				if (name) name = name.slice(0, -1);
+				else name = "pass";
+				let convertor = (arg) => arg;
+				switch (conversions.length) {
+					case 0: break;
+					case 1:
+						test0 = tests[0];
+						conversion0 = conversions[0];
+						convertor = function convertArg(arg) {
+							if (test0(arg)) return conversion0(arg);
+							return arg;
+						};
+						break;
+					case 2:
+						test0 = tests[0];
+						test1 = tests[1];
+						conversion0 = conversions[0];
+						conversion1 = conversions[1];
+						convertor = function convertArg(arg) {
+							if (test0(arg)) return conversion0(arg);
+							if (test1(arg)) return conversion1(arg);
+							return arg;
+						};
+						break;
+					default: convertor = function convertArg(arg) {
+						for (let i = 0; i < conversions.length; i++) if (tests[i](arg)) return conversions[i](arg);
+						return arg;
+					};
+				}
+				Object.defineProperty(convertor, "name", { value: name });
+				return convertor;
+			}
+			/**
+			* Split params with union types in to separate params.
+			*
+			* For example:
+			*
+			*     splitParams([['Array', 'Object'], ['string', 'RegExp'])
+			*     // returns:
+			*     // [
+			*     //   ['Array', 'string'],
+			*     //   ['Array', 'RegExp'],
+			*     //   ['Object', 'string'],
+			*     //   ['Object', 'RegExp']
+			*     // ]
+			*
+			* @param {Param[]} params
+			* @return {Param[]}
+			*/
+			function splitParams(params) {
+				function _splitParams(params, index, paramsSoFar) {
+					if (index < params.length) {
+						const param = params[index];
+						let resultingParams = [];
+						if (param.restParam) {
+							const exactTypes = param.types.filter(isExactType);
+							if (exactTypes.length < param.types.length) resultingParams.push({
+								types: exactTypes,
+								name: "..." + exactTypes.map((t) => t.name).join("|"),
+								hasAny: exactTypes.some((t) => t.isAny),
+								hasConversion: false,
+								restParam: true
+							});
+							resultingParams.push(param);
+						} else resultingParams = param.types.map(function(type) {
+							return {
+								types: [type],
+								name: type.name,
+								hasAny: type.isAny,
+								hasConversion: type.conversion,
+								restParam: false
+							};
+						});
+						return flatMap(resultingParams, function(nextParam) {
+							return _splitParams(params, index + 1, paramsSoFar.concat([nextParam]));
+						});
+					} else return [paramsSoFar];
+				}
+				return _splitParams(params, 0, []);
+			}
+			/**
+			* Test whether two param lists represent conflicting signatures
+			* @param {Param[]} params1
+			* @param {Param[]} params2
+			* @return {boolean} Returns true when the signatures conflict, false otherwise.
+			*/
+			function conflicting(params1, params2) {
+				const ii = Math.max(params1.length, params2.length);
+				for (let i = 0; i < ii; i++) {
+					const typeSet1 = getTypeSetAtIndex(params1, i);
+					const typeSet2 = getTypeSetAtIndex(params2, i);
+					let overlap = false;
+					let name;
+					for (name of typeSet2) if (typeSet1.has(name)) {
+						overlap = true;
+						break;
+					}
+					if (!overlap) return false;
+				}
+				const len1 = params1.length;
+				const len2 = params2.length;
+				const restParam1 = hasRestParam(params1);
+				const restParam2 = hasRestParam(params2);
+				return restParam1 ? restParam2 ? len1 === len2 : len2 >= len1 : restParam2 ? len1 >= len2 : len1 === len2;
+			}
+			/**
+			* Helper function for `resolveReferences` that returns a copy of
+			* functionList wihe any prior resolutions cleared out, in case we are
+			* recycling signatures from a prior typed function construction.
+			*
+			* @param {Array.<function|typed-reference>} functionList
+			* @return {Array.<function|typed-reference>}
+			*/
+			function clearResolutions(functionList) {
+				return functionList.map((fn) => {
+					if (isReferToSelf(fn)) return referToSelf(fn.referToSelf.callback);
+					if (isReferTo(fn)) return makeReferTo(fn.referTo.references, fn.referTo.callback);
+					return fn;
+				});
+			}
+			/**
+			* Take a list of references, a list of functions functionList, and a
+			* signatureMap indexing signatures into functionList, and return
+			* the list of resolutions, or a false-y value if they don't all
+			* resolve in a valid way (yet).
+			*
+			* @param {string[]} references
+			* @param {Array<function|typed-reference} functionList
+			* @param {Object.<string, integer>} signatureMap
+			* @return {function[] | false} resolutions
+			*/
+			function collectResolutions(references, functionList, signatureMap) {
+				const resolvedReferences = [];
+				let reference;
+				for (reference of references) {
+					let resolution = signatureMap[reference];
+					if (typeof resolution !== "number") throw new TypeError("No definition for referenced signature \"" + reference + "\"");
+					resolution = functionList[resolution];
+					if (typeof resolution !== "function") return false;
+					resolvedReferences.push(resolution);
+				}
+				return resolvedReferences;
+			}
+			/**
+			* Resolve any references in the functionList for the typed function
+			* itself. The signatureMap tells which index in the functionList a
+			* given signature should be mapped to (for use in resolving typed.referTo)
+			* and self provides the destions of a typed.referToSelf.
+			*
+			* @param {Array<function | typed-reference-object>} functionList
+			* @param {Object.<string, function>} signatureMap
+			* @param {function} self  The typed-function itself
+			* @return {Array<function>} The list of resolved functions
+			*/
+			function resolveReferences(functionList, signatureMap, self) {
+				const resolvedFunctions = clearResolutions(functionList);
+				const isResolved = new Array(resolvedFunctions.length).fill(false);
+				let leftUnresolved = true;
+				while (leftUnresolved) {
+					leftUnresolved = false;
+					let nothingResolved = true;
+					for (let i = 0; i < resolvedFunctions.length; ++i) {
+						if (isResolved[i]) continue;
+						const fn = resolvedFunctions[i];
+						if (isReferToSelf(fn)) {
+							resolvedFunctions[i] = fn.referToSelf.callback(self);
+							resolvedFunctions[i].referToSelf = fn.referToSelf;
+							isResolved[i] = true;
+							nothingResolved = false;
+						} else if (isReferTo(fn)) {
+							const resolvedReferences = collectResolutions(fn.referTo.references, resolvedFunctions, signatureMap);
+							if (resolvedReferences) {
+								resolvedFunctions[i] = fn.referTo.callback.apply(this, resolvedReferences);
+								resolvedFunctions[i].referTo = fn.referTo;
+								isResolved[i] = true;
+								nothingResolved = false;
+							} else leftUnresolved = true;
+						}
+					}
+					if (nothingResolved && leftUnresolved) throw new SyntaxError("Circular reference detected in resolving typed.referTo");
+				}
+				return resolvedFunctions;
+			}
+			/**
+			* Validate whether any of the function bodies contains a self-reference
+			* usage like `this(...)` or `this.signatures`. This self-referencing is
+			* deprecated since typed-function v3. It has been replaced with
+			* the functions typed.referTo and typed.referToSelf.
+			* @param {Object.<string, function>} signaturesMap
+			*/
+			function validateDeprecatedThis(signaturesMap) {
+				const deprecatedThisRegex = /\bthis(\(|\.signatures\b)/;
+				Object.keys(signaturesMap).forEach((signature) => {
+					const fn = signaturesMap[signature];
+					if (deprecatedThisRegex.test(fn.toString())) throw new SyntaxError("Using `this` to self-reference a function is deprecated since typed-function@3. Use typed.referTo and typed.referToSelf instead.");
+				});
+			}
+			/**
+			* Create a typed function
+			* @param {String} name               The name for the typed function
+			* @param {Object.<string, function>} rawSignaturesMap
+			*                                    An object with one or
+			*                                    multiple signatures as key, and the
+			*                                    function corresponding to the
+			*                                    signature as value.
+			* @return {function}  Returns the created typed function.
+			*/
+			function createTypedFunction(name, rawSignaturesMap) {
+				typed.createCount++;
+				if (Object.keys(rawSignaturesMap).length === 0) throw new SyntaxError("No signatures provided");
+				if (typed.warnAgainstDeprecatedThis) validateDeprecatedThis(rawSignaturesMap);
+				const parsedParams = [];
+				const originalFunctions = [];
+				const signaturesMap = {};
+				const preliminarySignatures = [];
+				let signature;
+				for (signature in rawSignaturesMap) {
+					if (!Object.prototype.hasOwnProperty.call(rawSignaturesMap, signature)) continue;
+					const params = parseSignature(signature);
+					if (!params) continue;
+					parsedParams.forEach(function(pp) {
+						if (conflicting(pp, params)) throw new TypeError("Conflicting signatures \"" + stringifyParams(pp) + "\" and \"" + stringifyParams(params) + "\".");
+					});
+					parsedParams.push(params);
+					const functionIndex = originalFunctions.length;
+					originalFunctions.push(rawSignaturesMap[signature]);
+					const conversionParams = params.map(expandParam);
+					let sp;
+					for (sp of splitParams(conversionParams)) {
+						const spName = stringifyParams(sp);
+						preliminarySignatures.push({
+							params: sp,
+							name: spName,
+							fn: functionIndex
+						});
+						if (sp.every((p) => !p.hasConversion)) signaturesMap[spName] = functionIndex;
+					}
+				}
+				preliminarySignatures.sort(compareSignatures);
+				const resolvedFunctions = resolveReferences(originalFunctions, signaturesMap, theTypedFn);
+				let s;
+				for (s in signaturesMap) if (Object.prototype.hasOwnProperty.call(signaturesMap, s)) signaturesMap[s] = resolvedFunctions[signaturesMap[s]];
+				const signatures = [];
+				const internalSignatureMap = /* @__PURE__ */ new Map();
+				for (s of preliminarySignatures) if (!internalSignatureMap.has(s.name)) {
+					s.fn = resolvedFunctions[s.fn];
+					signatures.push(s);
+					internalSignatureMap.set(s.name, s);
+				}
+				const ok0 = signatures[0] && signatures[0].params.length <= 2 && !hasRestParam(signatures[0].params);
+				const ok1 = signatures[1] && signatures[1].params.length <= 2 && !hasRestParam(signatures[1].params);
+				const ok2 = signatures[2] && signatures[2].params.length <= 2 && !hasRestParam(signatures[2].params);
+				const ok3 = signatures[3] && signatures[3].params.length <= 2 && !hasRestParam(signatures[3].params);
+				const ok4 = signatures[4] && signatures[4].params.length <= 2 && !hasRestParam(signatures[4].params);
+				const ok5 = signatures[5] && signatures[5].params.length <= 2 && !hasRestParam(signatures[5].params);
+				const allOk = ok0 && ok1 && ok2 && ok3 && ok4 && ok5;
+				for (let i = 0; i < signatures.length; ++i) signatures[i].test = compileTests(signatures[i].params);
+				const test00 = ok0 ? compileTest(signatures[0].params[0]) : notOk;
+				const test10 = ok1 ? compileTest(signatures[1].params[0]) : notOk;
+				const test20 = ok2 ? compileTest(signatures[2].params[0]) : notOk;
+				const test30 = ok3 ? compileTest(signatures[3].params[0]) : notOk;
+				const test40 = ok4 ? compileTest(signatures[4].params[0]) : notOk;
+				const test50 = ok5 ? compileTest(signatures[5].params[0]) : notOk;
+				const test01 = ok0 ? compileTest(signatures[0].params[1]) : notOk;
+				const test11 = ok1 ? compileTest(signatures[1].params[1]) : notOk;
+				const test21 = ok2 ? compileTest(signatures[2].params[1]) : notOk;
+				const test31 = ok3 ? compileTest(signatures[3].params[1]) : notOk;
+				const test41 = ok4 ? compileTest(signatures[4].params[1]) : notOk;
+				const test51 = ok5 ? compileTest(signatures[5].params[1]) : notOk;
+				for (let i = 0; i < signatures.length; ++i) signatures[i].implementation = compileArgsPreprocessing(signatures[i].params, signatures[i].fn);
+				const fn0 = ok0 ? signatures[0].implementation : undef;
+				const fn1 = ok1 ? signatures[1].implementation : undef;
+				const fn2 = ok2 ? signatures[2].implementation : undef;
+				const fn3 = ok3 ? signatures[3].implementation : undef;
+				const fn4 = ok4 ? signatures[4].implementation : undef;
+				const fn5 = ok5 ? signatures[5].implementation : undef;
+				const len0 = ok0 ? signatures[0].params.length : -1;
+				const len1 = ok1 ? signatures[1].params.length : -1;
+				const len2 = ok2 ? signatures[2].params.length : -1;
+				const len3 = ok3 ? signatures[3].params.length : -1;
+				const len4 = ok4 ? signatures[4].params.length : -1;
+				const len5 = ok5 ? signatures[5].params.length : -1;
+				const iStart = allOk ? 6 : 0;
+				const iEnd = signatures.length;
+				const tests = signatures.map((s) => s.test);
+				const fns = signatures.map((s) => s.implementation);
+				const generic = function generic() {
+					for (let i = iStart; i < iEnd; i++) if (tests[i](arguments)) return fns[i].apply(this, arguments);
+					return typed.onMismatch(name, arguments, signatures);
+				};
+				function theTypedFn(arg0, arg1) {
+					if (arguments.length === len0 && test00(arg0) && test01(arg1)) return fn0.apply(this, arguments);
+					if (arguments.length === len1 && test10(arg0) && test11(arg1)) return fn1.apply(this, arguments);
+					if (arguments.length === len2 && test20(arg0) && test21(arg1)) return fn2.apply(this, arguments);
+					if (arguments.length === len3 && test30(arg0) && test31(arg1)) return fn3.apply(this, arguments);
+					if (arguments.length === len4 && test40(arg0) && test41(arg1)) return fn4.apply(this, arguments);
+					if (arguments.length === len5 && test50(arg0) && test51(arg1)) return fn5.apply(this, arguments);
+					return generic.apply(this, arguments);
+				}
+				try {
+					Object.defineProperty(theTypedFn, "name", { value: name });
+				} catch (err) {}
+				theTypedFn.signatures = signaturesMap;
+				theTypedFn._typedFunctionData = {
+					signatures,
+					signatureMap: internalSignatureMap
+				};
+				return theTypedFn;
+			}
+			/**
+			* Action to take on mismatch
+			* @param {string} name      Name of function that was attempted to be called
+			* @param {Array} args       Actual arguments to the call
+			* @param {Array} signatures Known signatures of the named typed-function
+			*/
+			function _onMismatch(name, args, signatures) {
+				throw createError(name, args, signatures);
+			}
+			/**
+			* Return all but the last items of an array or function Arguments
+			* @param {Array | Arguments} arr
+			* @return {Array}
+			*/
+			function initial(arr) {
+				return slice(arr, 0, arr.length - 1);
+			}
+			/**
+			* return the last item of an array or function Arguments
+			* @param {Array | Arguments} arr
+			* @return {*}
+			*/
+			function last(arr) {
+				return arr[arr.length - 1];
+			}
+			/**
+			* Slice an array or function Arguments
+			* @param {Array | Arguments | IArguments} arr
+			* @param {number} start
+			* @param {number} [end]
+			* @return {Array}
+			*/
+			function slice(arr, start, end) {
+				return Array.prototype.slice.call(arr, start, end);
+			}
+			/**
+			* Return the first item from an array for which test(arr[i]) returns true
+			* @param {Array} arr
+			* @param {function} test
+			* @return {* | undefined} Returns the first matching item
+			*                         or undefined when there is no match
+			*/
+			function findInArray(arr, test) {
+				for (let i = 0; i < arr.length; i++) if (test(arr[i])) return arr[i];
+			}
+			/**
+			* Flat map the result invoking a callback for every item in an array.
+			* https://gist.github.com/samgiles/762ee337dff48623e729
+			* @param {Array} arr
+			* @param {function} callback
+			* @return {Array}
+			*/
+			function flatMap(arr, callback) {
+				return Array.prototype.concat.apply([], arr.map(callback));
+			}
+			/**
+			* Create a reference callback to one or multiple signatures
+			*
+			* Syntax:
+			*
+			*     typed.referTo(signature1, signature2, ..., function callback(fn1, fn2, ...) {
+			*       // ...
+			*     })
+			*
+			* @returns {{referTo: {references: string[], callback}}}
+			*/
+			function referTo() {
+				const references = initial(arguments).map((s) => stringifyParams(parseSignature(s)));
+				const callback = last(arguments);
+				if (typeof callback !== "function") throw new TypeError("Callback function expected as last argument");
+				return makeReferTo(references, callback);
+			}
+			function makeReferTo(references, callback) {
+				return { referTo: {
+					references,
+					callback
+				} };
+			}
+			/**
+			* Create a reference callback to the typed-function itself
+			*
+			* @param {(self: function) => function} callback
+			* @returns {{referToSelf: { callback: function }}}
+			*/
+			function referToSelf(callback) {
+				if (typeof callback !== "function") throw new TypeError("Callback function expected as first argument");
+				return { referToSelf: { callback } };
+			}
+			/**
+			* Test whether something is a referTo object, holding a list with reference
+			* signatures and a callback.
+			*
+			* @param {Object | function} objectOrFn
+			* @returns {boolean}
+			*/
+			function isReferTo(objectOrFn) {
+				return objectOrFn && typeof objectOrFn.referTo === "object" && Array.isArray(objectOrFn.referTo.references) && typeof objectOrFn.referTo.callback === "function";
+			}
+			/**
+			* Test whether something is a referToSelf object, holding a callback where
+			* to pass `self`.
+			*
+			* @param {Object | function} objectOrFn
+			* @returns {boolean}
+			*/
+			function isReferToSelf(objectOrFn) {
+				return objectOrFn && typeof objectOrFn.referToSelf === "object" && typeof objectOrFn.referToSelf.callback === "function";
+			}
+			/**
+			* Check if name is (A) new, (B) a match, or (C) a mismatch; and throw
+			* an error in case (C).
+			*
+			* @param { string | undefined } nameSoFar
+			* @param { string | undefined } newName
+			* @returns { string } updated name
+			*/
+			function checkName(nameSoFar, newName) {
+				if (!nameSoFar) return newName;
+				if (newName && newName !== nameSoFar) {
+					const err = /* @__PURE__ */ new Error("Function names do not match (expected: " + nameSoFar + ", actual: " + newName + ")");
+					err.data = {
+						actual: newName,
+						expected: nameSoFar
+					};
+					throw err;
+				}
+				return nameSoFar;
+			}
+			/**
+			* Retrieve the implied name from an object with signature keys
+			* and function values, checking whether all value names match
+			*
+			* @param { {string: function} } obj
+			*/
+			function getObjectName(obj) {
+				let name;
+				for (const key in obj) if (Object.prototype.hasOwnProperty.call(obj, key) && (isTypedFunction(obj[key]) || typeof obj[key].signature === "string")) name = checkName(name, obj[key].name);
+				return name;
+			}
+			/**
+			* Copy all of the signatures from the second argument into the first,
+			* which is modified by side effect, checking for conflicts
+			*
+			* @param {Object.<string, function|typed-reference>} dest
+			* @param {Object.<string, function|typed-reference>} source
+			*/
+			function mergeSignatures(dest, source) {
+				let key;
+				for (key in source) if (Object.prototype.hasOwnProperty.call(source, key)) {
+					if (key in dest) {
+						if (source[key] !== dest[key]) {
+							const err = /* @__PURE__ */ new Error("Signature \"" + key + "\" is defined twice");
+							err.data = {
+								signature: key,
+								sourceFunction: source[key],
+								destFunction: dest[key]
+							};
+							throw err;
+						}
+					}
+					dest[key] = source[key];
+				}
+			}
+			const saveTyped = typed;
+			/**
+			* Originally the main function was a typed function itself, but then
+			* it might not be able to generate error messages if the client
+			* replaced the type system with different names.
+			*
+			* Main entry: typed([name], functions/objects with signatures...)
+			*
+			* Assembles and returns a new typed-function from the given items
+			* that provide signatures and implementations, each of which may be
+			* * a plain object mapping (string) signatures to implementing functions,
+			* * a previously constructed typed function, or
+			* * any other single function with a string-valued property `signature`.
+			* The name of the resulting typed-function will be given by the
+			* string-valued name argument if present, or if not, by the name
+			* of any of the arguments that have one, as long as any that do are
+			* consistent with each other. If no name is specified, the name will be
+			* an empty string.
+			*
+			* @param {string} maybeName [optional]
+			* @param {(function|object)[]} signature providers
+			* @returns {typed-function}
+			*/
+			typed = function(maybeName) {
+				const named = typeof maybeName === "string";
+				const start = named ? 1 : 0;
+				let name = named ? maybeName : "";
+				const allSignatures = {};
+				for (let i = start; i < arguments.length; ++i) {
+					const item = arguments[i];
+					let theseSignatures = {};
+					let thisName;
+					if (typeof item === "function") {
+						thisName = item.name;
+						if (typeof item.signature === "string") theseSignatures[item.signature] = item;
+						else if (isTypedFunction(item)) theseSignatures = item.signatures;
+					} else if (isPlainObject(item)) {
+						theseSignatures = item;
+						if (!named) thisName = getObjectName(item);
+					}
+					if (Object.keys(theseSignatures).length === 0) {
+						const err = /* @__PURE__ */ new TypeError("Argument to 'typed' at index " + i + " is not a (typed) function, nor an object with signatures as keys and functions as values.");
+						err.data = {
+							index: i,
+							argument: item
+						};
+						throw err;
+					}
+					if (!named) name = checkName(name, thisName);
+					mergeSignatures(allSignatures, theseSignatures);
+				}
+				return createTypedFunction(name || "", allSignatures);
+			};
+			typed.create = create;
+			typed.createCount = saveTyped.createCount;
+			typed.onMismatch = _onMismatch;
+			typed.throwMismatchError = _onMismatch;
+			typed.createError = createError;
+			typed.clear = clear;
+			typed.clearConversions = clearConversions;
+			typed.addTypes = addTypes;
+			typed._findType = findType;
+			typed.referTo = referTo;
+			typed.referToSelf = referToSelf;
+			typed.convert = convert;
+			typed.findSignature = findSignature;
+			typed.find = find;
+			typed.isTypedFunction = isTypedFunction;
+			typed.warnAgainstDeprecatedThis = true;
+			/**
+			* add a type (convenience wrapper for typed.addTypes)
+			* @param {{name: string, test: function}} type
+			* @param {boolean} [beforeObjectTest=true]
+			*                          If true, the new test will be inserted before
+			*                          the test with name 'Object' (if any), since
+			*                          tests for Object match Array and classes too.
+			*/
+			typed.addType = function(type, beforeObjectTest) {
+				let before = "any";
+				if (beforeObjectTest !== false && typeMap.has("Object")) before = "Object";
+				typed.addTypes([type], before);
+			};
+			/**
+			* Verify that the ConversionDef conversion has a valid format.
+			*
+			* @param {conversionDef} conversion
+			* @return {void}
+			* @throws {TypeError|SyntaxError}
+			*/
+			function _validateConversion(conversion) {
+				if (!conversion || typeof conversion.from !== "string" || typeof conversion.to !== "string" || typeof conversion.convert !== "function") throw new TypeError("Object with properties {from: string, to: string, convert: function} expected");
+				if (conversion.to === conversion.from) throw new SyntaxError("Illegal to define conversion from \"" + conversion.from + "\" to itself.");
+			}
+			/**
+			* Add a conversion
+			*
+			* @param {ConversionDef} conversion
+			* @param {{override: boolean}} [options]
+			* @returns {void}
+			* @throws {TypeError}
+			*/
+			typed.addConversion = function(conversion) {
+				let options = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : { override: false };
+				_validateConversion(conversion);
+				const to = findType(conversion.to);
+				const existing = to.conversionsTo.find((other) => other.from === conversion.from);
+				if (existing) if (options && options.override) typed.removeConversion({
+					from: existing.from,
+					to: conversion.to,
+					convert: existing.convert
+				});
+				else throw new Error("There is already a conversion from \"" + conversion.from + "\" to \"" + to.name + "\"");
+				to.conversionsTo.push({
+					from: conversion.from,
+					to: to.name,
+					convert: conversion.convert,
+					index: nConversions++
+				});
+			};
+			/**
+			* Convenience wrapper to call addConversion on each conversion in a list.
+			*
+			* @param {ConversionDef[]} conversions
+			* @param {{override: boolean}} [options]
+			* @returns {void}
+			* @throws {TypeError}
+			*/
+			typed.addConversions = function(conversions, options) {
+				conversions.forEach((conversion) => typed.addConversion(conversion, options));
+			};
+			/**
+			* Remove the specified conversion. The format is the same as for
+			* addConversion, and the convert function must match or an error
+			* is thrown.
+			*
+			* @param {{from: string, to: string, convert: function}} conversion
+			* @returns {void}
+			* @throws {TypeError|SyntaxError|Error}
+			*/
+			typed.removeConversion = function(conversion) {
+				_validateConversion(conversion);
+				const to = findType(conversion.to);
+				const existingConversion = findInArray(to.conversionsTo, (c) => c.from === conversion.from);
+				if (!existingConversion) throw new Error("Attempt to remove nonexistent conversion from " + conversion.from + " to " + conversion.to);
+				if (existingConversion.convert !== conversion.convert) throw new Error("Conversion to remove does not match existing conversion");
+				const index = to.conversionsTo.indexOf(existingConversion);
+				to.conversionsTo.splice(index, 1);
+			};
+			/**
+			* Produce the specific signature that a typed function
+			* will execute on the given arguments. Here, a "signature" is an
+			* object with properties 'params', 'test', 'fn', and 'implementation'.
+			* This last property is a function that converts params as necessary
+			* and then calls 'fn'. Returns null if there is no matching signature.
+			* @param {typed-function} tf
+			* @param {any[]} argList
+			* @returns {{params: string, test: function, fn: function, implementation: function}}
+			*/
+			typed.resolve = function(tf, argList) {
+				if (!isTypedFunction(tf)) throw new TypeError(NOT_TYPED_FUNCTION);
+				const sigs = tf._typedFunctionData.signatures;
+				for (let i = 0; i < sigs.length; ++i) if (sigs[i].test(argList)) return sigs[i];
+				return null;
+			};
+			return typed;
+		}
+		return create();
+	}));
+})))(), 1);
+var _createTyped2 = function _createTyped() {
+	_createTyped2 = import_typed_function.default.create;
+	return import_typed_function.default;
+};
+/**
+* Factory function for creating a new typed instance
+* @param {Object} dependencies   Object with data types like Complex and BigNumber
+* @returns {Function}
+*/
+var createTyped = /* @__PURE__ */ factory("typed", [
+	"?BigNumber",
+	"?Complex",
+	"?DenseMatrix",
+	"?Fraction"
+], function createTyped(_ref) {
+	var { BigNumber, Complex, DenseMatrix, Fraction } = _ref;
+	var typed = _createTyped2();
+	typed.clear();
+	typed.addTypes([
+		{
+			name: "number",
+			test: isNumber
+		},
+		{
+			name: "Complex",
+			test: isComplex
+		},
+		{
+			name: "BigNumber",
+			test: isBigNumber
+		},
+		{
+			name: "bigint",
+			test: isBigInt
+		},
+		{
+			name: "Fraction",
+			test: isFraction
+		},
+		{
+			name: "Unit",
+			test: isUnit
+		},
+		{
+			name: "identifier",
+			test: (s) => isString && /^(?:[A-Za-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u052F\u0531-\u0556\u0559\u0560-\u0588\u05D0-\u05EA\u05EF-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u0860-\u086A\u0870-\u0887\u0889-\u088F\u08A0-\u08C9\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0980\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u09FC\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0AF9\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D\u0C58-\u0C5A\u0C5C\u0C5D\u0C60\u0C61\u0C80\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDC-\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D04-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D54-\u0D56\u0D5F-\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E86-\u0E8A\u0E8C-\u0EA3\u0EA5\u0EA7-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16F1-\u16F8\u1700-\u1711\u171F-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1878\u1880-\u1884\u1887-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191E\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4C\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1C80-\u1C8A\u1C90-\u1CBA\u1CBD-\u1CBF\u1CE9-\u1CEC\u1CEE-\u1CF3\u1CF5\u1CF6\u1CFA\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2183\u2184\u2C00-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2E2F\u3005\u3006\u3031-\u3035\u303B\u303C\u3041-\u3096\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312F\u3131-\u318E\u31A0-\u31BF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA69D\uA6A0-\uA6E5\uA717-\uA71F\uA722-\uA788\uA78B-\uA7DC\uA7F1-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA8FD\uA8FE\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uA9E0-\uA9E4\uA9E6-\uA9EF\uA9FA-\uA9FE\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA7E-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB69\uAB70-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDE80-\uDE9C\uDEA0-\uDED0\uDF00-\uDF1F\uDF2D-\uDF40\uDF42-\uDF49\uDF50-\uDF75\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF]|\uD801[\uDC00-\uDC9D\uDCB0-\uDCD3\uDCD8-\uDCFB\uDD00-\uDD27\uDD30-\uDD63\uDD70-\uDD7A\uDD7C-\uDD8A\uDD8C-\uDD92\uDD94\uDD95\uDD97-\uDDA1\uDDA3-\uDDB1\uDDB3-\uDDB9\uDDBB\uDDBC\uDDC0-\uDDF3\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67\uDF80-\uDF85\uDF87-\uDFB0\uDFB2-\uDFBA]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDCE0-\uDCF2\uDCF4\uDCF5\uDD00-\uDD15\uDD20-\uDD39\uDD40-\uDD59\uDD80-\uDDB7\uDDBE\uDDBF\uDE00\uDE10-\uDE13\uDE15-\uDE17\uDE19-\uDE35\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE4\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48\uDC80-\uDCB2\uDCC0-\uDCF2\uDD00-\uDD23\uDD4A-\uDD65\uDD6F-\uDD85\uDE80-\uDEA9\uDEB0\uDEB1\uDEC2-\uDEC7\uDF00-\uDF1C\uDF27\uDF30-\uDF45\uDF70-\uDF81\uDFB0-\uDFC4\uDFE0-\uDFF6]|\uD804[\uDC03-\uDC37\uDC71\uDC72\uDC75\uDC83-\uDCAF\uDCD0-\uDCE8\uDD03-\uDD26\uDD44\uDD47\uDD50-\uDD72\uDD76\uDD83-\uDDB2\uDDC1-\uDDC4\uDDDA\uDDDC\uDE00-\uDE11\uDE13-\uDE2B\uDE3F\uDE40\uDE80-\uDE86\uDE88\uDE8A-\uDE8D\uDE8F-\uDE9D\uDE9F-\uDEA8\uDEB0-\uDEDE\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3D\uDF50\uDF5D-\uDF61\uDF80-\uDF89\uDF8B\uDF8E\uDF90-\uDFB5\uDFB7\uDFD1\uDFD3]|\uD805[\uDC00-\uDC34\uDC47-\uDC4A\uDC5F-\uDC61\uDC80-\uDCAF\uDCC4\uDCC5\uDCC7\uDD80-\uDDAE\uDDD8-\uDDDB\uDE00-\uDE2F\uDE44\uDE80-\uDEAA\uDEB8\uDF00-\uDF1A\uDF40-\uDF46]|\uD806[\uDC00-\uDC2B\uDCA0-\uDCDF\uDCFF-\uDD06\uDD09\uDD0C-\uDD13\uDD15\uDD16\uDD18-\uDD2F\uDD3F\uDD41\uDDA0-\uDDA7\uDDAA-\uDDD0\uDDE1\uDDE3\uDE00\uDE0B-\uDE32\uDE3A\uDE50\uDE5C-\uDE89\uDE9D\uDEB0-\uDEF8\uDFC0-\uDFE0]|\uD807[\uDC00-\uDC08\uDC0A-\uDC2E\uDC40\uDC72-\uDC8F\uDD00-\uDD06\uDD08\uDD09\uDD0B-\uDD30\uDD46\uDD60-\uDD65\uDD67\uDD68\uDD6A-\uDD89\uDD98\uDDB0-\uDDDB\uDEE0-\uDEF2\uDF02\uDF04-\uDF10\uDF12-\uDF33\uDFB0]|\uD808[\uDC00-\uDF99]|\uD809[\uDC80-\uDD43]|\uD80B[\uDF90-\uDFF0]|[\uD80C\uD80E\uD80F\uD81C-\uD822\uD840-\uD868\uD86A-\uD86D\uD86F-\uD872\uD874-\uD879\uD880-\uD883\uD885-\uD88C][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2F\uDC41-\uDC46\uDC60-\uDFFF]|\uD810[\uDC00-\uDFFA]|\uD811[\uDC00-\uDE46]|\uD818[\uDD00-\uDD1D]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDE70-\uDEBE\uDED0-\uDEED\uDF00-\uDF2F\uDF40-\uDF43\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDD40-\uDD6C\uDE40-\uDE7F\uDEA0-\uDEB8\uDEBB-\uDED3\uDF00-\uDF4A\uDF50\uDF93-\uDF9F\uDFE0\uDFE1\uDFE3\uDFF2\uDFF3]|\uD823[\uDC00-\uDCD5\uDCFF-\uDD1E\uDD80-\uDDF2]|\uD82B[\uDFF0-\uDFF3\uDFF5-\uDFFB\uDFFD\uDFFE]|\uD82C[\uDC00-\uDD22\uDD32\uDD50-\uDD52\uDD55\uDD64-\uDD67\uDD70-\uDEFB]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB]|\uD837[\uDF00-\uDF1E\uDF25-\uDF2A]|\uD838[\uDC30-\uDC6D\uDD00-\uDD2C\uDD37-\uDD3D\uDD4E\uDE90-\uDEAD\uDEC0-\uDEEB]|\uD839[\uDCD0-\uDCEB\uDDD0-\uDDED\uDDF0\uDEC0-\uDEDE\uDEE0-\uDEE2\uDEE4\uDEE5\uDEE7-\uDEED\uDEF0-\uDEF4\uDEFE\uDEFF\uDFE0-\uDFE6\uDFE8-\uDFEB\uDFED\uDFEE\uDFF0-\uDFFE]|\uD83A[\uDC00-\uDCC4\uDD00-\uDD43\uDD4B]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDEDF\uDF00-\uDFFF]|\uD86E[\uDC00-\uDC1D\uDC20-\uDFFF]|\uD873[\uDC00-\uDEAD\uDEB0-\uDFFF]|\uD87A[\uDC00-\uDFE0\uDFF0-\uDFFF]|\uD87B[\uDC00-\uDE5D]|\uD87E[\uDC00-\uDE1D]|\uD884[\uDC00-\uDF4A\uDF50-\uDFFF]|\uD88D[\uDC00-\uDC79])(?:[0-9A-Za-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u052F\u0531-\u0556\u0559\u0560-\u0588\u05D0-\u05EA\u05EF-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u0860-\u086A\u0870-\u0887\u0889-\u088F\u08A0-\u08C9\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0980\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u09FC\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0AF9\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D\u0C58-\u0C5A\u0C5C\u0C5D\u0C60\u0C61\u0C80\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDC-\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D04-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D54-\u0D56\u0D5F-\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E86-\u0E8A\u0E8C-\u0EA3\u0EA5\u0EA7-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16F1-\u16F8\u1700-\u1711\u171F-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1878\u1880-\u1884\u1887-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191E\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4C\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1C80-\u1C8A\u1C90-\u1CBA\u1CBD-\u1CBF\u1CE9-\u1CEC\u1CEE-\u1CF3\u1CF5\u1CF6\u1CFA\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2183\u2184\u2C00-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2E2F\u3005\u3006\u3031-\u3035\u303B\u303C\u3041-\u3096\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312F\u3131-\u318E\u31A0-\u31BF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA69D\uA6A0-\uA6E5\uA717-\uA71F\uA722-\uA788\uA78B-\uA7DC\uA7F1-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA8FD\uA8FE\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uA9E0-\uA9E4\uA9E6-\uA9EF\uA9FA-\uA9FE\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA7E-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB69\uAB70-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDE80-\uDE9C\uDEA0-\uDED0\uDF00-\uDF1F\uDF2D-\uDF40\uDF42-\uDF49\uDF50-\uDF75\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF]|\uD801[\uDC00-\uDC9D\uDCB0-\uDCD3\uDCD8-\uDCFB\uDD00-\uDD27\uDD30-\uDD63\uDD70-\uDD7A\uDD7C-\uDD8A\uDD8C-\uDD92\uDD94\uDD95\uDD97-\uDDA1\uDDA3-\uDDB1\uDDB3-\uDDB9\uDDBB\uDDBC\uDDC0-\uDDF3\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67\uDF80-\uDF85\uDF87-\uDFB0\uDFB2-\uDFBA]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDCE0-\uDCF2\uDCF4\uDCF5\uDD00-\uDD15\uDD20-\uDD39\uDD40-\uDD59\uDD80-\uDDB7\uDDBE\uDDBF\uDE00\uDE10-\uDE13\uDE15-\uDE17\uDE19-\uDE35\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE4\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48\uDC80-\uDCB2\uDCC0-\uDCF2\uDD00-\uDD23\uDD4A-\uDD65\uDD6F-\uDD85\uDE80-\uDEA9\uDEB0\uDEB1\uDEC2-\uDEC7\uDF00-\uDF1C\uDF27\uDF30-\uDF45\uDF70-\uDF81\uDFB0-\uDFC4\uDFE0-\uDFF6]|\uD804[\uDC03-\uDC37\uDC71\uDC72\uDC75\uDC83-\uDCAF\uDCD0-\uDCE8\uDD03-\uDD26\uDD44\uDD47\uDD50-\uDD72\uDD76\uDD83-\uDDB2\uDDC1-\uDDC4\uDDDA\uDDDC\uDE00-\uDE11\uDE13-\uDE2B\uDE3F\uDE40\uDE80-\uDE86\uDE88\uDE8A-\uDE8D\uDE8F-\uDE9D\uDE9F-\uDEA8\uDEB0-\uDEDE\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3D\uDF50\uDF5D-\uDF61\uDF80-\uDF89\uDF8B\uDF8E\uDF90-\uDFB5\uDFB7\uDFD1\uDFD3]|\uD805[\uDC00-\uDC34\uDC47-\uDC4A\uDC5F-\uDC61\uDC80-\uDCAF\uDCC4\uDCC5\uDCC7\uDD80-\uDDAE\uDDD8-\uDDDB\uDE00-\uDE2F\uDE44\uDE80-\uDEAA\uDEB8\uDF00-\uDF1A\uDF40-\uDF46]|\uD806[\uDC00-\uDC2B\uDCA0-\uDCDF\uDCFF-\uDD06\uDD09\uDD0C-\uDD13\uDD15\uDD16\uDD18-\uDD2F\uDD3F\uDD41\uDDA0-\uDDA7\uDDAA-\uDDD0\uDDE1\uDDE3\uDE00\uDE0B-\uDE32\uDE3A\uDE50\uDE5C-\uDE89\uDE9D\uDEB0-\uDEF8\uDFC0-\uDFE0]|\uD807[\uDC00-\uDC08\uDC0A-\uDC2E\uDC40\uDC72-\uDC8F\uDD00-\uDD06\uDD08\uDD09\uDD0B-\uDD30\uDD46\uDD60-\uDD65\uDD67\uDD68\uDD6A-\uDD89\uDD98\uDDB0-\uDDDB\uDEE0-\uDEF2\uDF02\uDF04-\uDF10\uDF12-\uDF33\uDFB0]|\uD808[\uDC00-\uDF99]|\uD809[\uDC80-\uDD43]|\uD80B[\uDF90-\uDFF0]|[\uD80C\uD80E\uD80F\uD81C-\uD822\uD840-\uD868\uD86A-\uD86D\uD86F-\uD872\uD874-\uD879\uD880-\uD883\uD885-\uD88C][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2F\uDC41-\uDC46\uDC60-\uDFFF]|\uD810[\uDC00-\uDFFA]|\uD811[\uDC00-\uDE46]|\uD818[\uDD00-\uDD1D]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDE70-\uDEBE\uDED0-\uDEED\uDF00-\uDF2F\uDF40-\uDF43\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDD40-\uDD6C\uDE40-\uDE7F\uDEA0-\uDEB8\uDEBB-\uDED3\uDF00-\uDF4A\uDF50\uDF93-\uDF9F\uDFE0\uDFE1\uDFE3\uDFF2\uDFF3]|\uD823[\uDC00-\uDCD5\uDCFF-\uDD1E\uDD80-\uDDF2]|\uD82B[\uDFF0-\uDFF3\uDFF5-\uDFFB\uDFFD\uDFFE]|\uD82C[\uDC00-\uDD22\uDD32\uDD50-\uDD52\uDD55\uDD64-\uDD67\uDD70-\uDEFB]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB]|\uD837[\uDF00-\uDF1E\uDF25-\uDF2A]|\uD838[\uDC30-\uDC6D\uDD00-\uDD2C\uDD37-\uDD3D\uDD4E\uDE90-\uDEAD\uDEC0-\uDEEB]|\uD839[\uDCD0-\uDCEB\uDDD0-\uDDED\uDDF0\uDEC0-\uDEDE\uDEE0-\uDEE2\uDEE4\uDEE5\uDEE7-\uDEED\uDEF0-\uDEF4\uDEFE\uDEFF\uDFE0-\uDFE6\uDFE8-\uDFEB\uDFED\uDFEE\uDFF0-\uDFFE]|\uD83A[\uDC00-\uDCC4\uDD00-\uDD43\uDD4B]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDEDF\uDF00-\uDFFF]|\uD86E[\uDC00-\uDC1D\uDC20-\uDFFF]|\uD873[\uDC00-\uDEAD\uDEB0-\uDFFF]|\uD87A[\uDC00-\uDFE0\uDFF0-\uDFFF]|\uD87B[\uDC00-\uDE5D]|\uD87E[\uDC00-\uDE1D]|\uD884[\uDC00-\uDF4A\uDF50-\uDFFF]|\uD88D[\uDC00-\uDC79])*$/.test(s)
+		},
+		{
+			name: "string",
+			test: isString
+		},
+		{
+			name: "Chain",
+			test: isChain
+		},
+		{
+			name: "Array",
+			test: isArray
+		},
+		{
+			name: "Matrix",
+			test: isMatrix
+		},
+		{
+			name: "DenseMatrix",
+			test: isDenseMatrix
+		},
+		{
+			name: "SparseMatrix",
+			test: isSparseMatrix
+		},
+		{
+			name: "Range",
+			test: isRange
+		},
+		{
+			name: "Index",
+			test: isIndex
+		},
+		{
+			name: "boolean",
+			test: isBoolean
+		},
+		{
+			name: "ResultSet",
+			test: isResultSet
+		},
+		{
+			name: "Help",
+			test: isHelp
+		},
+		{
+			name: "function",
+			test: isFunction
+		},
+		{
+			name: "Date",
+			test: isDate
+		},
+		{
+			name: "RegExp",
+			test: isRegExp
+		},
+		{
+			name: "null",
+			test: isNull
+		},
+		{
+			name: "undefined",
+			test: isUndefined
+		},
+		{
+			name: "AccessorNode",
+			test: isAccessorNode
+		},
+		{
+			name: "ArrayNode",
+			test: isArrayNode
+		},
+		{
+			name: "AssignmentNode",
+			test: isAssignmentNode
+		},
+		{
+			name: "BlockNode",
+			test: isBlockNode
+		},
+		{
+			name: "ConditionalNode",
+			test: isConditionalNode
+		},
+		{
+			name: "ConstantNode",
+			test: isConstantNode
+		},
+		{
+			name: "FunctionNode",
+			test: isFunctionNode
+		},
+		{
+			name: "FunctionAssignmentNode",
+			test: isFunctionAssignmentNode
+		},
+		{
+			name: "IndexNode",
+			test: isIndexNode
+		},
+		{
+			name: "Node",
+			test: isNode
+		},
+		{
+			name: "ObjectNode",
+			test: isObjectNode
+		},
+		{
+			name: "OperatorNode",
+			test: isOperatorNode
+		},
+		{
+			name: "ParenthesisNode",
+			test: isParenthesisNode
+		},
+		{
+			name: "RangeNode",
+			test: isRangeNode
+		},
+		{
+			name: "RelationalNode",
+			test: isRelationalNode
+		},
+		{
+			name: "SymbolNode",
+			test: isSymbolNode
+		},
+		{
+			name: "Map",
+			test: isMap
+		},
+		{
+			name: "Object",
+			test: isObject
+		}
+	]);
+	typed.addConversions([
+		{
+			from: "number",
+			to: "BigNumber",
+			convert: function convert(x) {
+				if (!BigNumber) throwNoBignumber(x);
+				if (digits(x) > 15) throw new TypeError("Cannot implicitly convert a number with >15 significant digits to BigNumber (value: " + x + "). Use function bignumber(x) to convert to BigNumber.");
+				return new BigNumber(x);
+			}
+		},
+		{
+			from: "number",
+			to: "Complex",
+			convert: function convert(x) {
+				if (!Complex) throwNoComplex(x);
+				return new Complex(x, 0);
+			}
+		},
+		{
+			from: "BigNumber",
+			to: "Complex",
+			convert: function convert(x) {
+				if (!Complex) throwNoComplex(x);
+				return new Complex(x.toNumber(), 0);
+			}
+		},
+		{
+			from: "bigint",
+			to: "number",
+			convert: function convert(x) {
+				if (x > Number.MAX_SAFE_INTEGER) throw new TypeError("Cannot implicitly convert bigint to number: value exceeds the max safe integer value (value: " + x + ")");
+				return Number(x);
+			}
+		},
+		{
+			from: "bigint",
+			to: "BigNumber",
+			convert: function convert(x) {
+				if (!BigNumber) throwNoBignumber(x);
+				return new BigNumber(x.toString());
+			}
+		},
+		{
+			from: "bigint",
+			to: "Fraction",
+			convert: function convert(x) {
+				if (!Fraction) throwNoFraction(x);
+				return new Fraction(x);
+			}
+		},
+		{
+			from: "Fraction",
+			to: "BigNumber",
+			convert: function convert(x) {
+				throw new TypeError("Cannot implicitly convert a Fraction to BigNumber or vice versa. Use function bignumber(x) to convert to BigNumber or fraction(x) to convert to Fraction.");
+			}
+		},
+		{
+			from: "Fraction",
+			to: "Complex",
+			convert: function convert(x) {
+				if (!Complex) throwNoComplex(x);
+				return new Complex(x.valueOf(), 0);
+			}
+		},
+		{
+			from: "number",
+			to: "Fraction",
+			convert: function convert(x) {
+				if (!Fraction) throwNoFraction(x);
+				var f = new Fraction(x);
+				if (f.valueOf() !== x) throw new TypeError("Cannot implicitly convert a number to a Fraction when there will be a loss of precision (value: " + x + "). Use function fraction(x) to convert to Fraction.");
+				return f;
+			}
+		},
+		{
+			from: "string",
+			to: "number",
+			convert: function convert(x) {
+				var n = Number(x);
+				if (isNaN(n)) throw new Error("Cannot convert \"" + x + "\" to a number");
+				return n;
+			}
+		},
+		{
+			from: "string",
+			to: "BigNumber",
+			convert: function convert(x) {
+				if (!BigNumber) throwNoBignumber(x);
+				try {
+					return new BigNumber(x);
+				} catch (err) {
+					throw new Error("Cannot convert \"" + x + "\" to BigNumber");
+				}
+			}
+		},
+		{
+			from: "string",
+			to: "bigint",
+			convert: function convert(x) {
+				try {
+					return BigInt(x);
+				} catch (err) {
+					throw new Error("Cannot convert \"" + x + "\" to BigInt");
+				}
+			}
+		},
+		{
+			from: "string",
+			to: "Fraction",
+			convert: function convert(x) {
+				if (!Fraction) throwNoFraction(x);
+				try {
+					return new Fraction(x);
+				} catch (err) {
+					throw new Error("Cannot convert \"" + x + "\" to Fraction");
+				}
+			}
+		},
+		{
+			from: "string",
+			to: "Complex",
+			convert: function convert(x) {
+				if (!Complex) throwNoComplex(x);
+				try {
+					return new Complex(x);
+				} catch (err) {
+					throw new Error("Cannot convert \"" + x + "\" to Complex");
+				}
+			}
+		},
+		{
+			from: "boolean",
+			to: "number",
+			convert: function convert(x) {
+				return +x;
+			}
+		},
+		{
+			from: "boolean",
+			to: "BigNumber",
+			convert: function convert(x) {
+				if (!BigNumber) throwNoBignumber(x);
+				return new BigNumber(+x);
+			}
+		},
+		{
+			from: "boolean",
+			to: "bigint",
+			convert: function convert(x) {
+				return BigInt(+x);
+			}
+		},
+		{
+			from: "boolean",
+			to: "Fraction",
+			convert: function convert(x) {
+				if (!Fraction) throwNoFraction(x);
+				return new Fraction(+x);
+			}
+		},
+		{
+			from: "boolean",
+			to: "string",
+			convert: function convert(x) {
+				return String(x);
+			}
+		},
+		{
+			from: "Array",
+			to: "Matrix",
+			convert: function convert(array) {
+				if (!DenseMatrix) throwNoMatrix();
+				return new DenseMatrix(array);
+			}
+		},
+		{
+			from: "Matrix",
+			to: "Array",
+			convert: function convert(matrix) {
+				return matrix.valueOf();
+			}
+		}
+	]);
+	typed.onMismatch = (name, args, signatures) => {
+		var usualError = typed.createError(name, args, signatures);
+		if (["wrongType", "mismatch"].includes(usualError.data.category) && args.length === 1 && isCollection(args[0]) && signatures.some((sig) => !sig.params.includes(","))) {
+			var err = new TypeError("Function '".concat(name, "' doesn't apply to matrices. To call it ") + "elementwise on a matrix 'M', try 'map(M, ".concat(name, ")'."));
+			err.data = usualError.data;
+			throw err;
+		}
+		throw usualError;
+	};
+	typed.onMismatch = (name, args, signatures) => {
+		var usualError = typed.createError(name, args, signatures);
+		if (["wrongType", "mismatch"].includes(usualError.data.category) && args.length === 1 && isCollection(args[0]) && signatures.some((sig) => !sig.params.includes(","))) {
+			var err = new TypeError("Function '".concat(name, "' doesn't apply to matrices. To call it ") + "elementwise on a matrix 'M', try 'map(M, ".concat(name, ")'."));
+			err.data = usualError.data;
+			throw err;
+		}
+		throw usualError;
+	};
+	return typed;
+});
+function throwNoBignumber(x) {
+	throw new Error("Cannot convert value ".concat(x, " into a BigNumber: no class 'BigNumber' provided"));
+}
+function throwNoComplex(x) {
+	throw new Error("Cannot convert value ".concat(x, " into a Complex number: no class 'Complex' provided"));
+}
+function throwNoMatrix() {
+	throw new Error("Cannot convert array into a Matrix: no class 'DenseMatrix' provided");
+}
+function throwNoFraction(x) {
+	throw new Error("Cannot convert value ".concat(x, " into a Fraction, no class 'Fraction' provided."));
+}
+var createResultSet = /* @__PURE__ */ factory("ResultSet", [], () => {
+	/**
+	* A ResultSet contains a list or results
+	* @class ResultSet
+	* @param {Array} entries
+	* @constructor ResultSet
+	*/
+	function ResultSet(entries) {
+		if (!(this instanceof ResultSet)) throw new SyntaxError("Constructor must be called with the new operator");
+		this.entries = entries || [];
+	}
+	/**
+	* Attach type information
+	*/
+	ResultSet.prototype.type = "ResultSet";
+	ResultSet.prototype.isResultSet = true;
+	/**
+	* Returns the array with results hold by this ResultSet
+	* @memberof ResultSet
+	* @returns {Array} entries
+	*/
+	ResultSet.prototype.valueOf = function() {
+		return this.entries;
+	};
+	/**
+	* Returns the stringified results of the ResultSet
+	* @memberof ResultSet
+	* @returns {string} string
+	*/
+	ResultSet.prototype.toString = function() {
+		return "[" + this.entries.map(String).join(", ") + "]";
+	};
+	/**
+	* Get a JSON representation of the ResultSet
+	* @memberof ResultSet
+	* @returns {Object} Returns a JSON object structured as:
+	*                   `{"mathjs": "ResultSet", "entries": [...]}`
+	*/
+	ResultSet.prototype.toJSON = function() {
+		return {
+			mathjs: "ResultSet",
+			entries: this.entries
+		};
+	};
+	/**
+	* Instantiate a ResultSet from a JSON object
+	* @memberof ResultSet
+	* @param {Object} json  A JSON object structured as:
+	*                       `{"mathjs": "ResultSet", "entries": [...]}`
+	* @return {ResultSet}
+	*/
+	ResultSet.fromJSON = function(json) {
+		return new ResultSet(json.entries);
+	};
+	return ResultSet;
+}, { isClass: true });
+var createRangeClass = /* @__PURE__ */ factory("Range", [], () => {
+	/**
+	* Create a range of numbers. A range has a start, step, and end,
+	* and contains functions to iterate over the range.
+	*
+	* A range can be constructed as:
+	*
+	*     const range = new Range(start, end)
+	*     const range = new Range(start, end, step)
+	*
+	* Note that the endpoints and step may be specified with other numeric
+	* types such as bigint or BigNumber, but they will be demoted to the
+	* built-in `number` type and the Range will only contain numbers. The
+	* rationale for this demotion is that Range objects are primarily used
+	* for indexing Matrix objects, and Matrix objects may only be indexed
+	* with `number`s.
+	*
+	* To get the result of the range:
+	*     range.forEach(function (x) {
+	*         console.log(x)
+	*     })
+	*     range.map(function (x) {
+	*         return math.sin(x)
+	*     })
+	*     range.toArray()
+	*
+	* Example usage:
+	*
+	*     const c = new Range(2, 6)       // 2:1:5
+	*     c.toArray()                     // [2, 3, 4, 5]
+	*     const d = new Range(2, -3, -1)  // 2:-1:-2
+	*     d.toArray()                     // [2, 1, 0, -1, -2]
+	*
+	* @class Range
+	* @constructor Range
+	* @param {number} start  included lower bound
+	* @param {number} end    excluded upper bound
+	* @param {number} [step] step size, default value is 1
+	*/
+	function Range(start, end, step) {
+		if (!(this instanceof Range)) throw new SyntaxError("Constructor must be called with the new operator");
+		var hasStart = start !== null && start !== void 0;
+		var hasEnd = end !== null && end !== void 0;
+		var hasStep = step !== null && step !== void 0;
+		if (hasStart) {
+			if (isBigNumber(start)) start = start.toNumber();
+			else if (typeof start !== "number" && !isBigInt(start)) throw new TypeError("Parameter start must be a number or bigint");
+		}
+		if (hasEnd) {
+			if (isBigNumber(end)) end = end.toNumber();
+			else if (typeof end !== "number" && !isBigInt(end)) throw new TypeError("Parameter end must be a number or bigint");
+		}
+		if (hasStep) {
+			if (isBigNumber(step)) step = step.toNumber();
+			else if (typeof step !== "number" && !isBigInt(step)) throw new TypeError("Parameter step must be a number or bigint");
+		}
+		this.start = hasStart ? parseFloat(start) : 0;
+		this.end = hasEnd ? parseFloat(end) : 0;
+		this.step = hasStep ? parseFloat(step) : 1;
+		if (hasStep && nearlyEqual(this.step, 0)) throw new Error("Step must not be zero");
+	}
+	/**
+	* Attach type information
+	*/
+	Range.prototype.type = "Range";
+	Range.prototype.isRange = true;
+	/**
+	* Parse a string into a range,
+	* The string contains the start, optional step, and end, separated by a colon.
+	* If the string does not contain a valid range, null is returned.
+	* For example str='0:2:11'.
+	* @memberof Range
+	* @param {string} str
+	* @return {Range | null} range
+	*/
+	Range.parse = function(str) {
+		if (typeof str !== "string") return null;
+		var nums = str.split(":").map(function(arg) {
+			return parseFloat(arg);
+		});
+		if (nums.some(function(num) {
+			return isNaN(num);
+		})) return null;
+		switch (nums.length) {
+			case 2: return new Range(nums[0], nums[1]);
+			case 3: return new Range(nums[0], nums[2], nums[1]);
+			default: return null;
+		}
+	};
+	/**
+	* Create a clone of the range
+	* @return {Range} clone
+	*/
+	Range.prototype.clone = function() {
+		return new Range(this.start, this.end, this.step);
+	};
+	/**
+	* Retrieve the size of the range.
+	* Returns an array containing one number, the number of elements in the range.
+	* @memberof Range
+	* @returns {number[]} size
+	*/
+	Range.prototype.size = function() {
+		var len = 0;
+		var start = this.start;
+		var step = this.step;
+		var diff = this.end - start;
+		if (sign$2(step) === sign$2(diff)) len = Math.ceil(diff / step);
+		else if (diff === 0) len = 0;
+		if (isNaN(len)) len = 0;
+		return [len];
+	};
+	/**
+	* Calculate the minimum value in the range
+	* @memberof Range
+	* @return {number | undefined} min
+	*/
+	Range.prototype.min = function() {
+		var size = this.size()[0];
+		if (size > 0) if (this.step > 0) return this.start;
+		else return this.start + (size - 1) * this.step;
+		else return;
+	};
+	/**
+	* Calculate the maximum value in the range
+	* @memberof Range
+	* @return {number | undefined} max
+	*/
+	Range.prototype.max = function() {
+		var size = this.size()[0];
+		if (size > 0) if (this.step > 0) return this.start + (size - 1) * this.step;
+		else return this.start;
+		else return;
+	};
+	/**
+	* Execute a callback function for each value in the range.
+	* @memberof Range
+	* @param {function} callback   The callback method is invoked with three
+	*                              parameters: the value of the element, the index
+	*                              of the element, and the Range being traversed.
+	*/
+	Range.prototype.forEach = function(callback) {
+		var x = this.start;
+		var step = this.step;
+		var end = this.end;
+		var i = 0;
+		if (step > 0) while (x < end) {
+			callback(x, [i], this);
+			x += step;
+			i++;
+		}
+		else if (step < 0) while (x > end) {
+			callback(x, [i], this);
+			x += step;
+			i++;
+		}
+	};
+	/**
+	* Execute a callback function for each value in the Range, and return the
+	* results as an array
+	* @memberof Range
+	* @param {function} callback   The callback method is invoked with three
+	*                              parameters: the value of the element, the index
+	*                              of the element, and the Matrix being traversed.
+	* @returns {Array} array
+	*/
+	Range.prototype.map = function(callback) {
+		var array = [];
+		this.forEach(function(value, index, obj) {
+			array[index[0]] = callback(value, index, obj);
+		});
+		return array;
+	};
+	/**
+	* Create an Array with a copy of the Ranges data
+	* @memberof Range
+	* @returns {Array} array
+	*/
+	Range.prototype.toArray = function() {
+		var array = [];
+		this.forEach(function(value, index) {
+			array[index[0]] = value;
+		});
+		return array;
+	};
+	/**
+	* Get the primitive value of the Range, a one dimensional array
+	* @memberof Range
+	* @returns {Array} array
+	*/
+	Range.prototype.valueOf = function() {
+		return this.toArray();
+	};
+	/**
+	* Get a string representation of the range, with optional formatting options.
+	* Output is formatted as 'start:step:end', for example '2:6' or '0:0.2:11'
+	* @memberof Range
+	* @param {Object | number | function} [options]  Formatting options. See
+	*                                                lib/utils/number:format for a
+	*                                                description of the available
+	*                                                options.
+	* @returns {string} str
+	*/
+	Range.prototype.format = function(options) {
+		var str = format$3(this.start, options);
+		if (this.step !== 1) str += ":" + format$3(this.step, options);
+		str += ":" + format$3(this.end, options);
+		return str;
+	};
+	/**
+	* Get a string representation of the range.
+	* @memberof Range
+	* @returns {string}
+	*/
+	Range.prototype.toString = function() {
+		return this.format();
+	};
+	/**
+	* Get a JSON representation of the range
+	* @memberof Range
+	* @returns {Object} Returns a JSON object structured as:
+	*                   `{"mathjs": "Range", "start": 2, "end": 4, "step": 1}`
+	*/
+	Range.prototype.toJSON = function() {
+		return {
+			mathjs: "Range",
+			start: this.start,
+			end: this.end,
+			step: this.step
+		};
+	};
+	/**
+	* Instantiate a Range from a JSON object
+	* @memberof Range
+	* @param {Object} json A JSON object structured as:
+	*                      `{"mathjs": "Range", "start": 2, "end": 4, "step": 1}`
+	* @return {Range}
+	*/
+	Range.fromJSON = function(json) {
+		return new Range(json.start, json.end, json.step);
+	};
+	return Range;
+}, { isClass: true });
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/bignumber/formatter.js
+/**
+* Formats a BigNumber in a given base
+* @param {BigNumber} n
+* @param {number} base
+* @param {number} size
+* @returns {string}
+*/
+function formatBigNumberToBase(n, base, size) {
+	var BigNumberCtor = n.constructor;
+	var big2 = new BigNumberCtor(2);
+	var suffix = "";
+	if (size) {
+		if (size < 1) throw new Error("size must be in greater than 0");
+		if (!isInteger$1(size)) throw new Error("size must be an integer");
+		if (n.greaterThan(big2.pow(size - 1).sub(1)) || n.lessThan(big2.pow(size - 1).mul(-1))) throw new Error("Value must be in range [-2^".concat(size - 1, ", 2^").concat(size - 1, "-1]"));
+		if (!n.isInteger()) throw new Error("Value must be an integer");
+		if (n.lessThan(0)) n = n.add(big2.pow(size));
+		suffix = "i".concat(size);
+	}
+	switch (base) {
+		case 2: return "".concat(n.toBinary()).concat(suffix);
+		case 8: return "".concat(n.toOctal()).concat(suffix);
+		case 16: return "".concat(n.toHexadecimal()).concat(suffix);
+		default: throw new Error("Base ".concat(base, " not supported "));
+	}
+}
+/**
+* Convert a BigNumber to a formatted string representation.
+*
+* Syntax:
+*
+*    format(value)
+*    format(value, options)
+*    format(value, precision)
+*    format(value, fn)
+*
+* Where:
+*
+*    {number} value   The value to be formatted
+*    {Object} options An object with formatting options. Available options:
+*                     {string} notation
+*                         Number notation. Choose from:
+*                         'fixed'          Always use regular number notation.
+*                                          For example '123.40' and '14000000'
+*                         'exponential'    Always use exponential notation.
+*                                          For example '1.234e+2' and '1.4e+7'
+*                         'auto' (default) Regular number notation for numbers
+*                                          having an absolute value between
+*                                          `lower` and `upper` bounds, and uses
+*                                          exponential notation elsewhere.
+*                                          Lower bound is included, upper bound
+*                                          is excluded.
+*                                          For example '123.4' and '1.4e7'.
+*                         'bin', 'oct, or
+*                         'hex'            Format the number using binary, octal,
+*                                          or hexadecimal notation.
+*                                          For example '0b1101' and '0x10fe'.
+*                     {number} wordSize    The word size in bits to use for formatting
+*                                          in binary, octal, or hexadecimal notation.
+*                                          To be used only with 'bin', 'oct', or 'hex'
+*                                          values for 'notation' option. When this option
+*                                          is defined the value is formatted as a signed
+*                                          twos complement integer of the given word size
+*                                          and the size suffix is appended to the output.
+*                                          For example
+*                                          format(-1, {notation: 'hex', wordSize: 8}) === '0xffi8'.
+*                                          Default value is undefined.
+*                     {number} precision   A number between 0 and 16 to round
+*                                          the digits of the number.
+*                                          In case of notations 'exponential',
+*                                          'engineering', and 'auto',
+*                                          `precision` defines the total
+*                                          number of significant digits returned.
+*                                          In case of notation 'fixed',
+*                                          `precision` defines the number of
+*                                          significant digits after the decimal
+*                                          point.
+*                                          `precision` is undefined by default.
+*                     {number} lowerExp    Exponent determining the lower boundary
+*                                          for formatting a value with an exponent
+*                                          when `notation='auto`.
+*                                          Default value is `-3`.
+*                     {number} upperExp    Exponent determining the upper boundary
+*                                          for formatting a value with an exponent
+*                                          when `notation='auto`.
+*                                          Default value is `5`.
+*    {Function} fn    A custom formatting function. Can be used to override the
+*                     built-in notations. Function `fn` is called with `value` as
+*                     parameter and must return a string. Is useful for example to
+*                     format all values inside a matrix in a particular way.
+*
+* Examples:
+*
+*    format(6.4)                                        // '6.4'
+*    format(1240000)                                    // '1.24e6'
+*    format(1/3)                                        // '0.3333333333333333'
+*    format(1/3, 3)                                     // '0.333'
+*    format(21385, 2)                                   // '21000'
+*    format(12e8, {notation: 'fixed'})                  // returns '1200000000'
+*    format(2.3,    {notation: 'fixed', precision: 4})  // returns '2.3000'
+*    format(52.8,   {notation: 'exponential'})          // returns '5.28e+1'
+*    format(12400,  {notation: 'engineering'})          // returns '12.400e+3'
+*
+* @param {BigNumber} value
+* @param {Object | Function | number | BigNumber} [options]
+* @return {string} str The formatted value
+*/
+function format$2(value, options) {
+	if (typeof options === "function") return options(value);
+	if (!value.isFinite()) return value.isNaN() ? "NaN" : value.gt(0) ? "Infinity" : "-Infinity";
+	var { notation, precision, wordSize } = normalizeFormatOptions(options);
+	switch (notation) {
+		case "fixed": return toFixed(value, precision);
+		case "exponential": return toExponential(value, precision);
+		case "engineering": return toEngineering(value, precision);
+		case "bin": return formatBigNumberToBase(value, 2, wordSize);
+		case "oct": return formatBigNumberToBase(value, 8, wordSize);
+		case "hex": return formatBigNumberToBase(value, 16, wordSize);
+		case "auto":
+			var lowerExp = _toNumberOrDefault(options === null || options === void 0 ? void 0 : options.lowerExp, -3);
+			var upperExp = _toNumberOrDefault(options === null || options === void 0 ? void 0 : options.upperExp, 5);
+			if (value.isZero()) return "0";
+			var str;
+			var rounded = value.toSignificantDigits(precision);
+			var exp = rounded.e;
+			if (exp >= lowerExp && exp < upperExp) str = rounded.toFixed();
+			else str = toExponential(value, precision);
+			return str.replace(/((\.\d*?)(0+))($|e)/, function() {
+				var digits = arguments[2];
+				var e = arguments[4];
+				return digits !== "." ? digits + e : e;
+			});
+		default: throw new Error("Unknown notation \"" + notation + "\". Choose \"auto\", \"exponential\", \"fixed\", \"bin\", \"oct\", or \"hex.");
+	}
+}
+/**
+* Format a BigNumber in engineering notation. Like '1.23e+6', '2.3e+0', '3.500e-3'
+* @param {BigNumber} value
+* @param {number} [precision]        Optional number of significant figures to return.
+*/
+function toEngineering(value, precision) {
+	var e = value.e;
+	var newExp = e % 3 === 0 ? e : e < 0 ? e - 3 - e % 3 : e - e % 3;
+	var valueStr = value.mul(Math.pow(10, -newExp)).toPrecision(precision);
+	if (valueStr.includes("e")) {
+		var BigNumber = value.constructor;
+		valueStr = new BigNumber(valueStr).toFixed();
+	}
+	return valueStr + "e" + (e >= 0 ? "+" : "") + newExp.toString();
+}
+/**
+* Format a number in exponential notation. Like '1.23e+5', '2.3e+0', '3.500e-3'
+* @param {BigNumber} value
+* @param {number} [precision]  Number of digits in formatted output.
+*                              If not provided, the maximum available digits
+*                              is used.
+* @returns {string} str
+*/
+function toExponential(value, precision) {
+	if (precision !== void 0) return value.toExponential(precision - 1);
+	else return value.toExponential();
+}
+/**
+* Format a number with fixed notation.
+* @param {BigNumber} value
+* @param {number} [precision=undefined] Optional number of decimals after the
+*                                       decimal point. Undefined by default.
+*/
+function toFixed(value, precision) {
+	return value.toFixed(precision);
+}
+function _toNumberOrDefault(value, defaultValue) {
+	if (isNumber(value)) return value;
+	else if (isBigNumber(value)) return value.toNumber();
+	else return defaultValue;
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/string.js
+/**
+* Format a value of any type into a string.
+*
+* Usage:
+*     math.format(value)
+*     math.format(value, precision)
+*     math.format(value, options)
+*
+* When value is a function:
+*
+* - When the function has a property `syntax`, it returns this
+*   syntax description.
+* - In other cases, a string `'function'` is returned.
+*
+* When `value` is an Object:
+*
+* - When the object contains a property `format` being a function, this
+*   function is invoked as `value.format(options)` and the result is returned.
+* - When the object has its own `toString` method, this method is invoked
+*   and the result is returned.
+* - In other cases the function will loop over all object properties and
+*   return JSON object notation like '{"a": 2, "b": 3}'.
+*
+* Example usage:
+*     math.format(2/7)                // '0.2857142857142857'
+*     math.format(math.pi, 3)         // '3.14'
+*     math.format(new Complex(2, 3))  // '2 + 3i'
+*     math.format('hello')            // '"hello"'
+*
+* @param {*} value             Value to be stringified
+* @param {Object | number | Function} [options]
+*     Formatting options. See src/utils/number.js:format for a
+*     description of the available options controlling number output.
+*     This generic "format" also supports the option property `truncate: NN`
+*     giving the maximum number NN of characters to return (if there would
+*     have been more, they are deleted and replaced by an ellipsis).
+* @return {string} str
+*/
+function format$1(value, options) {
+	var result = _format(value, options);
+	if (options && typeof options === "object" && "truncate" in options && result.length > options.truncate) return result.substring(0, options.truncate - 3) + "...";
+	return result;
+}
+function _format(value, options) {
+	if (typeof value === "number") return format$3(value, options);
+	if (isBigNumber(value)) return format$2(value, options);
+	if (looksLikeFraction(value)) if (!options || options.fraction !== "decimal") return "".concat(value.s * value.n, "/").concat(value.d);
+	else return value.toString();
+	if (Array.isArray(value)) return formatArray(value, options);
+	if (isString(value)) return stringify(value);
+	if (typeof value === "function") return value.syntax ? String(value.syntax) : "function";
+	if (value && typeof value === "object") if (typeof value.format === "function") return value.format(options);
+	else if (value && value.toString(options) !== {}.toString()) return value.toString(options);
+	else return "{" + Object.keys(value).map((key) => {
+		return stringify(key) + ": " + format$1(value[key], options);
+	}).join(", ") + "}";
+	return String(value);
+}
+/**
+* Stringify a value into a string enclosed in double quotes.
+* Unescaped double quotes and backslashes inside the value are escaped.
+* @param {*} value
+* @return {string}
+*/
+function stringify(value) {
+	var text = String(value);
+	var escaped = "";
+	var i = 0;
+	while (i < text.length) {
+		var c = text.charAt(i);
+		escaped += c in controlCharacters ? controlCharacters[c] : c;
+		i++;
+	}
+	return "\"" + escaped + "\"";
+}
+var controlCharacters = {
+	"\"": "\\\"",
+	"\\": "\\\\",
+	"\b": "\\b",
+	"\f": "\\f",
+	"\n": "\\n",
+	"\r": "\\r",
+	"	": "\\t"
+};
+/**
+* Escape special HTML characters
+* @param {*} value
+* @return {string}
+*/
+function escape(value) {
+	var text = String(value);
+	text = text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+	return text;
+}
+/**
+* Recursively format an n-dimensional matrix
+* Example output: "[[1, 2], [3, 4]]"
+* @param {Array} array
+* @param {Object | number | Function} [options]  Formatting options. See
+*                                                lib/utils/number:format for a
+*                                                description of the available
+*                                                options.
+* @returns {string} str
+*/
+function formatArray(array, options) {
+	if (Array.isArray(array)) {
+		var str = "[";
+		var len = array.length;
+		for (var i = 0; i < len; i++) {
+			if (i !== 0) str += ", ";
+			str += formatArray(array[i], options);
+		}
+		str += "]";
+		return str;
+	} else return format$1(array, options);
+}
+/**
+* Check whether a value looks like a Fraction (unsafe duck-type check)
+* @param {*} value
+* @return {boolean}
+*/
+function looksLikeFraction(value) {
+	return value && typeof value === "object" && typeof value.s === "bigint" && typeof value.n === "bigint" && typeof value.d === "bigint" || false;
+}
+/**
+* Compare two strings
+* @param {string} x
+* @param {string} y
+* @returns {number}
+*/
+function compareText$1(x, y) {
+	if (!isString(x)) throw new TypeError("Unexpected type of argument in function compareText (expected: string or Array or Matrix, actual: " + typeOf$1(x) + ", index: 0)");
+	if (!isString(y)) throw new TypeError("Unexpected type of argument in function compareText (expected: string or Array or Matrix, actual: " + typeOf$1(y) + ", index: 1)");
+	return x === y ? 0 : x > y ? 1 : -1;
+}
+var createHelpClass = /* @__PURE__ */ factory("Help", ["evaluate"], (_ref) => {
+	var { evaluate } = _ref;
+	/**
+	* Documentation object
+	* @param {Object} doc  Object containing properties:
+	*                      {string} name
+	*                      {string} category
+	*                      {string} description
+	*                      {string[]} syntax
+	*                      {string[]} examples
+	*                      {string[]} seealso
+	* @constructor
+	*/
+	function Help(doc) {
+		if (!(this instanceof Help)) throw new SyntaxError("Constructor must be called with the new operator");
+		if (!doc) throw new Error("Argument \"doc\" missing");
+		this.doc = doc;
+	}
+	/**
+	* Attach type information
+	*/
+	Help.prototype.type = "Help";
+	Help.prototype.isHelp = true;
+	/**
+	* Generate a string representation of the Help object
+	* @return {string} Returns a string
+	* @private
+	*/
+	Help.prototype.toString = function() {
+		var doc = this.doc || {};
+		var desc = "\n";
+		if (doc.name) desc += "Name: " + doc.name + "\n\n";
+		if (doc.category) desc += "Category: " + doc.category + "\n\n";
+		if (doc.description) desc += "Description:\n    " + doc.description + "\n\n";
+		if (doc.syntax) desc += "Syntax:\n    " + doc.syntax.join("\n    ") + "\n\n";
+		if (doc.examples) {
+			desc += "Examples:\n";
+			var configChanged = false;
+			var originalConfig = evaluate("config()");
+			var scope = { config: (newConfig) => {
+				configChanged = true;
+				return evaluate("config(newConfig)", { newConfig });
+			} };
+			for (var i = 0; i < doc.examples.length; i++) {
+				var expr = doc.examples[i];
+				desc += "    " + expr + "\n";
+				var res = void 0;
+				try {
+					res = evaluate(expr, scope);
+				} catch (e) {
+					res = e;
+				}
+				if (res !== void 0 && !isHelp(res)) desc += "        " + format$1(res, { precision: 14 }) + "\n";
+			}
+			desc += "\n";
+			if (configChanged) evaluate("config(originalConfig)", { originalConfig });
+		}
+		if (doc.mayThrow && doc.mayThrow.length) desc += "Throws: " + doc.mayThrow.join(", ") + "\n\n";
+		if (doc.seealso && doc.seealso.length) desc += "See also: " + doc.seealso.join(", ") + "\n";
+		return desc;
+	};
+	/**
+	* Export the help object to JSON
+	*/
+	Help.prototype.toJSON = function() {
+		var obj = clone$3(this.doc);
+		obj.mathjs = "Help";
+		return obj;
+	};
+	/**
+	* Instantiate a Help object from a JSON object
+	* @param {Object} json
+	* @returns {Help} Returns a new Help object
+	*/
+	Help.fromJSON = function(json) {
+		var doc = {};
+		Object.keys(json).filter((prop) => prop !== "mathjs").forEach((prop) => {
+			doc[prop] = json[prop];
+		});
+		return new Help(doc);
+	};
+	/**
+	* Returns a string representation of the Help object
+	*/
+	Help.prototype.valueOf = Help.prototype.toString;
+	return Help;
+}, { isClass: true });
+var createChainClass = /* @__PURE__ */ factory("Chain", [
+	"?on",
+	"math",
+	"typed"
+], (_ref) => {
+	var { on, math, typed } = _ref;
+	/**
+	* @constructor Chain
+	* Wrap any value in a chain, allowing to perform chained operations on
+	* the value.
+	*
+	* All methods available in the math.js library can be called upon the chain,
+	* and then will be evaluated with the value itself as first argument.
+	* The chain can be closed by executing chain.done(), which will return
+	* the final value.
+	*
+	* The Chain has a number of special functions:
+	* - done()             Finalize the chained operation and return the
+	*                      chain's value.
+	* - valueOf()          The same as done()
+	* - toString()         Returns a string representation of the chain's value.
+	*
+	* @param {*} [value]
+	*/
+	function Chain(value) {
+		if (!(this instanceof Chain)) throw new SyntaxError("Constructor must be called with the new operator");
+		if (isChain(value)) this.value = value.value;
+		else this.value = value;
+	}
+	/**
+	* Attach type information
+	*/
+	Chain.prototype.type = "Chain";
+	Chain.prototype.isChain = true;
+	/**
+	* Close the chain. Returns the final value.
+	* Does the same as method valueOf()
+	* @returns {*} value
+	*/
+	Chain.prototype.done = function() {
+		return this.value;
+	};
+	/**
+	* Close the chain. Returns the final value.
+	* Does the same as method done()
+	* @returns {*} value
+	*/
+	Chain.prototype.valueOf = function() {
+		return this.value;
+	};
+	/**
+	* Get a string representation of the value in the chain
+	* @returns {string}
+	*/
+	Chain.prototype.toString = function() {
+		return format$1(this.value);
+	};
+	/**
+	* Get a JSON representation of the chain
+	* @returns {Object}
+	*/
+	Chain.prototype.toJSON = function() {
+		return {
+			mathjs: "Chain",
+			value: this.value
+		};
+	};
+	/**
+	* Instantiate a Chain from its JSON representation
+	* @param {Object} json  An object structured like
+	*                       `{"mathjs": "Chain", value: ...}`,
+	*                       where mathjs is optional
+	* @returns {Chain}
+	*/
+	Chain.fromJSON = function(json) {
+		return new Chain(json.value);
+	};
+	/**
+	* Create a proxy method for the chain
+	* @param {string} name
+	* @param {Function} fn      The function to be proxied
+	*                           If fn is no function, it is silently ignored.
+	* @private
+	*/
+	function createProxy(name, fn) {
+		if (typeof fn === "function") Chain.prototype[name] = chainify(fn);
+	}
+	/**
+	* Create a proxy method for the chain
+	* @param {string} name
+	* @param {function} resolver   The function resolving with the
+	*                              function to be proxied
+	* @private
+	*/
+	function createLazyProxy(name, resolver) {
+		lazy(Chain.prototype, name, function outerResolver() {
+			var fn = resolver();
+			if (typeof fn === "function") return chainify(fn);
+		});
+	}
+	/**
+	* Make a function chainable
+	* @param {function} fn
+	* @return {Function} chain function
+	* @private
+	*/
+	function chainify(fn) {
+		return function() {
+			if (arguments.length === 0) return new Chain(fn(this.value));
+			var args = [this.value];
+			for (var i = 0; i < arguments.length; i++) args[i + 1] = arguments[i];
+			if (typed.isTypedFunction(fn)) {
+				var sigObject = typed.resolve(fn, args);
+				if (sigObject.params.length === 1) throw new Error("chain function " + fn.name + " cannot match rest parameter between chain value and additional arguments.");
+				return new Chain(sigObject.implementation.apply(fn, args));
+			}
+			return new Chain(fn.apply(fn, args));
+		};
+	}
+	/**
+	* Create a proxy for a single method, or an object with multiple methods.
+	* Example usage:
+	*
+	*   Chain.createProxy('add', function add (x, y) {...})
+	*   Chain.createProxy({
+	*     add:      function add (x, y) {...},
+	*     subtract: function subtract (x, y) {...}
+	*   }
+	*
+	* @param {string | Object} arg0   A name (string), or an object with
+	*                                 functions
+	* @param {*} [arg1]               A function, when arg0 is a name
+	*/
+	Chain.createProxy = function(arg0, arg1) {
+		if (typeof arg0 === "string") createProxy(arg0, arg1);
+		else {
+			var _loop = function _loop(_name) {
+				if (hasOwnProperty(arg0, _name) && excludedNames[_name] === void 0) createLazyProxy(_name, () => arg0[_name]);
+			};
+			for (var _name in arg0) _loop(_name);
+		}
+	};
+	var excludedNames = {
+		expression: true,
+		docs: true,
+		type: true,
+		classes: true,
+		json: true,
+		error: true,
+		isChain: true
+	};
+	Chain.createProxy(math);
+	if (on) on("import", function(name, resolver, path) {
+		if (!path) createLazyProxy(name, resolver);
+	});
+	return Chain;
+}, { isClass: true });
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/embeddedDocs/constants/e.js
+var eDocs = {
+	name: "e",
+	category: "Constants",
+	syntax: ["e"],
+	description: "Euler's number, the base of the natural logarithm. Approximately equal to 2.71828",
+	examples: [
+		"e",
+		"e ^ 2",
+		"exp(2)",
+		"log(e)"
+	],
+	seealso: ["exp"]
+};
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/embeddedDocs/constants/false.js
+var falseDocs = {
+	name: "false",
+	category: "Constants",
+	syntax: ["false"],
+	description: "Boolean value false",
+	examples: ["false"],
+	seealso: ["true"]
+};
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/embeddedDocs/constants/i.js
+var iDocs = {
+	name: "i",
+	category: "Constants",
+	syntax: ["i"],
+	description: "Imaginary unit, defined as i*i=-1. A complex number is described as a + b*i, where a is the real part, and b is the imaginary part.",
+	examples: [
+		"i",
+		"i * i",
+		"sqrt(-1)"
+	],
+	seealso: []
+};
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/embeddedDocs/constants/Infinity.js
+var InfinityDocs = {
+	name: "Infinity",
+	category: "Constants",
+	syntax: ["Infinity"],
+	description: "Infinity, a number which is larger than the maximum number that can be handled by a floating point number.",
+	examples: ["Infinity", "1 / 0"],
+	seealso: []
+};
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/embeddedDocs/constants/LN10.js
+var LN10Docs = {
+	name: "LN10",
+	category: "Constants",
+	syntax: ["LN10"],
+	description: "Returns the natural logarithm of 10, approximately equal to 2.302",
+	examples: ["LN10", "log(10)"],
+	seealso: []
+};
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/embeddedDocs/constants/LN2.js
+var LN2Docs = {
+	name: "LN2",
+	category: "Constants",
+	syntax: ["LN2"],
+	description: "Returns the natural logarithm of 2, approximately equal to 0.693",
+	examples: ["LN2", "log(2)"],
+	seealso: []
+};
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/embeddedDocs/constants/LOG10E.js
+var LOG10EDocs = {
+	name: "LOG10E",
+	category: "Constants",
+	syntax: ["LOG10E"],
+	description: "Returns the base-10 logarithm of E, approximately equal to 0.434",
+	examples: ["LOG10E", "log(e, 10)"],
+	seealso: []
+};
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/embeddedDocs/constants/LOG2E.js
+var LOG2EDocs = {
+	name: "LOG2E",
+	category: "Constants",
+	syntax: ["LOG2E"],
+	description: "Returns the base-2 logarithm of E, approximately equal to 1.442",
+	examples: ["LOG2E", "log(e, 2)"],
+	seealso: []
+};
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/embeddedDocs/constants/NaN.js
+var NaNDocs = {
+	name: "NaN",
+	category: "Constants",
+	syntax: ["NaN"],
+	description: "Not a number",
+	examples: ["NaN", "0 / 0"],
+	seealso: []
+};
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/embeddedDocs/constants/null.js
+var nullDocs = {
+	name: "null",
+	category: "Constants",
+	syntax: ["null"],
+	description: "Value null",
+	examples: ["null"],
+	seealso: ["true", "false"]
+};
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/embeddedDocs/constants/phi.js
+var phiDocs = {
+	name: "phi",
+	category: "Constants",
+	syntax: ["phi"],
+	description: "Phi is the golden ratio. Two quantities are in the golden ratio if their ratio is the same as the ratio of their sum to the larger of the two quantities. Phi is defined as `(1 + sqrt(5)) / 2` and is approximately 1.618034...",
+	examples: ["phi"],
+	seealso: []
+};
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/embeddedDocs/constants/pi.js
+var piDocs = {
+	name: "pi",
+	category: "Constants",
+	syntax: ["pi"],
+	description: "The number pi is a mathematical constant that is the ratio of a circle's circumference to its diameter, and is approximately equal to 3.14159",
+	examples: ["pi", "sin(pi/2)"],
+	seealso: ["tau"]
+};
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/embeddedDocs/embeddedDocs.js
+var embeddedDocs = {
+	bignumber: {
+		name: "bignumber",
+		category: "Construction",
+		syntax: ["bignumber(x)"],
+		description: "Create a big number from a number or string.",
+		examples: [
+			"0.1 + 0.2",
+			"bignumber(0.1) + bignumber(0.2)",
+			"bignumber(\"7.2\")",
+			"bignumber(\"7.2e500\")",
+			"bignumber([0.1, 0.2, 0.3])"
+		],
+		seealso: [
+			"boolean",
+			"bigint",
+			"complex",
+			"fraction",
+			"index",
+			"matrix",
+			"string",
+			"unit"
+		]
+	},
+	bigint: {
+		name: "bigint",
+		category: "Construction",
+		syntax: ["bigint(x)"],
+		description: "Create a bigint, an integer with an arbitrary number of digits, from a number or string.",
+		examples: [
+			"123123123123123123 # a large number will lose digits",
+			"bigint(\"123123123123123123\")",
+			"bignumber([\"1\", \"3\", \"5\"])"
+		],
+		seealso: [
+			"boolean",
+			"bignumber",
+			"number",
+			"complex",
+			"fraction",
+			"index",
+			"matrix",
+			"string",
+			"unit"
+		]
+	},
+	boolean: {
+		name: "boolean",
+		category: "Construction",
+		syntax: ["x", "boolean(x)"],
+		description: "Convert a string or number into a boolean.",
+		examples: [
+			"boolean(0)",
+			"boolean(1)",
+			"boolean(3)",
+			"boolean(\"true\")",
+			"boolean(\"false\")",
+			"boolean([1, 0, 1, 1])"
+		],
+		seealso: [
+			"bignumber",
+			"complex",
+			"index",
+			"matrix",
+			"number",
+			"string",
+			"unit"
+		]
+	},
+	complex: {
+		name: "complex",
+		category: "Construction",
+		syntax: [
+			"complex()",
+			"complex(re, im)",
+			"complex(string)"
+		],
+		description: "Create a complex number.",
+		examples: [
+			"complex()",
+			"complex(2, 3)",
+			"complex(\"7 - 2i\")"
+		],
+		seealso: [
+			"bignumber",
+			"boolean",
+			"index",
+			"matrix",
+			"number",
+			"string",
+			"unit"
+		]
+	},
+	createUnit: {
+		name: "createUnit",
+		category: "Construction",
+		syntax: ["createUnit(definitions)", "createUnit(name, definition)"],
+		description: "Create a user-defined unit and register it with the Unit type.",
+		examples: [
+			"createUnit(\"foo\")",
+			"createUnit(\"knot\", {definition: \"0.514444444 m/s\", aliases: [\"knots\", \"kt\", \"kts\"]})",
+			"createUnit(\"mph\", \"1 mile/hour\")"
+		],
+		seealso: ["unit", "splitUnit"]
+	},
+	fraction: {
+		name: "fraction",
+		category: "Construction",
+		syntax: [
+			"fraction(num)",
+			"fraction(matrix)",
+			"fraction(num,den)",
+			"fraction({n: num, d: den})"
+		],
+		description: "Create a fraction from a number or from integer numerator and denominator.",
+		examples: [
+			"fraction(0.125)",
+			"fraction(1, 3) + fraction(2, 5)",
+			"fraction({n: 333, d: 53})",
+			"fraction([sqrt(9), sqrt(10), sqrt(11)])"
+		],
+		seealso: [
+			"bignumber",
+			"boolean",
+			"complex",
+			"index",
+			"matrix",
+			"string",
+			"unit"
+		]
+	},
+	index: {
+		name: "index",
+		category: "Construction",
+		syntax: [
+			"[start]",
+			"[start:end]",
+			"[start:step:end]",
+			"[start1, start 2, ...]",
+			"[start1:end1, start2:end2, ...]",
+			"[start1:step1:end1, start2:step2:end2, ...]"
+		],
+		description: "Create an index to get or replace a subset of a matrix",
+		examples: [
+			"A = [1, 2, 3; 4, 5, 6]",
+			"A[1, :]",
+			"A[1, 2] = 50",
+			"A[1:2, 1:2] = 1",
+			"B = [1, 2, 3]",
+			"B[B>1 and B<3]"
+		],
+		seealso: [
+			"bignumber",
+			"boolean",
+			"complex",
+			"matrix",
+			"number",
+			"range",
+			"string",
+			"unit"
+		]
+	},
+	matrix: {
+		name: "matrix",
+		category: "Construction",
+		syntax: [
+			"[]",
+			"[a1, b1, ...; a2, b2, ...]",
+			"matrix()",
+			"matrix(\"dense\")",
+			"matrix([...])"
+		],
+		description: "Create a matrix.",
+		examples: [
+			"[]",
+			"[1, 2, 3]",
+			"[1, 2, 3; 4, 5, 6]",
+			"matrix()",
+			"matrix([3, 4])",
+			"matrix([3, 4; 5, 6], \"sparse\")",
+			"matrix([3, 4; 5, 6], \"sparse\", \"number\")"
+		],
+		seealso: [
+			"bignumber",
+			"boolean",
+			"complex",
+			"index",
+			"number",
+			"string",
+			"unit",
+			"sparse"
+		]
+	},
+	number: {
+		name: "number",
+		category: "Construction",
+		syntax: [
+			"x",
+			"number(x)",
+			"number(unit, valuelessUnit)"
+		],
+		description: "Create a number or convert a string or boolean into a number.",
+		examples: [
+			"2",
+			"2e3",
+			"4.05",
+			"number(2)",
+			"number(\"7.2\")",
+			"number(true)",
+			"number([true, false, true, true])",
+			"number(unit(\"52cm\"), \"m\")"
+		],
+		seealso: [
+			"bignumber",
+			"bigint",
+			"boolean",
+			"complex",
+			"fraction",
+			"index",
+			"matrix",
+			"string",
+			"unit"
+		]
+	},
+	sparse: {
+		name: "sparse",
+		category: "Construction",
+		syntax: [
+			"sparse()",
+			"sparse([a1, b1, ...; a1, b2, ...])",
+			"sparse([a1, b1, ...; a1, b2, ...], \"number\")"
+		],
+		description: "Create a sparse matrix.",
+		examples: [
+			"sparse()",
+			"sparse([3, 4; 5, 6])",
+			"sparse([3, 0; 5, 0], \"number\")"
+		],
+		seealso: [
+			"bignumber",
+			"boolean",
+			"complex",
+			"index",
+			"number",
+			"string",
+			"unit",
+			"matrix"
+		]
+	},
+	splitUnit: {
+		name: "splitUnit",
+		category: "Construction",
+		syntax: ["splitUnit(unit: Unit, parts: Unit[])"],
+		description: "Split a unit in an array of units whose sum is equal to the original unit.",
+		examples: ["splitUnit(1 m, [\"feet\", \"inch\"])"],
+		seealso: ["unit", "createUnit"]
+	},
+	string: {
+		name: "string",
+		category: "Construction",
+		syntax: ["\"text\"", "string(x)"],
+		description: "Create a string or convert a value to a string",
+		examples: [
+			"\"Hello World!\"",
+			"string(4.2)",
+			"string(3 + 2i)"
+		],
+		seealso: [
+			"bignumber",
+			"boolean",
+			"complex",
+			"index",
+			"matrix",
+			"number",
+			"unit"
+		]
+	},
+	unit: {
+		name: "unit",
+		category: "Construction",
+		syntax: [
+			"value unit",
+			"unit(value, unit)",
+			"unit(string)"
+		],
+		description: "Create a unit.",
+		examples: [
+			"5.5 mm",
+			"3 inch",
+			"unit(7.1, \"kilogram\")",
+			"unit(\"23 deg\")"
+		],
+		seealso: [
+			"bignumber",
+			"boolean",
+			"complex",
+			"index",
+			"matrix",
+			"number",
+			"string"
+		]
+	},
+	e: eDocs,
+	E: eDocs,
+	false: falseDocs,
+	i: iDocs,
+	Infinity: InfinityDocs,
+	LN2: LN2Docs,
+	LN10: LN10Docs,
+	LOG2E: LOG2EDocs,
+	LOG10E: LOG10EDocs,
+	NaN: NaNDocs,
+	null: nullDocs,
+	pi: piDocs,
+	PI: piDocs,
+	phi: phiDocs,
+	SQRT1_2: {
+		name: "SQRT1_2",
+		category: "Constants",
+		syntax: ["SQRT1_2"],
+		description: "Returns the square root of 1/2, approximately equal to 0.707",
+		examples: ["SQRT1_2", "sqrt(1/2)"],
+		seealso: []
+	},
+	SQRT2: {
+		name: "SQRT2",
+		category: "Constants",
+		syntax: ["SQRT2"],
+		description: "Returns the square root of 2, approximately equal to 1.414",
+		examples: ["SQRT2", "sqrt(2)"],
+		seealso: []
+	},
+	tau: {
+		name: "tau",
+		category: "Constants",
+		syntax: ["tau"],
+		description: "Tau is the ratio constant of a circle's circumference to radius, equal to 2 * pi, approximately 6.2832.",
+		examples: ["tau", "2 * pi"],
+		seealso: ["pi"]
+	},
+	true: {
+		name: "true",
+		category: "Constants",
+		syntax: ["true"],
+		description: "Boolean value true",
+		examples: ["true"],
+		seealso: ["false"]
+	},
+	version: {
+		name: "version",
+		category: "Constants",
+		syntax: ["version"],
+		description: "A string with the version number of math.js",
+		examples: ["version"],
+		seealso: []
+	},
+	speedOfLight: {
+		description: "Speed of light in vacuum",
+		examples: ["speedOfLight"]
+	},
+	gravitationConstant: {
+		description: "Newtonian constant of gravitation",
+		examples: ["gravitationConstant"]
+	},
+	planckConstant: {
+		description: "Planck constant",
+		examples: ["planckConstant"]
+	},
+	reducedPlanckConstant: {
+		description: "Reduced Planck constant",
+		examples: ["reducedPlanckConstant"]
+	},
+	magneticConstant: {
+		description: "Magnetic constant (vacuum permeability)",
+		examples: ["magneticConstant"]
+	},
+	electricConstant: {
+		description: "Electric constant (vacuum permeability)",
+		examples: ["electricConstant"]
+	},
+	vacuumImpedance: {
+		description: "Characteristic impedance of vacuum",
+		examples: ["vacuumImpedance"]
+	},
+	coulomb: {
+		description: "Coulomb's constant. Deprecated in favor of coulombConstant",
+		examples: ["coulombConstant"]
+	},
+	coulombConstant: {
+		description: "Coulomb's constant",
+		examples: ["coulombConstant"]
+	},
+	elementaryCharge: {
+		description: "Elementary charge",
+		examples: ["elementaryCharge"]
+	},
+	bohrMagneton: {
+		description: "Bohr magneton",
+		examples: ["bohrMagneton"]
+	},
+	conductanceQuantum: {
+		description: "Conductance quantum",
+		examples: ["conductanceQuantum"]
+	},
+	inverseConductanceQuantum: {
+		description: "Inverse conductance quantum",
+		examples: ["inverseConductanceQuantum"]
+	},
+	magneticFluxQuantum: {
+		description: "Magnetic flux quantum",
+		examples: ["magneticFluxQuantum"]
+	},
+	nuclearMagneton: {
+		description: "Nuclear magneton",
+		examples: ["nuclearMagneton"]
+	},
+	klitzing: {
+		description: "Von Klitzing constant",
+		examples: ["klitzing"]
+	},
+	bohrRadius: {
+		description: "Bohr radius",
+		examples: ["bohrRadius"]
+	},
+	classicalElectronRadius: {
+		description: "Classical electron radius",
+		examples: ["classicalElectronRadius"]
+	},
+	electronMass: {
+		description: "Electron mass",
+		examples: ["electronMass"]
+	},
+	fermiCoupling: {
+		description: "Fermi coupling constant",
+		examples: ["fermiCoupling"]
+	},
+	fineStructure: {
+		description: "Fine-structure constant",
+		examples: ["fineStructure"]
+	},
+	hartreeEnergy: {
+		description: "Hartree energy",
+		examples: ["hartreeEnergy"]
+	},
+	protonMass: {
+		description: "Proton mass",
+		examples: ["protonMass"]
+	},
+	deuteronMass: {
+		description: "Deuteron Mass",
+		examples: ["deuteronMass"]
+	},
+	neutronMass: {
+		description: "Neutron mass",
+		examples: ["neutronMass"]
+	},
+	quantumOfCirculation: {
+		description: "Quantum of circulation",
+		examples: ["quantumOfCirculation"]
+	},
+	rydberg: {
+		description: "Rydberg constant",
+		examples: ["rydberg"]
+	},
+	thomsonCrossSection: {
+		description: "Thomson cross section",
+		examples: ["thomsonCrossSection"]
+	},
+	weakMixingAngle: {
+		description: "Weak mixing angle",
+		examples: ["weakMixingAngle"]
+	},
+	efimovFactor: {
+		description: "Efimov factor",
+		examples: ["efimovFactor"]
+	},
+	atomicMass: {
+		description: "Atomic mass constant",
+		examples: ["atomicMass"]
+	},
+	avogadro: {
+		description: "Avogadro's number",
+		examples: ["avogadro"]
+	},
+	boltzmann: {
+		description: "Boltzmann constant",
+		examples: ["boltzmann"]
+	},
+	faraday: {
+		description: "Faraday constant",
+		examples: ["faraday"]
+	},
+	firstRadiation: {
+		description: "First radiation constant",
+		examples: ["firstRadiation"]
+	},
+	loschmidt: {
+		description: "Loschmidt constant at T=273.15 K and p=101.325 kPa",
+		examples: ["loschmidt"]
+	},
+	gasConstant: {
+		description: "Gas constant",
+		examples: ["gasConstant"]
+	},
+	molarPlanckConstant: {
+		description: "Molar Planck constant",
+		examples: ["molarPlanckConstant"]
+	},
+	molarVolume: {
+		description: "Molar volume of an ideal gas at T=273.15 K and p=101.325 kPa",
+		examples: ["molarVolume"]
+	},
+	sackurTetrode: {
+		description: "Sackur-Tetrode constant at T=1 K and p=101.325 kPa",
+		examples: ["sackurTetrode"]
+	},
+	secondRadiation: {
+		description: "Second radiation constant",
+		examples: ["secondRadiation"]
+	},
+	stefanBoltzmann: {
+		description: "Stefan-Boltzmann constant",
+		examples: ["stefanBoltzmann"]
+	},
+	wienDisplacement: {
+		description: "Wien displacement law constant",
+		examples: ["wienDisplacement"]
+	},
+	molarMass: {
+		description: "Molar mass constant",
+		examples: ["molarMass"]
+	},
+	molarMassC12: {
+		description: "Molar mass constant of carbon-12",
+		examples: ["molarMassC12"]
+	},
+	gravity: {
+		description: "Standard acceleration of gravity (standard acceleration of free-fall on Earth)",
+		examples: ["gravity"]
+	},
+	planckLength: {
+		description: "Planck length",
+		examples: ["planckLength"]
+	},
+	planckMass: {
+		description: "Planck mass",
+		examples: ["planckMass"]
+	},
+	planckTime: {
+		description: "Planck time",
+		examples: ["planckTime"]
+	},
+	planckCharge: {
+		description: "Planck charge",
+		examples: ["planckCharge"]
+	},
+	planckTemperature: {
+		description: "Planck temperature",
+		examples: ["planckTemperature"]
+	},
+	derivative: {
+		name: "derivative",
+		category: "Algebra",
+		syntax: ["derivative(expr, variable)", "derivative(expr, variable, {simplify: boolean})"],
+		description: "Takes the derivative of an expression expressed in parser Nodes. The derivative will be taken over the supplied variable in the second parameter. If there are multiple variables in the expression, it will return a partial derivative.",
+		examples: [
+			"derivative(\"2x^3\", \"x\")",
+			"derivative(\"2x^3\", \"x\", {simplify: false})",
+			"derivative(\"2x^2 + 3x + 4\", \"x\")",
+			"derivative(\"sin(2x)\", \"x\")",
+			"f = parse(\"x^2 + x\")",
+			"x = parse(\"x\")",
+			"df = derivative(f, x)",
+			"df.evaluate({x: 3})"
+		],
+		seealso: [
+			"simplify",
+			"parse",
+			"evaluate"
+		]
+	},
+	lsolve: {
+		name: "lsolve",
+		category: "Algebra",
+		syntax: ["x=lsolve(L, b)"],
+		description: "Finds one solution of the linear system L * x = b where L is an [n x n] lower triangular matrix and b is a [n] column vector.",
+		examples: [
+			"a = [-2, 3; 2, 1]",
+			"b = [11, 9]",
+			"x = lsolve(a, b)"
+		],
+		seealso: [
+			"lsolveAll",
+			"lup",
+			"lusolve",
+			"usolve",
+			"matrix",
+			"sparse"
+		]
+	},
+	lsolveAll: {
+		name: "lsolveAll",
+		category: "Algebra",
+		syntax: ["x=lsolveAll(L, b)"],
+		description: "Finds all solutions of the linear system L * x = b where L is an [n x n] lower triangular matrix and b is a [n] column vector.",
+		examples: [
+			"a = [-2, 3; 2, 1]",
+			"b = [11, 9]",
+			"x = lsolve(a, b)"
+		],
+		seealso: [
+			"lsolve",
+			"lup",
+			"lusolve",
+			"usolve",
+			"matrix",
+			"sparse"
+		]
+	},
+	lup: {
+		name: "lup",
+		category: "Algebra",
+		syntax: ["lup(m)"],
+		description: "Calculate the Matrix LU decomposition with partial pivoting. Matrix A is decomposed in three matrices (L, U, P) where P * A = L * U",
+		examples: [
+			"lup([[2, 1], [1, 4]])",
+			"lup(matrix([[2, 1], [1, 4]]))",
+			"lup(sparse([[2, 1], [1, 4]]))"
+		],
+		seealso: [
+			"lusolve",
+			"lsolve",
+			"usolve",
+			"matrix",
+			"sparse",
+			"slu",
+			"qr"
+		]
+	},
+	lusolve: {
+		name: "lusolve",
+		category: "Algebra",
+		syntax: ["x=lusolve(A, b)", "x=lusolve(lu, b)"],
+		description: "Solves the linear system A * x = b where A is an [n x n] matrix and b is a [n] column vector.",
+		examples: [
+			"a = [-2, 3; 2, 1]",
+			"b = [11, 9]",
+			"x = lusolve(a, b)"
+		],
+		seealso: [
+			"lup",
+			"slu",
+			"lsolve",
+			"usolve",
+			"matrix",
+			"sparse"
+		]
+	},
+	leafCount: {
+		name: "leafCount",
+		category: "Algebra",
+		syntax: ["leafCount(expr)"],
+		description: "Computes the number of leaves in the parse tree of the given expression",
+		examples: ["leafCount(\"e^(i*pi)-1\")", "leafCount(parse(\"{a: 22/7, b: 10^(1/2)}\"))"],
+		seealso: ["simplify"]
+	},
+	polynomialRoot: {
+		name: "polynomialRoot",
+		category: "Algebra",
+		syntax: [
+			"x=polynomialRoot(-6, 3)",
+			"x=polynomialRoot(4, -4, 1)",
+			"x=polynomialRoot(-8, 12, -6, 1)"
+		],
+		description: "Finds the roots of a univariate polynomial given by its coefficients starting from constant, linear, and so on, increasing in degree.",
+		examples: ["a = polynomialRoot(-6, 11, -6, 1)"],
+		seealso: ["cbrt", "sqrt"]
+	},
+	resolve: {
+		name: "resolve",
+		category: "Algebra",
+		syntax: ["resolve(node, scope)"],
+		description: "Recursively substitute variables in an expression tree.",
+		examples: [
+			"resolve(parse(\"1 + x\"), { x: 7 })",
+			"resolve(parse(\"size(text)\"), { text: \"Hello World\" })",
+			"resolve(parse(\"x + y\"), { x: parse(\"3z\") })",
+			"resolve(parse(\"3x\"), { x: parse(\"y+z\"), z: parse(\"w^y\") })"
+		],
+		seealso: ["simplify", "evaluate"],
+		mayThrow: ["ReferenceError"]
+	},
+	simplify: {
+		name: "simplify",
+		category: "Algebra",
+		syntax: ["simplify(expr)", "simplify(expr, rules)"],
+		description: "Simplify an expression tree.",
+		examples: [
+			"simplify(\"3 + 2 / 4\")",
+			"simplify(\"2x + x\")",
+			"f = parse(\"x * (x + 2 + x)\")",
+			"simplified = simplify(f)",
+			"simplified.evaluate({x: 2})"
+		],
+		seealso: [
+			"simplifyCore",
+			"derivative",
+			"evaluate",
+			"parse",
+			"rationalize",
+			"resolve"
+		]
+	},
+	simplifyConstant: {
+		name: "simplifyConstant",
+		category: "Algebra",
+		syntax: ["simplifyConstant(expr)", "simplifyConstant(expr, options)"],
+		description: "Replace constant subexpressions of node with their values.",
+		examples: ["simplifyConstant(\"(3-3)*x\")", "simplifyConstant(parse(\"z-cos(tau/8)\"))"],
+		seealso: [
+			"simplify",
+			"simplifyCore",
+			"evaluate"
+		]
+	},
+	simplifyCore: {
+		name: "simplifyCore",
+		category: "Algebra",
+		syntax: ["simplifyCore(node)"],
+		description: "Perform simple one-pass simplifications on an expression tree.",
+		examples: ["simplifyCore(parse(\"0*x\"))", "simplifyCore(parse(\"(x+0)*2\"))"],
+		seealso: [
+			"simplify",
+			"simplifyConstant",
+			"evaluate"
+		]
+	},
+	symbolicEqual: {
+		name: "symbolicEqual",
+		category: "Algebra",
+		syntax: ["symbolicEqual(expr1, expr2)", "symbolicEqual(expr1, expr2, options)"],
+		description: "Returns true if the difference of the expressions simplifies to 0",
+		examples: [
+			"symbolicEqual(\"x*y\",\"y*x\")",
+			"symbolicEqual(\"abs(x^2)\", \"x^2\")",
+			"symbolicEqual(\"abs(x)\", \"x\", {context: {abs: {trivial: true}}})"
+		],
+		seealso: ["simplify", "evaluate"]
+	},
+	rationalize: {
+		name: "rationalize",
+		category: "Algebra",
+		syntax: [
+			"rationalize(expr)",
+			"rationalize(expr, scope)",
+			"rationalize(expr, scope, detailed)"
+		],
+		description: "Transform a rationalizable expression in a rational fraction. If rational fraction is one variable polynomial then converts the numerator and denominator in canonical form, with decreasing exponents, returning the coefficients of numerator.",
+		examples: ["rationalize(\"2x/y - y/(x+1)\")", "rationalize(\"2x/y - y/(x+1)\", true)"],
+		seealso: ["simplify"]
+	},
+	slu: {
+		name: "slu",
+		category: "Algebra",
+		syntax: ["slu(A, order, threshold)"],
+		description: "Calculate the Matrix LU decomposition with full pivoting. Matrix A is decomposed in two matrices (L, U) and two permutation vectors (pinv, q) where P * A * Q = L * U",
+		examples: ["slu(sparse([4.5, 0, 3.2, 0; 3.1, 2.9, 0, 0.9; 0, 1.7, 3, 0; 3.5, 0.4, 0, 1]), 1, 0.001)"],
+		seealso: [
+			"lusolve",
+			"lsolve",
+			"usolve",
+			"matrix",
+			"sparse",
+			"lup",
+			"qr"
+		]
+	},
+	usolve: {
+		name: "usolve",
+		category: "Algebra",
+		syntax: ["x=usolve(U, b)"],
+		description: "Finds one solution of the linear system U * x = b where U is an [n x n] upper triangular matrix and b is a [n] column vector.",
+		examples: ["x=usolve(sparse([1, 1, 1, 1; 0, 1, 1, 1; 0, 0, 1, 1; 0, 0, 0, 1]), [1; 2; 3; 4])"],
+		seealso: [
+			"usolveAll",
+			"lup",
+			"lusolve",
+			"lsolve",
+			"matrix",
+			"sparse"
+		]
+	},
+	usolveAll: {
+		name: "usolveAll",
+		category: "Algebra",
+		syntax: ["x=usolve(U, b)"],
+		description: "Finds all solutions of the linear system U * x = b where U is an [n x n] upper triangular matrix and b is a [n] column vector.",
+		examples: ["x=usolve(sparse([1, 1, 1, 1; 0, 1, 1, 1; 0, 0, 1, 1; 0, 0, 0, 1]), [1; 2; 3; 4])"],
+		seealso: [
+			"usolve",
+			"lup",
+			"lusolve",
+			"lsolve",
+			"matrix",
+			"sparse"
+		]
+	},
+	qr: {
+		name: "qr",
+		category: "Algebra",
+		syntax: ["qr(A)"],
+		description: "Calculates the Matrix QR decomposition. Matrix `A` is decomposed in two matrices (`Q`, `R`) where `Q` is an orthogonal matrix and `R` is an upper triangular matrix.",
+		examples: ["qr([[1, -1,  4], [1,  4, -2], [1,  4,  2], [1,  -1, 0]])"],
+		seealso: [
+			"lup",
+			"slu",
+			"matrix"
+		]
+	},
+	abs: {
+		name: "abs",
+		category: "Arithmetic",
+		syntax: ["abs(x)"],
+		description: "Compute the absolute value.",
+		examples: ["abs(3.5)", "abs(-4.2)"],
+		seealso: ["sign"]
+	},
+	add: {
+		name: "add",
+		category: "Operators",
+		syntax: ["x + y", "add(x, y)"],
+		description: "Add two values.",
+		examples: [
+			"a = 2.1 + 3.6",
+			"a - 3.6",
+			"3 + 2i",
+			"3 cm + 2 inch",
+			"\"2.3\" + \"4\""
+		],
+		seealso: ["subtract"]
+	},
+	cbrt: {
+		name: "cbrt",
+		category: "Arithmetic",
+		syntax: ["cbrt(x)", "cbrt(x, allRoots)"],
+		description: "Compute the cubic root value. If x = y * y * y, then y is the cubic root of x. When `x` is a number or complex number, an optional second argument `allRoots` can be provided to return all three cubic roots. If not provided, the principal root is returned",
+		examples: [
+			"cbrt(64)",
+			"cube(4)",
+			"cbrt(-8)",
+			"cbrt(2 + 3i)",
+			"cbrt(8i)",
+			"cbrt(8i, true)",
+			"cbrt(27 m^3)"
+		],
+		seealso: [
+			"square",
+			"sqrt",
+			"cube",
+			"multiply"
+		]
+	},
+	ceil: {
+		name: "ceil",
+		category: "Arithmetic",
+		syntax: [
+			"ceil(x)",
+			"ceil(x, n)",
+			"ceil(unit, valuelessUnit)",
+			"ceil(unit, n, valuelessUnit)"
+		],
+		description: "Round a value towards plus infinity. If x is complex, both real and imaginary part are rounded towards plus infinity.",
+		examples: [
+			"ceil(3.2)",
+			"ceil(3.8)",
+			"ceil(-4.2)",
+			"ceil(3.241cm, cm)",
+			"ceil(3.241cm, 2, cm)"
+		],
+		seealso: [
+			"floor",
+			"fix",
+			"round"
+		]
+	},
+	cube: {
+		name: "cube",
+		category: "Arithmetic",
+		syntax: ["cube(x)"],
+		description: "Compute the cube of a value. The cube of x is x * x * x.",
+		examples: [
+			"cube(2)",
+			"2^3",
+			"2 * 2 * 2"
+		],
+		seealso: [
+			"multiply",
+			"square",
+			"pow"
+		]
+	},
+	divide: {
+		name: "divide",
+		category: "Operators",
+		syntax: ["x / y", "divide(x, y)"],
+		description: "Divide two values.",
+		examples: [
+			"a = 2 / 3",
+			"a * 3",
+			"4.5 / 2",
+			"3 + 4 / 2",
+			"(3 + 4) / 2",
+			"18 km / 4.5"
+		],
+		seealso: ["multiply"]
+	},
+	dotDivide: {
+		name: "dotDivide",
+		category: "Operators",
+		syntax: ["x ./ y", "dotDivide(x, y)"],
+		description: "Divide two values element wise.",
+		examples: [
+			"a = [1, 2, 3; 4, 5, 6]",
+			"b = [2, 1, 1; 3, 2, 5]",
+			"a ./ b"
+		],
+		seealso: [
+			"multiply",
+			"dotMultiply",
+			"divide"
+		]
+	},
+	dotMultiply: {
+		name: "dotMultiply",
+		category: "Operators",
+		syntax: ["x .* y", "dotMultiply(x, y)"],
+		description: "Multiply two values element wise.",
+		examples: [
+			"a = [1, 2, 3; 4, 5, 6]",
+			"b = [2, 1, 1; 3, 2, 5]",
+			"a .* b"
+		],
+		seealso: [
+			"multiply",
+			"divide",
+			"dotDivide"
+		]
+	},
+	dotPow: {
+		name: "dotPow",
+		category: "Operators",
+		syntax: ["x .^ y", "dotPow(x, y)"],
+		description: "Calculates the power of x to y element wise.",
+		examples: ["a = [1, 2, 3; 4, 5, 6]", "a .^ 2"],
+		seealso: ["pow"]
+	},
+	exp: {
+		name: "exp",
+		category: "Arithmetic",
+		syntax: ["exp(x)"],
+		description: "Calculate the exponent of a value.",
+		examples: [
+			"exp(1.3)",
+			"e ^ 1.3",
+			"log(exp(1.3))",
+			"x = 2.4",
+			"(exp(i*x) == cos(x) + i*sin(x))   # Euler's formula"
+		],
+		seealso: [
+			"expm",
+			"expm1",
+			"pow",
+			"log"
+		]
+	},
+	expm: {
+		name: "expm",
+		category: "Arithmetic",
+		syntax: ["exp(x)"],
+		description: "Compute the matrix exponential, expm(A) = e^A. The matrix must be square. Not to be confused with exp(a), which performs element-wise exponentiation.",
+		examples: ["expm([[0,2],[0,0]])"],
+		seealso: ["exp"]
+	},
+	expm1: {
+		name: "expm1",
+		category: "Arithmetic",
+		syntax: ["expm1(x)"],
+		description: "Calculate the value of subtracting 1 from the exponential value.",
+		examples: [
+			"expm1(2)",
+			"pow(e, 2) - 1",
+			"log(expm1(2) + 1)"
+		],
+		seealso: [
+			"exp",
+			"pow",
+			"log"
+		]
+	},
+	fix: {
+		name: "fix",
+		category: "Arithmetic",
+		syntax: [
+			"fix(x)",
+			"fix(x, n)",
+			"fix(unit, valuelessUnit)",
+			"fix(unit, n, valuelessUnit)"
+		],
+		description: "Round a value towards zero. If x is complex, both real and imaginary part are rounded towards zero.",
+		examples: [
+			"fix(3.2)",
+			"fix(3.8)",
+			"fix(-4.2)",
+			"fix(-4.8)",
+			"fix(3.241cm, cm)",
+			"fix(3.241cm, 2, cm)"
+		],
+		seealso: [
+			"ceil",
+			"floor",
+			"round"
+		]
+	},
+	floor: {
+		name: "floor",
+		category: "Arithmetic",
+		syntax: [
+			"floor(x)",
+			"floor(x, n)",
+			"floor(unit, valuelessUnit)",
+			"floor(unit, n, valuelessUnit)"
+		],
+		description: "Round a value towards minus infinity.If x is complex, both real and imaginary part are rounded towards minus infinity.",
+		examples: [
+			"floor(3.2)",
+			"floor(3.8)",
+			"floor(-4.2)",
+			"floor(3.241cm, cm)",
+			"floor(3.241cm, 2, cm)"
+		],
+		seealso: [
+			"ceil",
+			"fix",
+			"round"
+		]
+	},
+	gcd: {
+		name: "gcd",
+		category: "Arithmetic",
+		syntax: ["gcd(a, b)", "gcd(a, b, c, ...)"],
+		description: "Compute the greatest common divisor.",
+		examples: [
+			"gcd(8, 12)",
+			"gcd(-4, 6)",
+			"gcd(25, 15, -10)"
+		],
+		seealso: ["lcm", "xgcd"]
+	},
+	hypot: {
+		name: "hypot",
+		category: "Arithmetic",
+		syntax: ["hypot(a, b, c, ...)", "hypot([a, b, c, ...])"],
+		description: "Calculate the hypotenuse of a list with values.",
+		examples: [
+			"hypot(3, 4)",
+			"sqrt(3^2 + 4^2)",
+			"hypot(-2)",
+			"hypot([3, 4, 5])"
+		],
+		seealso: ["abs", "norm"]
+	},
+	lcm: {
+		name: "lcm",
+		category: "Arithmetic",
+		syntax: ["lcm(x, y)"],
+		description: "Compute the least common multiple.",
+		examples: [
+			"lcm(4, 6)",
+			"lcm(6, 21)",
+			"lcm(6, 21, 5)"
+		],
+		seealso: ["gcd"]
+	},
+	log: {
+		name: "log",
+		category: "Arithmetic",
+		syntax: ["log(x)", "log(x, base)"],
+		description: "Compute the logarithm of a value. If no base is provided, the natural logarithm of x is calculated. If base if provided, the logarithm is calculated for the specified base. log(x, base) is defined as log(x) / log(base).",
+		examples: [
+			"log(3.5)",
+			"a = log(2.4)",
+			"exp(a)",
+			"10 ^ 4",
+			"log(10000, 10)",
+			"log(10000) / log(10)",
+			"b = log(1024, 2)",
+			"2 ^ b"
+		],
+		seealso: [
+			"exp",
+			"log1p",
+			"log2",
+			"log10"
+		]
+	},
+	log2: {
+		name: "log2",
+		category: "Arithmetic",
+		syntax: ["log2(x)"],
+		description: "Calculate the 2-base of a value. This is the same as calculating `log(x, 2)`.",
+		examples: [
+			"log2(0.03125)",
+			"log2(16)",
+			"log2(16) / log2(2)",
+			"pow(2, 4)"
+		],
+		seealso: [
+			"exp",
+			"log1p",
+			"log",
+			"log10"
+		]
+	},
+	log1p: {
+		name: "log1p",
+		category: "Arithmetic",
+		syntax: ["log1p(x)", "log1p(x, base)"],
+		description: "Calculate the logarithm of a `value+1`",
+		examples: [
+			"log1p(2.5)",
+			"exp(log1p(1.4))",
+			"pow(10, 4)",
+			"log1p(9999, 10)",
+			"log1p(9999) / log(10)"
+		],
+		seealso: [
+			"exp",
+			"log",
+			"log2",
+			"log10"
+		]
+	},
+	log10: {
+		name: "log10",
+		category: "Arithmetic",
+		syntax: ["log10(x)"],
+		description: "Compute the 10-base logarithm of a value.",
+		examples: [
+			"log10(0.00001)",
+			"log10(10000)",
+			"10 ^ 4",
+			"log(10000) / log(10)",
+			"log(10000, 10)"
+		],
+		seealso: ["exp", "log"]
+	},
+	mod: {
+		name: "mod",
+		category: "Operators",
+		syntax: [
+			"x % y",
+			"x mod y",
+			"mod(x, y)"
+		],
+		description: "Calculates the modulus, the remainder of an integer division.",
+		examples: [
+			"7 % 3",
+			"11 % 2",
+			"10 mod 4",
+			"isOdd(x) = x % 2",
+			"isOdd(2)",
+			"isOdd(3)"
+		],
+		seealso: ["divide"]
+	},
+	multiply: {
+		name: "multiply",
+		category: "Operators",
+		syntax: ["x * y", "multiply(x, y)"],
+		description: "multiply two values.",
+		examples: [
+			"a = 2.1 * 3.4",
+			"a / 3.4",
+			"2 * 3 + 4",
+			"2 * (3 + 4)",
+			"3 * 2.1 km"
+		],
+		seealso: ["divide"]
+	},
+	norm: {
+		name: "norm",
+		category: "Arithmetic",
+		syntax: ["norm(x)", "norm(x, p)"],
+		description: "Calculate the norm of a number, vector or matrix.",
+		examples: [
+			"abs(-3.5)",
+			"norm(-3.5)",
+			"norm(3 - 4i)",
+			"norm([1, 2, -3], Infinity)",
+			"norm([1, 2, -3], -Infinity)",
+			"norm([3, 4], 2)",
+			"norm([[1, 2], [3, 4]], 1)",
+			"norm([[1, 2], [3, 4]], \"inf\")",
+			"norm([[1, 2], [3, 4]], \"fro\")"
+		]
+	},
+	nthRoot: {
+		name: "nthRoot",
+		category: "Arithmetic",
+		syntax: ["nthRoot(a)", "nthRoot(a, root)"],
+		description: "Calculate the nth root of a value. The principal nth root of a positive real number A, is the positive real solution of the equation \"x^root = A\".",
+		examples: [
+			"4 ^ 3",
+			"nthRoot(64, 3)",
+			"nthRoot(9, 2)",
+			"sqrt(9)"
+		],
+		seealso: [
+			"nthRoots",
+			"pow",
+			"sqrt"
+		]
+	},
+	nthRoots: {
+		name: "nthRoots",
+		category: "Arithmetic",
+		syntax: ["nthRoots(A)", "nthRoots(A, root)"],
+		description: "Calculate the nth roots of a value. An nth root of a positive real number A, is a positive real solution of the equation \"x^root = A\". This function returns an array of complex values.",
+		examples: ["nthRoots(1)", "nthRoots(1, 3)"],
+		seealso: [
+			"sqrt",
+			"pow",
+			"nthRoot"
+		]
+	},
+	pow: {
+		name: "pow",
+		category: "Operators",
+		syntax: ["x ^ y", "pow(x, y)"],
+		description: "Calculates the power of x to y, x^y.",
+		examples: [
+			"2^3",
+			"2*2*2",
+			"1 + e ^ (pi * i)",
+			"pow([[1, 2], [4, 3]], 2)",
+			"pow([[1, 2], [4, 3]], -1)"
+		],
+		seealso: [
+			"multiply",
+			"nthRoot",
+			"nthRoots",
+			"sqrt"
+		]
+	},
+	round: {
+		name: "round",
+		category: "Arithmetic",
+		syntax: [
+			"round(x)",
+			"round(x, n)",
+			"round(unit, valuelessUnit)",
+			"round(unit, n, valuelessUnit)"
+		],
+		description: "round a value towards the nearest integer.If x is complex, both real and imaginary part are rounded towards the nearest integer. When n is specified, the value is rounded to n decimals.",
+		examples: [
+			"round(3.2)",
+			"round(3.8)",
+			"round(-4.2)",
+			"round(-4.8)",
+			"round(pi, 3)",
+			"round(123.45678, 2)",
+			"round(3.241cm, 2, cm)",
+			"round([3.2, 3.8, -4.7])"
+		],
+		seealso: [
+			"ceil",
+			"floor",
+			"fix"
+		]
+	},
+	sign: {
+		name: "sign",
+		category: "Arithmetic",
+		syntax: ["sign(x)"],
+		description: "Compute the sign of a value. The sign of a value x is 1 when x>0, -1 when x<0, and 0 when x=0.",
+		examples: [
+			"sign(3.5)",
+			"sign(-4.2)",
+			"sign(0)"
+		],
+		seealso: ["abs"]
+	},
+	sqrt: {
+		name: "sqrt",
+		category: "Arithmetic",
+		syntax: ["sqrt(x)"],
+		description: "Compute the square root value. If x = y * y, then y is the square root of x.",
+		examples: [
+			"sqrt(25)",
+			"5 * 5",
+			"sqrt(-1)"
+		],
+		seealso: [
+			"square",
+			"sqrtm",
+			"multiply",
+			"nthRoot",
+			"nthRoots",
+			"pow"
+		]
+	},
+	sqrtm: {
+		name: "sqrtm",
+		category: "Arithmetic",
+		syntax: ["sqrtm(x)"],
+		description: "Calculate the principal square root of a square matrix. The principal square root matrix `X` of another matrix `A` is such that `X * X = A`.",
+		examples: ["sqrtm([[33, 24], [48, 57]])"],
+		seealso: [
+			"sqrt",
+			"abs",
+			"square",
+			"multiply"
+		]
+	},
+	square: {
+		name: "square",
+		category: "Arithmetic",
+		syntax: ["square(x)"],
+		description: "Compute the square of a value. The square of x is x * x.",
+		examples: [
+			"square(3)",
+			"sqrt(9)",
+			"3^2",
+			"3 * 3"
+		],
+		seealso: [
+			"multiply",
+			"pow",
+			"sqrt",
+			"cube"
+		]
+	},
+	subtract: {
+		name: "subtract",
+		category: "Operators",
+		syntax: ["x - y", "subtract(x, y)"],
+		description: "subtract two values.",
+		examples: [
+			"a = 5.3 - 2",
+			"a + 2",
+			"2/3 - 1/6",
+			"2 * 3 - 3",
+			"2.1 km - 500m"
+		],
+		seealso: ["add"]
+	},
+	unaryMinus: {
+		name: "unaryMinus",
+		category: "Operators",
+		syntax: ["-x", "unaryMinus(x)"],
+		description: "Inverse the sign of a value. Converts booleans and strings to numbers.",
+		examples: [
+			"-4.5",
+			"-(-5.6)",
+			"-\"22\""
+		],
+		seealso: [
+			"add",
+			"subtract",
+			"unaryPlus"
+		]
+	},
+	unaryPlus: {
+		name: "unaryPlus",
+		category: "Operators",
+		syntax: ["+x", "unaryPlus(x)"],
+		description: "Converts booleans and strings to numbers.",
+		examples: ["+true", "+\"2\""],
+		seealso: [
+			"add",
+			"subtract",
+			"unaryMinus"
+		]
+	},
+	xgcd: {
+		name: "xgcd",
+		category: "Arithmetic",
+		syntax: ["xgcd(a, b)"],
+		description: "Calculate the extended greatest common divisor for two values. The result is an array [d, x, y] with 3 entries, where d is the greatest common divisor, and d = x * a + y * b.",
+		examples: [
+			"xgcd(8, 12)",
+			"gcd(8, 12)",
+			"xgcd(36163, 21199)"
+		],
+		seealso: ["gcd", "lcm"]
+	},
+	invmod: {
+		name: "invmod",
+		category: "Arithmetic",
+		syntax: ["invmod(a, b)"],
+		description: "Calculate the (modular) multiplicative inverse of a modulo b. Solution to the equation ax ≣ 1 (mod b)",
+		examples: [
+			"invmod(8, 12)",
+			"invmod(7, 13)",
+			"invmod(15151, 15122)"
+		],
+		seealso: ["gcd", "xgcd"]
+	},
+	num: {
+		name: "num",
+		category: "Fraction",
+		syntax: ["num(x)"],
+		description: "Get the numerator of a fraction.",
+		examples: ["num(fraction(2, 3))", "num(fraction(5, 8))"],
+		seealso: ["den", "fraction"]
+	},
+	den: {
+		name: "den",
+		category: "Fraction",
+		syntax: ["den(x)"],
+		description: "Get the denominator of a fraction.",
+		examples: ["den(fraction(2, 3))", "den(fraction(5, 8))"],
+		seealso: ["num", "fraction"]
+	},
+	bitAnd: {
+		name: "bitAnd",
+		category: "Bitwise",
+		syntax: ["x & y", "bitAnd(x, y)"],
+		description: "Bitwise AND operation. Performs the logical AND operation on each pair of the corresponding bits of the two given values by multiplying them. If both bits in the compared position are 1, the bit in the resulting binary representation is 1, otherwise, the result is 0",
+		examples: [
+			"5 & 3",
+			"bitAnd(53, 131)",
+			"[1, 12, 31] & 42"
+		],
+		seealso: [
+			"bitNot",
+			"bitOr",
+			"bitXor",
+			"leftShift",
+			"rightArithShift",
+			"rightLogShift"
+		]
+	},
+	bitNot: {
+		name: "bitNot",
+		category: "Bitwise",
+		syntax: ["~x", "bitNot(x)"],
+		description: "Bitwise NOT operation. Performs a logical negation on each bit of the given value. Bits that are 0 become 1, and those that are 1 become 0.",
+		examples: [
+			"~1",
+			"~2",
+			"bitNot([2, -3, 4])"
+		],
+		seealso: [
+			"bitAnd",
+			"bitOr",
+			"bitXor",
+			"leftShift",
+			"rightArithShift",
+			"rightLogShift"
+		]
+	},
+	bitOr: {
+		name: "bitOr",
+		category: "Bitwise",
+		syntax: ["x | y", "bitOr(x, y)"],
+		description: "Bitwise OR operation. Performs the logical inclusive OR operation on each pair of corresponding bits of the two given values. The result in each position is 1 if the first bit is 1 or the second bit is 1 or both bits are 1, otherwise, the result is 0.",
+		examples: ["5 | 3", "bitOr([1, 2, 3], 4)"],
+		seealso: [
+			"bitAnd",
+			"bitNot",
+			"bitXor",
+			"leftShift",
+			"rightArithShift",
+			"rightLogShift"
+		]
+	},
+	bitXor: {
+		name: "bitXor",
+		category: "Bitwise",
+		syntax: ["bitXor(x, y)"],
+		description: "Bitwise XOR operation, exclusive OR. Performs the logical exclusive OR operation on each pair of corresponding bits of the two given values. The result in each position is 1 if only the first bit is 1 or only the second bit is 1, but will be 0 if both are 0 or both are 1.",
+		examples: ["bitOr(1, 2)", "bitXor([2, 3, 4], 4)"],
+		seealso: [
+			"bitAnd",
+			"bitNot",
+			"bitOr",
+			"leftShift",
+			"rightArithShift",
+			"rightLogShift"
+		]
+	},
+	leftShift: {
+		name: "leftShift",
+		category: "Bitwise",
+		syntax: ["x << y", "leftShift(x, y)"],
+		description: "Bitwise left logical shift of a value x by y number of bits.",
+		examples: ["4 << 1", "8 >> 1"],
+		seealso: [
+			"bitAnd",
+			"bitNot",
+			"bitOr",
+			"bitXor",
+			"rightArithShift",
+			"rightLogShift"
+		]
+	},
+	rightArithShift: {
+		name: "rightArithShift",
+		category: "Bitwise",
+		syntax: ["x >> y", "rightArithShift(x, y)"],
+		description: "Bitwise right arithmetic shift of a value x by y number of bits.",
+		examples: [
+			"8 >> 1",
+			"4 << 1",
+			"-12 >> 2"
+		],
+		seealso: [
+			"bitAnd",
+			"bitNot",
+			"bitOr",
+			"bitXor",
+			"leftShift",
+			"rightLogShift"
+		]
+	},
+	rightLogShift: {
+		name: "rightLogShift",
+		category: "Bitwise",
+		syntax: ["x >>> y", "rightLogShift(x, y)"],
+		description: "Bitwise right logical shift of a value x by y number of bits.",
+		examples: [
+			"8 >>> 1",
+			"4 << 1",
+			"-12 >>> 2"
+		],
+		seealso: [
+			"bitAnd",
+			"bitNot",
+			"bitOr",
+			"bitXor",
+			"leftShift",
+			"rightArithShift"
+		]
+	},
+	bellNumbers: {
+		name: "bellNumbers",
+		category: "Combinatorics",
+		syntax: ["bellNumbers(n)"],
+		description: "The Bell Numbers count the number of partitions of a set. A partition is a pairwise disjoint subset of S whose union is S. `bellNumbers` only takes integer arguments. The following condition must be enforced: n >= 0.",
+		examples: ["bellNumbers(3)", "bellNumbers(8)"],
+		seealso: ["stirlingS2"]
+	},
+	catalan: {
+		name: "catalan",
+		category: "Combinatorics",
+		syntax: ["catalan(n)"],
+		description: "The Catalan Numbers enumerate combinatorial structures of many different types. catalan only takes integer arguments. The following condition must be enforced: n >= 0.",
+		examples: ["catalan(3)", "catalan(8)"],
+		seealso: ["bellNumbers"]
+	},
+	composition: {
+		name: "composition",
+		category: "Combinatorics",
+		syntax: ["composition(n, k)"],
+		description: "The composition counts of n into k parts. composition only takes integer arguments. The following condition must be enforced: k <= n.",
+		examples: ["composition(5, 3)"],
+		seealso: ["combinations"]
+	},
+	stirlingS2: {
+		name: "stirlingS2",
+		category: "Combinatorics",
+		syntax: ["stirlingS2(n, k)"],
+		description: "The Stirling numbers of the second kind, counts the number of ways to partition a set of n labelled objects into k nonempty unlabelled subsets. `stirlingS2` only takes integer arguments. The following condition must be enforced: k <= n. If n = k or k = 1, then s(n,k) = 1.",
+		examples: ["stirlingS2(5, 3)"],
+		seealso: ["bellNumbers", "bernoulli"]
+	},
+	config: {
+		name: "config",
+		category: "Core",
+		syntax: ["config()", "config(options)"],
+		description: "Get configuration or change configuration.",
+		examples: [
+			"config()",
+			"1/3 + 1/4",
+			"config({number: \"Fraction\"})",
+			"1/3 + 1/4"
+		],
+		seealso: []
+	},
+	import: {
+		name: "import",
+		category: "Core",
+		syntax: ["import(functions)", "import(functions, options)"],
+		description: "Import functions or constants from an object.",
+		examples: [
+			"import({myFn: f(x)=x^2, myConstant: 32 })",
+			"myFn(2)",
+			"myConstant"
+		],
+		seealso: []
+	},
+	typed: {
+		name: "typed",
+		category: "Core",
+		syntax: ["typed(signatures)", "typed(name, signatures)"],
+		description: "Create a typed function.",
+		examples: [
+			"double = typed({ \"number\": f(x)=x+x, \"string\": f(x)=concat(x,x) })",
+			"double(2)",
+			"double(\"hello\")"
+		],
+		seealso: []
+	},
+	arg: {
+		name: "arg",
+		category: "Complex",
+		syntax: ["arg(x)"],
+		description: "Compute the argument of a complex value. If x = a+bi, the argument is computed as atan2(b, a).",
+		examples: [
+			"arg(2 + 2i)",
+			"atan2(3, 2)",
+			"arg(2 + 3i)"
+		],
+		seealso: [
+			"re",
+			"im",
+			"conj",
+			"abs"
+		]
+	},
+	conj: {
+		name: "conj",
+		category: "Complex",
+		syntax: ["conj(x)"],
+		description: "Compute the complex conjugate of a complex value. If x = a+bi, the complex conjugate is a-bi.",
+		examples: [
+			"conj(2 + 3i)",
+			"conj(2 - 3i)",
+			"conj(-5.2i)"
+		],
+		seealso: [
+			"re",
+			"im",
+			"abs",
+			"arg"
+		]
+	},
+	re: {
+		name: "re",
+		category: "Complex",
+		syntax: ["re(x)"],
+		description: "Get the real part of a complex number.",
+		examples: [
+			"re(2 + 3i)",
+			"im(2 + 3i)",
+			"re(-5.2i)",
+			"re(2.4)"
+		],
+		seealso: [
+			"im",
+			"conj",
+			"abs",
+			"arg"
+		]
+	},
+	im: {
+		name: "im",
+		category: "Complex",
+		syntax: ["im(x)"],
+		description: "Get the imaginary part of a complex number.",
+		examples: [
+			"im(2 + 3i)",
+			"re(2 + 3i)",
+			"im(-5.2i)",
+			"im(2.4)"
+		],
+		seealso: [
+			"re",
+			"conj",
+			"abs",
+			"arg"
+		]
+	},
+	evaluate: {
+		name: "evaluate",
+		category: "Expression",
+		syntax: [
+			"evaluate(expression)",
+			"evaluate(expression, scope)",
+			"evaluate([expr1, expr2, expr3, ...])",
+			"evaluate([expr1, expr2, expr3, ...], scope)"
+		],
+		description: "Evaluate an expression or an array with expressions.",
+		examples: [
+			"evaluate(\"2 + 3\")",
+			"evaluate(\"sqrt(16)\")",
+			"evaluate(\"2 inch to cm\")",
+			"evaluate(\"sin(x * pi)\", { \"x\": 1/2 })",
+			"evaluate([\"width=2\", \"height=4\",\"width*height\"])"
+		],
+		seealso: [
+			"parser",
+			"parse",
+			"compile"
+		]
+	},
+	help: {
+		name: "help",
+		category: "Expression",
+		syntax: ["help(object)", "help(string)"],
+		description: "Display documentation on a function or data type.",
+		examples: ["help(sqrt)", "help(\"complex\")"],
+		seealso: []
+	},
+	parse: {
+		name: "parse",
+		category: "Expression",
+		syntax: [
+			"parse(expr)",
+			"parse(expr, options)",
+			"parse([expr1, expr2, expr3, ...])",
+			"parse([expr1, expr2, expr3, ...], options)"
+		],
+		description: "Parse an expression. Returns a node tree, which can be evaluated by invoking node.evaluate() or transformed into a functional object via node.compile().",
+		examples: [
+			"node1 = parse(\"sqrt(3^2 + 4^2)\")",
+			"node1.evaluate()",
+			"code1 = node1.compile()",
+			"code1.evaluate()",
+			"scope = {a: 3, b: 4}",
+			"node2 = parse(\"a * b\")",
+			"node2.evaluate(scope)",
+			"code2 = node2.compile()",
+			"code2.evaluate(scope)"
+		],
+		seealso: [
+			"parser",
+			"evaluate",
+			"compile"
+		]
+	},
+	parser: {
+		name: "parser",
+		category: "Expression",
+		syntax: ["parser()"],
+		description: "Create a parser object that keeps a context of variables and their values, allowing the evaluation of expressions in that context.",
+		examples: [
+			"myParser = parser()",
+			"myParser.evaluate(\"sqrt(3^2 + 4^2)\")",
+			"myParser.set(\"x\", 3)",
+			"myParser.evaluate(\"y = x + 3\")",
+			"myParser.evaluate([\"y = x + 3\", \"y = y + 1\"])",
+			"myParser.get(\"y\")"
+		],
+		seealso: [
+			"evaluate",
+			"parse",
+			"compile"
+		]
+	},
+	compile: {
+		name: "compile",
+		category: "Expression",
+		syntax: ["compile(expr) ", "compile([expr1, expr2, expr3, ...])"],
+		description: "Parse and compile an expression. Returns a an object with a function evaluate([scope]) to evaluate the compiled expression.",
+		examples: [
+			"code1 = compile(\"sqrt(3^2 + 4^2)\")",
+			"code1.evaluate() ",
+			"code2 = compile(\"a * b\")",
+			"code2.evaluate({a: 3, b: 4})"
+		],
+		seealso: [
+			"parser",
+			"parse",
+			"evaluate"
+		]
+	},
+	distance: {
+		name: "distance",
+		category: "Geometry",
+		syntax: ["distance([x1, y1], [x2, y2])", "distance([[x1, y1], [x2, y2]])"],
+		description: "Calculates the Euclidean distance between two points.",
+		examples: ["distance([0,0], [4,4])", "distance([[0,0], [4,4]])"],
+		seealso: []
+	},
+	intersect: {
+		name: "intersect",
+		category: "Geometry",
+		syntax: ["intersect(expr1, expr2, expr3, expr4)", "intersect(expr1, expr2, expr3)"],
+		description: "Computes the intersection point of lines and/or planes.",
+		examples: ["intersect([0, 0], [10, 10], [10, 0], [0, 10])", "intersect([1, 0, 1],  [4, -2, 2], [1, 1, 1, 6])"],
+		seealso: []
+	},
+	and: {
+		name: "and",
+		category: "Logical",
+		syntax: ["x and y", "and(x, y)"],
+		description: "Logical and. Test whether two values are both defined with a nonzero/nonempty value.",
+		examples: [
+			"true and false",
+			"true and true",
+			"2 and 4"
+		],
+		seealso: [
+			"not",
+			"or",
+			"xor"
+		]
+	},
+	not: {
+		name: "not",
+		category: "Logical",
+		syntax: ["not x", "not(x)"],
+		description: "Logical not. Flips the boolean value of given argument.",
+		examples: [
+			"not true",
+			"not false",
+			"not 2",
+			"not 0"
+		],
+		seealso: [
+			"and",
+			"or",
+			"xor"
+		]
+	},
+	nullish: {
+		name: "nullish",
+		category: "Logical",
+		syntax: ["x ?? y", "nullish(x, y)"],
+		description: "Nullish coalescing operator. Returns the right-hand operand when the left-hand operand is null or undefined, and otherwise returns the left-hand operand.",
+		examples: [
+			"null ?? 42",
+			"undefined ?? 42",
+			"0 ?? 42",
+			"false ?? 42",
+			"null ?? undefined ?? 42"
+		],
+		seealso: [
+			"and",
+			"or",
+			"not"
+		]
+	},
+	or: {
+		name: "or",
+		category: "Logical",
+		syntax: ["x or y", "or(x, y)"],
+		description: "Logical or. Test if at least one value is defined with a nonzero/nonempty value.",
+		examples: [
+			"true or false",
+			"false or false",
+			"0 or 4"
+		],
+		seealso: [
+			"not",
+			"and",
+			"xor"
+		]
+	},
+	xor: {
+		name: "xor",
+		category: "Logical",
+		syntax: ["x xor y", "xor(x, y)"],
+		description: "Logical exclusive or, xor. Test whether one and only one value is defined with a nonzero/nonempty value.",
+		examples: [
+			"true xor false",
+			"false xor false",
+			"true xor true",
+			"0 xor 4"
+		],
+		seealso: [
+			"not",
+			"and",
+			"or"
+		]
+	},
+	mapSlices: {
+		name: "mapSlices",
+		category: "Matrix",
+		syntax: ["mapSlices(A, dim, callback)"],
+		description: "Generate a matrix one dimension less than A by applying callback to each slice of A along dimension dim.",
+		examples: [
+			"A = [[1, 2], [3, 4]]",
+			"mapSlices(A, 1, sum)",
+			"mapSlices(A, 2, prod)"
+		],
+		seealso: ["map", "forEach"]
+	},
+	concat: {
+		name: "concat",
+		category: "Matrix",
+		syntax: ["concat(A, B, C, ...)", "concat(A, B, C, ..., dim)"],
+		description: "Concatenate matrices. By default, the matrices are concatenated by the last dimension. The dimension on which to concatenate can be provided as last argument.",
+		examples: [
+			"A = [1, 2; 5, 6]",
+			"B = [3, 4; 7, 8]",
+			"concat(A, B)",
+			"concat(A, B, 1)",
+			"concat(A, B, 2)"
+		],
+		seealso: [
+			"det",
+			"diag",
+			"identity",
+			"inv",
+			"ones",
+			"range",
+			"size",
+			"squeeze",
+			"subset",
+			"trace",
+			"transpose",
+			"zeros"
+		]
+	},
+	count: {
+		name: "count",
+		category: "Matrix",
+		syntax: ["count(x)"],
+		description: "Count the number of elements of a matrix, array or string.",
+		examples: [
+			"a = [1, 2; 3, 4; 5, 6]",
+			"count(a)",
+			"size(a)",
+			"count(\"hello world\")"
+		],
+		seealso: ["size"]
+	},
+	cross: {
+		name: "cross",
+		category: "Matrix",
+		syntax: ["cross(A, B)"],
+		description: "Calculate the cross product for two vectors in three dimensional space.",
+		examples: [
+			"cross([1, 1, 0],  [0, 1, 1])",
+			"cross([3, -3, 1], [4, 9, 2])",
+			"cross([2, 3, 4],  [5, 6, 7])"
+		],
+		seealso: ["multiply", "dot"]
+	},
+	column: {
+		name: "column",
+		category: "Matrix",
+		syntax: ["column(x, index)"],
+		description: "Return a column from a matrix or array.",
+		examples: [
+			"A = [[1, 2], [3, 4]]",
+			"column(A, 1)",
+			"column(A, 2)"
+		],
+		seealso: ["row", "matrixFromColumns"]
+	},
+	ctranspose: {
+		name: "ctranspose",
+		category: "Matrix",
+		syntax: ["x'", "ctranspose(x)"],
+		description: "Complex Conjugate and Transpose a matrix",
+		examples: [
+			"a = [1, 2, 3; 4, 5, 6]",
+			"a'",
+			"ctranspose(a)"
+		],
+		seealso: [
+			"concat",
+			"det",
+			"diag",
+			"identity",
+			"inv",
+			"ones",
+			"range",
+			"size",
+			"squeeze",
+			"subset",
+			"trace",
+			"zeros"
+		]
+	},
+	det: {
+		name: "det",
+		category: "Matrix",
+		syntax: ["det(x)"],
+		description: "Calculate the determinant of a matrix",
+		examples: ["det([1, 2; 3, 4])", "det([-2, 2, 3; -1, 1, 3; 2, 0, -1])"],
+		seealso: [
+			"concat",
+			"diag",
+			"identity",
+			"inv",
+			"ones",
+			"range",
+			"size",
+			"squeeze",
+			"subset",
+			"trace",
+			"transpose",
+			"zeros"
+		]
+	},
+	diag: {
+		name: "diag",
+		category: "Matrix",
+		syntax: ["diag(x)", "diag(x, k)"],
+		description: "Create a diagonal matrix or retrieve the diagonal of a matrix. When x is a vector, a matrix with the vector values on the diagonal will be returned. When x is a matrix, a vector with the diagonal values of the matrix is returned. When k is provided, the k-th diagonal will be filled in or retrieved, if k is positive, the values are placed on the super diagonal. When k is negative, the values are placed on the sub diagonal.",
+		examples: [
+			"diag(1:3)",
+			"diag(1:3, 1)",
+			"a = [1, 2, 3; 4, 5, 6; 7, 8, 9]",
+			"diag(a)"
+		],
+		seealso: [
+			"concat",
+			"det",
+			"identity",
+			"inv",
+			"ones",
+			"range",
+			"size",
+			"squeeze",
+			"subset",
+			"trace",
+			"transpose",
+			"zeros"
+		]
+	},
+	diff: {
+		name: "diff",
+		category: "Matrix",
+		syntax: ["diff(arr)", "diff(arr, dim)"],
+		description: [
+			"Create a new matrix or array with the difference of the passed matrix or array.",
+			"Dim parameter is optional and used to indicate the dimension of the array/matrix to apply the difference",
+			"If no dimension parameter is passed it is assumed as dimension 0",
+			"Dimension is zero-based in javascript and one-based in the parser",
+			"Arrays must be 'rectangular' meaning arrays like [1, 2]",
+			"If something is passed as a matrix it will be returned as a matrix but other than that all matrices are converted to arrays"
+		],
+		examples: [
+			"A = [1, 2, 4, 7, 0]",
+			"diff(A)",
+			"diff(A, 1)",
+			"B = [[1, 2], [3, 4]]",
+			"diff(B)",
+			"diff(B, 1)",
+			"diff(B, 2)",
+			"diff(B, bignumber(2))",
+			"diff([[1, 2], matrix([3, 4])], 2)"
+		],
+		seealso: ["subtract", "partitionSelect"]
+	},
+	dot: {
+		name: "dot",
+		category: "Matrix",
+		syntax: ["dot(A, B)", "A * B"],
+		description: "Calculate the dot product of two vectors. The dot product of A = [a1, a2, a3, ..., an] and B = [b1, b2, b3, ..., bn] is defined as dot(A, B) = a1 * b1 + a2 * b2 + a3 * b3 + ... + an * bn",
+		examples: ["dot([2, 4, 1], [2, 2, 3])", "[2, 4, 1] * [2, 2, 3]"],
+		seealso: ["multiply", "cross"]
+	},
+	getMatrixDataType: {
+		name: "getMatrixDataType",
+		category: "Matrix",
+		syntax: ["getMatrixDataType(x)"],
+		description: "Find the data type of all elements in a matrix or array, for example \"number\" if all items are a number and \"Complex\" if all values are complex numbers. If a matrix contains more than one data type, it will return \"mixed\".",
+		examples: [
+			"getMatrixDataType([1, 2, 3])",
+			"getMatrixDataType([[5 cm], [2 inch]])",
+			"getMatrixDataType([1, \"text\"])",
+			"getMatrixDataType([1, bignumber(4)])"
+		],
+		seealso: [
+			"matrix",
+			"sparse",
+			"typeOf"
+		]
+	},
+	identity: {
+		name: "identity",
+		category: "Matrix",
+		syntax: [
+			"identity(n)",
+			"identity(m, n)",
+			"identity([m, n])"
+		],
+		description: "Returns the identity matrix with size m-by-n. The matrix has ones on the diagonal and zeros elsewhere.",
+		examples: [
+			"identity(3)",
+			"identity(3, 5)",
+			"a = [1, 2, 3; 4, 5, 6]",
+			"identity(size(a))"
+		],
+		seealso: [
+			"concat",
+			"det",
+			"diag",
+			"inv",
+			"ones",
+			"range",
+			"size",
+			"squeeze",
+			"subset",
+			"trace",
+			"transpose",
+			"zeros"
+		]
+	},
+	filter: {
+		name: "filter",
+		category: "Matrix",
+		syntax: ["filter(x, test)"],
+		description: "Filter items in a matrix.",
+		examples: [
+			"isPositive(x) = x > 0",
+			"filter([6, -2, -1, 4, 3], isPositive)",
+			"filter([6, -2, 0, 1, 0], x != 0)"
+		],
+		seealso: [
+			"sort",
+			"map",
+			"forEach"
+		]
+	},
+	flatten: {
+		name: "flatten",
+		category: "Matrix",
+		syntax: ["flatten(x)"],
+		description: "Flatten a multi dimensional matrix into a single dimensional matrix.",
+		examples: [
+			"a = [1, 2, 3; 4, 5, 6]",
+			"size(a)",
+			"b = flatten(a)",
+			"size(b)"
+		],
+		seealso: [
+			"concat",
+			"resize",
+			"size",
+			"squeeze"
+		]
+	},
+	forEach: {
+		name: "forEach",
+		category: "Matrix",
+		syntax: ["forEach(x, callback)"],
+		description: "Iterates over all elements of a matrix/array, and executes the given callback function.",
+		examples: [
+			"numberOfPets = {}",
+			"addPet(n) = numberOfPets[n] = (numberOfPets[n] ? numberOfPets[n]:0 ) + 1;",
+			"forEach([\"Dog\",\"Cat\",\"Cat\"], addPet)",
+			"numberOfPets"
+		],
+		seealso: [
+			"map",
+			"sort",
+			"filter"
+		]
+	},
+	inv: {
+		name: "inv",
+		category: "Matrix",
+		syntax: ["inv(x)"],
+		description: "Calculate the inverse of a matrix",
+		examples: [
+			"inv([1, 2; 3, 4])",
+			"inv(4)",
+			"1 / 4"
+		],
+		seealso: [
+			"concat",
+			"det",
+			"diag",
+			"identity",
+			"ones",
+			"range",
+			"size",
+			"squeeze",
+			"subset",
+			"trace",
+			"transpose",
+			"zeros"
+		]
+	},
+	pinv: {
+		name: "pinv",
+		category: "Matrix",
+		syntax: ["pinv(x)"],
+		description: "Calculate the Moore–Penrose inverse of a matrix",
+		examples: [
+			"pinv([1, 2; 3, 4])",
+			"pinv([[1, 0], [0, 1], [0, 1]])",
+			"pinv(4)"
+		],
+		seealso: ["inv"]
+	},
+	eigs: {
+		name: "eigs",
+		category: "Matrix",
+		syntax: ["eigs(x)"],
+		description: "Calculate the eigenvalues and optionally eigenvectors of a square matrix",
+		examples: ["eigs([[5, 2.3], [2.3, 1]])", "eigs([[1, 2, 3], [4, 5, 6], [7, 8, 9]], { precision: 1e-6, eigenvectors: false })"],
+		seealso: ["inv"]
+	},
+	kron: {
+		name: "kron",
+		category: "Matrix",
+		syntax: ["kron(x, y)"],
+		description: "Calculates the Kronecker product of 2 matrices or vectors.",
+		examples: ["kron([[1, 0], [0, 1]], [[1, 2], [3, 4]])", "kron([1,1], [2,3,4])"],
+		seealso: [
+			"multiply",
+			"dot",
+			"cross"
+		]
+	},
+	matrixFromFunction: {
+		name: "matrixFromFunction",
+		category: "Matrix",
+		syntax: [
+			"matrixFromFunction(size, fn)",
+			"matrixFromFunction(size, fn, format)",
+			"matrixFromFunction(size, fn, format, datatype)",
+			"matrixFromFunction(size, format, fn)",
+			"matrixFromFunction(size, format, datatype, fn)"
+		],
+		description: "Create a matrix by evaluating a generating function at each index.",
+		examples: [
+			"f(I) = I[1] - I[2]",
+			"matrixFromFunction([3,3], f)",
+			"g(I) = I[1] - I[2] == 1 ? 4 : 0",
+			"matrixFromFunction([100, 100], \"sparse\", g)",
+			"matrixFromFunction([5], random)"
+		],
+		seealso: [
+			"matrix",
+			"matrixFromRows",
+			"matrixFromColumns",
+			"zeros"
+		]
+	},
+	matrixFromRows: {
+		name: "matrixFromRows",
+		category: "Matrix",
+		syntax: [
+			"matrixFromRows(...arr)",
+			"matrixFromRows(row1, row2)",
+			"matrixFromRows(row1, row2, row3)"
+		],
+		description: "Create a dense matrix from vectors as individual rows.",
+		examples: ["matrixFromRows([1, 2, 3], [[4],[5],[6]])"],
+		seealso: [
+			"matrix",
+			"matrixFromColumns",
+			"matrixFromFunction",
+			"zeros"
+		]
+	},
+	matrixFromColumns: {
+		name: "matrixFromColumns",
+		category: "Matrix",
+		syntax: [
+			"matrixFromColumns(...arr)",
+			"matrixFromColumns(row1, row2)",
+			"matrixFromColumns(row1, row2, row3)"
+		],
+		description: "Create a dense matrix from vectors as individual columns.",
+		examples: ["matrixFromColumns([1, 2, 3], [[4],[5],[6]])"],
+		seealso: [
+			"matrix",
+			"matrixFromRows",
+			"matrixFromFunction",
+			"zeros"
+		]
+	},
+	map: {
+		name: "map",
+		category: "Matrix",
+		syntax: ["map(x, callback)", "map(x, y, ..., callback)"],
+		description: "Create a new matrix or array with the results of the callback function executed on each entry of the matrix/array or the matrices/arrays.",
+		examples: ["map([1, 2, 3], square)", "map([1, 2], [3, 4], f(a,b) = a + b)"],
+		seealso: ["filter", "forEach"]
+	},
+	ones: {
+		name: "ones",
+		category: "Matrix",
+		syntax: [
+			"ones(m)",
+			"ones(m, n)",
+			"ones(m, n, p, ...)",
+			"ones([m])",
+			"ones([m, n])",
+			"ones([m, n, p, ...])"
+		],
+		description: "Create a matrix containing ones.",
+		examples: [
+			"ones(3)",
+			"ones(3, 5)",
+			"ones([2,3]) * 4.5",
+			"a = [1, 2, 3; 4, 5, 6]",
+			"ones(size(a))"
+		],
+		seealso: [
+			"concat",
+			"det",
+			"diag",
+			"identity",
+			"inv",
+			"range",
+			"size",
+			"squeeze",
+			"subset",
+			"trace",
+			"transpose",
+			"zeros"
+		]
+	},
+	partitionSelect: {
+		name: "partitionSelect",
+		category: "Matrix",
+		syntax: ["partitionSelect(x, k)", "partitionSelect(x, k, compare)"],
+		description: "Partition-based selection of an array or 1D matrix. Will find the kth smallest value, and mutates the input array. Uses Quickselect.",
+		examples: [
+			"partitionSelect([5, 10, 1], 2)",
+			"partitionSelect([\"C\", \"B\", \"A\", \"D\"], 1, compareText)",
+			"arr = [5, 2, 1]",
+			"partitionSelect(arr, 0) # returns 1, arr is now: [1, 2, 5]",
+			"arr",
+			"partitionSelect(arr, 1, 'desc') # returns 2, arr is now: [5, 2, 1]",
+			"arr"
+		],
+		seealso: ["sort"]
+	},
+	range: {
+		name: "range",
+		category: "Type",
+		syntax: [
+			"start:end",
+			"start:step:end",
+			"range(start, end)",
+			"range(start, end, step)",
+			"range(string)"
+		],
+		description: "Create a range. Lower bound of the range is included, upper bound is excluded.",
+		examples: [
+			"1:5",
+			"3:-1:-3",
+			"range(3, 7)",
+			"range(0, 12, 2)",
+			"range(\"4:10\")",
+			"range(1m, 1m, 3m)",
+			"a = [1, 2, 3, 4; 5, 6, 7, 8]",
+			"a[1:2, 1:2]"
+		],
+		seealso: [
+			"concat",
+			"det",
+			"diag",
+			"identity",
+			"inv",
+			"ones",
+			"size",
+			"squeeze",
+			"subset",
+			"trace",
+			"transpose",
+			"zeros"
+		]
+	},
+	resize: {
+		name: "resize",
+		category: "Matrix",
+		syntax: ["resize(x, size)", "resize(x, size, defaultValue)"],
+		description: "Resize a matrix.",
+		examples: [
+			"resize([1,2,3,4,5], [3])",
+			"resize([1,2,3], [5])",
+			"resize([1,2,3], [5], -1)",
+			"resize(2, [2, 3])",
+			"resize(\"hello\", [8], \"!\")"
+		],
+		seealso: [
+			"size",
+			"subset",
+			"squeeze",
+			"reshape"
+		]
+	},
+	reshape: {
+		name: "reshape",
+		category: "Matrix",
+		syntax: ["reshape(x, sizes)"],
+		description: "Reshape a multi dimensional array to fit the specified dimensions.",
+		examples: [
+			"reshape([1, 2, 3, 4, 5, 6], [2, 3])",
+			"reshape([[1, 2], [3, 4]], [1, 4])",
+			"reshape([[1, 2], [3, 4]], [4])",
+			"reshape([1, 2, 3, 4], [-1, 2])"
+		],
+		seealso: [
+			"size",
+			"squeeze",
+			"resize"
+		]
+	},
+	rotate: {
+		name: "rotate",
+		category: "Matrix",
+		syntax: ["rotate(w, theta)", "rotate(w, theta, v)"],
+		description: "Returns a 2-D rotation matrix (2x2) for a given angle (in radians). Returns a 2-D rotation matrix (3x3) of a given angle (in radians) around given axis.",
+		examples: [
+			"rotate([1, 0], pi / 2)",
+			"rotate(matrix([1, 0]), unit(\"35deg\"))",
+			"rotate([1, 0, 0], unit(\"90deg\"), [0, 0, 1])",
+			"rotate(matrix([1, 0, 0]), unit(\"90deg\"), matrix([0, 0, 1]))"
+		],
+		seealso: ["matrix", "rotationMatrix"]
+	},
+	rotationMatrix: {
+		name: "rotationMatrix",
+		category: "Matrix",
+		syntax: [
+			"rotationMatrix(theta)",
+			"rotationMatrix(theta, v)",
+			"rotationMatrix(theta, v, format)"
+		],
+		description: "Returns a 2-D rotation matrix (2x2) for a given angle (in radians). Returns a 2-D rotation matrix (3x3) of a given angle (in radians) around given axis.",
+		examples: [
+			"rotationMatrix(pi / 2)",
+			"rotationMatrix(unit(\"45deg\"), [0, 0, 1])",
+			"rotationMatrix(1, matrix([0, 0, 1]), \"sparse\")"
+		],
+		seealso: ["cos", "sin"]
+	},
+	row: {
+		name: "row",
+		category: "Matrix",
+		syntax: ["row(x, index)"],
+		description: "Return a row from a matrix or array.",
+		examples: [
+			"A = [[1, 2], [3, 4]]",
+			"row(A, 1)",
+			"row(A, 2)"
+		],
+		seealso: ["column", "matrixFromRows"]
+	},
+	size: {
+		name: "size",
+		category: "Matrix",
+		syntax: ["size(x)"],
+		description: "Calculate the size of a matrix.",
+		examples: [
+			"size(2.3)",
+			"size(\"hello world\")",
+			"a = [1, 2; 3, 4; 5, 6]",
+			"size(a)",
+			"size(1:6)"
+		],
+		seealso: [
+			"concat",
+			"count",
+			"det",
+			"diag",
+			"identity",
+			"inv",
+			"ones",
+			"range",
+			"squeeze",
+			"subset",
+			"trace",
+			"transpose",
+			"zeros"
+		]
+	},
+	sort: {
+		name: "sort",
+		category: "Matrix",
+		syntax: ["sort(x)", "sort(x, compare)"],
+		description: "Sort the items in a matrix. Compare can be a string \"asc\", \"desc\", \"natural\", or a custom sort function.",
+		examples: [
+			"sort([5, 10, 1])",
+			"sort([\"C\", \"B\", \"A\", \"D\"], \"natural\")",
+			"sortByLength(a, b) = size(a)[1] - size(b)[1]",
+			"sort([\"Langdon\", \"Tom\", \"Sara\"], sortByLength)",
+			"sort([\"10\", \"1\", \"2\"], \"natural\")"
+		],
+		seealso: [
+			"map",
+			"filter",
+			"forEach"
+		]
+	},
+	squeeze: {
+		name: "squeeze",
+		category: "Matrix",
+		syntax: ["squeeze(x)"],
+		description: "Remove inner and outer singleton dimensions from a matrix.",
+		examples: [
+			"a = zeros(3,2,1)",
+			"size(squeeze(a))",
+			"b = zeros(1,1,3)",
+			"size(squeeze(b))"
+		],
+		seealso: [
+			"concat",
+			"det",
+			"diag",
+			"identity",
+			"inv",
+			"ones",
+			"range",
+			"size",
+			"subset",
+			"trace",
+			"transpose",
+			"zeros"
+		]
+	},
+	subset: {
+		name: "subset",
+		category: "Matrix",
+		syntax: [
+			"value(index)",
+			"value(index) = replacement",
+			"subset(value, [index])",
+			"subset(value, [index], replacement)"
+		],
+		description: "Get or set a subset of the entries of a matrix or characters of a string. Indexes are one-based. There should be one index specification for each dimension of the target. Each specification can be a single index, a list of indices, or a range in colon notation `l:u`. In a range, both the lower bound l and upper bound u are included; and if a bound is omitted it defaults to the most extreme valid value. The cartesian product of the indices specified in each dimension determines the target of the operation.",
+		examples: [
+			"d = [1, 2; 3, 4]",
+			"e = []",
+			"e[1, 1:2] = [5, 6]",
+			"e[2, :] = [7, 8]",
+			"f = d * e",
+			"f[2, 1]",
+			"f[:, 1]",
+			"f[[1,2], [1,3]] = [9, 10; 11, 12]",
+			"f"
+		],
+		seealso: [
+			"concat",
+			"det",
+			"diag",
+			"identity",
+			"inv",
+			"ones",
+			"range",
+			"size",
+			"squeeze",
+			"trace",
+			"transpose",
+			"zeros"
+		]
+	},
+	trace: {
+		name: "trace",
+		category: "Matrix",
+		syntax: ["trace(A)"],
+		description: "Calculate the trace of a matrix: the sum of the elements on the main diagonal of a square matrix.",
+		examples: ["A = [1, 2, 3; -1, 2, 3; 2, 0, 3]", "trace(A)"],
+		seealso: [
+			"concat",
+			"det",
+			"diag",
+			"identity",
+			"inv",
+			"ones",
+			"range",
+			"size",
+			"squeeze",
+			"subset",
+			"transpose",
+			"zeros"
+		]
+	},
+	transpose: {
+		name: "transpose",
+		category: "Matrix",
+		syntax: ["x'", "transpose(x)"],
+		description: "Transpose a matrix",
+		examples: [
+			"a = [1, 2, 3; 4, 5, 6]",
+			"a'",
+			"transpose(a)"
+		],
+		seealso: [
+			"concat",
+			"det",
+			"diag",
+			"identity",
+			"inv",
+			"ones",
+			"range",
+			"size",
+			"squeeze",
+			"subset",
+			"trace",
+			"zeros"
+		]
+	},
+	zeros: {
+		name: "zeros",
+		category: "Matrix",
+		syntax: [
+			"zeros(m)",
+			"zeros(m, n)",
+			"zeros(m, n, p, ...)",
+			"zeros([m])",
+			"zeros([m, n])",
+			"zeros([m, n, p, ...])"
+		],
+		description: "Create a matrix containing zeros.",
+		examples: [
+			"zeros(3)",
+			"zeros(3, 5)",
+			"a = [1, 2, 3; 4, 5, 6]",
+			"zeros(size(a))"
+		],
+		seealso: [
+			"concat",
+			"det",
+			"diag",
+			"identity",
+			"inv",
+			"ones",
+			"range",
+			"size",
+			"squeeze",
+			"subset",
+			"trace",
+			"transpose"
+		]
+	},
+	fft: {
+		name: "fft",
+		category: "Matrix",
+		syntax: ["fft(x)"],
+		description: "Calculate N-dimensional Fourier transform",
+		examples: ["fft([[1, 0], [1, 0]])"],
+		seealso: ["ifft"]
+	},
+	ifft: {
+		name: "ifft",
+		category: "Matrix",
+		syntax: ["ifft(x)"],
+		description: "Calculate N-dimensional inverse Fourier transform",
+		examples: ["ifft([[2, 2], [0, 0]])"],
+		seealso: ["fft"]
+	},
+	sylvester: {
+		name: "sylvester",
+		category: "Algebra",
+		syntax: ["sylvester(A,B,C)"],
+		description: "Solves the real-valued Sylvester equation AX+XB=C for X",
+		examples: [
+			"sylvester([[-1, -2], [1, 1]], [[-2, 1], [-1, 2]], [[-3, 2], [3, 0]])",
+			"A = [[-1, -2], [1, 1]]; B = [[2, -1], [1, -2]]; C = [[-3, 2], [3, 0]]",
+			"sylvester(A, B, C)"
+		],
+		seealso: ["schur", "lyap"]
+	},
+	schur: {
+		name: "schur",
+		category: "Algebra",
+		syntax: ["schur(A)"],
+		description: "Performs a real Schur decomposition of the real matrix A = UTU'",
+		examples: [
+			"schur([[1, 0], [-4, 3]])",
+			"A = [[1, 0], [-4, 3]]",
+			"schur(A)"
+		],
+		seealso: ["lyap", "sylvester"]
+	},
+	lyap: {
+		name: "lyap",
+		category: "Algebra",
+		syntax: ["lyap(A,Q)"],
+		description: "Solves the Continuous-time Lyapunov equation AP+PA'+Q=0 for P",
+		examples: [
+			"lyap([[-2, 0], [1, -4]], [[3, 1], [1, 3]])",
+			"A = [[-2, 0], [1, -4]]",
+			"Q = [[3, 1], [1, 3]]",
+			"lyap(A,Q)"
+		],
+		seealso: ["schur", "sylvester"]
+	},
+	solveODE: {
+		name: "solveODE",
+		category: "Numeric",
+		syntax: ["solveODE(func, tspan, y0)", "solveODE(func, tspan, y0, options)"],
+		description: "Numerical Integration of Ordinary Differential Equations.",
+		examples: [
+			"f(t,y) = y",
+			"tspan = [0, 4]",
+			"solveODE(f, tspan, 1)",
+			"solveODE(f, tspan, [1, 2])",
+			"solveODE(f, tspan, 1, { method:\"RK23\", maxStep:0.1 })"
+		],
+		seealso: ["derivative", "simplifyCore"]
+	},
+	bernoulli: {
+		name: "bernoulli",
+		category: "Probability",
+		syntax: ["bernoulli(n)"],
+		description: "The nth Bernoulli number",
+		examples: ["bernoulli(4)", "bernoulli(fraction(12))"],
+		seealso: [
+			"combinations",
+			"gamma",
+			"stirlingS2"
+		]
+	},
+	combinations: {
+		name: "combinations",
+		category: "Probability",
+		syntax: ["combinations(n, k)"],
+		description: "Compute the number of combinations of n items taken k at a time",
+		examples: ["combinations(7, 5)"],
+		seealso: [
+			"combinationsWithRep",
+			"permutations",
+			"factorial"
+		]
+	},
+	combinationsWithRep: {
+		name: "combinationsWithRep",
+		category: "Probability",
+		syntax: ["combinationsWithRep(n, k)"],
+		description: "Compute the number of combinations of n items taken k at a time with replacements.",
+		examples: ["combinationsWithRep(7, 5)"],
+		seealso: [
+			"combinations",
+			"permutations",
+			"factorial"
+		]
+	},
+	factorial: {
+		name: "factorial",
+		category: "Probability",
+		syntax: ["n!", "factorial(n)"],
+		description: "Compute the factorial of a value",
+		examples: [
+			"5!",
+			"5 * 4 * 3 * 2 * 1",
+			"3!"
+		],
+		seealso: [
+			"combinations",
+			"combinationsWithRep",
+			"permutations",
+			"gamma"
+		]
+	},
+	gamma: {
+		name: "gamma",
+		category: "Probability",
+		syntax: ["gamma(n)"],
+		description: "Compute the gamma function. For small values, the Lanczos approximation is used, and for large values the extended Stirling approximation.",
+		examples: [
+			"gamma(4)",
+			"3!",
+			"gamma(1/2)",
+			"sqrt(pi)"
+		],
+		seealso: ["factorial"]
+	},
+	kldivergence: {
+		name: "kldivergence",
+		category: "Probability",
+		syntax: ["kldivergence(x, y)"],
+		description: "Calculate the Kullback-Leibler (KL) divergence  between two distributions.",
+		examples: ["kldivergence([0.7,0.5,0.4], [0.2,0.9,0.5])"],
+		seealso: []
+	},
+	lgamma: {
+		name: "lgamma",
+		category: "Probability",
+		syntax: ["lgamma(n)"],
+		description: "Logarithm of the gamma function for real, positive numbers and complex numbers, using Lanczos approximation for numbers and Stirling series for complex numbers.",
+		examples: [
+			"lgamma(4)",
+			"lgamma(1/2)",
+			"lgamma(i)",
+			"lgamma(complex(1.1, 2))"
+		],
+		seealso: ["gamma"]
+	},
+	multinomial: {
+		name: "multinomial",
+		category: "Probability",
+		syntax: ["multinomial(A)"],
+		description: "Multinomial Coefficients compute the number of ways of picking a1, a2, ..., ai unordered outcomes from `n` possibilities. multinomial takes one array of integers as an argument. The following condition must be enforced: every ai > 0.",
+		examples: ["multinomial([1, 2, 1])"],
+		seealso: ["combinations", "factorial"]
+	},
+	permutations: {
+		name: "permutations",
+		category: "Probability",
+		syntax: ["permutations(n)", "permutations(n, k)"],
+		description: "Compute the number of permutations of n items taken k at a time",
+		examples: ["permutations(5)", "permutations(5, 3)"],
+		seealso: [
+			"combinations",
+			"combinationsWithRep",
+			"factorial"
+		]
+	},
+	pickRandom: {
+		name: "pickRandom",
+		category: "Probability",
+		syntax: [
+			"pickRandom(array)",
+			"pickRandom(array, number)",
+			"pickRandom(array, weights)",
+			"pickRandom(array, number, weights)",
+			"pickRandom(array, weights, number)"
+		],
+		description: "Pick a random entry from a given array.",
+		examples: [
+			"pickRandom(0:10)",
+			"pickRandom([1, 3, 1, 6])",
+			"pickRandom([1, 3, 1, 6], 2)",
+			"pickRandom([1, 3, 1, 6], [2, 3, 2, 1])",
+			"pickRandom([1, 3, 1, 6], 2, [2, 3, 2, 1])",
+			"pickRandom([1, 3, 1, 6], [2, 3, 2, 1], 2)"
+		],
+		seealso: ["random", "randomInt"]
+	},
+	random: {
+		name: "random",
+		category: "Probability",
+		syntax: [
+			"random()",
+			"random(max)",
+			"random(min, max)",
+			"random(size)",
+			"random(size, max)",
+			"random(size, min, max)"
+		],
+		description: "Return a random number.",
+		examples: [
+			"random()",
+			"random(10, 20)",
+			"random([2, 3])"
+		],
+		seealso: ["pickRandom", "randomInt"]
+	},
+	randomInt: {
+		name: "randomInt",
+		category: "Probability",
+		syntax: [
+			"randomInt(max)",
+			"randomInt(min, max)",
+			"randomInt(size)",
+			"randomInt(size, max)",
+			"randomInt(size, min, max)"
+		],
+		description: "Return a random integer number",
+		examples: ["randomInt(10, 20)", "randomInt([2, 3], 10)"],
+		seealso: ["pickRandom", "random"]
+	},
+	compare: {
+		name: "compare",
+		category: "Relational",
+		syntax: ["compare(x, y)"],
+		description: "Compare two values. Returns 1 when x > y, -1 when x < y, and 0 when x == y.",
+		examples: [
+			"compare(2, 3)",
+			"compare(3, 2)",
+			"compare(2, 2)",
+			"compare(5cm, 40mm)",
+			"compare(2, [1, 2, 3])"
+		],
+		seealso: [
+			"equal",
+			"unequal",
+			"smaller",
+			"smallerEq",
+			"largerEq",
+			"compareNatural",
+			"compareText"
+		]
+	},
+	compareNatural: {
+		name: "compareNatural",
+		category: "Relational",
+		syntax: ["compareNatural(x, y)"],
+		description: "Compare two values of any type in a deterministic, natural way. Returns 1 when x > y, -1 when x < y, and 0 when x == y.",
+		examples: [
+			"compareNatural(2, 3)",
+			"compareNatural(3, 2)",
+			"compareNatural(2, 2)",
+			"compareNatural(5cm, 40mm)",
+			"compareNatural(\"2\", \"10\")",
+			"compareNatural(2 + 3i, 2 + 4i)",
+			"compareNatural([1, 2, 4], [1, 2, 3])",
+			"compareNatural([1, 5], [1, 2, 3])",
+			"compareNatural([1, 2], [1, 2])",
+			"compareNatural({a: 2}, {a: 4})"
+		],
+		seealso: [
+			"equal",
+			"unequal",
+			"smaller",
+			"smallerEq",
+			"largerEq",
+			"compare",
+			"compareText"
+		]
+	},
+	compareText: {
+		name: "compareText",
+		category: "Relational",
+		syntax: ["compareText(x, y)"],
+		description: "Compare two strings lexically. Comparison is case sensitive. Returns 1 when x > y, -1 when x < y, and 0 when x == y.",
+		examples: [
+			"compareText(\"B\", \"A\")",
+			"compareText(\"A\", \"B\")",
+			"compareText(\"A\", \"A\")",
+			"compareText(\"2\", \"10\")",
+			"compare(\"2\", \"10\")",
+			"compare(2, 10)",
+			"compareNatural(\"2\", \"10\")",
+			"compareText(\"B\", [\"A\", \"B\", \"C\"])"
+		],
+		seealso: ["compare", "compareNatural"]
+	},
+	deepEqual: {
+		name: "deepEqual",
+		category: "Relational",
+		syntax: ["deepEqual(x, y)"],
+		description: "Check equality of two matrices element wise. Returns true if the size of both matrices is equal and when and each of the elements are equal.",
+		examples: ["deepEqual([1,3,4], [1,3,4])", "deepEqual([1,3,4], [1,3])"],
+		seealso: [
+			"equal",
+			"unequal",
+			"smaller",
+			"larger",
+			"smallerEq",
+			"largerEq",
+			"compare"
+		]
+	},
+	equal: {
+		name: "equal",
+		category: "Relational",
+		syntax: ["x == y", "equal(x, y)"],
+		description: "Check equality of two values. Returns true if the values are equal, and false if not.",
+		examples: [
+			"2+2 == 3",
+			"2+2 == 4",
+			"a = 3.2",
+			"b = 6-2.8",
+			"a == b",
+			"50cm == 0.5m"
+		],
+		seealso: [
+			"unequal",
+			"smaller",
+			"larger",
+			"smallerEq",
+			"largerEq",
+			"compare",
+			"deepEqual",
+			"equalText"
+		]
+	},
+	equalText: {
+		name: "equalText",
+		category: "Relational",
+		syntax: ["equalText(x, y)"],
+		description: "Check equality of two strings. Comparison is case sensitive. Returns true if the values are equal, and false if not.",
+		examples: [
+			"equalText(\"Hello\", \"Hello\")",
+			"equalText(\"a\", \"A\")",
+			"equal(\"2e3\", \"2000\")",
+			"equalText(\"2e3\", \"2000\")",
+			"equalText(\"B\", [\"A\", \"B\", \"C\"])"
+		],
+		seealso: [
+			"compare",
+			"compareNatural",
+			"compareText",
+			"equal"
+		]
+	},
+	larger: {
+		name: "larger",
+		category: "Relational",
+		syntax: ["x > y", "larger(x, y)"],
+		description: "Check if value x is larger than y. Returns true if x is larger than y, and false if not. Comparing a value with NaN returns false.",
+		examples: [
+			"2 > 3",
+			"5 > 2*2",
+			"a = 3.3",
+			"b = 6-2.8",
+			"(a > b)",
+			"(b < a)",
+			"5 cm > 2 inch"
+		],
+		seealso: [
+			"equal",
+			"unequal",
+			"smaller",
+			"smallerEq",
+			"largerEq",
+			"compare"
+		]
+	},
+	largerEq: {
+		name: "largerEq",
+		category: "Relational",
+		syntax: ["x >= y", "largerEq(x, y)"],
+		description: "Check if value x is larger or equal to y. Returns true if x is larger or equal to y, and false if not.",
+		examples: [
+			"2 >= 1+1",
+			"2 > 1+1",
+			"a = 3.2",
+			"b = 6-2.8",
+			"(a >= b)"
+		],
+		seealso: [
+			"equal",
+			"unequal",
+			"smallerEq",
+			"smaller",
+			"compare"
+		]
+	},
+	smaller: {
+		name: "smaller",
+		category: "Relational",
+		syntax: ["x < y", "smaller(x, y)"],
+		description: "Check if value x is smaller than value y. Returns true if x is smaller than y, and false if not. Comparing a value with NaN returns false.",
+		examples: [
+			"2 < 3",
+			"5 < 2*2",
+			"a = 3.3",
+			"b = 6-2.8",
+			"(a < b)",
+			"5 cm < 2 inch"
+		],
+		seealso: [
+			"equal",
+			"unequal",
+			"larger",
+			"smallerEq",
+			"largerEq",
+			"compare"
+		]
+	},
+	smallerEq: {
+		name: "smallerEq",
+		category: "Relational",
+		syntax: ["x <= y", "smallerEq(x, y)"],
+		description: "Check if value x is smaller or equal to value y. Returns true if x is smaller than y, and false if not.",
+		examples: [
+			"2 <= 1+1",
+			"2 < 1+1",
+			"a = 3.2",
+			"b = 6-2.8",
+			"(a <= b)"
+		],
+		seealso: [
+			"equal",
+			"unequal",
+			"larger",
+			"smaller",
+			"largerEq",
+			"compare"
+		]
+	},
+	unequal: {
+		name: "unequal",
+		category: "Relational",
+		syntax: ["x != y", "unequal(x, y)"],
+		description: "Check unequality of two values. Returns true if the values are unequal, and false if they are equal.",
+		examples: [
+			"2+2 != 3",
+			"2+2 != 4",
+			"a = 3.2",
+			"b = 6-2.8",
+			"a != b",
+			"50cm != 0.5m",
+			"5 cm != 2 inch"
+		],
+		seealso: [
+			"equal",
+			"smaller",
+			"larger",
+			"smallerEq",
+			"largerEq",
+			"compare",
+			"deepEqual"
+		]
+	},
+	setCartesian: {
+		name: "setCartesian",
+		category: "Set",
+		syntax: ["setCartesian(set1, set2)"],
+		description: "Create the cartesian product of two (multi)sets. Multi-dimension arrays will be converted to single-dimension arrays and the values will be sorted in ascending order before the operation.",
+		examples: ["setCartesian([1, 2], [3, 4])"],
+		seealso: [
+			"setUnion",
+			"setIntersect",
+			"setDifference",
+			"setPowerset"
+		]
+	},
+	setDifference: {
+		name: "setDifference",
+		category: "Set",
+		syntax: ["setDifference(set1, set2)"],
+		description: "Create the difference of two (multi)sets: every element of set1, that is not the element of set2. Multi-dimension arrays will be converted to single-dimension arrays before the operation.",
+		examples: ["setDifference([1, 2, 3, 4], [3, 4, 5, 6])", "setDifference([[1, 2], [3, 4]], [[3, 4], [5, 6]])"],
+		seealso: [
+			"setUnion",
+			"setIntersect",
+			"setSymDifference"
+		]
+	},
+	setDistinct: {
+		name: "setDistinct",
+		category: "Set",
+		syntax: ["setDistinct(set)"],
+		description: "Collect the distinct elements of a multiset. A multi-dimension array will be converted to a single-dimension array before the operation.",
+		examples: ["setDistinct([1, 1, 1, 2, 2, 3])"],
+		seealso: ["setMultiplicity"]
+	},
+	setIntersect: {
+		name: "setIntersect",
+		category: "Set",
+		syntax: ["setIntersect(set1, set2)"],
+		description: "Create the intersection of two (multi)sets. Multi-dimension arrays will be converted to single-dimension arrays before the operation.",
+		examples: ["setIntersect([1, 2, 3, 4], [3, 4, 5, 6])", "setIntersect([[1, 2], [3, 4]], [[3, 4], [5, 6]])"],
+		seealso: ["setUnion", "setDifference"]
+	},
+	setIsSubset: {
+		name: "setIsSubset",
+		category: "Set",
+		syntax: ["setIsSubset(set1, set2)"],
+		description: "Check whether a (multi)set is a subset of another (multi)set: every element of set1 is the element of set2. Multi-dimension arrays will be converted to single-dimension arrays before the operation.",
+		examples: ["setIsSubset([1, 2], [3, 4, 5, 6])", "setIsSubset([3, 4], [3, 4, 5, 6])"],
+		seealso: [
+			"setUnion",
+			"setIntersect",
+			"setDifference"
+		]
+	},
+	setMultiplicity: {
+		name: "setMultiplicity",
+		category: "Set",
+		syntax: ["setMultiplicity(element, set)"],
+		description: "Count the multiplicity of an element in a multiset. A multi-dimension array will be converted to a single-dimension array before the operation.",
+		examples: ["setMultiplicity(1, [1, 2, 2, 4])", "setMultiplicity(2, [1, 2, 2, 4])"],
+		seealso: ["setDistinct", "setSize"]
+	},
+	setPowerset: {
+		name: "setPowerset",
+		category: "Set",
+		syntax: ["setPowerset(set)"],
+		description: "Create the powerset of a (multi)set: the powerset contains very possible subsets of a (multi)set. A multi-dimension array will be converted to a single-dimension array before the operation.",
+		examples: ["setPowerset([1, 2, 3])"],
+		seealso: ["setCartesian"]
+	},
+	setSize: {
+		name: "setSize",
+		category: "Set",
+		syntax: ["setSize(set)", "setSize(set, unique)"],
+		description: "Count the number of elements of a (multi)set. When the second parameter \"unique\" is true, count only the unique values. A multi-dimension array will be converted to a single-dimension array before the operation.",
+		examples: ["setSize([1, 2, 2, 4])", "setSize([1, 2, 2, 4], true)"],
+		seealso: [
+			"setUnion",
+			"setIntersect",
+			"setDifference"
+		]
+	},
+	setSymDifference: {
+		name: "setSymDifference",
+		category: "Set",
+		syntax: ["setSymDifference(set1, set2)"],
+		description: "Create the symmetric difference of two (multi)sets. Multi-dimension arrays will be converted to single-dimension arrays before the operation.",
+		examples: ["setSymDifference([1, 2, 3, 4], [3, 4, 5, 6])", "setSymDifference([[1, 2], [3, 4]], [[3, 4], [5, 6]])"],
+		seealso: [
+			"setUnion",
+			"setIntersect",
+			"setDifference"
+		]
+	},
+	setUnion: {
+		name: "setUnion",
+		category: "Set",
+		syntax: ["setUnion(set1, set2)"],
+		description: "Create the union of two (multi)sets. Multi-dimension arrays will be converted to single-dimension arrays before the operation.",
+		examples: ["setUnion([1, 2, 3, 4], [3, 4, 5, 6])", "setUnion([[1, 2], [3, 4]], [[3, 4], [5, 6]])"],
+		seealso: ["setIntersect", "setDifference"]
+	},
+	zpk2tf: {
+		name: "zpk2tf",
+		category: "Signal",
+		syntax: ["zpk2tf(z, p, k)"],
+		description: "Compute the transfer function of a zero-pole-gain model.",
+		examples: [
+			"zpk2tf([1, 2], [-1, -2], 1)",
+			"zpk2tf([1, 2], [-1, -2])",
+			"zpk2tf([1 - 3i, 2 + 2i], [-1, -2])"
+		],
+		seealso: []
+	},
+	freqz: {
+		name: "freqz",
+		category: "Signal",
+		syntax: ["freqz(b, a)", "freqz(b, a, w)"],
+		description: "Calculates the frequency response of a filter given its numerator and denominator coefficients.",
+		examples: [
+			"freqz([1, 2], [1, 2, 3])",
+			"freqz([1, 2], [1, 2, 3], [0, 1])",
+			"freqz([1, 2], [1, 2, 3], 512)"
+		],
+		seealso: []
+	},
+	erf: {
+		name: "erf",
+		category: "Special",
+		syntax: ["erf(x)"],
+		description: "Compute the erf function of a value using a rational Chebyshev approximations for different intervals of x",
+		examples: [
+			"erf(0.2)",
+			"erf(-0.5)",
+			"erf(4)"
+		],
+		seealso: []
+	},
+	zeta: {
+		name: "zeta",
+		category: "Special",
+		syntax: ["zeta(s)"],
+		description: "Compute the Riemann Zeta Function using an infinite series and Riemann's Functional Equation for the entire complex plane",
+		examples: [
+			"zeta(0.2)",
+			"zeta(-0.5)",
+			"zeta(4)"
+		],
+		seealso: []
+	},
+	cumsum: {
+		name: "cumsum",
+		category: "Statistics",
+		syntax: ["cumsum(a, b, c, ...)", "cumsum(A)"],
+		description: "Compute the cumulative sum of all values.",
+		examples: [
+			"cumsum(2, 3, 4, 1)",
+			"cumsum([2, 3, 4, 1])",
+			"cumsum([1, 2; 3, 4])",
+			"cumsum([1, 2; 3, 4], 1)",
+			"cumsum([1, 2; 3, 4], 2)"
+		],
+		seealso: [
+			"max",
+			"mean",
+			"median",
+			"min",
+			"prod",
+			"std",
+			"sum",
+			"variance"
+		]
+	},
+	mad: {
+		name: "mad",
+		category: "Statistics",
+		syntax: ["mad(a, b, c, ...)", "mad(A)"],
+		description: "Compute the median absolute deviation of a matrix or a list with values. The median absolute deviation is defined as the median of the absolute deviations from the median.",
+		examples: ["mad(10, 20, 30)", "mad([1, 2, 3])"],
+		seealso: [
+			"mean",
+			"median",
+			"std",
+			"abs"
+		]
+	},
+	max: {
+		name: "max",
+		category: "Statistics",
+		syntax: [
+			"max(a, b, c, ...)",
+			"max(A)",
+			"max(A, dimension)"
+		],
+		description: "Compute the maximum value of a list of values. If any NaN values are found, the function yields the last NaN in the input.",
+		examples: [
+			"max(2, 3, 4, 1)",
+			"max([2, 3, 4, 1])",
+			"max([2, 5; 4, 3])",
+			"max([2, 5; 4, 3], 1)",
+			"max([2, 5; 4, 3], 2)",
+			"max(2.7, 7.1, -4.5, 2.0, 4.1)",
+			"min(2.7, 7.1, -4.5, 2.0, 4.1)"
+		],
+		seealso: [
+			"mean",
+			"median",
+			"min",
+			"prod",
+			"std",
+			"sum",
+			"variance"
+		]
+	},
+	mean: {
+		name: "mean",
+		category: "Statistics",
+		syntax: [
+			"mean(a, b, c, ...)",
+			"mean(A)",
+			"mean(A, dimension)"
+		],
+		description: "Compute the arithmetic mean of a list of values.",
+		examples: [
+			"mean(2, 3, 4, 1)",
+			"mean([2, 3, 4, 1])",
+			"mean([2, 5; 4, 3])",
+			"mean([2, 5; 4, 3], 1)",
+			"mean([2, 5; 4, 3], 2)",
+			"mean([1.0, 2.7, 3.2, 4.0])"
+		],
+		seealso: [
+			"max",
+			"median",
+			"min",
+			"prod",
+			"std",
+			"sum",
+			"variance"
+		]
+	},
+	median: {
+		name: "median",
+		category: "Statistics",
+		syntax: ["median(a, b, c, ...)", "median(A)"],
+		description: "Compute the median of all values. The values are sorted and the middle value is returned. In case of an even number of values, the average of the two middle values is returned.",
+		examples: ["median(5, 2, 7)", "median([3, -1, 5, 7])"],
+		seealso: [
+			"max",
+			"mean",
+			"min",
+			"prod",
+			"std",
+			"sum",
+			"variance",
+			"quantileSeq"
+		]
+	},
+	min: {
+		name: "min",
+		category: "Statistics",
+		syntax: [
+			"min(a, b, c, ...)",
+			"min(A)",
+			"min(A, dimension)"
+		],
+		description: "Compute the minimum value of a list of values. If any NaN values are found, the function yields the last NaN in the input.",
+		examples: [
+			"min(2, 3, 4, 1)",
+			"min([2, 3, 4, 1])",
+			"min([2, 5; 4, 3])",
+			"min([2, 5; 4, 3], 1)",
+			"min([2, 5; 4, 3], 2)",
+			"min(2.7, 7.1, -4.5, 2.0, 4.1)",
+			"max(2.7, 7.1, -4.5, 2.0, 4.1)"
+		],
+		seealso: [
+			"max",
+			"mean",
+			"median",
+			"prod",
+			"std",
+			"sum",
+			"variance"
+		]
+	},
+	mode: {
+		name: "mode",
+		category: "Statistics",
+		syntax: [
+			"mode(a, b, c, ...)",
+			"mode(A)",
+			"mode(A, a, b, B, c, ...)"
+		],
+		description: "Computes the mode of all values as an array. In case mode being more than one, multiple values are returned in an array.",
+		examples: [
+			"mode(2, 1, 4, 3, 1)",
+			"mode([1, 2.7, 3.2, 4, 2.7])",
+			"mode(1, 4, 6, 1, 6)"
+		],
+		seealso: [
+			"max",
+			"mean",
+			"min",
+			"median",
+			"prod",
+			"std",
+			"sum",
+			"variance"
+		]
+	},
+	prod: {
+		name: "prod",
+		category: "Statistics",
+		syntax: ["prod(a, b, c, ...)", "prod(A)"],
+		description: "Compute the product of all values.",
+		examples: [
+			"prod(2, 3, 4)",
+			"prod([2, 3, 4])",
+			"prod([2, 5; 4, 3])"
+		],
+		seealso: [
+			"max",
+			"mean",
+			"min",
+			"median",
+			"min",
+			"std",
+			"sum",
+			"variance"
+		]
+	},
+	quantileSeq: {
+		name: "quantileSeq",
+		category: "Statistics",
+		syntax: [
+			"quantileSeq(A, prob[, sorted])",
+			"quantileSeq(A, [prob1, prob2, ...][, sorted])",
+			"quantileSeq(A, N[, sorted])"
+		],
+		description: "Compute the prob order quantile of a matrix or a list with values. The sequence is sorted and the middle value is returned. Supported types of sequence values are: Number, BigNumber, Unit Supported types of probability are: Number, BigNumber. \n\nIn case of a (multi dimensional) array or matrix, the prob order quantile of all elements will be calculated.",
+		examples: [
+			"quantileSeq([3, -1, 5, 7], 0.5)",
+			"quantileSeq([3, -1, 5, 7], [1/3, 2/3])",
+			"quantileSeq([3, -1, 5, 7], 2)",
+			"quantileSeq([-1, 3, 5, 7], 0.5, true)"
+		],
+		seealso: [
+			"mean",
+			"median",
+			"min",
+			"max",
+			"prod",
+			"std",
+			"sum",
+			"variance"
+		]
+	},
+	std: {
+		name: "std",
+		category: "Statistics",
+		syntax: [
+			"std(a, b, c, ...)",
+			"std(A)",
+			"std(A, dimension)",
+			"std(A, normalization)",
+			"std(A, dimension, normalization)"
+		],
+		description: "Compute the standard deviation of all values, defined as std(A) = sqrt(variance(A)). Optional parameter normalization can be \"unbiased\" (default), \"uncorrected\", or \"biased\".",
+		examples: [
+			"std(2, 4, 6)",
+			"std([2, 4, 6, 8])",
+			"std([2, 4, 6, 8], \"uncorrected\")",
+			"std([2, 4, 6, 8], \"biased\")",
+			"std([1, 2, 3; 4, 5, 6])"
+		],
+		seealso: [
+			"max",
+			"mean",
+			"min",
+			"median",
+			"prod",
+			"sum",
+			"variance"
+		]
+	},
+	sum: {
+		name: "sum",
+		category: "Statistics",
+		syntax: [
+			"sum(a, b, c, ...)",
+			"sum(A)",
+			"sum(A, dimension)"
+		],
+		description: "Compute the sum of all values.",
+		examples: [
+			"sum(2, 3, 4, 1)",
+			"sum([2, 3, 4, 1])",
+			"sum([2, 5; 4, 3])"
+		],
+		seealso: [
+			"max",
+			"mean",
+			"median",
+			"min",
+			"prod",
+			"std",
+			"variance"
+		]
+	},
+	variance: {
+		name: "variance",
+		category: "Statistics",
+		syntax: [
+			"variance(a, b, c, ...)",
+			"variance(A)",
+			"variance(A, dimension)",
+			"variance(A, normalization)",
+			"variance(A, dimension, normalization)"
+		],
+		description: "Compute the variance of all values. Optional parameter normalization can be \"unbiased\" (default), \"uncorrected\", or \"biased\".",
+		examples: [
+			"variance(2, 4, 6)",
+			"variance([2, 4, 6, 8])",
+			"variance([2, 4, 6, 8], \"uncorrected\")",
+			"variance([2, 4, 6, 8], \"biased\")",
+			"variance([1, 2, 3; 4, 5, 6])"
+		],
+		seealso: [
+			"max",
+			"mean",
+			"min",
+			"median",
+			"min",
+			"prod",
+			"std",
+			"sum"
+		]
+	},
+	corr: {
+		name: "corr",
+		category: "Statistics",
+		syntax: ["corr(A,B)"],
+		description: "Compute the correlation coefficient of a two list with values, For matrices, the matrix correlation coefficient is calculated.",
+		examples: ["corr([2, 4, 6, 8],[1, 2, 3, 6])", "corr(matrix([[1, 2.2, 3, 4.8, 5], [1, 2, 3, 4, 5]]), matrix([[4, 5.3, 6.6, 7, 8], [1, 2, 3, 4, 5]]))"],
+		seealso: [
+			"max",
+			"mean",
+			"min",
+			"median",
+			"min",
+			"prod",
+			"std",
+			"sum"
+		]
+	},
+	acos: {
+		name: "acos",
+		category: "Trigonometry",
+		syntax: ["acos(x)"],
+		description: "Compute the inverse cosine of a value in radians.",
+		examples: ["acos(0.5)", "acos(cos(2.3))"],
+		seealso: [
+			"cos",
+			"atan",
+			"asin"
+		]
+	},
+	acosh: {
+		name: "acosh",
+		category: "Trigonometry",
+		syntax: ["acosh(x)"],
+		description: "Calculate the hyperbolic arccos of a value, defined as `acosh(x) = ln(sqrt(x^2 - 1) + x)`.",
+		examples: ["acosh(1.5)"],
+		seealso: [
+			"cosh",
+			"asinh",
+			"atanh"
+		]
+	},
+	acot: {
+		name: "acot",
+		category: "Trigonometry",
+		syntax: ["acot(x)"],
+		description: "Calculate the inverse cotangent of a value.",
+		examples: [
+			"acot(0.5)",
+			"acot(cot(0.5))",
+			"acot(2)"
+		],
+		seealso: ["cot", "atan"]
+	},
+	acoth: {
+		name: "acoth",
+		category: "Trigonometry",
+		syntax: ["acoth(x)"],
+		description: "Calculate the inverse hyperbolic tangent of a value, defined as `acoth(x) = (ln((x+1)/x) + ln(x/(x-1))) / 2`.",
+		examples: ["acoth(2)", "acoth(0.5)"],
+		seealso: ["acsch", "asech"]
+	},
+	acsc: {
+		name: "acsc",
+		category: "Trigonometry",
+		syntax: ["acsc(x)"],
+		description: "Calculate the inverse cotangent of a value.",
+		examples: [
+			"acsc(2)",
+			"acsc(csc(0.5))",
+			"acsc(0.5)"
+		],
+		seealso: [
+			"csc",
+			"asin",
+			"asec"
+		]
+	},
+	acsch: {
+		name: "acsch",
+		category: "Trigonometry",
+		syntax: ["acsch(x)"],
+		description: "Calculate the inverse hyperbolic cosecant of a value, defined as `acsch(x) = ln(1/x + sqrt(1/x^2 + 1))`.",
+		examples: ["acsch(0.5)"],
+		seealso: ["asech", "acoth"]
+	},
+	asec: {
+		name: "asec",
+		category: "Trigonometry",
+		syntax: ["asec(x)"],
+		description: "Calculate the inverse secant of a value.",
+		examples: [
+			"asec(0.5)",
+			"asec(sec(0.5))",
+			"asec(2)"
+		],
+		seealso: [
+			"acos",
+			"acot",
+			"acsc"
+		]
+	},
+	asech: {
+		name: "asech",
+		category: "Trigonometry",
+		syntax: ["asech(x)"],
+		description: "Calculate the inverse secant of a value.",
+		examples: ["asech(0.5)"],
+		seealso: ["acsch", "acoth"]
+	},
+	asin: {
+		name: "asin",
+		category: "Trigonometry",
+		syntax: ["asin(x)"],
+		description: "Compute the inverse sine of a value in radians.",
+		examples: ["asin(0.5)", "asin(sin(0.5))"],
+		seealso: [
+			"sin",
+			"acos",
+			"atan"
+		]
+	},
+	asinh: {
+		name: "asinh",
+		category: "Trigonometry",
+		syntax: ["asinh(x)"],
+		description: "Calculate the hyperbolic arcsine of a value, defined as `asinh(x) = ln(x + sqrt(x^2 + 1))`.",
+		examples: ["asinh(0.5)"],
+		seealso: ["acosh", "atanh"]
+	},
+	atan: {
+		name: "atan",
+		category: "Trigonometry",
+		syntax: ["atan(x)"],
+		description: "Compute the inverse tangent of a value in radians.",
+		examples: ["atan(0.5)", "atan(tan(0.5))"],
+		seealso: [
+			"tan",
+			"acos",
+			"asin"
+		]
+	},
+	atanh: {
+		name: "atanh",
+		category: "Trigonometry",
+		syntax: ["atanh(x)"],
+		description: "Calculate the hyperbolic arctangent of a value, defined as `atanh(x) = ln((1 + x)/(1 - x)) / 2`.",
+		examples: ["atanh(0.5)"],
+		seealso: ["acosh", "asinh"]
+	},
+	atan2: {
+		name: "atan2",
+		category: "Trigonometry",
+		syntax: ["atan2(y, x)"],
+		description: "Computes the principal value of the arc tangent of y/x in radians.",
+		examples: [
+			"atan2(2, 2) / pi",
+			"angle = 60 deg in rad",
+			"x = cos(angle)",
+			"y = sin(angle)",
+			"atan2(y, x)"
+		],
+		seealso: [
+			"sin",
+			"cos",
+			"tan"
+		]
+	},
+	cos: {
+		name: "cos",
+		category: "Trigonometry",
+		syntax: ["cos(x)"],
+		description: "Compute the cosine of x in radians.",
+		examples: [
+			"cos(2)",
+			"cos(pi / 4) ^ 2",
+			"cos(180 deg)",
+			"cos(60 deg)",
+			"sin(0.2)^2 + cos(0.2)^2"
+		],
+		seealso: [
+			"acos",
+			"sin",
+			"tan"
+		]
+	},
+	cosh: {
+		name: "cosh",
+		category: "Trigonometry",
+		syntax: ["cosh(x)"],
+		description: "Compute the hyperbolic cosine of x in radians.",
+		examples: ["cosh(0.5)"],
+		seealso: [
+			"sinh",
+			"tanh",
+			"coth"
+		]
+	},
+	cot: {
+		name: "cot",
+		category: "Trigonometry",
+		syntax: ["cot(x)"],
+		description: "Compute the cotangent of x in radians. Defined as 1/tan(x)",
+		examples: ["cot(2)", "1 / tan(2)"],
+		seealso: [
+			"sec",
+			"csc",
+			"tan"
+		]
+	},
+	coth: {
+		name: "coth",
+		category: "Trigonometry",
+		syntax: ["coth(x)"],
+		description: "Compute the hyperbolic cotangent of x in radians.",
+		examples: ["coth(2)", "1 / tanh(2)"],
+		seealso: [
+			"sech",
+			"csch",
+			"tanh"
+		]
+	},
+	csc: {
+		name: "csc",
+		category: "Trigonometry",
+		syntax: ["csc(x)"],
+		description: "Compute the cosecant of x in radians. Defined as 1/sin(x)",
+		examples: ["csc(2)", "1 / sin(2)"],
+		seealso: [
+			"sec",
+			"cot",
+			"sin"
+		]
+	},
+	csch: {
+		name: "csch",
+		category: "Trigonometry",
+		syntax: ["csch(x)"],
+		description: "Compute the hyperbolic cosecant of x in radians. Defined as 1/sinh(x)",
+		examples: ["csch(2)", "1 / sinh(2)"],
+		seealso: [
+			"sech",
+			"coth",
+			"sinh"
+		]
+	},
+	sec: {
+		name: "sec",
+		category: "Trigonometry",
+		syntax: ["sec(x)"],
+		description: "Compute the secant of x in radians. Defined as 1/cos(x)",
+		examples: ["sec(2)", "1 / cos(2)"],
+		seealso: [
+			"cot",
+			"csc",
+			"cos"
+		]
+	},
+	sech: {
+		name: "sech",
+		category: "Trigonometry",
+		syntax: ["sech(x)"],
+		description: "Compute the hyperbolic secant of x in radians. Defined as 1/cosh(x)",
+		examples: ["sech(2)", "1 / cosh(2)"],
+		seealso: [
+			"coth",
+			"csch",
+			"cosh"
+		]
+	},
+	sin: {
+		name: "sin",
+		category: "Trigonometry",
+		syntax: ["sin(x)"],
+		description: "Compute the sine of x in radians.",
+		examples: [
+			"sin(2)",
+			"sin(pi / 4) ^ 2",
+			"sin(90 deg)",
+			"sin(30 deg)",
+			"sin(0.2)^2 + cos(0.2)^2"
+		],
+		seealso: [
+			"asin",
+			"cos",
+			"tan"
+		]
+	},
+	sinh: {
+		name: "sinh",
+		category: "Trigonometry",
+		syntax: ["sinh(x)"],
+		description: "Compute the hyperbolic sine of x in radians.",
+		examples: ["sinh(0.5)"],
+		seealso: ["cosh", "tanh"]
+	},
+	tan: {
+		name: "tan",
+		category: "Trigonometry",
+		syntax: ["tan(x)"],
+		description: "Compute the tangent of x in radians.",
+		examples: [
+			"tan(0.5)",
+			"sin(0.5) / cos(0.5)",
+			"tan(pi / 4)",
+			"tan(45 deg)"
+		],
+		seealso: [
+			"atan",
+			"sin",
+			"cos"
+		]
+	},
+	tanh: {
+		name: "tanh",
+		category: "Trigonometry",
+		syntax: ["tanh(x)"],
+		description: "Compute the hyperbolic tangent of x in radians.",
+		examples: ["tanh(0.5)", "sinh(0.5) / cosh(0.5)"],
+		seealso: ["sinh", "cosh"]
+	},
+	to: {
+		name: "to",
+		category: "Units",
+		syntax: ["x to unit", "to(x, unit)"],
+		description: "Change the unit of a value.",
+		examples: [
+			"5 inch to cm",
+			"3.2kg to g",
+			"16 bytes in bits"
+		],
+		seealso: []
+	},
+	toBest: {
+		name: "toBest",
+		category: "Units",
+		syntax: [
+			"toBest(x)",
+			"toBest(x, unitList)",
+			"toBest(x, unitList, options)"
+		],
+		description: "Converts to the most appropriate display unit.",
+		examples: [
+			"toBest(unit(5000, \"m\"))",
+			"toBest(unit(3500000, \"W\"))",
+			"toBest(unit(0.000000123, \"A\"))",
+			"toBest(unit(10, \"m\"), \"cm\")",
+			"toBest(unit(10, \"m\"), \"mm,km\", {offset: 1.5})"
+		],
+		seealso: []
+	},
+	clone: {
+		name: "clone",
+		category: "Utils",
+		syntax: ["clone(x)"],
+		description: "Clone a variable. Creates a copy of primitive variables, and a deep copy of matrices",
+		examples: [
+			"clone(3.5)",
+			"clone(2 - 4i)",
+			"clone(45 deg)",
+			"clone([1, 2; 3, 4])",
+			"clone(\"hello world\")"
+		],
+		seealso: []
+	},
+	format: {
+		name: "format",
+		category: "Utils",
+		syntax: ["format(value)", "format(value, precision)"],
+		description: "Format a value of any type as string.",
+		examples: [
+			"format(2.3)",
+			"format(3 - 4i)",
+			"format([])",
+			"format(pi, 3)"
+		],
+		seealso: ["print"]
+	},
+	bin: {
+		name: "bin",
+		category: "Utils",
+		syntax: ["bin(value)"],
+		description: "Format a number as binary",
+		examples: ["bin(2)"],
+		seealso: ["oct", "hex"]
+	},
+	oct: {
+		name: "oct",
+		category: "Utils",
+		syntax: ["oct(value)"],
+		description: "Format a number as octal",
+		examples: ["oct(56)"],
+		seealso: ["bin", "hex"]
+	},
+	hex: {
+		name: "hex",
+		category: "Utils",
+		syntax: ["hex(value)"],
+		description: "Format a number as hexadecimal",
+		examples: ["hex(240)"],
+		seealso: ["bin", "oct"]
+	},
+	isNaN: {
+		name: "isNaN",
+		category: "Utils",
+		syntax: ["isNaN(x)"],
+		description: "Test whether a value is NaN (not a number)",
+		examples: [
+			"isNaN(2)",
+			"isNaN(0 / 0)",
+			"isNaN(NaN)",
+			"isNaN(Infinity)"
+		],
+		seealso: [
+			"isNegative",
+			"isNumeric",
+			"isPositive",
+			"isZero",
+			"isFinite",
+			"isBounded"
+		]
+	},
+	isBounded: {
+		name: "isBounded",
+		category: "Utils",
+		syntax: ["isBounded(x)"],
+		description: "Test whether a value or its entries are bounded.",
+		examples: [
+			"isBounded(Infinity)",
+			"isBounded(bigint(3))",
+			"isBounded([3, -Infinity, -3])"
+		],
+		seealso: [
+			"isFinite",
+			"isNumeric",
+			"isNaN",
+			"isNegative",
+			"isPositive"
+		]
+	},
+	isFinite: {
+		name: "isFinite",
+		category: "Utils",
+		syntax: ["isFinite(x)"],
+		description: "Test whether a value is finite, elementwise on collections.",
+		examples: [
+			"isFinite(Infinity)",
+			"isFinite(bigint(3))",
+			"isFinite([3, -Infinity, -3])"
+		],
+		seealso: [
+			"isBounded",
+			"isNumeric",
+			"isNaN",
+			"isNegative",
+			"isPositive"
+		]
+	},
+	isInteger: {
+		name: "isInteger",
+		category: "Utils",
+		syntax: ["isInteger(x)"],
+		description: "Test whether a value is an integer number.",
+		examples: [
+			"isInteger(2)",
+			"isInteger(3.5)",
+			"isInteger([3, 0.5, -2])"
+		],
+		seealso: [
+			"isNegative",
+			"isNumeric",
+			"isPositive",
+			"isZero"
+		]
+	},
+	isNegative: {
+		name: "isNegative",
+		category: "Utils",
+		syntax: ["isNegative(x)"],
+		description: "Test whether a value is negative: smaller than zero.",
+		examples: [
+			"isNegative(2)",
+			"isNegative(0)",
+			"isNegative(-4)",
+			"isNegative([3, 0.5, -2])"
+		],
+		seealso: [
+			"isInteger",
+			"isNumeric",
+			"isPositive",
+			"isZero"
+		]
+	},
+	isNumeric: {
+		name: "isNumeric",
+		category: "Utils",
+		syntax: ["isNumeric(x)"],
+		description: "Test whether a value is a numeric value. Returns true when the input is a number, BigNumber, Fraction, or boolean.",
+		examples: [
+			"isNumeric(2)",
+			"isNumeric(\"2\")",
+			"hasNumericValue(\"2\")",
+			"isNumeric(0)",
+			"isNumeric(bignumber(500))",
+			"isNumeric(fraction(0.125))",
+			"isNumeric(2 + 3i)",
+			"isNumeric([2.3, \"foo\", false])"
+		],
+		seealso: [
+			"isInteger",
+			"isZero",
+			"isNegative",
+			"isPositive",
+			"isNaN",
+			"hasNumericValue",
+			"isFinite",
+			"isBounded"
+		]
+	},
+	hasNumericValue: {
+		name: "hasNumericValue",
+		category: "Utils",
+		syntax: ["hasNumericValue(x)"],
+		description: "Test whether a value is an numeric value. In case of a string, true is returned if the string contains a numeric value.",
+		examples: [
+			"hasNumericValue(2)",
+			"hasNumericValue(\"2\")",
+			"isNumeric(\"2\")",
+			"hasNumericValue(0)",
+			"hasNumericValue(bignumber(500))",
+			"hasNumericValue(fraction(0.125))",
+			"hasNumericValue(2 + 3i)",
+			"hasNumericValue([2.3, \"foo\", false])"
+		],
+		seealso: [
+			"isInteger",
+			"isZero",
+			"isNegative",
+			"isPositive",
+			"isNaN",
+			"isNumeric"
+		]
+	},
+	isPositive: {
+		name: "isPositive",
+		category: "Utils",
+		syntax: ["isPositive(x)"],
+		description: "Test whether a value is positive: larger than zero.",
+		examples: [
+			"isPositive(2)",
+			"isPositive(0)",
+			"isPositive(-4)",
+			"isPositive([3, 0.5, -2])"
+		],
+		seealso: [
+			"isInteger",
+			"isNumeric",
+			"isNegative",
+			"isZero"
+		]
+	},
+	isPrime: {
+		name: "isPrime",
+		category: "Utils",
+		syntax: ["isPrime(x)"],
+		description: "Test whether a value is prime: has no divisors other than itself and one.",
+		examples: [
+			"isPrime(3)",
+			"isPrime(-2)",
+			"isPrime([2, 17, 100])"
+		],
+		seealso: [
+			"isInteger",
+			"isNumeric",
+			"isNegative",
+			"isZero"
+		]
+	},
+	isZero: {
+		name: "isZero",
+		category: "Utils",
+		syntax: ["isZero(x)"],
+		description: "Test whether a value is zero.",
+		examples: [
+			"isZero(2)",
+			"isZero(0)",
+			"isZero(-4)",
+			"isZero([3, 0, -2, 0])"
+		],
+		seealso: [
+			"isInteger",
+			"isNumeric",
+			"isNegative",
+			"isPositive"
+		]
+	},
+	print: {
+		name: "print",
+		category: "Utils",
+		syntax: ["print(template, values)", "print(template, values, precision)"],
+		description: "Interpolate values into a string template.",
+		examples: [
+			"print(\"Lucy is $age years old\", {age: 5})",
+			"print(\"The value of pi is $pi\", {pi: pi}, 3)",
+			"print(\"Hello, $user.name!\", {user: {name: \"John\"}})",
+			"print(\"Values: $1, $2, $3\", [6, 9, 4])"
+		],
+		seealso: ["format"]
+	},
+	typeOf: {
+		name: "typeOf",
+		category: "Utils",
+		syntax: ["typeOf(x)"],
+		description: "Get the type of a variable.",
+		examples: [
+			"typeOf(3.5)",
+			"typeOf(2 - 4i)",
+			"typeOf(45 deg)",
+			"typeOf(\"hello world\")"
+		],
+		seealso: ["getMatrixDataType"]
+	},
+	numeric: {
+		name: "numeric",
+		category: "Utils",
+		syntax: ["numeric(x)"],
+		description: "Convert a numeric input to a specific numeric type: number, BigNumber, bigint, or Fraction.",
+		examples: [
+			"numeric(\"4\")",
+			"numeric(\"4\", \"number\")",
+			"numeric(\"4\", \"bigint\")",
+			"numeric(\"4\", \"BigNumber\")",
+			"numeric(\"4\", \"Fraction\")",
+			"numeric(4, \"Fraction\")",
+			"numeric(fraction(2, 5), \"number\")"
+		],
+		seealso: [
+			"number",
+			"bigint",
+			"fraction",
+			"bignumber",
+			"string",
+			"format"
+		]
+	}
+};
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/function/help.js
+var name$108 = "help";
+var createHelp = /* @__PURE__ */ factory(name$108, [
+	"typed",
+	"mathWithTransform",
+	"Help"
+], (_ref) => {
+	var { typed, mathWithTransform, Help } = _ref;
+	/**
+	* Retrieve help on a function or data type.
+	* Help files are retrieved from the embedded documentation in math.docs.
+	*
+	* Syntax:
+	*
+	*    math.help(search)
+	*
+	* Examples:
+	*
+	*    console.log(math.help('sin').toString())
+	*    console.log(math.help(math.add).toString())
+	*    console.log(math.help(math.add).toJSON())
+	*
+	* @param {Function | string | Object} search   A function or function name
+	*                                              for which to get help
+	* @return {Help} A help object
+	*/
+	return typed(name$108, { any: function any(search) {
+		var prop;
+		var searchName = search;
+		if (typeof search !== "string") {
+			for (prop in mathWithTransform) if (hasOwnProperty(mathWithTransform, prop) && search === mathWithTransform[prop]) {
+				searchName = prop;
+				break;
+			}
+		}
+		var doc = getSafeProperty(embeddedDocs, searchName);
+		if (!doc) {
+			var searchText = typeof searchName === "function" ? searchName.name : searchName;
+			throw new Error("No documentation found on \"" + searchText + "\"");
+		}
+		return new Help(doc);
+	} });
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/type/chain/function/chain.js
+var name$107 = "chain";
+var createChain = /* @__PURE__ */ factory(name$107, ["typed", "Chain"], (_ref) => {
+	var { typed, Chain } = _ref;
+	/**
+	* Wrap any value in a chain, allowing to perform chained operations on
+	* the value.
+	*
+	* All methods available in the math.js library can be called upon the chain,
+	* and then will be evaluated with the value itself as first argument.
+	* The chain can be closed by executing `chain.done()`, which returns
+	* the final value.
+	*
+	* The chain has a number of special functions:
+	*
+	* - `done()`     Finalize the chain and return the chain's value.
+	* - `valueOf()`  The same as `done()`
+	* - `toString()` Executes `math.format()` onto the chain's value, returning
+	*                a string representation of the value.
+	*
+	* Syntax:
+	*
+	*    math.chain(value)
+	*
+	* Examples:
+	*
+	*     math.chain(3)
+	*         .add(4)
+	*         .subtract(2)
+	*         .done()     // 5
+	*
+	*     math.chain( [[1, 2], [3, 4]] )
+	*         .subset(math.index(0, 0), 8)
+	*         .multiply(3)
+	*         .done()     // [[24, 6], [9, 12]]
+	*
+	* @param {*} [value]   A value of any type on which to start a chained operation.
+	* @return {math.Chain} The created chain
+	*/
+	return typed(name$107, {
+		"": function _() {
+			return new Chain();
+		},
+		any: function any(value) {
+			return new Chain(value);
+		}
+	});
+});
+var createResolve = /* @__PURE__ */ factory("resolve", [
+	"typed",
+	"parse",
+	"ConstantNode",
+	"FunctionNode",
+	"OperatorNode",
+	"ParenthesisNode"
+], (_ref) => {
+	var { typed, parse, ConstantNode, FunctionNode, OperatorNode, ParenthesisNode } = _ref;
+	/**
+	* resolve(expr, scope) replaces variable nodes with their scoped values
+	*
+	* Syntax:
+	*
+	*     math.resolve(expr, scope)
+	*
+	* Examples:
+	*
+	*     math.resolve('x + y', {x:1, y:2})           // Node '1 + 2'
+	*     math.resolve(math.parse('x+y'), {x:1, y:2}) // Node '1 + 2'
+	*     math.simplify('x+y', {x:2, y: math.parse('x+x')}).toString() // "6"
+	*
+	* See also:
+	*
+	*     simplify, evaluate
+	*
+	* @param {Node | Node[]} node
+	*     The expression tree (or trees) to be simplified
+	* @param {Object} scope
+	*     Scope specifying variables to be resolved
+	* @return {Node | Node[]} Returns `node` with variables recursively substituted.
+	* @throws {ReferenceError}
+	*     If there is a cyclic dependency among the variables in `scope`,
+	*     resolution is impossible and a ReferenceError is thrown.
+	*/
+	function _resolve(node, scope) {
+		var within = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : /* @__PURE__ */ new Set();
+		if (!scope) return node;
+		if (isSymbolNode(node)) {
+			if (within.has(node.name)) {
+				var variables = Array.from(within).join(", ");
+				throw new ReferenceError("recursive loop of variable definitions among {".concat(variables, "}"));
+			}
+			var value = scope.get(node.name);
+			if (isNode(value)) {
+				var nextWithin = new Set(within);
+				nextWithin.add(node.name);
+				return _resolve(value, scope, nextWithin);
+			} else if (typeof value === "number") return parse(String(value));
+			else if (value !== void 0) return new ConstantNode(value);
+			else return node;
+		} else if (isOperatorNode(node)) {
+			var args = node.args.map(function(arg) {
+				return _resolve(arg, scope, within);
+			});
+			return new OperatorNode(node.op, node.fn, args, node.implicit);
+		} else if (isParenthesisNode(node)) return new ParenthesisNode(_resolve(node.content, scope, within));
+		else if (isFunctionNode(node)) {
+			var _args = node.args.map(function(arg) {
+				return _resolve(arg, scope, within);
+			});
+			return new FunctionNode(node.name, _args);
+		}
+		return node.map((child) => _resolve(child, scope, within));
+	}
+	return typed("resolve", {
+		Node: _resolve,
+		"Node, Map | null | undefined": _resolve,
+		"Node, Object": (n, scope) => _resolve(n, createMap$1(scope)),
+		"Array | Matrix": typed.referToSelf((self) => (A) => A.map((n) => self(n))),
+		"Array | Matrix, null | undefined": typed.referToSelf((self) => (A) => A.map((n) => self(n))),
+		"Array, Object": typed.referTo("Array,Map", (selfAM) => (A, scope) => selfAM(A, createMap$1(scope))),
+		"Matrix, Object": typed.referTo("Matrix,Map", (selfMM) => (A, scope) => selfMM(A, createMap$1(scope))),
+		"Array | Matrix, Map": typed.referToSelf((self) => (A, scope) => A.map((n) => self(n, scope)))
+	});
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/algebra/simplify/wildcards.js
+function isNumericNode(x) {
+	return isConstantNode(x) || isOperatorNode(x) && x.isUnary() && isConstantNode(x.args[0]);
+}
+function isConstantExpression(x) {
+	if (isConstantNode(x)) return true;
+	if ((isFunctionNode(x) || isOperatorNode(x)) && x.args.every(isConstantExpression)) return true;
+	if (isParenthesisNode(x) && isConstantExpression(x.content)) return true;
+	return false;
+}
+//#endregion
+//#region node_modules/@babel/runtime/helpers/esm/typeof.js
+function _typeof(o) {
+	"@babel/helpers - typeof";
+	return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(o) {
+		return typeof o;
+	} : function(o) {
+		return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
+	}, _typeof(o);
+}
+//#endregion
+//#region node_modules/@babel/runtime/helpers/esm/toPrimitive.js
+function toPrimitive(t, r) {
+	if ("object" != _typeof(t) || !t) return t;
+	var e = t[Symbol.toPrimitive];
+	if (void 0 !== e) {
+		var i = e.call(t, r || "default");
+		if ("object" != _typeof(i)) return i;
+		throw new TypeError("@@toPrimitive must return a primitive value.");
+	}
+	return ("string" === r ? String : Number)(t);
+}
+//#endregion
+//#region node_modules/@babel/runtime/helpers/esm/toPropertyKey.js
+function toPropertyKey(t) {
+	var i = toPrimitive(t, "string");
+	return "symbol" == _typeof(i) ? i : i + "";
+}
+//#endregion
+//#region node_modules/@babel/runtime/helpers/esm/defineProperty.js
+function _defineProperty(e, r, t) {
+	return (r = toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
+		value: t,
+		enumerable: !0,
+		configurable: !0,
+		writable: !0
+	}) : e[r] = t, e;
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/algebra/simplify/util.js
+function ownKeys$1(e, r) {
+	var t = Object.keys(e);
+	if (Object.getOwnPropertySymbols) {
+		var o = Object.getOwnPropertySymbols(e);
+		r && (o = o.filter(function(r) {
+			return Object.getOwnPropertyDescriptor(e, r).enumerable;
+		})), t.push.apply(t, o);
+	}
+	return t;
+}
+function _objectSpread$1(e) {
+	for (var r = 1; r < arguments.length; r++) {
+		var t = null != arguments[r] ? arguments[r] : {};
+		r % 2 ? ownKeys$1(Object(t), !0).forEach(function(r) {
+			_defineProperty(e, r, t[r]);
+		}) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys$1(Object(t)).forEach(function(r) {
+			Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r));
+		});
+	}
+	return e;
+}
+var createUtil = /* @__PURE__ */ factory("simplifyUtil", [
+	"FunctionNode",
+	"OperatorNode",
+	"SymbolNode"
+], (_ref) => {
+	var { FunctionNode, OperatorNode, SymbolNode } = _ref;
+	var T = true;
+	var F = false;
+	var defaultName = "defaultF";
+	var defaultContext = {
+		add: {
+			trivial: T,
+			total: T,
+			commutative: T,
+			associative: T
+		},
+		unaryPlus: {
+			trivial: T,
+			total: T,
+			commutative: T,
+			associative: T
+		},
+		subtract: {
+			trivial: F,
+			total: T,
+			commutative: F,
+			associative: F
+		},
+		multiply: {
+			trivial: T,
+			total: T,
+			commutative: T,
+			associative: T
+		},
+		divide: {
+			trivial: F,
+			total: T,
+			commutative: F,
+			associative: F
+		},
+		paren: {
+			trivial: T,
+			total: T,
+			commutative: T,
+			associative: F
+		},
+		defaultF: {
+			trivial: F,
+			total: T,
+			commutative: F,
+			associative: F
+		}
+	};
+	var realContext = {
+		divide: { total: F },
+		log: { total: F }
+	};
+	var positiveContext = {
+		subtract: { total: F },
+		abs: { trivial: T },
+		log: { total: T }
+	};
+	function hasProperty(nodeOrName, property) {
+		var context = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : defaultContext;
+		var name = defaultName;
+		if (typeof nodeOrName === "string") name = nodeOrName;
+		else if (isOperatorNode(nodeOrName)) name = nodeOrName.fn.toString();
+		else if (isFunctionNode(nodeOrName)) name = nodeOrName.name;
+		else if (isParenthesisNode(nodeOrName)) name = "paren";
+		if (hasOwnProperty(context, name)) {
+			var properties = context[name];
+			if (hasOwnProperty(properties, property)) return properties[property];
+			if (hasOwnProperty(defaultContext, name)) return defaultContext[name][property];
+		}
+		if (hasOwnProperty(context, defaultName)) {
+			var _properties = context[defaultName];
+			if (hasOwnProperty(_properties, property)) return _properties[property];
+			return defaultContext[defaultName][property];
+		}
+		if (hasOwnProperty(defaultContext, name)) {
+			var _properties2 = defaultContext[name];
+			if (hasOwnProperty(_properties2, property)) return _properties2[property];
+		}
+		return defaultContext[defaultName][property];
+	}
+	function isCommutative(node) {
+		return hasProperty(node, "commutative", arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : defaultContext);
+	}
+	function isAssociative(node) {
+		return hasProperty(node, "associative", arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : defaultContext);
+	}
+	/**
+	* Merge the given contexts, with primary overriding secondary
+	* wherever they might conflict
+	*/
+	function mergeContext(primary, secondary) {
+		var merged = _objectSpread$1({}, primary);
+		for (var prop in secondary) if (hasOwnProperty(primary, prop)) merged[prop] = _objectSpread$1(_objectSpread$1({}, secondary[prop]), primary[prop]);
+		else merged[prop] = secondary[prop];
+		return merged;
+	}
+	/**
+	* Flatten all associative operators in an expression tree.
+	* Assumes parentheses have already been removed.
+	*/
+	function flatten(node, context) {
+		if (!node.args || node.args.length === 0) return node;
+		node.args = allChildren(node, context);
+		for (var i = 0; i < node.args.length; i++) flatten(node.args[i], context);
+	}
+	/**
+	* Get the children of a node as if it has been flattened.
+	* TODO implement for FunctionNodes
+	*/
+	function allChildren(node, context) {
+		var op;
+		var children = [];
+		var _findChildren = function findChildren(node) {
+			for (var i = 0; i < node.args.length; i++) {
+				var child = node.args[i];
+				if (isOperatorNode(child) && op === child.op) _findChildren(child);
+				else children.push(child);
+			}
+		};
+		if (isAssociative(node, context)) {
+			op = node.op;
+			_findChildren(node);
+			return children;
+		} else return node.args;
+	}
+	/**
+	*  Unflatten all flattened operators to a right-heavy binary tree.
+	*/
+	function unflattenr(node, context) {
+		if (!node.args || node.args.length === 0) return;
+		var makeNode = createMakeNodeFunction(node);
+		var l = node.args.length;
+		for (var i = 0; i < l; i++) unflattenr(node.args[i], context);
+		if (l > 2 && isAssociative(node, context)) {
+			var curnode = node.args.pop();
+			while (node.args.length > 0) curnode = makeNode([node.args.pop(), curnode]);
+			node.args = curnode.args;
+		}
+	}
+	/**
+	*  Unflatten all flattened operators to a left-heavy binary tree.
+	*/
+	function unflattenl(node, context) {
+		if (!node.args || node.args.length === 0) return;
+		var makeNode = createMakeNodeFunction(node);
+		var l = node.args.length;
+		for (var i = 0; i < l; i++) unflattenl(node.args[i], context);
+		if (l > 2 && isAssociative(node, context)) {
+			var curnode = node.args.shift();
+			while (node.args.length > 0) curnode = makeNode([curnode, node.args.shift()]);
+			node.args = curnode.args;
+		}
+	}
+	function createMakeNodeFunction(node) {
+		if (isOperatorNode(node)) return function(args) {
+			try {
+				return new OperatorNode(node.op, node.fn, args, node.implicit);
+			} catch (err) {
+				console.error(err);
+				return [];
+			}
+		};
+		else return function(args) {
+			return new FunctionNode(new SymbolNode(node.name), args);
+		};
+	}
+	return {
+		createMakeNodeFunction,
+		hasProperty,
+		isCommutative,
+		isAssociative,
+		mergeContext,
+		flatten,
+		allChildren,
+		unflattenr,
+		unflattenl,
+		defaultContext,
+		realContext,
+		positiveContext
+	};
+});
+var createSimplify = /* @__PURE__ */ factory("simplify", [
+	"typed",
+	"parse",
+	"equal",
+	"resolve",
+	"simplifyConstant",
+	"simplifyCore",
+	"AccessorNode",
+	"ArrayNode",
+	"ConstantNode",
+	"FunctionNode",
+	"IndexNode",
+	"ObjectNode",
+	"OperatorNode",
+	"ParenthesisNode",
+	"SymbolNode",
+	"replacer"
+], (_ref) => {
+	var { typed, parse, equal, resolve, simplifyConstant, simplifyCore, AccessorNode, ArrayNode, ConstantNode, FunctionNode, IndexNode, ObjectNode, OperatorNode, ParenthesisNode, SymbolNode, replacer } = _ref;
+	var { hasProperty, isCommutative, isAssociative, mergeContext, flatten, unflattenr, unflattenl, createMakeNodeFunction, defaultContext, realContext, positiveContext } = createUtil({
+		FunctionNode,
+		OperatorNode,
+		SymbolNode
+	});
+	/**
+	* Simplify an expression tree.
+	*
+	* A list of rules are applied to an expression, repeating over the list until
+	* no further changes are made.
+	* It's possible to pass a custom set of rules to the function as second
+	* argument. A rule can be specified as an object, string, or function:
+	*
+	*     const rules = [
+	*       { l: 'n1*n3 + n2*n3', r: '(n1+n2)*n3' },
+	*       'n1*n3 + n2*n3 -> (n1+n2)*n3',
+	*       function (node) {
+	*         // ... return a new node or return the node unchanged
+	*         return node
+	*       }
+	*     ]
+	*
+	* String and object rules consist of a left and right pattern. The left is
+	* used to match against the expression and the right determines what matches
+	* are replaced with. The main difference between a pattern and a normal
+	* expression is that variables starting with the following characters are
+	* interpreted as wildcards:
+	*
+	* - 'n' - Matches any node [Node]
+	* - 'c' - Matches a constant literal (5 or 3.2) [ConstantNode]
+	* - 'cl' - Matches a constant literal; same as c [ConstantNode]
+	* - 'cd' - Matches a decimal literal (5 or -3.2) [ConstantNode or unaryMinus wrapping a ConstantNode]
+	* - 'ce' - Matches a constant expression (-5 or √3) [Expressions consisting of only ConstantNodes, functions, and operators]
+	* - 'v' - Matches a variable; anything not matched by c (-5 or x) [Node that is not a ConstantNode]
+	* - 'vl' - Matches a variable literal (x or y) [SymbolNode]
+	* - 'vd' - Matches a non-decimal expression; anything not matched by cd (x or √3) [Node that is not a ConstantNode or unaryMinus that is wrapping a ConstantNode]
+	* - 've' - Matches a variable expression; anything not matched by ce (x or 2x) [Expressions that contain a SymbolNode or other non-constant term]
+	*
+	* The default list of rules is exposed on the function as `simplify.rules`
+	* and can be used as a basis to built a set of custom rules. Note that since
+	* the `simplifyCore` function is in the default list of rules, by default
+	* simplify will convert any function calls in the expression that have
+	* operator equivalents to their operator forms.
+	*
+	* To specify a rule as a string, separate the left and right pattern by '->'
+	* When specifying a rule as an object, the following keys are meaningful:
+	* - l - the left pattern
+	* - r - the right pattern
+	* - s - in lieu of l and r, the string form that is broken at -> to give them
+	* - repeat - whether to repeat this rule until the expression stabilizes
+	* - assuming - gives a context object, as in the 'context' option to
+	*     simplify. Every property in the context object must match the current
+	*     context in order, or else the rule will not be applied.
+	* - imposeContext - gives a context object, as in the 'context' option to
+	*     simplify. Any settings specified will override the incoming context
+	*     for all matches of this rule.
+	*
+	* For more details on the theory, see:
+	*
+	* - [Strategies for simplifying math expressions (Stackoverflow)](https://stackoverflow.com/questions/7540227/strategies-for-simplifying-math-expressions)
+	* - [Symbolic computation - Simplification (Wikipedia)](https://en.wikipedia.org/wiki/Symbolic_computation#Simplification)
+	*
+	*  An optional `options` argument can be passed as last argument of `simplify`.
+	*  Currently available options (defaults in parentheses):
+	*  - `consoleDebug` (false): whether to write the expression being simplified
+	*    and any changes to it, along with the rule responsible, to console
+	*  - `context` (simplify.defaultContext): an object giving properties of
+	*    each operator, which determine what simplifications are allowed. The
+	*    currently meaningful properties are commutative, associative,
+	*    total (whether the operation is defined for all arguments), and
+	*    trivial (whether the operation applied to a single argument leaves
+	*    that argument unchanged). The default context is very permissive and
+	*    allows almost all simplifications. Only properties differing from
+	*    the default need to be specified; the default context is used as a
+	*    fallback. Additional contexts `simplify.realContext` and
+	*    `simplify.positiveContext` are supplied to cause simplify to perform
+	*    just simplifications guaranteed to preserve all values of the expression
+	*    assuming all variables and subexpressions are real numbers or
+	*    positive real numbers, respectively. (Note that these are in some cases
+	*    more restrictive than the default context; for example, the default
+	*    context will allow `x/x` to simplify to 1, whereas
+	*    `simplify.realContext` will not, as `0/0` is not equal to 1.)
+	*  - `exactFractions` (true): whether to try to convert all constants to
+	*    exact rational numbers.
+	*  - `fractionsLimit` (10000): when `exactFractions` is true, constants will
+	*    be expressed as fractions only when both numerator and denominator
+	*    are smaller than `fractionsLimit`.
+	*
+	* Syntax:
+	*
+	*     math.simplify(expr)
+	*     math.simplify(expr, rules)
+	*     math.simplify(expr, rules)
+	*     math.simplify(expr, rules, scope)
+	*     math.simplify(expr, rules, scope, options)
+	*     math.simplify(expr, scope)
+	*     math.simplify(expr, scope, options)
+	*
+	* Examples:
+	*
+	*     math.simplify('2 * 1 * x ^ (2 - 1)')      // Node "2 * x"
+	*     math.simplify('2 * 3 * x', {x: 4})        // Node "24"
+	*     const f = math.parse('2 * 1 * x ^ (2 - 1)')
+	*     math.simplify(f)                          // Node "2 * x"
+	*     math.simplify('0.4 * x', {}, {exactFractions: true})  // Node "x * 2 / 5"
+	*     math.simplify('0.4 * x', {}, {exactFractions: false}) // Node "0.4 * x"
+	*
+	* See also:
+	*
+	*     simplifyCore, derivative, evaluate, parse, rationalize, resolve
+	*
+	* @param {Node | string} expr
+	*            The expression to be simplified
+	* @param {SimplifyRule[]} [rules]
+	*            Optional list with custom rules
+	* @param {Object} [scope] Optional scope with variables
+	* @param {SimplifyOptions} [options] Optional configuration settings
+	* @return {Node} Returns the simplified form of `expr`
+	*/
+	typed.addConversion({
+		from: "Object",
+		to: "Map",
+		convert: createMap$1
+	});
+	var simplify = typed("simplify", {
+		Node: _simplify,
+		"Node, Map": (expr, scope) => _simplify(expr, false, scope),
+		"Node, Map, Object": (expr, scope, options) => _simplify(expr, false, scope, options),
+		"Node, Array": _simplify,
+		"Node, Array, Map": _simplify,
+		"Node, Array, Map, Object": _simplify
+	});
+	typed.removeConversion({
+		from: "Object",
+		to: "Map",
+		convert: createMap$1
+	});
+	simplify.defaultContext = defaultContext;
+	simplify.realContext = realContext;
+	simplify.positiveContext = positiveContext;
+	function removeParens(node) {
+		return node.transform(function(node) {
+			return isParenthesisNode(node) ? removeParens(node.content) : node;
+		});
+	}
+	var SUPPORTED_CONSTANTS = {
+		true: true,
+		false: true,
+		e: true,
+		i: true,
+		Infinity: true,
+		LN2: true,
+		LN10: true,
+		LOG2E: true,
+		LOG10E: true,
+		NaN: true,
+		phi: true,
+		pi: true,
+		SQRT1_2: true,
+		SQRT2: true,
+		tau: true
+	};
+	simplify.rules = [
+		simplifyCore,
+		{
+			l: "log(e)",
+			r: "1"
+		},
+		{
+			s: "n-n1 -> n+-n1",
+			assuming: { subtract: { total: true } }
+		},
+		{
+			s: "n-n -> 0",
+			assuming: { subtract: { total: false } }
+		},
+		{
+			s: "-(cl*v) -> v * (-cl)",
+			assuming: {
+				multiply: { commutative: true },
+				subtract: { total: true }
+			}
+		},
+		{
+			s: "-(cl*v) -> (-cl) * v",
+			assuming: {
+				multiply: { commutative: false },
+				subtract: { total: true }
+			}
+		},
+		{
+			s: "-(v*cl) -> v * (-cl)",
+			assuming: {
+				multiply: { commutative: false },
+				subtract: { total: true }
+			}
+		},
+		{
+			l: "-(n1/n2)",
+			r: "-n1/n2"
+		},
+		{
+			l: "-v",
+			r: "v * (-1)"
+		},
+		{
+			l: "(n1 + n2)*(-1)",
+			r: "n1*(-1) + n2*(-1)",
+			repeat: true
+		},
+		{
+			l: "n/n1^n2",
+			r: "n*n1^-n2"
+		},
+		{
+			l: "n/n1",
+			r: "n*n1^-1"
+		},
+		{
+			s: "(n1*n2)^n3 -> n1^n3 * n2^n3",
+			assuming: { multiply: { commutative: true } }
+		},
+		{
+			s: "(n1*n2)^(-1) -> n2^(-1) * n1^(-1)",
+			assuming: { multiply: { commutative: false } }
+		},
+		{
+			s: "(n ^ n1) ^ n2 -> n ^ (n1 * n2)",
+			assuming: { divide: { total: true } }
+		},
+		{
+			l: " vd   * ( vd   * n1 + n2)",
+			r: "vd^2       * n1 +  vd   * n2"
+		},
+		{
+			s: " vd   * (vd^n4 * n1 + n2)   ->  vd^(1+n4)  * n1 +  vd   * n2",
+			assuming: { divide: { total: true } }
+		},
+		{
+			s: "vd^n3 * ( vd   * n1 + n2)   ->  vd^(n3+1)  * n1 + vd^n3 * n2",
+			assuming: { divide: { total: true } }
+		},
+		{
+			s: "vd^n3 * (vd^n4 * n1 + n2)   ->  vd^(n3+n4) * n1 + vd^n3 * n2",
+			assuming: { divide: { total: true } }
+		},
+		{
+			l: "n*n",
+			r: "n^2"
+		},
+		{
+			s: "n * n^n1 -> n^(n1+1)",
+			assuming: { divide: { total: true } }
+		},
+		{
+			s: "n^n1 * n^n2 -> n^(n1+n2)",
+			assuming: { divide: { total: true } }
+		},
+		simplifyConstant,
+		{
+			s: "n+n -> 2*n",
+			assuming: { add: { total: true } }
+		},
+		{
+			l: "n+-n",
+			r: "0"
+		},
+		{
+			l: "vd*n + vd",
+			r: "vd*(n+1)"
+		},
+		{
+			l: "n3*n1 + n3*n2",
+			r: "n3*(n1+n2)"
+		},
+		{
+			l: "n3^(-n4)*n1 +   n3  * n2",
+			r: "n3^(-n4)*(n1 + n3^(n4+1) *n2)"
+		},
+		{
+			l: "n3^(-n4)*n1 + n3^n5 * n2",
+			r: "n3^(-n4)*(n1 + n3^(n4+n5)*n2)"
+		},
+		{
+			s: "n*vd + vd -> (n+1)*vd",
+			assuming: { multiply: { commutative: false } }
+		},
+		{
+			s: "vd + n*vd -> (1+n)*vd",
+			assuming: { multiply: { commutative: false } }
+		},
+		{
+			s: "n1*n3 + n2*n3 -> (n1+n2)*n3",
+			assuming: { multiply: { commutative: false } }
+		},
+		{
+			s: "n^n1 * n -> n^(n1+1)",
+			assuming: {
+				divide: { total: true },
+				multiply: { commutative: false }
+			}
+		},
+		{
+			s: "n1*n3^(-n4) + n2 * n3    -> (n1 + n2*n3^(n4 +  1))*n3^(-n4)",
+			assuming: { multiply: { commutative: false } }
+		},
+		{
+			s: "n1*n3^(-n4) + n2 * n3^n5 -> (n1 + n2*n3^(n4 + n5))*n3^(-n4)",
+			assuming: { multiply: { commutative: false } }
+		},
+		{
+			l: "n*cd + cd",
+			r: "(n+1)*cd"
+		},
+		{
+			s: "cd*n + cd -> cd*(n+1)",
+			assuming: { multiply: { commutative: false } }
+		},
+		{
+			s: "cd + cd*n -> cd*(1+n)",
+			assuming: { multiply: { commutative: false } }
+		},
+		simplifyConstant,
+		{
+			s: "(-n)*n1 -> -(n*n1)",
+			assuming: { subtract: { total: true } }
+		},
+		{
+			s: "n1*(-n) -> -(n1*n)",
+			assuming: {
+				subtract: { total: true },
+				multiply: { commutative: false }
+			}
+		},
+		{
+			s: "ce+ve -> ve+ce",
+			assuming: { add: { commutative: true } },
+			imposeContext: { add: { commutative: false } }
+		},
+		{
+			s: "vd*cd -> cd*vd",
+			assuming: { multiply: { commutative: true } },
+			imposeContext: { multiply: { commutative: false } }
+		},
+		{
+			l: "n+-n1",
+			r: "n-n1"
+		},
+		{
+			l: "n+-(n1)",
+			r: "n-(n1)"
+		},
+		{
+			s: "n*(n1^-1) -> n/n1",
+			assuming: { multiply: { commutative: true } }
+		},
+		{
+			s: "n*n1^-n2 -> n/n1^n2",
+			assuming: { multiply: { commutative: true } }
+		},
+		{
+			s: "n^-1 -> 1/n",
+			assuming: { multiply: { commutative: true } }
+		},
+		{
+			l: "n^1",
+			r: "n"
+		},
+		{
+			s: "n*(n1/n2) -> (n*n1)/n2",
+			assuming: { multiply: { associative: true } }
+		},
+		{
+			s: "n-(n1+n2) -> n-n1-n2",
+			assuming: { addition: {
+				associative: true,
+				commutative: true
+			} }
+		},
+		{
+			l: "1*n",
+			r: "n",
+			imposeContext: { multiply: { commutative: true } }
+		},
+		{
+			s: "n1/(n2/n3) -> (n1*n3)/n2",
+			assuming: { multiply: { associative: true } }
+		},
+		{
+			l: "n1/(-n2)",
+			r: "-n1/n2"
+		}
+	];
+	/**
+	* Takes any rule object as allowed by the specification in simplify
+	* and puts it in a standard form used by applyRule
+	*/
+	function _canonicalizeRule(ruleObject, context) {
+		var newRule = {};
+		if (ruleObject.s) {
+			var lr = ruleObject.s.split("->");
+			if (lr.length === 2) {
+				newRule.l = lr[0];
+				newRule.r = lr[1];
+			} else throw SyntaxError("Could not parse rule: " + ruleObject.s);
+		} else {
+			newRule.l = ruleObject.l;
+			newRule.r = ruleObject.r;
+		}
+		newRule.l = removeParens(parse(newRule.l));
+		newRule.r = removeParens(parse(newRule.r));
+		for (var prop of [
+			"imposeContext",
+			"repeat",
+			"assuming"
+		]) if (prop in ruleObject) newRule[prop] = ruleObject[prop];
+		if (ruleObject.evaluate) newRule.evaluate = parse(ruleObject.evaluate);
+		if (isAssociative(newRule.l, context)) {
+			var nonCommutative = !isCommutative(newRule.l, context);
+			var leftExpandsym;
+			if (nonCommutative) leftExpandsym = _getExpandPlaceholderSymbol();
+			var makeNode = createMakeNodeFunction(newRule.l);
+			var expandsym = _getExpandPlaceholderSymbol();
+			newRule.expanded = {};
+			newRule.expanded.l = makeNode([newRule.l, expandsym]);
+			flatten(newRule.expanded.l, context);
+			unflattenr(newRule.expanded.l, context);
+			newRule.expanded.r = makeNode([newRule.r, expandsym]);
+			if (nonCommutative) {
+				newRule.expandedNC1 = {};
+				newRule.expandedNC1.l = makeNode([leftExpandsym, newRule.l]);
+				newRule.expandedNC1.r = makeNode([leftExpandsym, newRule.r]);
+				newRule.expandedNC2 = {};
+				newRule.expandedNC2.l = makeNode([leftExpandsym, newRule.expanded.l]);
+				newRule.expandedNC2.r = makeNode([leftExpandsym, newRule.expanded.r]);
+			}
+		}
+		return newRule;
+	}
+	/**
+	* Parse the string array of rules into nodes
+	*
+	* Example syntax for rules:
+	*
+	* Position constants to the left in a product:
+	* { l: 'n1 * c1', r: 'c1 * n1' }
+	* n1 is any Node, and c1 is a ConstantNode.
+	*
+	* Apply difference of squares formula:
+	* { l: '(n1 - n2) * (n1 + n2)', r: 'n1^2 - n2^2' }
+	* n1, n2 mean any Node.
+	*
+	* Short hand notation:
+	* 'n1 * c1 -> c1 * n1'
+	*/
+	function _buildRules(rules, context) {
+		var ruleSet = [];
+		for (var i = 0; i < rules.length; i++) {
+			var rule = rules[i];
+			var newRule = void 0;
+			var ruleType = typeof rule;
+			switch (ruleType) {
+				case "string": rule = { s: rule };
+				case "object":
+					newRule = _canonicalizeRule(rule, context);
+					break;
+				case "function":
+					newRule = rule;
+					break;
+				default: throw TypeError("Unsupported type of rule: " + ruleType);
+			}
+			ruleSet.push(newRule);
+		}
+		return ruleSet;
+	}
+	var _lastsym = 0;
+	function _getExpandPlaceholderSymbol() {
+		return new SymbolNode("_p" + _lastsym++);
+	}
+	function _simplify(expr, rules) {
+		var scope = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : createEmptyMap();
+		var options = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : {};
+		var debug = options.consoleDebug;
+		rules = _buildRules(rules || simplify.rules, options.context);
+		var res = resolve(expr, scope);
+		res = removeParens(res);
+		var visited = {};
+		var str = res.toString({ parenthesis: "all" });
+		while (!visited[str]) {
+			visited[str] = true;
+			_lastsym = 0;
+			var laststr = str;
+			if (debug) console.log("Working on: ", str);
+			for (var i = 0; i < rules.length; i++) {
+				var rulestr = "";
+				if (typeof rules[i] === "function") {
+					res = rules[i](res, options);
+					if (debug) rulestr = rules[i].name;
+				} else {
+					flatten(res, options.context);
+					res = applyRule(res, rules[i], options.context);
+					if (debug) rulestr = "".concat(rules[i].l.toString(), " -> ").concat(rules[i].r.toString());
+				}
+				if (debug) {
+					var newstr = res.toString({ parenthesis: "all" });
+					if (newstr !== laststr) {
+						console.log("Applying", rulestr, "produced", newstr);
+						laststr = newstr;
+					}
+				}
+				unflattenl(res, options.context);
+			}
+			str = res.toString({ parenthesis: "all" });
+		}
+		return res;
+	}
+	function mapRule(nodes, rule, context) {
+		var resNodes = nodes;
+		if (nodes) for (var i = 0; i < nodes.length; ++i) {
+			var newNode = applyRule(nodes[i], rule, context);
+			if (newNode !== nodes[i]) {
+				if (resNodes === nodes) resNodes = nodes.slice();
+				resNodes[i] = newNode;
+			}
+		}
+		return resNodes;
+	}
+	/**
+	* Returns a simplfied form of node, or the original node if no simplification was possible.
+	*
+	* @param  {ConstantNode | SymbolNode | ParenthesisNode | FunctionNode | OperatorNode} node
+	* @param  {Object | Function} rule
+	* @param  {Object} context -- information about assumed properties of operators
+	* @return {ConstantNode | SymbolNode | ParenthesisNode | FunctionNode | OperatorNode} The simplified form of `expr`, or the original node if no simplification was possible.
+	*/
+	function applyRule(node, rule, context) {
+		if (rule.assuming) {
+			for (var symbol in rule.assuming) for (var property in rule.assuming[symbol]) if (hasProperty(symbol, property, context) !== rule.assuming[symbol][property]) return node;
+		}
+		var mergedContext = mergeContext(rule.imposeContext, context);
+		var res = node;
+		if (res instanceof OperatorNode || res instanceof FunctionNode) {
+			var newArgs = mapRule(res.args, rule, context);
+			if (newArgs !== res.args) {
+				res = res.clone();
+				res.args = newArgs;
+			}
+		} else if (res instanceof ParenthesisNode) {
+			if (res.content) {
+				var newContent = applyRule(res.content, rule, context);
+				if (newContent !== res.content) res = new ParenthesisNode(newContent);
+			}
+		} else if (res instanceof ArrayNode) {
+			var newItems = mapRule(res.items, rule, context);
+			if (newItems !== res.items) res = new ArrayNode(newItems);
+		} else if (res instanceof AccessorNode) {
+			var newObj = res.object;
+			if (res.object) newObj = applyRule(res.object, rule, context);
+			var newIndex = res.index;
+			if (res.index) newIndex = applyRule(res.index, rule, context);
+			if (newObj !== res.object || newIndex !== res.index) res = new AccessorNode(newObj, newIndex);
+		} else if (res instanceof IndexNode) {
+			var newDims = mapRule(res.dimensions, rule, context);
+			if (newDims !== res.dimensions) res = new IndexNode(newDims);
+		} else if (res instanceof ObjectNode) {
+			var changed = false;
+			var newProps = {};
+			for (var prop in res.properties) {
+				newProps[prop] = applyRule(res.properties[prop], rule, context);
+				if (newProps[prop] !== res.properties[prop]) changed = true;
+			}
+			if (changed) res = new ObjectNode(newProps);
+		}
+		var repl = rule.r;
+		var matches = _ruleMatch(rule.l, res, mergedContext)[0];
+		if (!matches && rule.expanded) {
+			repl = rule.expanded.r;
+			matches = _ruleMatch(rule.expanded.l, res, mergedContext)[0];
+		}
+		if (!matches && rule.expandedNC1) {
+			repl = rule.expandedNC1.r;
+			matches = _ruleMatch(rule.expandedNC1.l, res, mergedContext)[0];
+			if (!matches) {
+				repl = rule.expandedNC2.r;
+				matches = _ruleMatch(rule.expandedNC2.l, res, mergedContext)[0];
+			}
+		}
+		if (matches) {
+			var implicit = res.implicit;
+			res = repl.clone();
+			if (implicit && "implicit" in repl) res.implicit = true;
+			res = res.transform(function(node) {
+				if (node.isSymbolNode && hasOwnProperty(matches.placeholders, node.name)) return matches.placeholders[node.name].clone();
+				else return node;
+			});
+		}
+		if (rule.repeat && res !== node) res = applyRule(res, rule, context);
+		return res;
+	}
+	/**
+	* Get (binary) combinations of a flattened binary node
+	* e.g. +(node1, node2, node3) -> [
+	*        +(node1,  +(node2, node3)),
+	*        +(node2,  +(node1, node3)),
+	*        +(node3,  +(node1, node2))]
+	*
+	*/
+	function getSplits(node, context) {
+		var res = [];
+		var right, rightArgs;
+		var makeNode = createMakeNodeFunction(node);
+		if (isCommutative(node, context)) for (var i = 0; i < node.args.length; i++) {
+			rightArgs = node.args.slice(0);
+			rightArgs.splice(i, 1);
+			right = rightArgs.length === 1 ? rightArgs[0] : makeNode(rightArgs);
+			res.push(makeNode([node.args[i], right]));
+		}
+		else for (var _i = 1; _i < node.args.length; _i++) {
+			var left = node.args[0];
+			if (_i > 1) left = makeNode(node.args.slice(0, _i));
+			rightArgs = node.args.slice(_i);
+			right = rightArgs.length === 1 ? rightArgs[0] : makeNode(rightArgs);
+			res.push(makeNode([left, right]));
+		}
+		return res;
+	}
+	/**
+	* Returns the set union of two match-placeholders or null if there is a conflict.
+	*/
+	function mergeMatch(match1, match2) {
+		var res = { placeholders: {} };
+		if (!match1.placeholders && !match2.placeholders) return res;
+		else if (!match1.placeholders) return match2;
+		else if (!match2.placeholders) return match1;
+		for (var key in match1.placeholders) if (hasOwnProperty(match1.placeholders, key)) {
+			res.placeholders[key] = match1.placeholders[key];
+			if (hasOwnProperty(match2.placeholders, key)) {
+				if (!_exactMatch(match1.placeholders[key], match2.placeholders[key])) return null;
+			}
+		}
+		for (var _key in match2.placeholders) if (hasOwnProperty(match2.placeholders, _key)) res.placeholders[_key] = match2.placeholders[_key];
+		return res;
+	}
+	/**
+	* Combine two lists of matches by applying mergeMatch to the cartesian product of two lists of matches.
+	* Each list represents matches found in one child of a node.
+	*/
+	function combineChildMatches(list1, list2) {
+		var res = [];
+		if (list1.length === 0 || list2.length === 0) return res;
+		var merged;
+		for (var i1 = 0; i1 < list1.length; i1++) for (var i2 = 0; i2 < list2.length; i2++) {
+			merged = mergeMatch(list1[i1], list2[i2]);
+			if (merged) res.push(merged);
+		}
+		return res;
+	}
+	/**
+	* Combine multiple lists of matches by applying mergeMatch to the cartesian product of two lists of matches.
+	* Each list represents matches found in one child of a node.
+	* Returns a list of unique matches.
+	*/
+	function mergeChildMatches(childMatches) {
+		if (childMatches.length === 0) return childMatches;
+		var sets = childMatches.reduce(combineChildMatches);
+		var uniqueSets = [];
+		var unique = {};
+		for (var i = 0; i < sets.length; i++) {
+			var s = JSON.stringify(sets[i], replacer);
+			if (!unique[s]) {
+				unique[s] = true;
+				uniqueSets.push(sets[i]);
+			}
+		}
+		return uniqueSets;
+	}
+	/**
+	* Determines whether node matches rule.
+	*
+	* @param {ConstantNode | SymbolNode | ParenthesisNode | FunctionNode | OperatorNode} rule
+	* @param {ConstantNode | SymbolNode | ParenthesisNode | FunctionNode | OperatorNode} node
+	* @param {Object} context -- provides assumed properties of operators
+	* @param {Boolean} isSplit -- whether we are in process of splitting an
+	*                    n-ary operator node into possible binary combinations.
+	*                    Defaults to false.
+	* @return {Object} Information about the match, if it exists.
+	*/
+	function _ruleMatch(rule, node, context, isSplit) {
+		var res = [{ placeholders: {} }];
+		if (rule instanceof OperatorNode && node instanceof OperatorNode || rule instanceof FunctionNode && node instanceof FunctionNode) {
+			if (rule instanceof OperatorNode) {
+				if (rule.op !== node.op || rule.fn !== node.fn) return [];
+			} else if (rule instanceof FunctionNode) {
+				if (rule.name !== node.name) return [];
+			}
+			if (node.args.length === 1 && rule.args.length === 1 || !isAssociative(node, context) && node.args.length === rule.args.length || isSplit) {
+				var childMatches = [];
+				for (var i = 0; i < rule.args.length; i++) {
+					var childMatch = _ruleMatch(rule.args[i], node.args[i], context);
+					if (childMatch.length === 0) break;
+					childMatches.push(childMatch);
+				}
+				if (childMatches.length !== rule.args.length) {
+					if (!isCommutative(node, context) || rule.args.length === 1) return [];
+					if (rule.args.length > 2) throw new Error("permuting >2 commutative non-associative rule arguments not yet implemented");
+					var leftMatch = _ruleMatch(rule.args[0], node.args[1], context);
+					if (leftMatch.length === 0) return [];
+					var rightMatch = _ruleMatch(rule.args[1], node.args[0], context);
+					if (rightMatch.length === 0) return [];
+					childMatches = [leftMatch, rightMatch];
+				}
+				res = mergeChildMatches(childMatches);
+			} else if (node.args.length >= 2 && rule.args.length === 2) {
+				var splits = getSplits(node, context);
+				var splitMatches = [];
+				for (var _i2 = 0; _i2 < splits.length; _i2++) {
+					var matchSet = _ruleMatch(rule, splits[_i2], context, true);
+					splitMatches = splitMatches.concat(matchSet);
+				}
+				return splitMatches;
+			} else if (rule.args.length > 2) throw Error("Unexpected non-binary associative function: " + rule.toString());
+			else return [];
+		} else if (rule instanceof SymbolNode) {
+			if (rule.name.length === 0) throw new Error("Symbol in rule has 0 length...!?");
+			if (SUPPORTED_CONSTANTS[rule.name]) {
+				if (rule.name !== node.name) return [];
+			} else switch (rule.name[1] >= "a" && rule.name[1] <= "z" ? rule.name.substring(0, 2) : rule.name[0]) {
+				case "n":
+				case "_p":
+					res[0].placeholders[rule.name] = node;
+					break;
+				case "c":
+				case "cl":
+					if (isConstantNode(node)) res[0].placeholders[rule.name] = node;
+					else return [];
+					break;
+				case "v":
+					if (!isConstantNode(node)) res[0].placeholders[rule.name] = node;
+					else return [];
+					break;
+				case "vl":
+					if (isSymbolNode(node)) res[0].placeholders[rule.name] = node;
+					else return [];
+					break;
+				case "cd":
+					if (isNumericNode(node)) res[0].placeholders[rule.name] = node;
+					else return [];
+					break;
+				case "vd":
+					if (!isNumericNode(node)) res[0].placeholders[rule.name] = node;
+					else return [];
+					break;
+				case "ce":
+					if (isConstantExpression(node)) res[0].placeholders[rule.name] = node;
+					else return [];
+					break;
+				case "ve":
+					if (!isConstantExpression(node)) res[0].placeholders[rule.name] = node;
+					else return [];
+					break;
+				default: throw new Error("Invalid symbol in rule: " + rule.name);
+			}
+		} else if (rule instanceof ConstantNode) {
+			if (!equal(rule.value, node.value)) return [];
+		} else return [];
+		return res;
+	}
+	/**
+	* Determines whether p and q (and all their children nodes) are identical.
+	*
+	* @param {ConstantNode | SymbolNode | ParenthesisNode | FunctionNode | OperatorNode} p
+	* @param {ConstantNode | SymbolNode | ParenthesisNode | FunctionNode | OperatorNode} q
+	* @return {Object} Information about the match, if it exists.
+	*/
+	function _exactMatch(p, q) {
+		if (p instanceof ConstantNode && q instanceof ConstantNode) {
+			if (!equal(p.value, q.value)) return false;
+		} else if (p instanceof SymbolNode && q instanceof SymbolNode) {
+			if (p.name !== q.name) return false;
+		} else if (p instanceof OperatorNode && q instanceof OperatorNode || p instanceof FunctionNode && q instanceof FunctionNode) {
+			if (p instanceof OperatorNode) {
+				if (p.op !== q.op || p.fn !== q.fn) return false;
+			} else if (p instanceof FunctionNode) {
+				if (p.name !== q.name) return false;
+			}
+			if (p.args.length !== q.args.length) return false;
+			for (var i = 0; i < p.args.length; i++) if (!_exactMatch(p.args[i], q.args[i])) return false;
+		} else return false;
+		return true;
+	}
+	return simplify;
+});
+var createSimplifyConstant = /* @__PURE__ */ factory("simplifyConstant", [
+	"typed",
+	"config",
+	"mathWithTransform",
+	"matrix",
+	"isBounded",
+	"?fraction",
+	"?bignumber",
+	"AccessorNode",
+	"ArrayNode",
+	"ConstantNode",
+	"FunctionNode",
+	"IndexNode",
+	"ObjectNode",
+	"OperatorNode",
+	"SymbolNode"
+], (_ref) => {
+	var { typed, config, mathWithTransform, matrix, isBounded, fraction, bignumber, AccessorNode, ArrayNode, ConstantNode, FunctionNode, IndexNode, ObjectNode, OperatorNode, SymbolNode } = _ref;
+	var { isCommutative, isAssociative, allChildren, createMakeNodeFunction } = createUtil({
+		FunctionNode,
+		OperatorNode,
+		SymbolNode
+	});
+	/**
+	* simplifyConstant() takes a mathjs expression (either a Node representing
+	* a parse tree or a string which it parses to produce a node), and replaces
+	* any subexpression of it consisting entirely of constants with the computed
+	* value of that subexpression.
+	*
+	* Syntax:
+	*
+	*     math.simplifyConstant(expr)
+	*     math.simplifyConstant(expr, options)
+	*
+	* Examples:
+	*
+	*     math.simplifyConstant('x + 4*3/6')  // Node "x + 2"
+	*     math.simplifyConstant('z cos(0)')   // Node "z 1"
+	*     math.simplifyConstant('(5.2 + 1.08)t', {exactFractions: false})  // Node "6.28 t"
+	*
+	* See also:
+	*
+	*     simplify, simplifyCore, resolve, derivative
+	*
+	* @param {Node | string} node
+	*     The expression to be simplified
+	* @param {Object} options
+	*     Simplification options, as per simplify()
+	* @return {Node} Returns expression with constant subexpressions evaluated
+	*/
+	var simplifyConstant = typed("simplifyConstant", {
+		Node: (node) => _ensureNode(foldFraction(node, {})),
+		"Node, Object": function Node_Object(expr, options) {
+			return _ensureNode(foldFraction(expr, options));
+		}
+	});
+	function _removeFractions(thing) {
+		if (isFraction(thing)) return thing.valueOf();
+		if (thing instanceof Array) return thing.map(_removeFractions);
+		if (isMatrix(thing)) return matrix(_removeFractions(thing.valueOf()));
+		return thing;
+	}
+	function _eval(fnname, args, options) {
+		try {
+			return mathWithTransform[fnname].apply(null, args);
+		} catch (ignore) {
+			args = args.map(_removeFractions);
+			return _toNumber(mathWithTransform[fnname].apply(null, args), options);
+		}
+	}
+	var _toNode = typed({
+		Fraction: _fractionToNode,
+		number: function number(n) {
+			if (n < 0) return unaryMinusNode(new ConstantNode(-n));
+			return new ConstantNode(n);
+		},
+		BigNumber: function BigNumber(n) {
+			if (n < 0) return unaryMinusNode(new ConstantNode(-n));
+			return new ConstantNode(n);
+		},
+		bigint: function bigint(n) {
+			if (n < 0n) return unaryMinusNode(new ConstantNode(-n));
+			return new ConstantNode(n);
+		},
+		Complex: function Complex(s) {
+			throw new Error("Cannot convert Complex number to Node");
+		},
+		string: function string(s) {
+			return new ConstantNode(s);
+		},
+		Matrix: function Matrix(m) {
+			return new ArrayNode(m.valueOf().map((e) => _toNode(e)));
+		}
+	});
+	function _ensureNode(thing) {
+		if (isNode(thing)) return thing;
+		return _toNode(thing);
+	}
+	function _exactFraction(n, options) {
+		if (options && options.exactFractions !== false && isBounded(n) && fraction) {
+			var f = fraction(n);
+			var fractionsLimit = options && typeof options.fractionsLimit === "number" ? options.fractionsLimit : Infinity;
+			if (f.valueOf() === n && f.n < fractionsLimit && f.d < fractionsLimit) return f;
+		}
+		return n;
+	}
+	var _toNumber = typed({
+		"string, Object": function string_Object(s, options) {
+			var numericType = safeNumberType(s, config);
+			if (numericType === "BigNumber") {
+				if (bignumber === void 0) noBignumber();
+				return bignumber(s);
+			} else if (numericType === "bigint") return BigInt(s);
+			else if (numericType === "Fraction") {
+				if (fraction === void 0) noFraction();
+				return fraction(s);
+			} else return _exactFraction(parseFloat(s), options);
+		},
+		"Fraction, Object": function Fraction_Object(s, options) {
+			return s;
+		},
+		"BigNumber, Object": function BigNumber_Object(s, options) {
+			return s;
+		},
+		"number, Object": function number_Object(s, options) {
+			return _exactFraction(s, options);
+		},
+		"bigint, Object": function bigint_Object(s, options) {
+			return s;
+		},
+		"Complex, Object": function Complex_Object(s, options) {
+			if (s.im !== 0) return s;
+			return _exactFraction(s.re, options);
+		},
+		"Matrix, Object": function Matrix_Object(s, options) {
+			return matrix(_exactFraction(s.valueOf()));
+		},
+		"Array, Object": function Array_Object(s, options) {
+			return s.map(_exactFraction);
+		}
+	});
+	function unaryMinusNode(n) {
+		return new OperatorNode("-", "unaryMinus", [n]);
+	}
+	function _fractionToNode(f) {
+		var fromBigInt = (value) => config.number === "BigNumber" && bignumber ? bignumber(value) : Number(value);
+		var numeratorValue = f.s * f.n;
+		var numeratorNode = numeratorValue < 0n ? new OperatorNode("-", "unaryMinus", [new ConstantNode(-fromBigInt(numeratorValue))]) : new ConstantNode(fromBigInt(numeratorValue));
+		return f.d === 1n ? numeratorNode : new OperatorNode("/", "divide", [numeratorNode, new ConstantNode(fromBigInt(f.d))]);
+	}
+	function _foldAccessor(obj, index, options) {
+		if (!isIndexNode(index)) return new AccessorNode(_ensureNode(obj), _ensureNode(index));
+		if (isArrayNode(obj) || isMatrix(obj)) {
+			var remainingDims = Array.from(index.dimensions);
+			while (remainingDims.length > 0) if (isConstantNode(remainingDims[0]) && typeof remainingDims[0].value !== "string") {
+				var first = _toNumber(remainingDims.shift().value, options);
+				if (isArrayNode(obj)) obj = obj.items[first - 1];
+				else {
+					obj = obj.valueOf()[first - 1];
+					if (obj instanceof Array) obj = matrix(obj);
+				}
+			} else if (remainingDims.length > 1 && isConstantNode(remainingDims[1]) && typeof remainingDims[1].value !== "string") {
+				var second = _toNumber(remainingDims[1].value, options);
+				var tryItems = [];
+				var fromItems = isArrayNode(obj) ? obj.items : obj.valueOf();
+				for (var item of fromItems) if (isArrayNode(item)) tryItems.push(item.items[second - 1]);
+				else if (isMatrix(obj)) tryItems.push(item[second - 1]);
+				else break;
+				if (tryItems.length === fromItems.length) {
+					if (isArrayNode(obj)) obj = new ArrayNode(tryItems);
+					else obj = matrix(tryItems);
+					remainingDims.splice(1, 1);
+				} else break;
+			} else break;
+			if (remainingDims.length === index.dimensions.length) return new AccessorNode(_ensureNode(obj), index);
+			if (remainingDims.length > 0) {
+				index = new IndexNode(remainingDims);
+				return new AccessorNode(_ensureNode(obj), index);
+			}
+			return obj;
+		}
+		if (isObjectNode(obj) && index.dimensions.length === 1 && isConstantNode(index.dimensions[0])) {
+			var key = index.dimensions[0].value;
+			if (key in obj.properties) return obj.properties[key];
+			return new ConstantNode();
+		}
+		return new AccessorNode(_ensureNode(obj), index);
+	}
+	function foldOp(fn, args, makeNode, options) {
+		var first = args.shift();
+		var reduction = args.reduce((sofar, next) => {
+			if (!isNode(next)) {
+				var last = sofar.pop();
+				if (isNode(last)) return [last, next];
+				try {
+					sofar.push(_eval(fn, [last, next], options));
+					return sofar;
+				} catch (ignoreandcontinue) {
+					sofar.push(last);
+				}
+			}
+			sofar.push(_ensureNode(sofar.pop()));
+			return [makeNode([sofar.length === 1 ? sofar[0] : makeNode(sofar), _ensureNode(next)])];
+		}, [first]);
+		if (reduction.length === 1) return reduction[0];
+		return makeNode([reduction[0], _toNode(reduction[1])]);
+	}
+	function foldFraction(node, options) {
+		switch (node.type) {
+			case "SymbolNode": return node;
+			case "ConstantNode":
+				switch (typeof node.value) {
+					case "number": return _toNumber(node.value, options);
+					case "bigint": return _toNumber(node.value, options);
+					case "string": return node.value;
+					default: if (!isNaN(node.value)) return _toNumber(node.value, options);
+				}
+				return node;
+			case "FunctionNode":
+				if (mathWithTransform[node.name] && mathWithTransform[node.name].rawArgs) return node;
+				if (!["add", "multiply"].includes(node.name)) {
+					var args = node.args.map((arg) => foldFraction(arg, options));
+					if (!args.some(isNode)) try {
+						return _eval(node.name, args, options);
+					} catch (ignoreandcontinue) {}
+					if (node.name === "size" && args.length === 1 && isArrayNode(args[0])) {
+						var sz = [];
+						var section = args[0];
+						while (isArrayNode(section)) {
+							sz.push(section.items.length);
+							section = section.items[0];
+						}
+						return matrix(sz);
+					}
+					return new FunctionNode(node.name, args.map(_ensureNode));
+				}
+			case "OperatorNode":
+				var fn = node.fn.toString();
+				var _args;
+				var res;
+				var makeNode = createMakeNodeFunction(node);
+				if (isOperatorNode(node) && node.isUnary()) {
+					_args = [foldFraction(node.args[0], options)];
+					if (!isNode(_args[0])) res = _eval(fn, _args, options);
+					else res = makeNode(_args);
+				} else if (isAssociative(node, options.context)) {
+					_args = allChildren(node, options.context);
+					_args = _args.map((arg) => foldFraction(arg, options));
+					if (isCommutative(fn, options.context)) {
+						var consts = [];
+						var vars = [];
+						for (var i = 0; i < _args.length; i++) if (!isNode(_args[i])) consts.push(_args[i]);
+						else vars.push(_args[i]);
+						if (consts.length > 1) {
+							res = foldOp(fn, consts, makeNode, options);
+							vars.unshift(res);
+							res = foldOp(fn, vars, makeNode, options);
+						} else res = foldOp(fn, _args, makeNode, options);
+					} else res = foldOp(fn, _args, makeNode, options);
+				} else {
+					_args = node.args.map((arg) => foldFraction(arg, options));
+					res = foldOp(fn, _args, makeNode, options);
+				}
+				return res;
+			case "ParenthesisNode": return foldFraction(node.content, options);
+			case "AccessorNode": return _foldAccessor(foldFraction(node.object, options), foldFraction(node.index, options), options);
+			case "ArrayNode":
+				var foldItems = node.items.map((item) => foldFraction(item, options));
+				if (foldItems.some(isNode)) return new ArrayNode(foldItems.map(_ensureNode));
+				return matrix(foldItems);
+			case "IndexNode": return new IndexNode(node.dimensions.map((n) => simplifyConstant(n, options)));
+			case "ObjectNode":
+				var foldProps = {};
+				for (var prop in node.properties) foldProps[prop] = simplifyConstant(node.properties[prop], options);
+				return new ObjectNode(foldProps);
+			default: throw new Error("Unimplemented node type in simplifyConstant: ".concat(node.type));
+		}
+	}
+	return simplifyConstant;
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/operators.js
+var properties = [
+	{
+		AssignmentNode: {},
+		FunctionAssignmentNode: {}
+	},
+	{ ConditionalNode: {
+		latexLeftParens: false,
+		latexRightParens: false,
+		latexParens: false
+	} },
+	{ "OperatorNode:or": {
+		op: "or",
+		associativity: "left",
+		associativeWith: []
+	} },
+	{ "OperatorNode:xor": {
+		op: "xor",
+		associativity: "left",
+		associativeWith: []
+	} },
+	{ "OperatorNode:and": {
+		op: "and",
+		associativity: "left",
+		associativeWith: []
+	} },
+	{ "OperatorNode:bitOr": {
+		op: "|",
+		associativity: "left",
+		associativeWith: []
+	} },
+	{ "OperatorNode:bitXor": {
+		op: "^|",
+		associativity: "left",
+		associativeWith: []
+	} },
+	{ "OperatorNode:bitAnd": {
+		op: "&",
+		associativity: "left",
+		associativeWith: []
+	} },
+	{
+		"OperatorNode:equal": {
+			op: "==",
+			associativity: "left",
+			associativeWith: []
+		},
+		"OperatorNode:unequal": {
+			op: "!=",
+			associativity: "left",
+			associativeWith: []
+		},
+		"OperatorNode:smaller": {
+			op: "<",
+			associativity: "left",
+			associativeWith: []
+		},
+		"OperatorNode:larger": {
+			op: ">",
+			associativity: "left",
+			associativeWith: []
+		},
+		"OperatorNode:smallerEq": {
+			op: "<=",
+			associativity: "left",
+			associativeWith: []
+		},
+		"OperatorNode:largerEq": {
+			op: ">=",
+			associativity: "left",
+			associativeWith: []
+		},
+		RelationalNode: {
+			associativity: "left",
+			associativeWith: []
+		}
+	},
+	{
+		"OperatorNode:leftShift": {
+			op: "<<",
+			associativity: "left",
+			associativeWith: []
+		},
+		"OperatorNode:rightArithShift": {
+			op: ">>",
+			associativity: "left",
+			associativeWith: []
+		},
+		"OperatorNode:rightLogShift": {
+			op: ">>>",
+			associativity: "left",
+			associativeWith: []
+		}
+	},
+	{ "OperatorNode:to": {
+		op: "to",
+		associativity: "left",
+		associativeWith: []
+	} },
+	{ RangeNode: {} },
+	{
+		"OperatorNode:add": {
+			op: "+",
+			associativity: "left",
+			associativeWith: ["OperatorNode:add", "OperatorNode:subtract"]
+		},
+		"OperatorNode:subtract": {
+			op: "-",
+			associativity: "left",
+			associativeWith: []
+		}
+	},
+	{
+		"OperatorNode:multiply": {
+			op: "*",
+			associativity: "left",
+			associativeWith: [
+				"OperatorNode:multiply",
+				"OperatorNode:divide",
+				"Operator:dotMultiply",
+				"Operator:dotDivide"
+			]
+		},
+		"OperatorNode:divide": {
+			op: "/",
+			associativity: "left",
+			associativeWith: [],
+			latexLeftParens: false,
+			latexRightParens: false,
+			latexParens: false
+		},
+		"OperatorNode:dotMultiply": {
+			op: ".*",
+			associativity: "left",
+			associativeWith: [
+				"OperatorNode:multiply",
+				"OperatorNode:divide",
+				"OperatorNode:dotMultiply",
+				"OperatorNode:doDivide"
+			]
+		},
+		"OperatorNode:dotDivide": {
+			op: "./",
+			associativity: "left",
+			associativeWith: []
+		},
+		"OperatorNode:mod": {
+			op: "mod",
+			associativity: "left",
+			associativeWith: []
+		}
+	},
+	{ "OperatorNode:multiply": {
+		associativity: "left",
+		associativeWith: [
+			"OperatorNode:multiply",
+			"OperatorNode:divide",
+			"Operator:dotMultiply",
+			"Operator:dotDivide"
+		]
+	} },
+	{
+		"OperatorNode:unaryPlus": {
+			op: "+",
+			associativity: "right"
+		},
+		"OperatorNode:unaryMinus": {
+			op: "-",
+			associativity: "right"
+		},
+		"OperatorNode:bitNot": {
+			op: "~",
+			associativity: "right"
+		},
+		"OperatorNode:not": {
+			op: "not",
+			associativity: "right"
+		}
+	},
+	{
+		"OperatorNode:pow": {
+			op: "^",
+			associativity: "right",
+			associativeWith: [],
+			latexRightParens: false
+		},
+		"OperatorNode:dotPow": {
+			op: ".^",
+			associativity: "right",
+			associativeWith: []
+		}
+	},
+	{ "OperatorNode:nullish": {
+		op: "??",
+		associativity: "left",
+		associativeWith: []
+	} },
+	{ "OperatorNode:factorial": {
+		op: "!",
+		associativity: "left"
+	} },
+	{ "OperatorNode:ctranspose": {
+		op: "'",
+		associativity: "left"
+	} }
+];
+/**
+* Returns the first non-parenthesis internal node, but only
+* when the 'parenthesis' option is unset or auto.
+* @param {Node} _node
+* @param {string} parenthesis
+* @return {Node}
+*/
+function unwrapParen(_node, parenthesis) {
+	if (!parenthesis || parenthesis !== "auto") return _node;
+	var node = _node;
+	while (isParenthesisNode(node)) node = node.content;
+	return node;
+}
+/**
+* Get the precedence of a Node.
+* Higher number for higher precedence, starting with 0.
+* Returns null if the precedence is undefined.
+*
+* @param {Node} _node
+* @param {string} parenthesis
+* @param {string} implicit
+* @param {Node} parent (for determining context for implicit multiplication)
+* @return {number | null}
+*/
+function getPrecedence(_node, parenthesis, implicit, parent) {
+	var node = _node;
+	if (parenthesis !== "keep") node = _node.getContent();
+	var identifier = node.getIdentifier();
+	var precedence = null;
+	for (var i = 0; i < properties.length; i++) if (identifier in properties[i]) {
+		precedence = i;
+		break;
+	}
+	if (identifier === "OperatorNode:multiply" && node.implicit && implicit !== "show") {
+		var leftArg = unwrapParen(node.args[0], parenthesis);
+		if (!(isConstantNode(leftArg) && parent && parent.getIdentifier() === "OperatorNode:divide" && rule2Node(unwrapParen(parent.args[0], parenthesis))) && !(leftArg.getIdentifier() === "OperatorNode:divide" && rule2Node(unwrapParen(leftArg.args[0], parenthesis)) && isConstantNode(unwrapParen(leftArg.args[1])))) precedence += 1;
+	}
+	return precedence;
+}
+/**
+* Get the associativity of an operator (left or right).
+* Returns a string containing 'left' or 'right' or null if
+* the associativity is not defined.
+*
+* @param {Node} _node
+* @param {string} parenthesis
+* @return {string|null}
+* @throws {Error}
+*/
+function getAssociativity(_node, parenthesis) {
+	var node = _node;
+	if (parenthesis !== "keep") node = _node.getContent();
+	var identifier = node.getIdentifier();
+	var index = getPrecedence(node, parenthesis);
+	if (index === null) return null;
+	var property = properties[index][identifier];
+	if (hasOwnProperty(property, "associativity")) {
+		if (property.associativity === "left") return "left";
+		if (property.associativity === "right") return "right";
+		throw Error("'" + identifier + "' has the invalid associativity '" + property.associativity + "'.");
+	}
+	return null;
+}
+/**
+* Check if an operator is associative with another operator.
+* Returns either true or false or null if not defined.
+*
+* @param {Node} nodeA
+* @param {Node} nodeB
+* @param {string} parenthesis
+* @return {boolean | null}
+*/
+function isAssociativeWith(nodeA, nodeB, parenthesis) {
+	var a = parenthesis !== "keep" ? nodeA.getContent() : nodeA;
+	var b = parenthesis !== "keep" ? nodeA.getContent() : nodeB;
+	var identifierA = a.getIdentifier();
+	var identifierB = b.getIdentifier();
+	var index = getPrecedence(a, parenthesis);
+	if (index === null) return null;
+	var property = properties[index][identifierA];
+	if (hasOwnProperty(property, "associativeWith") && property.associativeWith instanceof Array) {
+		for (var i = 0; i < property.associativeWith.length; i++) if (property.associativeWith[i] === identifierB) return true;
+		return false;
+	}
+	return null;
+}
+/**
+* Get the operator associated with a function name.
+* Returns a string with the operator symbol, or null if the
+* input is not the name of a function associated with an
+* operator.
+*
+* @param {string} Function name
+* @return {string | null} Associated operator symbol, if any
+*/
+function getOperator(fn) {
+	var identifier = "OperatorNode:" + fn;
+	for (var group of properties) if (identifier in group) return group[identifier].op;
+	return null;
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/algebra/simplifyCore.js
+var name$102 = "simplifyCore";
+var createSimplifyCore = /* @__PURE__ */ factory(name$102, [
+	"typed",
+	"parse",
+	"equal",
+	"isZero",
+	"add",
+	"subtract",
+	"multiply",
+	"divide",
+	"pow",
+	"AccessorNode",
+	"ArrayNode",
+	"ConstantNode",
+	"FunctionNode",
+	"IndexNode",
+	"ObjectNode",
+	"OperatorNode",
+	"ParenthesisNode",
+	"SymbolNode"
+], (_ref) => {
+	var { typed, parse, equal, isZero, add, subtract, multiply, divide, pow, AccessorNode, ArrayNode, ConstantNode, FunctionNode, IndexNode, ObjectNode, OperatorNode, ParenthesisNode, SymbolNode } = _ref;
+	var node0 = new ConstantNode(0);
+	var node1 = new ConstantNode(1);
+	var nodeT = new ConstantNode(true);
+	var nodeF = new ConstantNode(false);
+	function isAlwaysBoolean(node) {
+		return isOperatorNode(node) && [
+			"and",
+			"not",
+			"or"
+		].includes(node.op);
+	}
+	var { hasProperty, isCommutative } = createUtil({
+		FunctionNode,
+		OperatorNode,
+		SymbolNode
+	});
+	/**
+	* simplifyCore() performs single pass simplification suitable for
+	* applications requiring ultimate performance. To roughly summarize,
+	* it handles cases along the lines of simplifyConstant() but where
+	* knowledge of a single argument is sufficient to determine the value.
+	* In contrast, simplify() extends simplifyCore() with additional passes
+	* to provide deeper simplification (such as gathering like terms).
+	*
+	* Specifically, simplifyCore:
+	*
+	* * Converts all function calls with operator equivalents to their
+	*   operator forms.
+	* * Removes operators or function calls that are guaranteed to have no
+	*   effect (such as unary '+').
+	* * Removes double unary '-', '~', and 'not'
+	* * Eliminates addition/subtraction of 0 and multiplication/division/powers
+	*   by 1 or 0.
+	* * Converts addition of a negation into subtraction.
+	* * Eliminates logical operations with constant true or false leading
+	*   arguments.
+	* * Puts constants on the left of a product, if multiplication is
+	*   considered commutative by the options (which is the default)
+	*
+	* Syntax:
+	*
+	*     math.simplifyCore(expr)
+	*     math.simplifyCore(expr, options)
+	*
+	* Examples:
+	*
+	*     const f = math.parse('2 * 1 * x ^ (1 - 0)')
+	*     math.simplifyCore(f)                          // Node "2 * x"
+	*     math.simplify('2 * 1 * x ^ (1 - 0)', [math.simplifyCore]) // Node "2 * x"
+	*
+	* See also:
+	*
+	*     simplify, simplifyConstant, resolve, derivative
+	*
+	* @param {Node | string} node
+	*     The expression to be simplified
+	* @param {Object} options
+	*     Simplification options, as per simplify()
+	* @return {Node} Returns expression with basic simplifications applied
+	*/
+	function _simplifyCore(nodeToSimplify) {
+		var options = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {};
+		var context = options ? options.context : void 0;
+		if (hasProperty(nodeToSimplify, "trivial", context)) {
+			if (isFunctionNode(nodeToSimplify) && nodeToSimplify.args.length === 1) return _simplifyCore(nodeToSimplify.args[0], options);
+			var simpChild = false;
+			var childCount = 0;
+			nodeToSimplify.forEach((c) => {
+				++childCount;
+				if (childCount === 1) simpChild = _simplifyCore(c, options);
+			});
+			if (childCount === 1) return simpChild;
+		}
+		var node = nodeToSimplify;
+		if (isFunctionNode(node)) {
+			var op = getOperator(node.name);
+			if (op) {
+				if (node.args.length > 2 && hasProperty(node, "associative", context)) while (node.args.length > 2) {
+					var last = node.args.pop();
+					var seclast = node.args.pop();
+					node.args.push(new OperatorNode(op, node.name, [last, seclast]));
+				}
+				node = new OperatorNode(op, node.name, node.args);
+			} else return new FunctionNode(_simplifyCore(node.fn), node.args.map((n) => _simplifyCore(n, options)));
+		}
+		if (isOperatorNode(node) && node.isUnary()) {
+			var a0 = _simplifyCore(node.args[0], options);
+			if (node.op === "~") {
+				if (isOperatorNode(a0) && a0.isUnary() && a0.op === "~") return a0.args[0];
+			}
+			if (node.op === "not") {
+				if (isOperatorNode(a0) && a0.isUnary() && a0.op === "not") {
+					if (isAlwaysBoolean(a0.args[0])) return a0.args[0];
+				}
+			}
+			var finish = true;
+			if (node.op === "-") {
+				if (isOperatorNode(a0)) {
+					if (a0.isBinary() && a0.fn === "subtract") {
+						node = new OperatorNode("-", "subtract", [a0.args[1], a0.args[0]]);
+						finish = false;
+					}
+					if (a0.isUnary() && a0.op === "-") return a0.args[0];
+				}
+			}
+			if (finish) return new OperatorNode(node.op, node.fn, [a0]);
+		}
+		if (isOperatorNode(node) && node.isBinary()) {
+			var _a = _simplifyCore(node.args[0], options);
+			var a1 = _simplifyCore(node.args[1], options);
+			if (node.op === "+") {
+				if (isConstantNode(_a) && isZero(_a.value)) return a1;
+				if (isConstantNode(a1) && isZero(a1.value)) return _a;
+				if (isOperatorNode(a1) && a1.isUnary() && a1.op === "-") {
+					a1 = a1.args[0];
+					node = new OperatorNode("-", "subtract", [_a, a1]);
+				}
+			}
+			if (node.op === "-") {
+				if (isOperatorNode(a1) && a1.isUnary() && a1.op === "-") return _simplifyCore(new OperatorNode("+", "add", [_a, a1.args[0]]), options);
+				if (isConstantNode(_a) && isZero(_a.value)) return _simplifyCore(new OperatorNode("-", "unaryMinus", [a1]));
+				if (isConstantNode(a1) && isZero(a1.value)) return _a;
+				return new OperatorNode(node.op, node.fn, [_a, a1]);
+			}
+			if (node.op === "*") {
+				if (isConstantNode(_a)) {
+					if (isZero(_a.value)) return node0;
+					else if (equal(_a.value, 1)) return a1;
+				}
+				if (isConstantNode(a1)) {
+					if (isZero(a1.value)) return node0;
+					else if (equal(a1.value, 1)) return _a;
+					if (isCommutative(node, context)) return new OperatorNode(node.op, node.fn, [a1, _a], node.implicit);
+				}
+				return new OperatorNode(node.op, node.fn, [_a, a1], node.implicit);
+			}
+			if (node.op === "/") {
+				if (isConstantNode(_a) && isZero(_a.value)) return node0;
+				if (isConstantNode(a1) && equal(a1.value, 1)) return _a;
+				return new OperatorNode(node.op, node.fn, [_a, a1]);
+			}
+			if (node.op === "^") {
+				if (isConstantNode(a1)) {
+					if (isZero(a1.value)) return node1;
+					else if (equal(a1.value, 1)) return _a;
+				}
+			}
+			if (node.op === "and") {
+				if (isConstantNode(_a)) if (_a.value) {
+					if (isAlwaysBoolean(a1)) return a1;
+					if (isConstantNode(a1)) return a1.value ? nodeT : nodeF;
+				} else return nodeF;
+				if (isConstantNode(a1)) if (a1.value) {
+					if (isAlwaysBoolean(_a)) return _a;
+				} else return nodeF;
+			}
+			if (node.op === "or") {
+				if (isConstantNode(_a)) {
+					if (_a.value) return nodeT;
+					else if (isAlwaysBoolean(a1)) return a1;
+				}
+				if (isConstantNode(a1)) {
+					if (a1.value) return nodeT;
+					else if (isAlwaysBoolean(_a)) return _a;
+				}
+			}
+			return new OperatorNode(node.op, node.fn, [_a, a1]);
+		}
+		if (isOperatorNode(node)) return new OperatorNode(node.op, node.fn, node.args.map((a) => _simplifyCore(a, options)));
+		if (isArrayNode(node)) return new ArrayNode(node.items.map((n) => _simplifyCore(n, options)));
+		if (isAccessorNode(node)) return new AccessorNode(_simplifyCore(node.object, options), _simplifyCore(node.index, options));
+		if (isIndexNode(node)) return new IndexNode(node.dimensions.map((n) => _simplifyCore(n, options)));
+		if (isObjectNode(node)) {
+			var newProps = {};
+			for (var prop in node.properties) newProps[prop] = _simplifyCore(node.properties[prop], options);
+			return new ObjectNode(newProps);
+		}
+		return node;
+	}
+	return typed(name$102, {
+		Node: _simplifyCore,
+		"Node,Object": _simplifyCore
+	});
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/algebra/derivative.js
+var name$101 = "derivative";
+var createDerivative = /* @__PURE__ */ factory(name$101, [
+	"typed",
+	"config",
+	"parse",
+	"simplify",
+	"equal",
+	"isZero",
+	"numeric",
+	"ConstantNode",
+	"FunctionNode",
+	"OperatorNode",
+	"ParenthesisNode",
+	"SymbolNode"
+], (_ref) => {
+	var { typed, config, parse, simplify, equal, isZero, numeric, ConstantNode, FunctionNode, OperatorNode, ParenthesisNode, SymbolNode } = _ref;
+	/**
+	* Takes the derivative of an expression expressed in parser Nodes.
+	* The derivative will be taken over the supplied variable in the
+	* second parameter. If there are multiple variables in the expression,
+	* it will return a partial derivative.
+	*
+	* This uses rules of differentiation which can be found here:
+	*
+	* - [Differentiation rules (Wikipedia)](https://en.wikipedia.org/wiki/Differentiation_rules)
+	*
+	* Syntax:
+	*
+	*     math.derivative(expr, variable)
+	*     math.derivative(expr, variable, options)
+	*
+	* Examples:
+	*
+	*     math.derivative('x^2', 'x')                     // Node '2 * x'
+	*     math.derivative('x^2', 'x', {simplify: false})  // Node '2 * 1 * x ^ (2 - 1)'
+	*     math.derivative('sin(2x)', 'x'))                // Node '2 * cos(2 * x)'
+	*     math.derivative('2*x', 'x').evaluate()          // number 2
+	*     math.derivative('x^2', 'x').evaluate({x: 4})    // number 8
+	*     const f = math.parse('x^2')
+	*     const x = math.parse('x')
+	*     math.derivative(f, x)                           // Node {2 * x}
+	*
+	* See also:
+	*
+	*     simplify, parse, evaluate
+	*
+	* @param  {Node | string} expr           The expression to differentiate
+	* @param  {SymbolNode | string} variable The variable over which to differentiate
+	* @param  {{simplify: boolean}} [options]
+	*                         There is one option available, `simplify`, which
+	*                         is true by default. When false, output will not
+	*                         be simplified.
+	* @return {ConstantNode | SymbolNode | ParenthesisNode | FunctionNode | OperatorNode}    The derivative of `expr`
+	*/
+	function plainDerivative(expr, variable) {
+		var options = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : { simplify: true };
+		var cache = /* @__PURE__ */ new Map();
+		var variableName = variable.name;
+		function isConstCached(node) {
+			var cached = cache.get(node);
+			if (cached !== void 0) return cached;
+			var res = _isConst(isConstCached, node, variableName);
+			cache.set(node, res);
+			return res;
+		}
+		var res = _derivative(expr, isConstCached);
+		return options.simplify ? simplify(res) : res;
+	}
+	function parseIdentifier(string) {
+		var symbol = parse(string);
+		if (!symbol.isSymbolNode) throw new TypeError("Invalid variable. " + "Cannot parse ".concat(JSON.stringify(string), " into a variable in function derivative"));
+		return symbol;
+	}
+	var derivative = typed(name$101, {
+		"Node, SymbolNode": plainDerivative,
+		"Node, SymbolNode, Object": plainDerivative,
+		"Node, string": (node, symbol) => plainDerivative(node, parseIdentifier(symbol)),
+		"Node, string, Object": (node, symbol, options) => plainDerivative(node, parseIdentifier(symbol), options)
+	});
+	derivative._simplify = true;
+	derivative.toTex = function(deriv) {
+		return _derivTex.apply(null, deriv.args);
+	};
+	var _derivTex = typed("_derivTex", {
+		"Node, SymbolNode": function Node_SymbolNode(expr, x) {
+			if (isConstantNode(expr) && typeOf$1(expr.value) === "string") return _derivTex(parse(expr.value).toString(), x.toString(), 1);
+			else return _derivTex(expr.toTex(), x.toString(), 1);
+		},
+		"Node, ConstantNode": function Node_ConstantNode(expr, x) {
+			if (typeOf$1(x.value) === "string") return _derivTex(expr, parse(x.value));
+			else throw new Error("The second parameter to 'derivative' is a non-string constant");
+		},
+		"Node, SymbolNode, ConstantNode": function Node_SymbolNode_ConstantNode(expr, x, order) {
+			return _derivTex(expr.toString(), x.name, order.value);
+		},
+		"string, string, number": function string_string_number(expr, x, order) {
+			var d;
+			if (order === 1) d = "{d\\over d" + x + "}";
+			else d = "{d^{" + order + "}\\over d" + x + "^{" + order + "}}";
+			return d + "\\left[".concat(expr, "\\right]");
+		}
+	});
+	/**
+	* Checks if a node is constants (e.g. 2 + 2).
+	* Accepts (usually memoized) version of self as the first parameter for recursive calls.
+	* Classification is done as follows:
+	*
+	*   1. ConstantNodes are constants.
+	*   2. If there exists a SymbolNode, of which we are differentiating over,
+	*      in the subtree it is not constant.
+	*
+	* @param  {function} isConst  Function that tells whether sub-expression is a constant
+	* @param  {ConstantNode | SymbolNode | ParenthesisNode | FunctionNode | OperatorNode} node
+	* @param  {string} varName     Variable that we are differentiating
+	* @return {boolean}  if node is constant
+	*/
+	var _isConst = typed("_isConst", {
+		"function, ConstantNode, string": function function_ConstantNode_string() {
+			return true;
+		},
+		"function, SymbolNode, string": function function_SymbolNode_string(isConst, node, varName) {
+			return node.name !== varName;
+		},
+		"function, ParenthesisNode, string": function function_ParenthesisNode_string(isConst, node, varName) {
+			return isConst(node.content, varName);
+		},
+		"function, FunctionAssignmentNode, string": function function_FunctionAssignmentNode_string(isConst, node, varName) {
+			if (!node.params.includes(varName)) return true;
+			return isConst(node.expr, varName);
+		},
+		"function, FunctionNode | OperatorNode, string": function function_FunctionNode__OperatorNode_string(isConst, node, varName) {
+			return node.args.every((arg) => isConst(arg, varName));
+		}
+	});
+	/**
+	* Applies differentiation rules.
+	*
+	* @param  {ConstantNode | SymbolNode | ParenthesisNode | FunctionNode | OperatorNode} node
+	* @param  {function} isConst  Function that tells if a node is constant
+	* @return {ConstantNode | SymbolNode | ParenthesisNode | FunctionNode | OperatorNode}    The derivative of `expr`
+	*/
+	var _derivative = typed("_derivative", {
+		"ConstantNode, function": function ConstantNode_function() {
+			return createConstantNode(0);
+		},
+		"SymbolNode, function": function SymbolNode_function(node, isConst) {
+			if (isConst(node)) return createConstantNode(0);
+			return createConstantNode(1);
+		},
+		"ParenthesisNode, function": function ParenthesisNode_function(node, isConst) {
+			return new ParenthesisNode(_derivative(node.content, isConst));
+		},
+		"FunctionAssignmentNode, function": function FunctionAssignmentNode_function(node, isConst) {
+			if (isConst(node)) return createConstantNode(0);
+			return _derivative(node.expr, isConst);
+		},
+		"FunctionNode, function": function FunctionNode_function(node, isConst) {
+			if (isConst(node)) return createConstantNode(0);
+			var arg0 = node.args[0];
+			var arg1;
+			var div = false;
+			var negative = false;
+			var funcDerivative;
+			switch (node.name) {
+				case "cbrt":
+					div = true;
+					funcDerivative = new OperatorNode("*", "multiply", [createConstantNode(3), new OperatorNode("^", "pow", [arg0, new OperatorNode("/", "divide", [createConstantNode(2), createConstantNode(3)])])]);
+					break;
+				case "sqrt":
+				case "nthRoot":
+					if (node.args.length === 1) {
+						div = true;
+						funcDerivative = new OperatorNode("*", "multiply", [createConstantNode(2), new FunctionNode("sqrt", [arg0])]);
+					} else if (node.args.length === 2) {
+						arg1 = new OperatorNode("/", "divide", [createConstantNode(1), node.args[1]]);
+						return _derivative(new OperatorNode("^", "pow", [arg0, arg1]), isConst);
+					}
+					break;
+				case "log10": arg1 = createConstantNode(10);
+				case "log":
+					if (!arg1 && node.args.length === 1) {
+						funcDerivative = arg0.clone();
+						div = true;
+					} else if (node.args.length === 1 && arg1 || node.args.length === 2 && isConst(node.args[1])) {
+						funcDerivative = new OperatorNode("*", "multiply", [arg0.clone(), new FunctionNode("log", [arg1 || node.args[1]])]);
+						div = true;
+					} else if (node.args.length === 2) return _derivative(new OperatorNode("/", "divide", [new FunctionNode("log", [arg0]), new FunctionNode("log", [node.args[1]])]), isConst);
+					break;
+				case "pow":
+					if (node.args.length === 2) return _derivative(new OperatorNode("^", "pow", [arg0, node.args[1]]), isConst);
+					break;
+				case "exp":
+					funcDerivative = new FunctionNode("exp", [arg0.clone()]);
+					break;
+				case "sin":
+					funcDerivative = new FunctionNode("cos", [arg0.clone()]);
+					break;
+				case "cos":
+					funcDerivative = new OperatorNode("-", "unaryMinus", [new FunctionNode("sin", [arg0.clone()])]);
+					break;
+				case "tan":
+					funcDerivative = new OperatorNode("^", "pow", [new FunctionNode("sec", [arg0.clone()]), createConstantNode(2)]);
+					break;
+				case "sec":
+					funcDerivative = new OperatorNode("*", "multiply", [node, new FunctionNode("tan", [arg0.clone()])]);
+					break;
+				case "csc":
+					negative = true;
+					funcDerivative = new OperatorNode("*", "multiply", [node, new FunctionNode("cot", [arg0.clone()])]);
+					break;
+				case "cot":
+					negative = true;
+					funcDerivative = new OperatorNode("^", "pow", [new FunctionNode("csc", [arg0.clone()]), createConstantNode(2)]);
+					break;
+				case "asin":
+					div = true;
+					funcDerivative = new FunctionNode("sqrt", [new OperatorNode("-", "subtract", [createConstantNode(1), new OperatorNode("^", "pow", [arg0.clone(), createConstantNode(2)])])]);
+					break;
+				case "acos":
+					div = true;
+					negative = true;
+					funcDerivative = new FunctionNode("sqrt", [new OperatorNode("-", "subtract", [createConstantNode(1), new OperatorNode("^", "pow", [arg0.clone(), createConstantNode(2)])])]);
+					break;
+				case "atan":
+					div = true;
+					funcDerivative = new OperatorNode("+", "add", [new OperatorNode("^", "pow", [arg0.clone(), createConstantNode(2)]), createConstantNode(1)]);
+					break;
+				case "asec":
+					div = true;
+					funcDerivative = new OperatorNode("*", "multiply", [new FunctionNode("abs", [arg0.clone()]), new FunctionNode("sqrt", [new OperatorNode("-", "subtract", [new OperatorNode("^", "pow", [arg0.clone(), createConstantNode(2)]), createConstantNode(1)])])]);
+					break;
+				case "acsc":
+					div = true;
+					negative = true;
+					funcDerivative = new OperatorNode("*", "multiply", [new FunctionNode("abs", [arg0.clone()]), new FunctionNode("sqrt", [new OperatorNode("-", "subtract", [new OperatorNode("^", "pow", [arg0.clone(), createConstantNode(2)]), createConstantNode(1)])])]);
+					break;
+				case "acot":
+					div = true;
+					negative = true;
+					funcDerivative = new OperatorNode("+", "add", [new OperatorNode("^", "pow", [arg0.clone(), createConstantNode(2)]), createConstantNode(1)]);
+					break;
+				case "sinh":
+					funcDerivative = new FunctionNode("cosh", [arg0.clone()]);
+					break;
+				case "cosh":
+					funcDerivative = new FunctionNode("sinh", [arg0.clone()]);
+					break;
+				case "tanh":
+					funcDerivative = new OperatorNode("^", "pow", [new FunctionNode("sech", [arg0.clone()]), createConstantNode(2)]);
+					break;
+				case "sech":
+					negative = true;
+					funcDerivative = new OperatorNode("*", "multiply", [node, new FunctionNode("tanh", [arg0.clone()])]);
+					break;
+				case "csch":
+					negative = true;
+					funcDerivative = new OperatorNode("*", "multiply", [node, new FunctionNode("coth", [arg0.clone()])]);
+					break;
+				case "coth":
+					negative = true;
+					funcDerivative = new OperatorNode("^", "pow", [new FunctionNode("csch", [arg0.clone()]), createConstantNode(2)]);
+					break;
+				case "asinh":
+					div = true;
+					funcDerivative = new FunctionNode("sqrt", [new OperatorNode("+", "add", [new OperatorNode("^", "pow", [arg0.clone(), createConstantNode(2)]), createConstantNode(1)])]);
+					break;
+				case "acosh":
+					div = true;
+					funcDerivative = new FunctionNode("sqrt", [new OperatorNode("-", "subtract", [new OperatorNode("^", "pow", [arg0.clone(), createConstantNode(2)]), createConstantNode(1)])]);
+					break;
+				case "atanh":
+					div = true;
+					funcDerivative = new OperatorNode("-", "subtract", [createConstantNode(1), new OperatorNode("^", "pow", [arg0.clone(), createConstantNode(2)])]);
+					break;
+				case "asech":
+					div = true;
+					negative = true;
+					funcDerivative = new OperatorNode("*", "multiply", [arg0.clone(), new FunctionNode("sqrt", [new OperatorNode("-", "subtract", [createConstantNode(1), new OperatorNode("^", "pow", [arg0.clone(), createConstantNode(2)])])])]);
+					break;
+				case "acsch":
+					div = true;
+					negative = true;
+					funcDerivative = new OperatorNode("*", "multiply", [new FunctionNode("abs", [arg0.clone()]), new FunctionNode("sqrt", [new OperatorNode("+", "add", [new OperatorNode("^", "pow", [arg0.clone(), createConstantNode(2)]), createConstantNode(1)])])]);
+					break;
+				case "acoth":
+					div = true;
+					negative = true;
+					funcDerivative = new OperatorNode("-", "subtract", [createConstantNode(1), new OperatorNode("^", "pow", [arg0.clone(), createConstantNode(2)])]);
+					break;
+				case "abs":
+					funcDerivative = new OperatorNode("/", "divide", [new FunctionNode(new SymbolNode("abs"), [arg0.clone()]), arg0.clone()]);
+					break;
+				default: throw new Error("Cannot process function \"" + node.name + "\" in derivative: the function is not supported, undefined, or the number of arguments passed to it are not supported");
+			}
+			var op, func;
+			if (div) {
+				op = "/";
+				func = "divide";
+			} else {
+				op = "*";
+				func = "multiply";
+			}
+			var chainDerivative = _derivative(arg0, isConst);
+			if (negative) chainDerivative = new OperatorNode("-", "unaryMinus", [chainDerivative]);
+			return new OperatorNode(op, func, [chainDerivative, funcDerivative]);
+		},
+		"OperatorNode, function": function OperatorNode_function(node, isConst) {
+			if (isConst(node)) return createConstantNode(0);
+			if (node.op === "+") return new OperatorNode(node.op, node.fn, node.args.map(function(arg) {
+				return _derivative(arg, isConst);
+			}));
+			if (node.op === "-") {
+				if (node.isUnary()) return new OperatorNode(node.op, node.fn, [_derivative(node.args[0], isConst)]);
+				if (node.isBinary()) return new OperatorNode(node.op, node.fn, [_derivative(node.args[0], isConst), _derivative(node.args[1], isConst)]);
+			}
+			if (node.op === "*") {
+				var constantTerms = node.args.filter(function(arg) {
+					return isConst(arg);
+				});
+				if (constantTerms.length > 0) {
+					var nonConstantTerms = node.args.filter(function(arg) {
+						return !isConst(arg);
+					});
+					var nonConstantNode = nonConstantTerms.length === 1 ? nonConstantTerms[0] : new OperatorNode("*", "multiply", nonConstantTerms);
+					return new OperatorNode("*", "multiply", constantTerms.concat(_derivative(nonConstantNode, isConst)));
+				}
+				return new OperatorNode("+", "add", node.args.map(function(argOuter) {
+					return new OperatorNode("*", "multiply", node.args.map(function(argInner) {
+						return argInner === argOuter ? _derivative(argInner, isConst) : argInner.clone();
+					}));
+				}));
+			}
+			if (node.op === "/" && node.isBinary()) {
+				var arg0 = node.args[0];
+				var arg1 = node.args[1];
+				if (isConst(arg1)) return new OperatorNode("/", "divide", [_derivative(arg0, isConst), arg1]);
+				if (isConst(arg0)) return new OperatorNode("*", "multiply", [new OperatorNode("-", "unaryMinus", [arg0]), new OperatorNode("/", "divide", [_derivative(arg1, isConst), new OperatorNode("^", "pow", [arg1.clone(), createConstantNode(2)])])]);
+				return new OperatorNode("/", "divide", [new OperatorNode("-", "subtract", [new OperatorNode("*", "multiply", [_derivative(arg0, isConst), arg1.clone()]), new OperatorNode("*", "multiply", [arg0.clone(), _derivative(arg1, isConst)])]), new OperatorNode("^", "pow", [arg1.clone(), createConstantNode(2)])]);
+			}
+			if (node.op === "^" && node.isBinary()) {
+				var _arg = node.args[0];
+				var _arg2 = node.args[1];
+				if (isConst(_arg)) {
+					if (isConstantNode(_arg) && (isZero(_arg.value) || equal(_arg.value, 1))) return createConstantNode(0);
+					return new OperatorNode("*", "multiply", [node, new OperatorNode("*", "multiply", [new FunctionNode("log", [_arg.clone()]), _derivative(_arg2.clone(), isConst)])]);
+				}
+				if (isConst(_arg2)) {
+					if (isConstantNode(_arg2)) {
+						if (isZero(_arg2.value)) return createConstantNode(0);
+						if (equal(_arg2.value, 1)) return _derivative(_arg, isConst);
+					}
+					var powMinusOne = new OperatorNode("^", "pow", [_arg.clone(), new OperatorNode("-", "subtract", [_arg2, createConstantNode(1)])]);
+					return new OperatorNode("*", "multiply", [_arg2.clone(), new OperatorNode("*", "multiply", [_derivative(_arg, isConst), powMinusOne])]);
+				}
+				return new OperatorNode("*", "multiply", [new OperatorNode("^", "pow", [_arg.clone(), _arg2.clone()]), new OperatorNode("+", "add", [new OperatorNode("*", "multiply", [_derivative(_arg, isConst), new OperatorNode("/", "divide", [_arg2.clone(), _arg.clone()])]), new OperatorNode("*", "multiply", [_derivative(_arg2, isConst), new FunctionNode("log", [_arg.clone()])])])]);
+			}
+			throw new Error("Cannot process operator \"" + node.op + "\" in derivative: the operator is not supported, undefined, or the number of arguments passed to it are not supported");
+		}
+	});
+	/**
+	* Helper function to create a constant node with a specific type
+	* (number, BigNumber, Fraction)
+	* @param {number} value
+	* @param {string} [valueType]
+	* @return {ConstantNode}
+	*/
+	function createConstantNode(value, valueType) {
+		return new ConstantNode(numeric(value, valueType || safeNumberType(String(value), config)));
+	}
+	return derivative;
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/algebra/rationalize.js
+var name$100 = "rationalize";
+var createRationalize = /* @__PURE__ */ factory(name$100, [
+	"config",
+	"typed",
+	"equal",
+	"isZero",
+	"add",
+	"subtract",
+	"multiply",
+	"divide",
+	"pow",
+	"parse",
+	"simplifyConstant",
+	"simplifyCore",
+	"simplify",
+	"?bignumber",
+	"?fraction",
+	"mathWithTransform",
+	"matrix",
+	"AccessorNode",
+	"ArrayNode",
+	"ConstantNode",
+	"FunctionNode",
+	"IndexNode",
+	"ObjectNode",
+	"OperatorNode",
+	"SymbolNode",
+	"ParenthesisNode"
+], (_ref) => {
+	var { config, typed, equal, isZero, add, subtract, multiply, divide, pow, parse, simplifyConstant, simplifyCore, simplify, fraction, bignumber, mathWithTransform, matrix, AccessorNode, ArrayNode, ConstantNode, FunctionNode, IndexNode, ObjectNode, OperatorNode, SymbolNode, ParenthesisNode } = _ref;
+	/**
+	* Transform a rationalizable expression in a rational fraction.
+	* If rational fraction is one variable polynomial then converts
+	* the numerator and denominator in canonical form, with decreasing
+	* exponents, returning the coefficients of numerator.
+	*
+	* Syntax:
+	*
+	*     math.rationalize(expr)
+	*     math.rationalize(expr, detailed)
+	*     math.rationalize(expr, scope)
+	*     math.rationalize(expr, scope, detailed)
+	*
+	* Examples:
+	*
+	*     math.rationalize('sin(x)+y')
+	*                   //  Error: There is an unsolved function call
+	*     math.rationalize('2x/y - y/(x+1)')
+	*                   // (2*x^2-y^2+2*x)/(x*y+y)
+	*     math.rationalize('(2x+1)^6')
+	*                   // 64*x^6+192*x^5+240*x^4+160*x^3+60*x^2+12*x+1
+	*     math.rationalize('2x/( (2x-1) / (3x+2) ) - 5x/ ( (3x+4) / (2x^2-5) ) + 3')
+	*                   // -20*x^4+28*x^3+104*x^2+6*x-12)/(6*x^2+5*x-4)
+	*     math.rationalize('x/(1-x)/(x-2)/(x-3)/(x-4) + 2x/ ( (1-2x)/(2-3x) )/ ((3-4x)/(4-5x) )') =
+	*                   // (-30*x^7+344*x^6-1506*x^5+3200*x^4-3472*x^3+1846*x^2-381*x)/
+	*                   //     (-8*x^6+90*x^5-383*x^4+780*x^3-797*x^2+390*x-72)
+	*
+	*     math.rationalize('x+x+x+y',{y:1}) // 3*x+1
+	*     math.rationalize('x+x+x+y',{})    // 3*x+y
+	*
+	*     const ret = math.rationalize('x+x+x+y',{},true)
+	*                   // ret.expression=3*x+y, ret.variables = ["x","y"]
+	*     const ret = math.rationalize('-2+5x^2',{},true)
+	*                   // ret.expression=5*x^2-2, ret.variables = ["x"], ret.coefficients=[-2,0,5]
+	*
+	* See also:
+	*
+	*     simplify
+	*
+	* @param  {Node|string} expr    The expression to check if is a polynomial expression
+	* @param  {Object|boolean}      optional scope of expression or true for already evaluated rational expression at input
+	* @param  {Boolean}  detailed   optional True if return an object, false if return expression node (default)
+	*
+	* @return {Object | Node}    The rational polynomial of `expr` or an object
+	*            `{expression, numerator, denominator, variables, coefficients}`, where
+	*              `expression` is a `Node` with the node simplified expression,
+	*              `numerator` is a `Node` with the simplified numerator of expression,
+	*              `denominator` is a `Node` or `boolean` with the simplified denominator or `false` (if there is no denominator),
+	*              `variables` is an array with variable names,
+	*              and `coefficients` is an array with coefficients of numerator sorted by increased exponent
+	*           {Expression Node}  node simplified expression
+	*
+	*/
+	function _rationalize(expr) {
+		var scope = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {};
+		var detailed = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : false;
+		var setRules = rulesRationalize();
+		var polyRet = polynomial(expr, scope, true, setRules.firstRules);
+		var nVars = polyRet.variables.length;
+		var noExactFractions = { exactFractions: false };
+		var withExactFractions = { exactFractions: true };
+		expr = polyRet.expression;
+		if (nVars >= 1) {
+			expr = expandPower(expr);
+			var sBefore;
+			var rules;
+			var eDistrDiv = true;
+			var redoInic = false;
+			expr = simplify(expr, setRules.firstRules, {}, noExactFractions);
+			var s;
+			while (true) {
+				rules = eDistrDiv ? setRules.distrDivRules : setRules.sucDivRules;
+				expr = simplify(expr, rules, {}, withExactFractions);
+				eDistrDiv = !eDistrDiv;
+				s = expr.toString();
+				if (s === sBefore) break;
+				redoInic = true;
+				sBefore = s;
+			}
+			if (redoInic) expr = simplify(expr, setRules.firstRulesAgain, {}, noExactFractions);
+			expr = simplify(expr, setRules.finalRules, {}, noExactFractions);
+		}
+		var coefficients = [];
+		var retRationalize = {};
+		if (expr.type === "OperatorNode" && expr.isBinary() && expr.op === "/") {
+			if (nVars === 1) {
+				expr.args[0] = polyToCanonical(expr.args[0], coefficients);
+				expr.args[1] = polyToCanonical(expr.args[1]);
+			}
+			if (detailed) {
+				retRationalize.numerator = expr.args[0];
+				retRationalize.denominator = expr.args[1];
+			}
+		} else {
+			if (nVars === 1) expr = polyToCanonical(expr, coefficients);
+			if (detailed) {
+				retRationalize.numerator = expr;
+				retRationalize.denominator = null;
+			}
+		}
+		if (!detailed) return expr;
+		retRationalize.coefficients = coefficients;
+		retRationalize.variables = polyRet.variables;
+		retRationalize.expression = expr;
+		return retRationalize;
+	}
+	return typed(name$100, {
+		Node: _rationalize,
+		"Node, boolean": (expr, detailed) => _rationalize(expr, {}, detailed),
+		"Node, Object": _rationalize,
+		"Node, Object, boolean": _rationalize
+	});
+	/**
+	*  Function to simplify an expression using an optional scope and
+	*  return it if the expression is a polynomial expression, i.e.
+	*  an expression with one or more variables and the operators
+	*  +, -, *, and ^, where the exponent can only be a positive integer.
+	*
+	* Syntax:
+	*
+	*     polynomial(expr,scope,extended, rules)
+	*
+	* @param  {Node | string} expr     The expression to simplify and check if is polynomial expression
+	* @param  {object} scope           Optional scope for expression simplification
+	* @param  {boolean} extended       Optional. Default is false. When true allows divide operator.
+	* @param  {array}  rules           Optional. Default is no rule.
+	*
+	*
+	* @return {Object}
+	*            {Object} node:   node simplified expression
+	*            {Array}  variables:  variable names
+	*/
+	function polynomial(expr, scope, extended, rules) {
+		var variables = [];
+		var node = simplify(expr, rules, scope, { exactFractions: false });
+		extended = !!extended;
+		var oper = "+-*" + (extended ? "/" : "");
+		recPoly(node);
+		var retFunc = {};
+		retFunc.expression = node;
+		retFunc.variables = variables;
+		return retFunc;
+		/**
+		*  Function to simplify an expression using an optional scope and
+		*  return it if the expression is a polynomial expression, i.e.
+		*  an expression with one or more variables and the operators
+		*  +, -, *, and ^, where the exponent can only be a positive integer.
+		*
+		* Syntax:
+		*
+		*     recPoly(node)
+		*
+		*
+		* @param  {Node} node               The current sub tree expression in recursion
+		*
+		* @return                           nothing, throw an exception if error
+		*/
+		function recPoly(node) {
+			var tp = node.type;
+			if (tp === "FunctionNode") throw new Error("There is an unsolved function call");
+			else if (tp === "OperatorNode") if (node.op === "^") if (node.args[1].type !== "ConstantNode" || !isInteger$1(parseFloat(node.args[1].value))) throw new Error("There is a non-integer exponent");
+			else recPoly(node.args[0]);
+			else {
+				if (!oper.includes(node.op)) throw new Error("Operator " + node.op + " invalid in polynomial expression");
+				for (var i = 0; i < node.args.length; i++) recPoly(node.args[i]);
+			}
+			else if (tp === "SymbolNode") {
+				var _name = node.name;
+				if (variables.indexOf(_name) === -1) variables.push(_name);
+			} else if (tp === "ParenthesisNode") recPoly(node.content);
+			else if (tp !== "ConstantNode") throw new Error("type " + tp + " is not allowed in polynomial expression");
+		}
+	}
+	/**
+	* Return a rule set to rationalize an polynomial expression in rationalize
+	*
+	* Syntax:
+	*
+	*     rulesRationalize()
+	*
+	* @return {array}        rule set to rationalize an polynomial expression
+	*/
+	function rulesRationalize() {
+		var oldRules = [
+			simplifyCore,
+			{
+				l: "n+n",
+				r: "2*n"
+			},
+			{
+				l: "n+-n",
+				r: "0"
+			},
+			simplifyConstant,
+			{
+				l: "n*(n1^-1)",
+				r: "n/n1"
+			},
+			{
+				l: "n*n1^-n2",
+				r: "n/n1^n2"
+			},
+			{
+				l: "n1^-1",
+				r: "1/n1"
+			},
+			{
+				l: "n*(n1/n2)",
+				r: "(n*n1)/n2"
+			},
+			{
+				l: "1*n",
+				r: "n"
+			}
+		];
+		var rulesFirst = [
+			{
+				l: "(-n1)/(-n2)",
+				r: "n1/n2"
+			},
+			{
+				l: "(-n1)*(-n2)",
+				r: "n1*n2"
+			},
+			{
+				l: "n1--n2",
+				r: "n1+n2"
+			},
+			{
+				l: "n1-n2",
+				r: "n1+(-n2)"
+			},
+			{
+				l: "(n1+n2)*n3",
+				r: "(n1*n3 + n2*n3)"
+			},
+			{
+				l: "n1*(n2+n3)",
+				r: "(n1*n2+n1*n3)"
+			},
+			{
+				l: "c1*n + c2*n",
+				r: "(c1+c2)*n"
+			},
+			{
+				l: "c1*n + n",
+				r: "(c1+1)*n"
+			},
+			{
+				l: "c1*n - c2*n",
+				r: "(c1-c2)*n"
+			},
+			{
+				l: "c1*n - n",
+				r: "(c1-1)*n"
+			},
+			{
+				l: "v/c",
+				r: "(1/c)*v"
+			},
+			{
+				l: "v/-c",
+				r: "-(1/c)*v"
+			},
+			{
+				l: "-v*-c",
+				r: "c*v"
+			},
+			{
+				l: "-v*c",
+				r: "-c*v"
+			},
+			{
+				l: "v*-c",
+				r: "-c*v"
+			},
+			{
+				l: "v*c",
+				r: "c*v"
+			},
+			{
+				l: "-(-n1*n2)",
+				r: "(n1*n2)"
+			},
+			{
+				l: "-(n1*n2)",
+				r: "(-n1*n2)"
+			},
+			{
+				l: "-(-n1+n2)",
+				r: "(n1-n2)"
+			},
+			{
+				l: "-(n1+n2)",
+				r: "(-n1-n2)"
+			},
+			{
+				l: "(n1^n2)^n3",
+				r: "(n1^(n2*n3))"
+			},
+			{
+				l: "-(-n1/n2)",
+				r: "(n1/n2)"
+			},
+			{
+				l: "-(n1/n2)",
+				r: "(-n1/n2)"
+			}
+		];
+		var rulesDistrDiv = [
+			{
+				l: "(n1/n2 + n3/n4)",
+				r: "((n1*n4 + n3*n2)/(n2*n4))"
+			},
+			{
+				l: "(n1/n2 + n3)",
+				r: "((n1 + n3*n2)/n2)"
+			},
+			{
+				l: "(n1 + n2/n3)",
+				r: "((n1*n3 + n2)/n3)"
+			}
+		];
+		var rulesSucDiv = [{
+			l: "(n1/(n2/n3))",
+			r: "((n1*n3)/n2)"
+		}, {
+			l: "(n1/n2/n3)",
+			r: "(n1/(n2*n3))"
+		}];
+		var setRules = {};
+		setRules.firstRules = oldRules.concat(rulesFirst, rulesSucDiv);
+		setRules.distrDivRules = rulesDistrDiv;
+		setRules.sucDivRules = rulesSucDiv;
+		setRules.firstRulesAgain = oldRules.concat(rulesFirst);
+		setRules.finalRules = [
+			simplifyCore,
+			{
+				l: "n*-n",
+				r: "-n^2"
+			},
+			{
+				l: "n*n",
+				r: "n^2"
+			},
+			simplifyConstant,
+			{
+				l: "n*-n^n1",
+				r: "-n^(n1+1)"
+			},
+			{
+				l: "n*n^n1",
+				r: "n^(n1+1)"
+			},
+			{
+				l: "n^n1*-n^n2",
+				r: "-n^(n1+n2)"
+			},
+			{
+				l: "n^n1*n^n2",
+				r: "n^(n1+n2)"
+			},
+			{
+				l: "n^n1*-n",
+				r: "-n^(n1+1)"
+			},
+			{
+				l: "n^n1*n",
+				r: "n^(n1+1)"
+			},
+			{
+				l: "n^n1/-n",
+				r: "-n^(n1-1)"
+			},
+			{
+				l: "n^n1/n",
+				r: "n^(n1-1)"
+			},
+			{
+				l: "n/-n^n1",
+				r: "-n^(1-n1)"
+			},
+			{
+				l: "n/n^n1",
+				r: "n^(1-n1)"
+			},
+			{
+				l: "n^n1/-n^n2",
+				r: "n^(n1-n2)"
+			},
+			{
+				l: "n^n1/n^n2",
+				r: "n^(n1-n2)"
+			},
+			{
+				l: "n1+(-n2*n3)",
+				r: "n1-n2*n3"
+			},
+			{
+				l: "v*(-c)",
+				r: "-c*v"
+			},
+			{
+				l: "n1+-n2",
+				r: "n1-n2"
+			},
+			{
+				l: "v*c",
+				r: "c*v"
+			},
+			{
+				l: "(n1^n2)^n3",
+				r: "(n1^(n2*n3))"
+			}
+		];
+		return setRules;
+	}
+	/**
+	*  Expand recursively a tree node for handling with expressions with exponents
+	*  (it's not for constants, symbols or functions with exponents)
+	*  PS: The other parameters are internal for recursion
+	*
+	* Syntax:
+	*
+	*     expandPower(node)
+	*
+	* @param  {Node} node         Current expression node
+	* @param  {node} parent       Parent current node inside the recursion
+	* @param  (int}               Parent number of chid inside the rercursion
+	*
+	* @return {node}        node expression with all powers expanded.
+	*/
+	function expandPower(node, parent, indParent) {
+		var tp = node.type;
+		var internal = arguments.length > 1;
+		if (tp === "OperatorNode" && node.isBinary()) {
+			var does = false;
+			var val;
+			if (node.op === "^") {
+				if ((node.args[0].type === "ParenthesisNode" || node.args[0].type === "OperatorNode") && node.args[1].type === "ConstantNode") {
+					val = parseFloat(node.args[1].value);
+					does = val >= 2 && isInteger$1(val);
+				}
+			}
+			if (does) {
+				if (val > 2) {
+					var nEsqTopo = node.args[0];
+					node = new OperatorNode("*", "multiply", [nEsqTopo, new OperatorNode("^", "pow", [node.args[0].cloneDeep(), new ConstantNode(val - 1)])]);
+				} else node = new OperatorNode("*", "multiply", [node.args[0], node.args[0].cloneDeep()]);
+				if (internal) if (indParent === "content") parent.content = node;
+				else parent.args[indParent] = node;
+			}
+		}
+		if (tp === "ParenthesisNode") expandPower(node.content, node, "content");
+		else if (tp !== "ConstantNode" && tp !== "SymbolNode") for (var i = 0; i < node.args.length; i++) expandPower(node.args[i], node, i);
+		if (!internal) return node;
+	}
+	/**
+	* Auxilary function for rationalize
+	* Convert near canonical polynomial in one variable in a canonical polynomial
+	* with one term for each exponent in decreasing order
+	*
+	* Syntax:
+	*
+	*     polyToCanonical(node [, coefficients])
+	*
+	* @param  {Node | string} expr       The near canonical polynomial expression to convert in a a canonical polynomial expression
+	*
+	*        The string or tree expression needs to be at below syntax, with free spaces:
+	*         (  (^(-)? | [+-]? )cte (*)? var (^expo)?  | cte )+
+	*       Where 'var' is one variable with any valid name
+	*             'cte' are real numeric constants with any value. It can be omitted if equal than 1
+	*             'expo' are integers greater than 0. It can be omitted if equal than 1.
+	*
+	* @param  {array}   coefficients             Optional returns coefficients sorted by increased exponent
+	*
+	*
+	* @return {node}        new node tree with one variable polynomial or string error.
+	*/
+	function polyToCanonical(node, coefficients) {
+		if (coefficients === void 0) coefficients = [];
+		coefficients[0] = 0;
+		var o = {};
+		o.cte = 1;
+		o.oper = "+";
+		o.fire = "";
+		var maxExpo = 0;
+		var varname = "";
+		recurPol(node, null, o);
+		maxExpo = coefficients.length - 1;
+		var first = true;
+		var no;
+		for (var i = maxExpo; i >= 0; i--) {
+			if (coefficients[i] === 0) continue;
+			var n1 = new ConstantNode(first ? coefficients[i] : Math.abs(coefficients[i]));
+			var op = coefficients[i] < 0 ? "-" : "+";
+			if (i > 0) {
+				var n2 = new SymbolNode(varname);
+				if (i > 1) {
+					var n3 = new ConstantNode(i);
+					n2 = new OperatorNode("^", "pow", [n2, n3]);
+				}
+				if (coefficients[i] === -1 && first) n1 = new OperatorNode("-", "unaryMinus", [n2]);
+				else if (Math.abs(coefficients[i]) === 1) n1 = n2;
+				else n1 = new OperatorNode("*", "multiply", [n1, n2]);
+			}
+			if (first) no = n1;
+			else if (op === "+") no = new OperatorNode("+", "add", [no, n1]);
+			else no = new OperatorNode("-", "subtract", [no, n1]);
+			first = false;
+		}
+		if (first) return new ConstantNode(0);
+		else return no;
+		/**
+		* Recursive auxilary function inside polyToCanonical for
+		* converting expression in canonical form
+		*
+		* Syntax:
+		*
+		*     recurPol(node, noPai, obj)
+		*
+		* @param  {Node} node        The current subpolynomial expression
+		* @param  {Node | Null}  noPai   The current parent node
+		* @param  {object}    obj        Object with many internal flags
+		*
+		* @return {}                    No return. If error, throws an exception
+		*/
+		function recurPol(node, noPai, o) {
+			var tp = node.type;
+			if (tp === "FunctionNode") throw new Error("There is an unsolved function call");
+			else if (tp === "OperatorNode") {
+				if (!"+-*^".includes(node.op)) throw new Error("Operator " + node.op + " invalid");
+				if (noPai !== null) {
+					if ((node.fn === "unaryMinus" || node.fn === "pow") && noPai.fn !== "add" && noPai.fn !== "subtract" && noPai.fn !== "multiply") throw new Error("Invalid " + node.op + " placing");
+					if ((node.fn === "subtract" || node.fn === "add" || node.fn === "multiply") && noPai.fn !== "add" && noPai.fn !== "subtract") throw new Error("Invalid " + node.op + " placing");
+					if ((node.fn === "subtract" || node.fn === "add" || node.fn === "unaryMinus") && o.noFil !== 0) throw new Error("Invalid " + node.op + " placing");
+				}
+				if (node.op === "^" || node.op === "*") o.fire = node.op;
+				for (var _i = 0; _i < node.args.length; _i++) {
+					if (node.fn === "unaryMinus") o.oper = "-";
+					if (node.op === "+" || node.fn === "subtract") {
+						o.fire = "";
+						o.cte = 1;
+						o.oper = _i === 0 ? "+" : node.op;
+					}
+					o.noFil = _i;
+					recurPol(node.args[_i], node, o);
+				}
+			} else if (tp === "SymbolNode") {
+				if (node.name !== varname && varname !== "") throw new Error("There is more than one variable");
+				varname = node.name;
+				if (noPai === null) {
+					coefficients[1] = 1;
+					return;
+				}
+				if (noPai.op === "^" && o.noFil !== 0) throw new Error("In power the variable should be the first parameter");
+				if (noPai.op === "*" && o.noFil !== 1) throw new Error("In multiply the variable should be the second parameter");
+				if (o.fire === "" || o.fire === "*") {
+					if (maxExpo < 1) coefficients[1] = 0;
+					coefficients[1] += o.cte * (o.oper === "+" ? 1 : -1);
+					maxExpo = Math.max(1, maxExpo);
+				}
+			} else if (tp === "ConstantNode") {
+				var valor = parseFloat(node.value);
+				if (noPai === null) {
+					coefficients[0] = valor;
+					return;
+				}
+				if (noPai.op === "^") {
+					if (o.noFil !== 1) throw new Error("Constant cannot be powered");
+					if (!isInteger$1(valor) || valor <= 0) throw new Error("Non-integer exponent is not allowed");
+					for (var _i2 = maxExpo + 1; _i2 < valor; _i2++) coefficients[_i2] = 0;
+					if (valor > maxExpo) coefficients[valor] = 0;
+					coefficients[valor] += o.cte * (o.oper === "+" ? 1 : -1);
+					maxExpo = Math.max(valor, maxExpo);
+					return;
+				}
+				o.cte = valor;
+				if (o.fire === "") coefficients[0] += o.cte * (o.oper === "+" ? 1 : -1);
+			} else throw new Error("Type " + tp + " is not allowed");
+		}
+	}
+});
+//#endregion
+//#region node_modules/decimal.js/decimal.mjs
+/*!
+*  decimal.js v10.6.0
+*  An arbitrary-precision Decimal type for JavaScript.
+*  https://github.com/MikeMcl/decimal.js
+*  Copyright (c) 2025 Michael Mclaughlin <M8ch88l@gmail.com>
+*  MIT Licence
+*/
+var EXP_LIMIT = 9e15, MAX_DIGITS = 1e9, NUMERALS = "0123456789abcdef", LN10$1 = "2.3025850929940456840179914546843642076011014886287729760333279009675726096773524802359972050895982983419677840422862486334095254650828067566662873690987816894829072083255546808437998948262331985283935053089653777326288461633662222876982198867465436674744042432743651550489343149393914796194044002221051017141748003688084012647080685567743216228355220114804663715659121373450747856947683463616792101806445070648000277502684916746550586856935673420670581136429224554405758925724208241314695689016758940256776311356919292033376587141660230105703089634572075440370847469940168269282808481184289314848524948644871927809676271275775397027668605952496716674183485704422507197965004714951050492214776567636938662976979522110718264549734772662425709429322582798502585509785265383207606726317164309505995087807523710333101197857547331541421808427543863591778117054309827482385045648019095610299291824318237525357709750539565187697510374970888692180205189339507238539205144634197265287286965110862571492198849978748873771345686209167058", PI = "3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989380952572010654858632789", DEFAULTS$1 = {
+	precision: 20,
+	rounding: 4,
+	modulo: 1,
+	toExpNeg: -7,
+	toExpPos: 21,
+	minE: -EXP_LIMIT,
+	maxE: EXP_LIMIT,
+	crypto: false
+}, inexact, quadrant, external = true, decimalError = "[DecimalError] ", invalidArgument = decimalError + "Invalid argument: ", precisionLimitExceeded = decimalError + "Precision limit exceeded", cryptoUnavailable = decimalError + "crypto unavailable", tag = "[object Decimal]", mathfloor = Math.floor, mathpow = Math.pow, isBinary = /^0b([01]+(\.[01]*)?|\.[01]+)(p[+-]?\d+)?$/i, isHex = /^0x([0-9a-f]+(\.[0-9a-f]*)?|\.[0-9a-f]+)(p[+-]?\d+)?$/i, isOctal = /^0o([0-7]+(\.[0-7]*)?|\.[0-7]+)(p[+-]?\d+)?$/i, isDecimal = /^(\d+(\.\d*)?|\.\d+)(e[+-]?\d+)?$/i, BASE = 1e7, LOG_BASE = 7, MAX_SAFE_INTEGER = 9007199254740991, LN10_PRECISION = LN10$1.length - 1, PI_PRECISION = PI.length - 1, P$1 = { toStringTag: tag };
+P$1.absoluteValue = P$1.abs = function() {
+	var x = new this.constructor(this);
+	if (x.s < 0) x.s = 1;
+	return finalise(x);
+};
+P$1.ceil = function() {
+	return finalise(new this.constructor(this), this.e + 1, 2);
+};
+P$1.clampedTo = P$1.clamp = function(min, max) {
+	var k, x = this, Ctor = x.constructor;
+	min = new Ctor(min);
+	max = new Ctor(max);
+	if (!min.s || !max.s) return new Ctor(NaN);
+	if (min.gt(max)) throw Error(invalidArgument + max);
+	k = x.cmp(min);
+	return k < 0 ? min : x.cmp(max) > 0 ? max : new Ctor(x);
+};
+P$1.comparedTo = P$1.cmp = function(y) {
+	var i, j, xdL, ydL, x = this, xd = x.d, yd = (y = new x.constructor(y)).d, xs = x.s, ys = y.s;
+	if (!xd || !yd) return !xs || !ys ? NaN : xs !== ys ? xs : xd === yd ? 0 : !xd ^ xs < 0 ? 1 : -1;
+	if (!xd[0] || !yd[0]) return xd[0] ? xs : yd[0] ? -ys : 0;
+	if (xs !== ys) return xs;
+	if (x.e !== y.e) return x.e > y.e ^ xs < 0 ? 1 : -1;
+	xdL = xd.length;
+	ydL = yd.length;
+	for (i = 0, j = xdL < ydL ? xdL : ydL; i < j; ++i) if (xd[i] !== yd[i]) return xd[i] > yd[i] ^ xs < 0 ? 1 : -1;
+	return xdL === ydL ? 0 : xdL > ydL ^ xs < 0 ? 1 : -1;
+};
+P$1.cosine = P$1.cos = function() {
+	var pr, rm, x = this, Ctor = x.constructor;
+	if (!x.d) return new Ctor(NaN);
+	if (!x.d[0]) return new Ctor(1);
+	pr = Ctor.precision;
+	rm = Ctor.rounding;
+	Ctor.precision = pr + Math.max(x.e, x.sd()) + LOG_BASE;
+	Ctor.rounding = 1;
+	x = cosine(Ctor, toLessThanHalfPi(Ctor, x));
+	Ctor.precision = pr;
+	Ctor.rounding = rm;
+	return finalise(quadrant == 2 || quadrant == 3 ? x.neg() : x, pr, rm, true);
+};
+P$1.cubeRoot = P$1.cbrt = function() {
+	var e, m, n, r, rep, s, sd, t, t3, t3plusx, x = this, Ctor = x.constructor;
+	if (!x.isFinite() || x.isZero()) return new Ctor(x);
+	external = false;
+	s = x.s * mathpow(x.s * x, 1 / 3);
+	if (!s || Math.abs(s) == Infinity) {
+		n = digitsToString(x.d);
+		e = x.e;
+		if (s = (e - n.length + 1) % 3) n += s == 1 || s == -2 ? "0" : "00";
+		s = mathpow(n, 1 / 3);
+		e = mathfloor((e + 1) / 3) - (e % 3 == (e < 0 ? -1 : 2));
+		if (s == Infinity) n = "5e" + e;
+		else {
+			n = s.toExponential();
+			n = n.slice(0, n.indexOf("e") + 1) + e;
+		}
+		r = new Ctor(n);
+		r.s = x.s;
+	} else r = new Ctor(s.toString());
+	sd = (e = Ctor.precision) + 3;
+	for (;;) {
+		t = r;
+		t3 = t.times(t).times(t);
+		t3plusx = t3.plus(x);
+		r = divide$1(t3plusx.plus(x).times(t), t3plusx.plus(t3), sd + 2, 1);
+		if (digitsToString(t.d).slice(0, sd) === (n = digitsToString(r.d)).slice(0, sd)) {
+			n = n.slice(sd - 3, sd + 1);
+			if (n == "9999" || !rep && n == "4999") {
+				if (!rep) {
+					finalise(t, e + 1, 0);
+					if (t.times(t).times(t).eq(x)) {
+						r = t;
+						break;
+					}
+				}
+				sd += 4;
+				rep = 1;
+			} else {
+				if (!+n || !+n.slice(1) && n.charAt(0) == "5") {
+					finalise(r, e + 1, 1);
+					m = !r.times(r).times(r).eq(x);
+				}
+				break;
+			}
+		}
+	}
+	external = true;
+	return finalise(r, e, Ctor.rounding, m);
+};
+P$1.decimalPlaces = P$1.dp = function() {
+	var w, d = this.d, n = NaN;
+	if (d) {
+		w = d.length - 1;
+		n = (w - mathfloor(this.e / LOG_BASE)) * LOG_BASE;
+		w = d[w];
+		if (w) for (; w % 10 == 0; w /= 10) n--;
+		if (n < 0) n = 0;
+	}
+	return n;
+};
+P$1.dividedBy = P$1.div = function(y) {
+	return divide$1(this, new this.constructor(y));
+};
+P$1.dividedToIntegerBy = P$1.divToInt = function(y) {
+	var x = this, Ctor = x.constructor;
+	return finalise(divide$1(x, new Ctor(y), 0, 1, 1), Ctor.precision, Ctor.rounding);
+};
+P$1.equals = P$1.eq = function(y) {
+	return this.cmp(y) === 0;
+};
+P$1.floor = function() {
+	return finalise(new this.constructor(this), this.e + 1, 3);
+};
+P$1.greaterThan = P$1.gt = function(y) {
+	return this.cmp(y) > 0;
+};
+P$1.greaterThanOrEqualTo = P$1.gte = function(y) {
+	var k = this.cmp(y);
+	return k == 1 || k === 0;
+};
+P$1.hyperbolicCosine = P$1.cosh = function() {
+	var k, n, pr, rm, len, x = this, Ctor = x.constructor, one = new Ctor(1);
+	if (!x.isFinite()) return new Ctor(x.s ? Infinity : NaN);
+	if (x.isZero()) return one;
+	pr = Ctor.precision;
+	rm = Ctor.rounding;
+	Ctor.precision = pr + Math.max(x.e, x.sd()) + 4;
+	Ctor.rounding = 1;
+	len = x.d.length;
+	if (len < 32) {
+		k = Math.ceil(len / 3);
+		n = (1 / tinyPow(4, k)).toString();
+	} else {
+		k = 16;
+		n = "2.3283064365386962890625e-10";
+	}
+	x = taylorSeries(Ctor, 1, x.times(n), new Ctor(1), true);
+	var cosh2_x, i = k, d8 = new Ctor(8);
+	for (; i--;) {
+		cosh2_x = x.times(x);
+		x = one.minus(cosh2_x.times(d8.minus(cosh2_x.times(d8))));
+	}
+	return finalise(x, Ctor.precision = pr, Ctor.rounding = rm, true);
+};
+P$1.hyperbolicSine = P$1.sinh = function() {
+	var k, pr, rm, len, x = this, Ctor = x.constructor;
+	if (!x.isFinite() || x.isZero()) return new Ctor(x);
+	pr = Ctor.precision;
+	rm = Ctor.rounding;
+	Ctor.precision = pr + Math.max(x.e, x.sd()) + 4;
+	Ctor.rounding = 1;
+	len = x.d.length;
+	if (len < 3) x = taylorSeries(Ctor, 2, x, x, true);
+	else {
+		k = 1.4 * Math.sqrt(len);
+		k = k > 16 ? 16 : k | 0;
+		x = x.times(1 / tinyPow(5, k));
+		x = taylorSeries(Ctor, 2, x, x, true);
+		var sinh2_x, d5 = new Ctor(5), d16 = new Ctor(16), d20 = new Ctor(20);
+		for (; k--;) {
+			sinh2_x = x.times(x);
+			x = x.times(d5.plus(sinh2_x.times(d16.times(sinh2_x).plus(d20))));
+		}
+	}
+	Ctor.precision = pr;
+	Ctor.rounding = rm;
+	return finalise(x, pr, rm, true);
+};
+P$1.hyperbolicTangent = P$1.tanh = function() {
+	var pr, rm, x = this, Ctor = x.constructor;
+	if (!x.isFinite()) return new Ctor(x.s);
+	if (x.isZero()) return new Ctor(x);
+	pr = Ctor.precision;
+	rm = Ctor.rounding;
+	Ctor.precision = pr + 7;
+	Ctor.rounding = 1;
+	return divide$1(x.sinh(), x.cosh(), Ctor.precision = pr, Ctor.rounding = rm);
+};
+P$1.inverseCosine = P$1.acos = function() {
+	var x = this, Ctor = x.constructor, k = x.abs().cmp(1), pr = Ctor.precision, rm = Ctor.rounding;
+	if (k !== -1) return k === 0 ? x.isNeg() ? getPi(Ctor, pr, rm) : new Ctor(0) : new Ctor(NaN);
+	if (x.isZero()) return getPi(Ctor, pr + 4, rm).times(.5);
+	Ctor.precision = pr + 6;
+	Ctor.rounding = 1;
+	x = new Ctor(1).minus(x).div(x.plus(1)).sqrt().atan();
+	Ctor.precision = pr;
+	Ctor.rounding = rm;
+	return x.times(2);
+};
+P$1.inverseHyperbolicCosine = P$1.acosh = function() {
+	var pr, rm, x = this, Ctor = x.constructor;
+	if (x.lte(1)) return new Ctor(x.eq(1) ? 0 : NaN);
+	if (!x.isFinite()) return new Ctor(x);
+	pr = Ctor.precision;
+	rm = Ctor.rounding;
+	Ctor.precision = pr + Math.max(Math.abs(x.e), x.sd()) + 4;
+	Ctor.rounding = 1;
+	external = false;
+	x = x.times(x).minus(1).sqrt().plus(x);
+	external = true;
+	Ctor.precision = pr;
+	Ctor.rounding = rm;
+	return x.ln();
+};
+P$1.inverseHyperbolicSine = P$1.asinh = function() {
+	var pr, rm, x = this, Ctor = x.constructor;
+	if (!x.isFinite() || x.isZero()) return new Ctor(x);
+	pr = Ctor.precision;
+	rm = Ctor.rounding;
+	Ctor.precision = pr + 2 * Math.max(Math.abs(x.e), x.sd()) + 6;
+	Ctor.rounding = 1;
+	external = false;
+	x = x.times(x).plus(1).sqrt().plus(x);
+	external = true;
+	Ctor.precision = pr;
+	Ctor.rounding = rm;
+	return x.ln();
+};
+P$1.inverseHyperbolicTangent = P$1.atanh = function() {
+	var pr, rm, wpr, xsd, x = this, Ctor = x.constructor;
+	if (!x.isFinite()) return new Ctor(NaN);
+	if (x.e >= 0) return new Ctor(x.abs().eq(1) ? x.s / 0 : x.isZero() ? x : NaN);
+	pr = Ctor.precision;
+	rm = Ctor.rounding;
+	xsd = x.sd();
+	if (Math.max(xsd, pr) < 2 * -x.e - 1) return finalise(new Ctor(x), pr, rm, true);
+	Ctor.precision = wpr = xsd - x.e;
+	x = divide$1(x.plus(1), new Ctor(1).minus(x), wpr + pr, 1);
+	Ctor.precision = pr + 4;
+	Ctor.rounding = 1;
+	x = x.ln();
+	Ctor.precision = pr;
+	Ctor.rounding = rm;
+	return x.times(.5);
+};
+P$1.inverseSine = P$1.asin = function() {
+	var halfPi, k, pr, rm, x = this, Ctor = x.constructor;
+	if (x.isZero()) return new Ctor(x);
+	k = x.abs().cmp(1);
+	pr = Ctor.precision;
+	rm = Ctor.rounding;
+	if (k !== -1) {
+		if (k === 0) {
+			halfPi = getPi(Ctor, pr + 4, rm).times(.5);
+			halfPi.s = x.s;
+			return halfPi;
+		}
+		return new Ctor(NaN);
+	}
+	Ctor.precision = pr + 6;
+	Ctor.rounding = 1;
+	x = x.div(new Ctor(1).minus(x.times(x)).sqrt().plus(1)).atan();
+	Ctor.precision = pr;
+	Ctor.rounding = rm;
+	return x.times(2);
+};
+P$1.inverseTangent = P$1.atan = function() {
+	var i, j, k, n, px, t, r, wpr, x2, x = this, Ctor = x.constructor, pr = Ctor.precision, rm = Ctor.rounding;
+	if (!x.isFinite()) {
+		if (!x.s) return new Ctor(NaN);
+		if (pr + 4 <= PI_PRECISION) {
+			r = getPi(Ctor, pr + 4, rm).times(.5);
+			r.s = x.s;
+			return r;
+		}
+	} else if (x.isZero()) return new Ctor(x);
+	else if (x.abs().eq(1) && pr + 4 <= PI_PRECISION) {
+		r = getPi(Ctor, pr + 4, rm).times(.25);
+		r.s = x.s;
+		return r;
+	}
+	Ctor.precision = wpr = pr + 10;
+	Ctor.rounding = 1;
+	k = Math.min(28, wpr / LOG_BASE + 2 | 0);
+	for (i = k; i; --i) x = x.div(x.times(x).plus(1).sqrt().plus(1));
+	external = false;
+	j = Math.ceil(wpr / LOG_BASE);
+	n = 1;
+	x2 = x.times(x);
+	r = new Ctor(x);
+	px = x;
+	for (; i !== -1;) {
+		px = px.times(x2);
+		t = r.minus(px.div(n += 2));
+		px = px.times(x2);
+		r = t.plus(px.div(n += 2));
+		if (r.d[j] !== void 0) for (i = j; r.d[i] === t.d[i] && i--;);
+	}
+	if (k) r = r.times(2 << k - 1);
+	external = true;
+	return finalise(r, Ctor.precision = pr, Ctor.rounding = rm, true);
+};
+P$1.isFinite = function() {
+	return !!this.d;
+};
+P$1.isInteger = P$1.isInt = function() {
+	return !!this.d && mathfloor(this.e / LOG_BASE) > this.d.length - 2;
+};
+P$1.isNaN = function() {
+	return !this.s;
+};
+P$1.isNegative = P$1.isNeg = function() {
+	return this.s < 0;
+};
+P$1.isPositive = P$1.isPos = function() {
+	return this.s > 0;
+};
+P$1.isZero = function() {
+	return !!this.d && this.d[0] === 0;
+};
+P$1.lessThan = P$1.lt = function(y) {
+	return this.cmp(y) < 0;
+};
+P$1.lessThanOrEqualTo = P$1.lte = function(y) {
+	return this.cmp(y) < 1;
+};
+P$1.logarithm = P$1.log = function(base) {
+	var isBase10, d, denominator, k, inf, num, sd, r, arg = this, Ctor = arg.constructor, pr = Ctor.precision, rm = Ctor.rounding, guard = 5;
+	if (base == null) {
+		base = new Ctor(10);
+		isBase10 = true;
+	} else {
+		base = new Ctor(base);
+		d = base.d;
+		if (base.s < 0 || !d || !d[0] || base.eq(1)) return new Ctor(NaN);
+		isBase10 = base.eq(10);
+	}
+	d = arg.d;
+	if (arg.s < 0 || !d || !d[0] || arg.eq(1)) return new Ctor(d && !d[0] ? -Infinity : arg.s != 1 ? NaN : d ? 0 : Infinity);
+	if (isBase10) if (d.length > 1) inf = true;
+	else {
+		for (k = d[0]; k % 10 === 0;) k /= 10;
+		inf = k !== 1;
+	}
+	external = false;
+	sd = pr + guard;
+	num = naturalLogarithm(arg, sd);
+	denominator = isBase10 ? getLn10(Ctor, sd + 10) : naturalLogarithm(base, sd);
+	r = divide$1(num, denominator, sd, 1);
+	if (checkRoundingDigits(r.d, k = pr, rm)) do {
+		sd += 10;
+		num = naturalLogarithm(arg, sd);
+		denominator = isBase10 ? getLn10(Ctor, sd + 10) : naturalLogarithm(base, sd);
+		r = divide$1(num, denominator, sd, 1);
+		if (!inf) {
+			if (+digitsToString(r.d).slice(k + 1, k + 15) + 1 == 0x5af3107a4000) r = finalise(r, pr + 1, 0);
+			break;
+		}
+	} while (checkRoundingDigits(r.d, k += 10, rm));
+	external = true;
+	return finalise(r, pr, rm);
+};
+P$1.minus = P$1.sub = function(y) {
+	var d, e, i, j, k, len, pr, rm, xd, xe, xLTy, yd, x = this, Ctor = x.constructor;
+	y = new Ctor(y);
+	if (!x.d || !y.d) {
+		if (!x.s || !y.s) y = new Ctor(NaN);
+		else if (x.d) y.s = -y.s;
+		else y = new Ctor(y.d || x.s !== y.s ? x : NaN);
+		return y;
+	}
+	if (x.s != y.s) {
+		y.s = -y.s;
+		return x.plus(y);
+	}
+	xd = x.d;
+	yd = y.d;
+	pr = Ctor.precision;
+	rm = Ctor.rounding;
+	if (!xd[0] || !yd[0]) {
+		if (yd[0]) y.s = -y.s;
+		else if (xd[0]) y = new Ctor(x);
+		else return new Ctor(rm === 3 ? -0 : 0);
+		return external ? finalise(y, pr, rm) : y;
+	}
+	e = mathfloor(y.e / LOG_BASE);
+	xe = mathfloor(x.e / LOG_BASE);
+	xd = xd.slice();
+	k = xe - e;
+	if (k) {
+		xLTy = k < 0;
+		if (xLTy) {
+			d = xd;
+			k = -k;
+			len = yd.length;
+		} else {
+			d = yd;
+			e = xe;
+			len = xd.length;
+		}
+		i = Math.max(Math.ceil(pr / LOG_BASE), len) + 2;
+		if (k > i) {
+			k = i;
+			d.length = 1;
+		}
+		d.reverse();
+		for (i = k; i--;) d.push(0);
+		d.reverse();
+	} else {
+		i = xd.length;
+		len = yd.length;
+		xLTy = i < len;
+		if (xLTy) len = i;
+		for (i = 0; i < len; i++) if (xd[i] != yd[i]) {
+			xLTy = xd[i] < yd[i];
+			break;
+		}
+		k = 0;
+	}
+	if (xLTy) {
+		d = xd;
+		xd = yd;
+		yd = d;
+		y.s = -y.s;
+	}
+	len = xd.length;
+	for (i = yd.length - len; i > 0; --i) xd[len++] = 0;
+	for (i = yd.length; i > k;) {
+		if (xd[--i] < yd[i]) {
+			for (j = i; j && xd[--j] === 0;) xd[j] = BASE - 1;
+			--xd[j];
+			xd[i] += BASE;
+		}
+		xd[i] -= yd[i];
+	}
+	for (; xd[--len] === 0;) xd.pop();
+	for (; xd[0] === 0; xd.shift()) --e;
+	if (!xd[0]) return new Ctor(rm === 3 ? -0 : 0);
+	y.d = xd;
+	y.e = getBase10Exponent(xd, e);
+	return external ? finalise(y, pr, rm) : y;
+};
+P$1.modulo = P$1.mod = function(y) {
+	var q, x = this, Ctor = x.constructor;
+	y = new Ctor(y);
+	if (!x.d || !y.s || y.d && !y.d[0]) return new Ctor(NaN);
+	if (!y.d || x.d && !x.d[0]) return finalise(new Ctor(x), Ctor.precision, Ctor.rounding);
+	external = false;
+	if (Ctor.modulo == 9) {
+		q = divide$1(x, y.abs(), 0, 3, 1);
+		q.s *= y.s;
+	} else q = divide$1(x, y, 0, Ctor.modulo, 1);
+	q = q.times(y);
+	external = true;
+	return x.minus(q);
+};
+P$1.naturalExponential = P$1.exp = function() {
+	return naturalExponential(this);
+};
+P$1.naturalLogarithm = P$1.ln = function() {
+	return naturalLogarithm(this);
+};
+P$1.negated = P$1.neg = function() {
+	var x = new this.constructor(this);
+	x.s = -x.s;
+	return finalise(x);
+};
+P$1.plus = P$1.add = function(y) {
+	var carry, d, e, i, k, len, pr, rm, xd, yd, x = this, Ctor = x.constructor;
+	y = new Ctor(y);
+	if (!x.d || !y.d) {
+		if (!x.s || !y.s) y = new Ctor(NaN);
+		else if (!x.d) y = new Ctor(y.d || x.s === y.s ? x : NaN);
+		return y;
+	}
+	if (x.s != y.s) {
+		y.s = -y.s;
+		return x.minus(y);
+	}
+	xd = x.d;
+	yd = y.d;
+	pr = Ctor.precision;
+	rm = Ctor.rounding;
+	if (!xd[0] || !yd[0]) {
+		if (!yd[0]) y = new Ctor(x);
+		return external ? finalise(y, pr, rm) : y;
+	}
+	k = mathfloor(x.e / LOG_BASE);
+	e = mathfloor(y.e / LOG_BASE);
+	xd = xd.slice();
+	i = k - e;
+	if (i) {
+		if (i < 0) {
+			d = xd;
+			i = -i;
+			len = yd.length;
+		} else {
+			d = yd;
+			e = k;
+			len = xd.length;
+		}
+		k = Math.ceil(pr / LOG_BASE);
+		len = k > len ? k + 1 : len + 1;
+		if (i > len) {
+			i = len;
+			d.length = 1;
+		}
+		d.reverse();
+		for (; i--;) d.push(0);
+		d.reverse();
+	}
+	len = xd.length;
+	i = yd.length;
+	if (len - i < 0) {
+		i = len;
+		d = yd;
+		yd = xd;
+		xd = d;
+	}
+	for (carry = 0; i;) {
+		carry = (xd[--i] = xd[i] + yd[i] + carry) / BASE | 0;
+		xd[i] %= BASE;
+	}
+	if (carry) {
+		xd.unshift(carry);
+		++e;
+	}
+	for (len = xd.length; xd[--len] == 0;) xd.pop();
+	y.d = xd;
+	y.e = getBase10Exponent(xd, e);
+	return external ? finalise(y, pr, rm) : y;
+};
+P$1.precision = P$1.sd = function(z) {
+	var k, x = this;
+	if (z !== void 0 && z !== !!z && z !== 1 && z !== 0) throw Error(invalidArgument + z);
+	if (x.d) {
+		k = getPrecision(x.d);
+		if (z && x.e + 1 > k) k = x.e + 1;
+	} else k = NaN;
+	return k;
+};
+P$1.round = function() {
+	var x = this, Ctor = x.constructor;
+	return finalise(new Ctor(x), x.e + 1, Ctor.rounding);
+};
+P$1.sine = P$1.sin = function() {
+	var pr, rm, x = this, Ctor = x.constructor;
+	if (!x.isFinite()) return new Ctor(NaN);
+	if (x.isZero()) return new Ctor(x);
+	pr = Ctor.precision;
+	rm = Ctor.rounding;
+	Ctor.precision = pr + Math.max(x.e, x.sd()) + LOG_BASE;
+	Ctor.rounding = 1;
+	x = sine(Ctor, toLessThanHalfPi(Ctor, x));
+	Ctor.precision = pr;
+	Ctor.rounding = rm;
+	return finalise(quadrant > 2 ? x.neg() : x, pr, rm, true);
+};
+P$1.squareRoot = P$1.sqrt = function() {
+	var m, n, sd, r, rep, t, x = this, d = x.d, e = x.e, s = x.s, Ctor = x.constructor;
+	if (s !== 1 || !d || !d[0]) return new Ctor(!s || s < 0 && (!d || d[0]) ? NaN : d ? x : Infinity);
+	external = false;
+	s = Math.sqrt(+x);
+	if (s == 0 || s == Infinity) {
+		n = digitsToString(d);
+		if ((n.length + e) % 2 == 0) n += "0";
+		s = Math.sqrt(n);
+		e = mathfloor((e + 1) / 2) - (e < 0 || e % 2);
+		if (s == Infinity) n = "5e" + e;
+		else {
+			n = s.toExponential();
+			n = n.slice(0, n.indexOf("e") + 1) + e;
+		}
+		r = new Ctor(n);
+	} else r = new Ctor(s.toString());
+	sd = (e = Ctor.precision) + 3;
+	for (;;) {
+		t = r;
+		r = t.plus(divide$1(x, t, sd + 2, 1)).times(.5);
+		if (digitsToString(t.d).slice(0, sd) === (n = digitsToString(r.d)).slice(0, sd)) {
+			n = n.slice(sd - 3, sd + 1);
+			if (n == "9999" || !rep && n == "4999") {
+				if (!rep) {
+					finalise(t, e + 1, 0);
+					if (t.times(t).eq(x)) {
+						r = t;
+						break;
+					}
+				}
+				sd += 4;
+				rep = 1;
+			} else {
+				if (!+n || !+n.slice(1) && n.charAt(0) == "5") {
+					finalise(r, e + 1, 1);
+					m = !r.times(r).eq(x);
+				}
+				break;
+			}
+		}
+	}
+	external = true;
+	return finalise(r, e, Ctor.rounding, m);
+};
+P$1.tangent = P$1.tan = function() {
+	var pr, rm, x = this, Ctor = x.constructor;
+	if (!x.isFinite()) return new Ctor(NaN);
+	if (x.isZero()) return new Ctor(x);
+	pr = Ctor.precision;
+	rm = Ctor.rounding;
+	Ctor.precision = pr + 10;
+	Ctor.rounding = 1;
+	x = x.sin();
+	x.s = 1;
+	x = divide$1(x, new Ctor(1).minus(x.times(x)).sqrt(), pr + 10, 0);
+	Ctor.precision = pr;
+	Ctor.rounding = rm;
+	return finalise(quadrant == 2 || quadrant == 4 ? x.neg() : x, pr, rm, true);
+};
+P$1.times = P$1.mul = function(y) {
+	var carry, e, i, k, r, rL, t, xdL, ydL, x = this, Ctor = x.constructor, xd = x.d, yd = (y = new Ctor(y)).d;
+	y.s *= x.s;
+	if (!xd || !xd[0] || !yd || !yd[0]) return new Ctor(!y.s || xd && !xd[0] && !yd || yd && !yd[0] && !xd ? NaN : !xd || !yd ? y.s / 0 : y.s * 0);
+	e = mathfloor(x.e / LOG_BASE) + mathfloor(y.e / LOG_BASE);
+	xdL = xd.length;
+	ydL = yd.length;
+	if (xdL < ydL) {
+		r = xd;
+		xd = yd;
+		yd = r;
+		rL = xdL;
+		xdL = ydL;
+		ydL = rL;
+	}
+	r = [];
+	rL = xdL + ydL;
+	for (i = rL; i--;) r.push(0);
+	for (i = ydL; --i >= 0;) {
+		carry = 0;
+		for (k = xdL + i; k > i;) {
+			t = r[k] + yd[i] * xd[k - i - 1] + carry;
+			r[k--] = t % BASE | 0;
+			carry = t / BASE | 0;
+		}
+		r[k] = (r[k] + carry) % BASE | 0;
+	}
+	for (; !r[--rL];) r.pop();
+	if (carry) ++e;
+	else r.shift();
+	y.d = r;
+	y.e = getBase10Exponent(r, e);
+	return external ? finalise(y, Ctor.precision, Ctor.rounding) : y;
+};
+P$1.toBinary = function(sd, rm) {
+	return toStringBinary(this, 2, sd, rm);
+};
+P$1.toDecimalPlaces = P$1.toDP = function(dp, rm) {
+	var x = this, Ctor = x.constructor;
+	x = new Ctor(x);
+	if (dp === void 0) return x;
+	checkInt32(dp, 0, MAX_DIGITS);
+	if (rm === void 0) rm = Ctor.rounding;
+	else checkInt32(rm, 0, 8);
+	return finalise(x, dp + x.e + 1, rm);
+};
+P$1.toExponential = function(dp, rm) {
+	var str, x = this, Ctor = x.constructor;
+	if (dp === void 0) str = finiteToString(x, true);
+	else {
+		checkInt32(dp, 0, MAX_DIGITS);
+		if (rm === void 0) rm = Ctor.rounding;
+		else checkInt32(rm, 0, 8);
+		x = finalise(new Ctor(x), dp + 1, rm);
+		str = finiteToString(x, true, dp + 1);
+	}
+	return x.isNeg() && !x.isZero() ? "-" + str : str;
+};
+P$1.toFixed = function(dp, rm) {
+	var str, y, x = this, Ctor = x.constructor;
+	if (dp === void 0) str = finiteToString(x);
+	else {
+		checkInt32(dp, 0, MAX_DIGITS);
+		if (rm === void 0) rm = Ctor.rounding;
+		else checkInt32(rm, 0, 8);
+		y = finalise(new Ctor(x), dp + x.e + 1, rm);
+		str = finiteToString(y, false, dp + y.e + 1);
+	}
+	return x.isNeg() && !x.isZero() ? "-" + str : str;
+};
+P$1.toFraction = function(maxD) {
+	var d, d0, d1, d2, e, k, n, n0, n1, pr, q, r, x = this, xd = x.d, Ctor = x.constructor;
+	if (!xd) return new Ctor(x);
+	n1 = d0 = new Ctor(1);
+	d1 = n0 = new Ctor(0);
+	d = new Ctor(d1);
+	e = d.e = getPrecision(xd) - x.e - 1;
+	k = e % LOG_BASE;
+	d.d[0] = mathpow(10, k < 0 ? LOG_BASE + k : k);
+	if (maxD == null) maxD = e > 0 ? d : n1;
+	else {
+		n = new Ctor(maxD);
+		if (!n.isInt() || n.lt(n1)) throw Error(invalidArgument + n);
+		maxD = n.gt(d) ? e > 0 ? d : n1 : n;
+	}
+	external = false;
+	n = new Ctor(digitsToString(xd));
+	pr = Ctor.precision;
+	Ctor.precision = e = xd.length * LOG_BASE * 2;
+	for (;;) {
+		q = divide$1(n, d, 0, 1, 1);
+		d2 = d0.plus(q.times(d1));
+		if (d2.cmp(maxD) == 1) break;
+		d0 = d1;
+		d1 = d2;
+		d2 = n1;
+		n1 = n0.plus(q.times(d2));
+		n0 = d2;
+		d2 = d;
+		d = n.minus(q.times(d2));
+		n = d2;
+	}
+	d2 = divide$1(maxD.minus(d0), d1, 0, 1, 1);
+	n0 = n0.plus(d2.times(n1));
+	d0 = d0.plus(d2.times(d1));
+	n0.s = n1.s = x.s;
+	r = divide$1(n1, d1, e, 1).minus(x).abs().cmp(divide$1(n0, d0, e, 1).minus(x).abs()) < 1 ? [n1, d1] : [n0, d0];
+	Ctor.precision = pr;
+	external = true;
+	return r;
+};
+P$1.toHexadecimal = P$1.toHex = function(sd, rm) {
+	return toStringBinary(this, 16, sd, rm);
+};
+P$1.toNearest = function(y, rm) {
+	var x = this, Ctor = x.constructor;
+	x = new Ctor(x);
+	if (y == null) {
+		if (!x.d) return x;
+		y = new Ctor(1);
+		rm = Ctor.rounding;
+	} else {
+		y = new Ctor(y);
+		if (rm === void 0) rm = Ctor.rounding;
+		else checkInt32(rm, 0, 8);
+		if (!x.d) return y.s ? x : y;
+		if (!y.d) {
+			if (y.s) y.s = x.s;
+			return y;
+		}
+	}
+	if (y.d[0]) {
+		external = false;
+		x = divide$1(x, y, 0, rm, 1).times(y);
+		external = true;
+		finalise(x);
+	} else {
+		y.s = x.s;
+		x = y;
+	}
+	return x;
+};
+P$1.toNumber = function() {
+	return +this;
+};
+P$1.toOctal = function(sd, rm) {
+	return toStringBinary(this, 8, sd, rm);
+};
+P$1.toPower = P$1.pow = function(y) {
+	var e, k, pr, r, rm, s, x = this, Ctor = x.constructor, yn = +(y = new Ctor(y));
+	if (!x.d || !y.d || !x.d[0] || !y.d[0]) return new Ctor(mathpow(+x, yn));
+	x = new Ctor(x);
+	if (x.eq(1)) return x;
+	pr = Ctor.precision;
+	rm = Ctor.rounding;
+	if (y.eq(1)) return finalise(x, pr, rm);
+	e = mathfloor(y.e / LOG_BASE);
+	if (e >= y.d.length - 1 && (k = yn < 0 ? -yn : yn) <= MAX_SAFE_INTEGER) {
+		r = intPow(Ctor, x, k, pr);
+		return y.s < 0 ? new Ctor(1).div(r) : finalise(r, pr, rm);
+	}
+	s = x.s;
+	if (s < 0) {
+		if (e < y.d.length - 1) return new Ctor(NaN);
+		if ((y.d[e] & 1) == 0) s = 1;
+		if (x.e == 0 && x.d[0] == 1 && x.d.length == 1) {
+			x.s = s;
+			return x;
+		}
+	}
+	k = mathpow(+x, yn);
+	e = k == 0 || !isFinite(k) ? mathfloor(yn * (Math.log("0." + digitsToString(x.d)) / Math.LN10 + x.e + 1)) : new Ctor(k + "").e;
+	if (e > Ctor.maxE + 1 || e < Ctor.minE - 1) return new Ctor(e > 0 ? s / 0 : 0);
+	external = false;
+	Ctor.rounding = x.s = 1;
+	k = Math.min(12, (e + "").length);
+	r = naturalExponential(y.times(naturalLogarithm(x, pr + k)), pr);
+	if (r.d) {
+		r = finalise(r, pr + 5, 1);
+		if (checkRoundingDigits(r.d, pr, rm)) {
+			e = pr + 10;
+			r = finalise(naturalExponential(y.times(naturalLogarithm(x, e + k)), e), e + 5, 1);
+			if (+digitsToString(r.d).slice(pr + 1, pr + 15) + 1 == 0x5af3107a4000) r = finalise(r, pr + 1, 0);
+		}
+	}
+	r.s = s;
+	external = true;
+	Ctor.rounding = rm;
+	return finalise(r, pr, rm);
+};
+P$1.toPrecision = function(sd, rm) {
+	var str, x = this, Ctor = x.constructor;
+	if (sd === void 0) str = finiteToString(x, x.e <= Ctor.toExpNeg || x.e >= Ctor.toExpPos);
+	else {
+		checkInt32(sd, 1, MAX_DIGITS);
+		if (rm === void 0) rm = Ctor.rounding;
+		else checkInt32(rm, 0, 8);
+		x = finalise(new Ctor(x), sd, rm);
+		str = finiteToString(x, sd <= x.e || x.e <= Ctor.toExpNeg, sd);
+	}
+	return x.isNeg() && !x.isZero() ? "-" + str : str;
+};
+P$1.toSignificantDigits = P$1.toSD = function(sd, rm) {
+	var x = this, Ctor = x.constructor;
+	if (sd === void 0) {
+		sd = Ctor.precision;
+		rm = Ctor.rounding;
+	} else {
+		checkInt32(sd, 1, MAX_DIGITS);
+		if (rm === void 0) rm = Ctor.rounding;
+		else checkInt32(rm, 0, 8);
+	}
+	return finalise(new Ctor(x), sd, rm);
+};
+P$1.toString = function() {
+	var x = this, Ctor = x.constructor, str = finiteToString(x, x.e <= Ctor.toExpNeg || x.e >= Ctor.toExpPos);
+	return x.isNeg() && !x.isZero() ? "-" + str : str;
+};
+P$1.truncated = P$1.trunc = function() {
+	return finalise(new this.constructor(this), this.e + 1, 1);
+};
+P$1.valueOf = P$1.toJSON = function() {
+	var x = this, Ctor = x.constructor, str = finiteToString(x, x.e <= Ctor.toExpNeg || x.e >= Ctor.toExpPos);
+	return x.isNeg() ? "-" + str : str;
+};
+function digitsToString(d) {
+	var i, k, ws, indexOfLastWord = d.length - 1, str = "", w = d[0];
+	if (indexOfLastWord > 0) {
+		str += w;
+		for (i = 1; i < indexOfLastWord; i++) {
+			ws = d[i] + "";
+			k = LOG_BASE - ws.length;
+			if (k) str += getZeroString(k);
+			str += ws;
+		}
+		w = d[i];
+		ws = w + "";
+		k = LOG_BASE - ws.length;
+		if (k) str += getZeroString(k);
+	} else if (w === 0) return "0";
+	for (; w % 10 === 0;) w /= 10;
+	return str + w;
+}
+function checkInt32(i, min, max) {
+	if (i !== ~~i || i < min || i > max) throw Error(invalidArgument + i);
+}
+function checkRoundingDigits(d, i, rm, repeating) {
+	var di, k, r, rd;
+	for (k = d[0]; k >= 10; k /= 10) --i;
+	if (--i < 0) {
+		i += LOG_BASE;
+		di = 0;
+	} else {
+		di = Math.ceil((i + 1) / LOG_BASE);
+		i %= LOG_BASE;
+	}
+	k = mathpow(10, LOG_BASE - i);
+	rd = d[di] % k | 0;
+	if (repeating == null) if (i < 3) {
+		if (i == 0) rd = rd / 100 | 0;
+		else if (i == 1) rd = rd / 10 | 0;
+		r = rm < 4 && rd == 99999 || rm > 3 && rd == 49999 || rd == 5e4 || rd == 0;
+	} else r = (rm < 4 && rd + 1 == k || rm > 3 && rd + 1 == k / 2) && (d[di + 1] / k / 100 | 0) == mathpow(10, i - 2) - 1 || (rd == k / 2 || rd == 0) && (d[di + 1] / k / 100 | 0) == 0;
+	else if (i < 4) {
+		if (i == 0) rd = rd / 1e3 | 0;
+		else if (i == 1) rd = rd / 100 | 0;
+		else if (i == 2) rd = rd / 10 | 0;
+		r = (repeating || rm < 4) && rd == 9999 || !repeating && rm > 3 && rd == 4999;
+	} else r = ((repeating || rm < 4) && rd + 1 == k || !repeating && rm > 3 && rd + 1 == k / 2) && (d[di + 1] / k / 1e3 | 0) == mathpow(10, i - 3) - 1;
+	return r;
+}
+function convertBase(str, baseIn, baseOut) {
+	var j, arr = [0], arrL, i = 0, strL = str.length;
+	for (; i < strL;) {
+		for (arrL = arr.length; arrL--;) arr[arrL] *= baseIn;
+		arr[0] += NUMERALS.indexOf(str.charAt(i++));
+		for (j = 0; j < arr.length; j++) if (arr[j] > baseOut - 1) {
+			if (arr[j + 1] === void 0) arr[j + 1] = 0;
+			arr[j + 1] += arr[j] / baseOut | 0;
+			arr[j] %= baseOut;
+		}
+	}
+	return arr.reverse();
+}
+function cosine(Ctor, x) {
+	var k, len, y;
+	if (x.isZero()) return x;
+	len = x.d.length;
+	if (len < 32) {
+		k = Math.ceil(len / 3);
+		y = (1 / tinyPow(4, k)).toString();
+	} else {
+		k = 16;
+		y = "2.3283064365386962890625e-10";
+	}
+	Ctor.precision += k;
+	x = taylorSeries(Ctor, 1, x.times(y), new Ctor(1));
+	for (var i = k; i--;) {
+		var cos2x = x.times(x);
+		x = cos2x.times(cos2x).minus(cos2x).times(8).plus(1);
+	}
+	Ctor.precision -= k;
+	return x;
+}
+var divide$1 = (function() {
+	function multiplyInteger(x, k, base) {
+		var temp, carry = 0, i = x.length;
+		for (x = x.slice(); i--;) {
+			temp = x[i] * k + carry;
+			x[i] = temp % base | 0;
+			carry = temp / base | 0;
+		}
+		if (carry) x.unshift(carry);
+		return x;
+	}
+	function compare(a, b, aL, bL) {
+		var i, r;
+		if (aL != bL) r = aL > bL ? 1 : -1;
+		else for (i = r = 0; i < aL; i++) if (a[i] != b[i]) {
+			r = a[i] > b[i] ? 1 : -1;
+			break;
+		}
+		return r;
+	}
+	function subtract(a, b, aL, base) {
+		var i = 0;
+		for (; aL--;) {
+			a[aL] -= i;
+			i = a[aL] < b[aL] ? 1 : 0;
+			a[aL] = i * base + a[aL] - b[aL];
+		}
+		for (; !a[0] && a.length > 1;) a.shift();
+	}
+	return function(x, y, pr, rm, dp, base) {
+		var cmp, e, i, k, logBase, more, prod, prodL, q, qd, rem, remL, rem0, sd, t, xi, xL, yd0, yL, yz, Ctor = x.constructor, sign = x.s == y.s ? 1 : -1, xd = x.d, yd = y.d;
+		if (!xd || !xd[0] || !yd || !yd[0]) return new Ctor(!x.s || !y.s || (xd ? yd && xd[0] == yd[0] : !yd) ? NaN : xd && xd[0] == 0 || !yd ? sign * 0 : sign / 0);
+		if (base) {
+			logBase = 1;
+			e = x.e - y.e;
+		} else {
+			base = BASE;
+			logBase = LOG_BASE;
+			e = mathfloor(x.e / logBase) - mathfloor(y.e / logBase);
+		}
+		yL = yd.length;
+		xL = xd.length;
+		q = new Ctor(sign);
+		qd = q.d = [];
+		for (i = 0; yd[i] == (xd[i] || 0); i++);
+		if (yd[i] > (xd[i] || 0)) e--;
+		if (pr == null) {
+			sd = pr = Ctor.precision;
+			rm = Ctor.rounding;
+		} else if (dp) sd = pr + (x.e - y.e) + 1;
+		else sd = pr;
+		if (sd < 0) {
+			qd.push(1);
+			more = true;
+		} else {
+			sd = sd / logBase + 2 | 0;
+			i = 0;
+			if (yL == 1) {
+				k = 0;
+				yd = yd[0];
+				sd++;
+				for (; (i < xL || k) && sd--; i++) {
+					t = k * base + (xd[i] || 0);
+					qd[i] = t / yd | 0;
+					k = t % yd | 0;
+				}
+				more = k || i < xL;
+			} else {
+				k = base / (yd[0] + 1) | 0;
+				if (k > 1) {
+					yd = multiplyInteger(yd, k, base);
+					xd = multiplyInteger(xd, k, base);
+					yL = yd.length;
+					xL = xd.length;
+				}
+				xi = yL;
+				rem = xd.slice(0, yL);
+				remL = rem.length;
+				for (; remL < yL;) rem[remL++] = 0;
+				yz = yd.slice();
+				yz.unshift(0);
+				yd0 = yd[0];
+				if (yd[1] >= base / 2) ++yd0;
+				do {
+					k = 0;
+					cmp = compare(yd, rem, yL, remL);
+					if (cmp < 0) {
+						rem0 = rem[0];
+						if (yL != remL) rem0 = rem0 * base + (rem[1] || 0);
+						k = rem0 / yd0 | 0;
+						if (k > 1) {
+							if (k >= base) k = base - 1;
+							prod = multiplyInteger(yd, k, base);
+							prodL = prod.length;
+							remL = rem.length;
+							cmp = compare(prod, rem, prodL, remL);
+							if (cmp == 1) {
+								k--;
+								subtract(prod, yL < prodL ? yz : yd, prodL, base);
+							}
+						} else {
+							if (k == 0) cmp = k = 1;
+							prod = yd.slice();
+						}
+						prodL = prod.length;
+						if (prodL < remL) prod.unshift(0);
+						subtract(rem, prod, remL, base);
+						if (cmp == -1) {
+							remL = rem.length;
+							cmp = compare(yd, rem, yL, remL);
+							if (cmp < 1) {
+								k++;
+								subtract(rem, yL < remL ? yz : yd, remL, base);
+							}
+						}
+						remL = rem.length;
+					} else if (cmp === 0) {
+						k++;
+						rem = [0];
+					}
+					qd[i++] = k;
+					if (cmp && rem[0]) rem[remL++] = xd[xi] || 0;
+					else {
+						rem = [xd[xi]];
+						remL = 1;
+					}
+				} while ((xi++ < xL || rem[0] !== void 0) && sd--);
+				more = rem[0] !== void 0;
+			}
+			if (!qd[0]) qd.shift();
+		}
+		if (logBase == 1) {
+			q.e = e;
+			inexact = more;
+		} else {
+			for (i = 1, k = qd[0]; k >= 10; k /= 10) i++;
+			q.e = i + e * logBase - 1;
+			finalise(q, dp ? pr + q.e + 1 : pr, rm, more);
+		}
+		return q;
+	};
+})();
+function finalise(x, sd, rm, isTruncated) {
+	var digits, i, j, k, rd, roundUp, w, xd, xdi, Ctor = x.constructor;
+	out: if (sd != null) {
+		xd = x.d;
+		if (!xd) return x;
+		for (digits = 1, k = xd[0]; k >= 10; k /= 10) digits++;
+		i = sd - digits;
+		if (i < 0) {
+			i += LOG_BASE;
+			j = sd;
+			w = xd[xdi = 0];
+			rd = w / mathpow(10, digits - j - 1) % 10 | 0;
+		} else {
+			xdi = Math.ceil((i + 1) / LOG_BASE);
+			k = xd.length;
+			if (xdi >= k) if (isTruncated) {
+				for (; k++ <= xdi;) xd.push(0);
+				w = rd = 0;
+				digits = 1;
+				i %= LOG_BASE;
+				j = i - LOG_BASE + 1;
+			} else break out;
+			else {
+				w = k = xd[xdi];
+				for (digits = 1; k >= 10; k /= 10) digits++;
+				i %= LOG_BASE;
+				j = i - LOG_BASE + digits;
+				rd = j < 0 ? 0 : w / mathpow(10, digits - j - 1) % 10 | 0;
+			}
+		}
+		isTruncated = isTruncated || sd < 0 || xd[xdi + 1] !== void 0 || (j < 0 ? w : w % mathpow(10, digits - j - 1));
+		roundUp = rm < 4 ? (rd || isTruncated) && (rm == 0 || rm == (x.s < 0 ? 3 : 2)) : rd > 5 || rd == 5 && (rm == 4 || isTruncated || rm == 6 && (i > 0 ? j > 0 ? w / mathpow(10, digits - j) : 0 : xd[xdi - 1]) % 10 & 1 || rm == (x.s < 0 ? 8 : 7));
+		if (sd < 1 || !xd[0]) {
+			xd.length = 0;
+			if (roundUp) {
+				sd -= x.e + 1;
+				xd[0] = mathpow(10, (LOG_BASE - sd % LOG_BASE) % LOG_BASE);
+				x.e = -sd || 0;
+			} else xd[0] = x.e = 0;
+			return x;
+		}
+		if (i == 0) {
+			xd.length = xdi;
+			k = 1;
+			xdi--;
+		} else {
+			xd.length = xdi + 1;
+			k = mathpow(10, LOG_BASE - i);
+			xd[xdi] = j > 0 ? (w / mathpow(10, digits - j) % mathpow(10, j) | 0) * k : 0;
+		}
+		if (roundUp) for (;;) if (xdi == 0) {
+			for (i = 1, j = xd[0]; j >= 10; j /= 10) i++;
+			j = xd[0] += k;
+			for (k = 1; j >= 10; j /= 10) k++;
+			if (i != k) {
+				x.e++;
+				if (xd[0] == BASE) xd[0] = 1;
+			}
+			break;
+		} else {
+			xd[xdi] += k;
+			if (xd[xdi] != BASE) break;
+			xd[xdi--] = 0;
+			k = 1;
+		}
+		for (i = xd.length; xd[--i] === 0;) xd.pop();
+	}
+	if (external) {
+		if (x.e > Ctor.maxE) {
+			x.d = null;
+			x.e = NaN;
+		} else if (x.e < Ctor.minE) {
+			x.e = 0;
+			x.d = [0];
+		}
+	}
+	return x;
+}
+function finiteToString(x, isExp, sd) {
+	if (!x.isFinite()) return nonFiniteToString(x);
+	var k, e = x.e, str = digitsToString(x.d), len = str.length;
+	if (isExp) {
+		if (sd && (k = sd - len) > 0) str = str.charAt(0) + "." + str.slice(1) + getZeroString(k);
+		else if (len > 1) str = str.charAt(0) + "." + str.slice(1);
+		str = str + (x.e < 0 ? "e" : "e+") + x.e;
+	} else if (e < 0) {
+		str = "0." + getZeroString(-e - 1) + str;
+		if (sd && (k = sd - len) > 0) str += getZeroString(k);
+	} else if (e >= len) {
+		str += getZeroString(e + 1 - len);
+		if (sd && (k = sd - e - 1) > 0) str = str + "." + getZeroString(k);
+	} else {
+		if ((k = e + 1) < len) str = str.slice(0, k) + "." + str.slice(k);
+		if (sd && (k = sd - len) > 0) {
+			if (e + 1 === len) str += ".";
+			str += getZeroString(k);
+		}
+	}
+	return str;
+}
+function getBase10Exponent(digits, e) {
+	var w = digits[0];
+	for (e *= LOG_BASE; w >= 10; w /= 10) e++;
+	return e;
+}
+function getLn10(Ctor, sd, pr) {
+	if (sd > LN10_PRECISION) {
+		external = true;
+		if (pr) Ctor.precision = pr;
+		throw Error(precisionLimitExceeded);
+	}
+	return finalise(new Ctor(LN10$1), sd, 1, true);
+}
+function getPi(Ctor, sd, rm) {
+	if (sd > PI_PRECISION) throw Error(precisionLimitExceeded);
+	return finalise(new Ctor(PI), sd, rm, true);
+}
+function getPrecision(digits) {
+	var w = digits.length - 1, len = w * LOG_BASE + 1;
+	w = digits[w];
+	if (w) {
+		for (; w % 10 == 0; w /= 10) len--;
+		for (w = digits[0]; w >= 10; w /= 10) len++;
+	}
+	return len;
+}
+function getZeroString(k) {
+	var zs = "";
+	for (; k--;) zs += "0";
+	return zs;
+}
+function intPow(Ctor, x, n, pr) {
+	var isTruncated, r = new Ctor(1), k = Math.ceil(pr / LOG_BASE + 4);
+	external = false;
+	for (;;) {
+		if (n % 2) {
+			r = r.times(x);
+			if (truncate(r.d, k)) isTruncated = true;
+		}
+		n = mathfloor(n / 2);
+		if (n === 0) {
+			n = r.d.length - 1;
+			if (isTruncated && r.d[n] === 0) ++r.d[n];
+			break;
+		}
+		x = x.times(x);
+		truncate(x.d, k);
+	}
+	external = true;
+	return r;
+}
+function isOdd(n) {
+	return n.d[n.d.length - 1] & 1;
+}
+function maxOrMin(Ctor, args, n) {
+	var k, y, x = new Ctor(args[0]), i = 0;
+	for (; ++i < args.length;) {
+		y = new Ctor(args[i]);
+		if (!y.s) {
+			x = y;
+			break;
+		}
+		k = x.cmp(y);
+		if (k === n || k === 0 && x.s === n) x = y;
+	}
+	return x;
+}
+function naturalExponential(x, sd) {
+	var denominator, guard, j, pow, sum, t, wpr, rep = 0, i = 0, k = 0, Ctor = x.constructor, rm = Ctor.rounding, pr = Ctor.precision;
+	if (!x.d || !x.d[0] || x.e > 17) return new Ctor(x.d ? !x.d[0] ? 1 : x.s < 0 ? 0 : Infinity : x.s ? x.s < 0 ? 0 : x : NaN);
+	if (sd == null) {
+		external = false;
+		wpr = pr;
+	} else wpr = sd;
+	t = new Ctor(.03125);
+	while (x.e > -2) {
+		x = x.times(t);
+		k += 5;
+	}
+	guard = Math.log(mathpow(2, k)) / Math.LN10 * 2 + 5 | 0;
+	wpr += guard;
+	denominator = pow = sum = new Ctor(1);
+	Ctor.precision = wpr;
+	for (;;) {
+		pow = finalise(pow.times(x), wpr, 1);
+		denominator = denominator.times(++i);
+		t = sum.plus(divide$1(pow, denominator, wpr, 1));
+		if (digitsToString(t.d).slice(0, wpr) === digitsToString(sum.d).slice(0, wpr)) {
+			j = k;
+			while (j--) sum = finalise(sum.times(sum), wpr, 1);
+			if (sd == null) if (rep < 3 && checkRoundingDigits(sum.d, wpr - guard, rm, rep)) {
+				Ctor.precision = wpr += 10;
+				denominator = pow = t = new Ctor(1);
+				i = 0;
+				rep++;
+			} else return finalise(sum, Ctor.precision = pr, rm, external = true);
+			else {
+				Ctor.precision = pr;
+				return sum;
+			}
+		}
+		sum = t;
+	}
+}
+function naturalLogarithm(y, sd) {
+	var c, c0, denominator, e, numerator, rep, sum, t, wpr, x1, x2, n = 1, guard = 10, x = y, xd = x.d, Ctor = x.constructor, rm = Ctor.rounding, pr = Ctor.precision;
+	if (x.s < 0 || !xd || !xd[0] || !x.e && xd[0] == 1 && xd.length == 1) return new Ctor(xd && !xd[0] ? -Infinity : x.s != 1 ? NaN : xd ? 0 : x);
+	if (sd == null) {
+		external = false;
+		wpr = pr;
+	} else wpr = sd;
+	Ctor.precision = wpr += guard;
+	c = digitsToString(xd);
+	c0 = c.charAt(0);
+	if (Math.abs(e = x.e) < 0x5543df729c000) {
+		while (c0 < 7 && c0 != 1 || c0 == 1 && c.charAt(1) > 3) {
+			x = x.times(y);
+			c = digitsToString(x.d);
+			c0 = c.charAt(0);
+			n++;
+		}
+		e = x.e;
+		if (c0 > 1) {
+			x = new Ctor("0." + c);
+			e++;
+		} else x = new Ctor(c0 + "." + c.slice(1));
+	} else {
+		t = getLn10(Ctor, wpr + 2, pr).times(e + "");
+		x = naturalLogarithm(new Ctor(c0 + "." + c.slice(1)), wpr - guard).plus(t);
+		Ctor.precision = pr;
+		return sd == null ? finalise(x, pr, rm, external = true) : x;
+	}
+	x1 = x;
+	sum = numerator = x = divide$1(x.minus(1), x.plus(1), wpr, 1);
+	x2 = finalise(x.times(x), wpr, 1);
+	denominator = 3;
+	for (;;) {
+		numerator = finalise(numerator.times(x2), wpr, 1);
+		t = sum.plus(divide$1(numerator, new Ctor(denominator), wpr, 1));
+		if (digitsToString(t.d).slice(0, wpr) === digitsToString(sum.d).slice(0, wpr)) {
+			sum = sum.times(2);
+			if (e !== 0) sum = sum.plus(getLn10(Ctor, wpr + 2, pr).times(e + ""));
+			sum = divide$1(sum, new Ctor(n), wpr, 1);
+			if (sd == null) if (checkRoundingDigits(sum.d, wpr - guard, rm, rep)) {
+				Ctor.precision = wpr += guard;
+				t = numerator = x = divide$1(x1.minus(1), x1.plus(1), wpr, 1);
+				x2 = finalise(x.times(x), wpr, 1);
+				denominator = rep = 1;
+			} else return finalise(sum, Ctor.precision = pr, rm, external = true);
+			else {
+				Ctor.precision = pr;
+				return sum;
+			}
+		}
+		sum = t;
+		denominator += 2;
+	}
+}
+function nonFiniteToString(x) {
+	return String(x.s * x.s / 0);
+}
+function parseDecimal(x, str) {
+	var e, i, len;
+	if ((e = str.indexOf(".")) > -1) str = str.replace(".", "");
+	if ((i = str.search(/e/i)) > 0) {
+		if (e < 0) e = i;
+		e += +str.slice(i + 1);
+		str = str.substring(0, i);
+	} else if (e < 0) e = str.length;
+	for (i = 0; str.charCodeAt(i) === 48; i++);
+	for (len = str.length; str.charCodeAt(len - 1) === 48; --len);
+	str = str.slice(i, len);
+	if (str) {
+		len -= i;
+		x.e = e = e - i - 1;
+		x.d = [];
+		i = (e + 1) % LOG_BASE;
+		if (e < 0) i += LOG_BASE;
+		if (i < len) {
+			if (i) x.d.push(+str.slice(0, i));
+			for (len -= LOG_BASE; i < len;) x.d.push(+str.slice(i, i += LOG_BASE));
+			str = str.slice(i);
+			i = LOG_BASE - str.length;
+		} else i -= len;
+		for (; i--;) str += "0";
+		x.d.push(+str);
+		if (external) {
+			if (x.e > x.constructor.maxE) {
+				x.d = null;
+				x.e = NaN;
+			} else if (x.e < x.constructor.minE) {
+				x.e = 0;
+				x.d = [0];
+			}
+		}
+	} else {
+		x.e = 0;
+		x.d = [0];
+	}
+	return x;
+}
+function parseOther(x, str) {
+	var base, Ctor, divisor, i, isFloat, len, p, xd, xe;
+	if (str.indexOf("_") > -1) {
+		str = str.replace(/(\d)_(?=\d)/g, "$1");
+		if (isDecimal.test(str)) return parseDecimal(x, str);
+	} else if (str === "Infinity" || str === "NaN") {
+		if (!+str) x.s = NaN;
+		x.e = NaN;
+		x.d = null;
+		return x;
+	}
+	if (isHex.test(str)) {
+		base = 16;
+		str = str.toLowerCase();
+	} else if (isBinary.test(str)) base = 2;
+	else if (isOctal.test(str)) base = 8;
+	else throw Error(invalidArgument + str);
+	i = str.search(/p/i);
+	if (i > 0) {
+		p = +str.slice(i + 1);
+		str = str.substring(2, i);
+	} else str = str.slice(2);
+	i = str.indexOf(".");
+	isFloat = i >= 0;
+	Ctor = x.constructor;
+	if (isFloat) {
+		str = str.replace(".", "");
+		len = str.length;
+		i = len - i;
+		divisor = intPow(Ctor, new Ctor(base), i, i * 2);
+	}
+	xd = convertBase(str, base, BASE);
+	xe = xd.length - 1;
+	for (i = xe; xd[i] === 0; --i) xd.pop();
+	if (i < 0) return new Ctor(x.s * 0);
+	x.e = getBase10Exponent(xd, xe);
+	x.d = xd;
+	external = false;
+	if (isFloat) x = divide$1(x, divisor, len * 4);
+	if (p) x = x.times(Math.abs(p) < 54 ? mathpow(2, p) : Decimal.pow(2, p));
+	external = true;
+	return x;
+}
+function sine(Ctor, x) {
+	var k, len = x.d.length;
+	if (len < 3) return x.isZero() ? x : taylorSeries(Ctor, 2, x, x);
+	k = 1.4 * Math.sqrt(len);
+	k = k > 16 ? 16 : k | 0;
+	x = x.times(1 / tinyPow(5, k));
+	x = taylorSeries(Ctor, 2, x, x);
+	var sin2_x, d5 = new Ctor(5), d16 = new Ctor(16), d20 = new Ctor(20);
+	for (; k--;) {
+		sin2_x = x.times(x);
+		x = x.times(d5.plus(sin2_x.times(d16.times(sin2_x).minus(d20))));
+	}
+	return x;
+}
+function taylorSeries(Ctor, n, x, y, isHyperbolic) {
+	var j, t, u, x2, i = 1, pr = Ctor.precision, k = Math.ceil(pr / LOG_BASE);
+	external = false;
+	x2 = x.times(x);
+	u = new Ctor(y);
+	for (;;) {
+		t = divide$1(u.times(x2), new Ctor(n++ * n++), pr, 1);
+		u = isHyperbolic ? y.plus(t) : y.minus(t);
+		y = divide$1(t.times(x2), new Ctor(n++ * n++), pr, 1);
+		t = u.plus(y);
+		if (t.d[k] !== void 0) {
+			for (j = k; t.d[j] === u.d[j] && j--;);
+			if (j == -1) break;
+		}
+		j = u;
+		u = y;
+		y = t;
+		t = j;
+		i++;
+	}
+	external = true;
+	t.d.length = k + 1;
+	return t;
+}
+function tinyPow(b, e) {
+	var n = b;
+	while (--e) n *= b;
+	return n;
+}
+function toLessThanHalfPi(Ctor, x) {
+	var t, isNeg = x.s < 0, pi = getPi(Ctor, Ctor.precision, 1), halfPi = pi.times(.5);
+	x = x.abs();
+	if (x.lte(halfPi)) {
+		quadrant = isNeg ? 4 : 1;
+		return x;
+	}
+	t = x.divToInt(pi);
+	if (t.isZero()) quadrant = isNeg ? 3 : 2;
+	else {
+		x = x.minus(t.times(pi));
+		if (x.lte(halfPi)) {
+			quadrant = isOdd(t) ? isNeg ? 2 : 3 : isNeg ? 4 : 1;
+			return x;
+		}
+		quadrant = isOdd(t) ? isNeg ? 1 : 4 : isNeg ? 3 : 2;
+	}
+	return x.minus(pi).abs();
+}
+function toStringBinary(x, baseOut, sd, rm) {
+	var base, e, i, k, len, roundUp, str, xd, y, Ctor = x.constructor, isExp = sd !== void 0;
+	if (isExp) {
+		checkInt32(sd, 1, MAX_DIGITS);
+		if (rm === void 0) rm = Ctor.rounding;
+		else checkInt32(rm, 0, 8);
+	} else {
+		sd = Ctor.precision;
+		rm = Ctor.rounding;
+	}
+	if (!x.isFinite()) str = nonFiniteToString(x);
+	else {
+		str = finiteToString(x);
+		i = str.indexOf(".");
+		if (isExp) {
+			base = 2;
+			if (baseOut == 16) sd = sd * 4 - 3;
+			else if (baseOut == 8) sd = sd * 3 - 2;
+		} else base = baseOut;
+		if (i >= 0) {
+			str = str.replace(".", "");
+			y = new Ctor(1);
+			y.e = str.length - i;
+			y.d = convertBase(finiteToString(y), 10, base);
+			y.e = y.d.length;
+		}
+		xd = convertBase(str, 10, base);
+		e = len = xd.length;
+		for (; xd[--len] == 0;) xd.pop();
+		if (!xd[0]) str = isExp ? "0p+0" : "0";
+		else {
+			if (i < 0) e--;
+			else {
+				x = new Ctor(x);
+				x.d = xd;
+				x.e = e;
+				x = divide$1(x, y, sd, rm, 0, base);
+				xd = x.d;
+				e = x.e;
+				roundUp = inexact;
+			}
+			i = xd[sd];
+			k = base / 2;
+			roundUp = roundUp || xd[sd + 1] !== void 0;
+			roundUp = rm < 4 ? (i !== void 0 || roundUp) && (rm === 0 || rm === (x.s < 0 ? 3 : 2)) : i > k || i === k && (rm === 4 || roundUp || rm === 6 && xd[sd - 1] & 1 || rm === (x.s < 0 ? 8 : 7));
+			xd.length = sd;
+			if (roundUp) for (; ++xd[--sd] > base - 1;) {
+				xd[sd] = 0;
+				if (!sd) {
+					++e;
+					xd.unshift(1);
+				}
+			}
+			for (len = xd.length; !xd[len - 1]; --len);
+			for (i = 0, str = ""; i < len; i++) str += NUMERALS.charAt(xd[i]);
+			if (isExp) {
+				if (len > 1) if (baseOut == 16 || baseOut == 8) {
+					i = baseOut == 16 ? 4 : 3;
+					for (--len; len % i; len++) str += "0";
+					xd = convertBase(str, base, baseOut);
+					for (len = xd.length; !xd[len - 1]; --len);
+					for (i = 1, str = "1."; i < len; i++) str += NUMERALS.charAt(xd[i]);
+				} else str = str.charAt(0) + "." + str.slice(1);
+				str = str + (e < 0 ? "p" : "p+") + e;
+			} else if (e < 0) {
+				for (; ++e;) str = "0" + str;
+				str = "0." + str;
+			} else if (++e > len) for (e -= len; e--;) str += "0";
+			else if (e < len) str = str.slice(0, e) + "." + str.slice(e);
+		}
+		str = (baseOut == 16 ? "0x" : baseOut == 2 ? "0b" : baseOut == 8 ? "0o" : "") + str;
+	}
+	return x.s < 0 ? "-" + str : str;
+}
+function truncate(arr, len) {
+	if (arr.length > len) {
+		arr.length = len;
+		return true;
+	}
+}
+function abs$1(x) {
+	return new this(x).abs();
+}
+function acos$1(x) {
+	return new this(x).acos();
+}
+function acosh$1(x) {
+	return new this(x).acosh();
+}
+function add$1(x, y) {
+	return new this(x).plus(y);
+}
+function asin$1(x) {
+	return new this(x).asin();
+}
+function asinh$1(x) {
+	return new this(x).asinh();
+}
+function atan$1(x) {
+	return new this(x).atan();
+}
+function atanh$1(x) {
+	return new this(x).atanh();
+}
+function atan2$1(y, x) {
+	y = new this(y);
+	x = new this(x);
+	var r, pr = this.precision, rm = this.rounding, wpr = pr + 4;
+	if (!y.s || !x.s) r = new this(NaN);
+	else if (!y.d && !x.d) {
+		r = getPi(this, wpr, 1).times(x.s > 0 ? .25 : .75);
+		r.s = y.s;
+	} else if (!x.d || y.isZero()) {
+		r = x.s < 0 ? getPi(this, pr, rm) : new this(0);
+		r.s = y.s;
+	} else if (!y.d || x.isZero()) {
+		r = getPi(this, wpr, 1).times(.5);
+		r.s = y.s;
+	} else if (x.s < 0) {
+		this.precision = wpr;
+		this.rounding = 1;
+		r = this.atan(divide$1(y, x, wpr, 1));
+		x = getPi(this, wpr, 1);
+		this.precision = pr;
+		this.rounding = rm;
+		r = y.s < 0 ? r.minus(x) : r.plus(x);
+	} else r = this.atan(divide$1(y, x, wpr, 1));
+	return r;
+}
+function cbrt$1(x) {
+	return new this(x).cbrt();
+}
+function ceil$1(x) {
+	return finalise(x = new this(x), x.e + 1, 2);
+}
+function clamp(x, min, max) {
+	return new this(x).clamp(min, max);
+}
+function config(obj) {
+	if (!obj || typeof obj !== "object") throw Error(decimalError + "Object expected");
+	var i, p, v, useDefaults = obj.defaults === true, ps = [
+		"precision",
+		1,
+		MAX_DIGITS,
+		"rounding",
+		0,
+		8,
+		"toExpNeg",
+		-EXP_LIMIT,
+		0,
+		"toExpPos",
+		0,
+		EXP_LIMIT,
+		"maxE",
+		0,
+		EXP_LIMIT,
+		"minE",
+		-EXP_LIMIT,
+		0,
+		"modulo",
+		0,
+		9
+	];
+	for (i = 0; i < ps.length; i += 3) {
+		if (p = ps[i], useDefaults) this[p] = DEFAULTS$1[p];
+		if ((v = obj[p]) !== void 0) if (mathfloor(v) === v && v >= ps[i + 1] && v <= ps[i + 2]) this[p] = v;
+		else throw Error(invalidArgument + p + ": " + v);
+	}
+	if (p = "crypto", useDefaults) this[p] = DEFAULTS$1[p];
+	if ((v = obj[p]) !== void 0) if (v === true || v === false || v === 0 || v === 1) if (v) if (typeof crypto != "undefined" && crypto && (crypto.getRandomValues || crypto.randomBytes)) this[p] = true;
+	else throw Error(cryptoUnavailable);
+	else this[p] = false;
+	else throw Error(invalidArgument + p + ": " + v);
+	return this;
+}
+function cos$1(x) {
+	return new this(x).cos();
+}
+function cosh$1(x) {
+	return new this(x).cosh();
+}
+function clone$2(obj) {
+	var i, p, ps;
+	function Decimal(v) {
+		var e, i, t, x = this;
+		if (!(x instanceof Decimal)) return new Decimal(v);
+		x.constructor = Decimal;
+		if (isDecimalInstance(v)) {
+			x.s = v.s;
+			if (external) if (!v.d || v.e > Decimal.maxE) {
+				x.e = NaN;
+				x.d = null;
+			} else if (v.e < Decimal.minE) {
+				x.e = 0;
+				x.d = [0];
+			} else {
+				x.e = v.e;
+				x.d = v.d.slice();
+			}
+			else {
+				x.e = v.e;
+				x.d = v.d ? v.d.slice() : v.d;
+			}
+			return;
+		}
+		t = typeof v;
+		if (t === "number") {
+			if (v === 0) {
+				x.s = 1 / v < 0 ? -1 : 1;
+				x.e = 0;
+				x.d = [0];
+				return;
+			}
+			if (v < 0) {
+				v = -v;
+				x.s = -1;
+			} else x.s = 1;
+			if (v === ~~v && v < 1e7) {
+				for (e = 0, i = v; i >= 10; i /= 10) e++;
+				if (external) if (e > Decimal.maxE) {
+					x.e = NaN;
+					x.d = null;
+				} else if (e < Decimal.minE) {
+					x.e = 0;
+					x.d = [0];
+				} else {
+					x.e = e;
+					x.d = [v];
+				}
+				else {
+					x.e = e;
+					x.d = [v];
+				}
+				return;
+			}
+			if (v * 0 !== 0) {
+				if (!v) x.s = NaN;
+				x.e = NaN;
+				x.d = null;
+				return;
+			}
+			return parseDecimal(x, v.toString());
+		}
+		if (t === "string") {
+			if ((i = v.charCodeAt(0)) === 45) {
+				v = v.slice(1);
+				x.s = -1;
+			} else {
+				if (i === 43) v = v.slice(1);
+				x.s = 1;
+			}
+			return isDecimal.test(v) ? parseDecimal(x, v) : parseOther(x, v);
+		}
+		if (t === "bigint") {
+			if (v < 0) {
+				v = -v;
+				x.s = -1;
+			} else x.s = 1;
+			return parseDecimal(x, v.toString());
+		}
+		throw Error(invalidArgument + v);
+	}
+	Decimal.prototype = P$1;
+	Decimal.ROUND_UP = 0;
+	Decimal.ROUND_DOWN = 1;
+	Decimal.ROUND_CEIL = 2;
+	Decimal.ROUND_FLOOR = 3;
+	Decimal.ROUND_HALF_UP = 4;
+	Decimal.ROUND_HALF_DOWN = 5;
+	Decimal.ROUND_HALF_EVEN = 6;
+	Decimal.ROUND_HALF_CEIL = 7;
+	Decimal.ROUND_HALF_FLOOR = 8;
+	Decimal.EUCLID = 9;
+	Decimal.config = Decimal.set = config;
+	Decimal.clone = clone$2;
+	Decimal.isDecimal = isDecimalInstance;
+	Decimal.abs = abs$1;
+	Decimal.acos = acos$1;
+	Decimal.acosh = acosh$1;
+	Decimal.add = add$1;
+	Decimal.asin = asin$1;
+	Decimal.asinh = asinh$1;
+	Decimal.atan = atan$1;
+	Decimal.atanh = atanh$1;
+	Decimal.atan2 = atan2$1;
+	Decimal.cbrt = cbrt$1;
+	Decimal.ceil = ceil$1;
+	Decimal.clamp = clamp;
+	Decimal.cos = cos$1;
+	Decimal.cosh = cosh$1;
+	Decimal.div = div;
+	Decimal.exp = exp$1;
+	Decimal.floor = floor$1;
+	Decimal.hypot = hypot$1;
+	Decimal.ln = ln;
+	Decimal.log = log$1;
+	Decimal.log10 = log10$1;
+	Decimal.log2 = log2$1;
+	Decimal.max = max$1;
+	Decimal.min = min$1;
+	Decimal.mod = mod$1;
+	Decimal.mul = mul;
+	Decimal.pow = pow$1;
+	Decimal.random = random$1;
+	Decimal.round = round$1;
+	Decimal.sign = sign$1;
+	Decimal.sin = sin$1;
+	Decimal.sinh = sinh$1;
+	Decimal.sqrt = sqrt$1;
+	Decimal.sub = sub;
+	Decimal.sum = sum$1;
+	Decimal.tan = tan$1;
+	Decimal.tanh = tanh$1;
+	Decimal.trunc = trunc;
+	if (obj === void 0) obj = {};
+	if (obj) {
+		if (obj.defaults !== true) {
+			ps = [
+				"precision",
+				"rounding",
+				"toExpNeg",
+				"toExpPos",
+				"maxE",
+				"minE",
+				"modulo",
+				"crypto"
+			];
+			for (i = 0; i < ps.length;) if (!obj.hasOwnProperty(p = ps[i++])) obj[p] = this[p];
+		}
+	}
+	Decimal.config(obj);
+	return Decimal;
+}
+function div(x, y) {
+	return new this(x).div(y);
+}
+function exp$1(x) {
+	return new this(x).exp();
+}
+function floor$1(x) {
+	return finalise(x = new this(x), x.e + 1, 3);
+}
+function hypot$1() {
+	var i, n, t = new this(0);
+	external = false;
+	for (i = 0; i < arguments.length;) {
+		n = new this(arguments[i++]);
+		if (!n.d) {
+			if (n.s) {
+				external = true;
+				return new this(Infinity);
+			}
+			t = n;
+		} else if (t.d) t = t.plus(n.times(n));
+	}
+	external = true;
+	return t.sqrt();
+}
+function isDecimalInstance(obj) {
+	return obj instanceof Decimal || obj && obj.toStringTag === tag || false;
+}
+function ln(x) {
+	return new this(x).ln();
+}
+function log$1(x, y) {
+	return new this(x).log(y);
+}
+function log2$1(x) {
+	return new this(x).log(2);
+}
+function log10$1(x) {
+	return new this(x).log(10);
+}
+function max$1() {
+	return maxOrMin(this, arguments, -1);
+}
+function min$1() {
+	return maxOrMin(this, arguments, 1);
+}
+function mod$1(x, y) {
+	return new this(x).mod(y);
+}
+function mul(x, y) {
+	return new this(x).mul(y);
+}
+function pow$1(x, y) {
+	return new this(x).pow(y);
+}
+function random$1(sd) {
+	var d, e, k, n, i = 0, r = new this(1), rd = [];
+	if (sd === void 0) sd = this.precision;
+	else checkInt32(sd, 1, MAX_DIGITS);
+	k = Math.ceil(sd / LOG_BASE);
+	if (!this.crypto) for (; i < k;) rd[i++] = Math.random() * 1e7 | 0;
+	else if (crypto.getRandomValues) {
+		d = crypto.getRandomValues(new Uint32Array(k));
+		for (; i < k;) {
+			n = d[i];
+			if (n >= 429e7) d[i] = crypto.getRandomValues(new Uint32Array(1))[0];
+			else rd[i++] = n % 1e7;
+		}
+	} else if (crypto.randomBytes) {
+		d = crypto.randomBytes(k *= 4);
+		for (; i < k;) {
+			n = d[i] + (d[i + 1] << 8) + (d[i + 2] << 16) + ((d[i + 3] & 127) << 24);
+			if (n >= 214e7) crypto.randomBytes(4).copy(d, i);
+			else {
+				rd.push(n % 1e7);
+				i += 4;
+			}
+		}
+		i = k / 4;
+	} else throw Error(cryptoUnavailable);
+	k = rd[--i];
+	sd %= LOG_BASE;
+	if (k && sd) {
+		n = mathpow(10, LOG_BASE - sd);
+		rd[i] = (k / n | 0) * n;
+	}
+	for (; rd[i] === 0; i--) rd.pop();
+	if (i < 0) {
+		e = 0;
+		rd = [0];
+	} else {
+		e = -1;
+		for (; rd[0] === 0; e -= LOG_BASE) rd.shift();
+		for (k = 1, n = rd[0]; n >= 10; n /= 10) k++;
+		if (k < LOG_BASE) e -= LOG_BASE - k;
+	}
+	r.e = e;
+	r.d = rd;
+	return r;
+}
+function round$1(x) {
+	return finalise(x = new this(x), x.e + 1, this.rounding);
+}
+function sign$1(x) {
+	x = new this(x);
+	return x.d ? x.d[0] ? x.s : 0 * x.s : x.s || NaN;
+}
+function sin$1(x) {
+	return new this(x).sin();
+}
+function sinh$1(x) {
+	return new this(x).sinh();
+}
+function sqrt$1(x) {
+	return new this(x).sqrt();
+}
+function sub(x, y) {
+	return new this(x).sub(y);
+}
+function sum$1() {
+	var i = 0, args = arguments, x = new this(args[i]);
+	external = false;
+	for (; x.s && ++i < args.length;) x = x.plus(args[i]);
+	external = true;
+	return finalise(x, this.precision, this.rounding);
+}
+function tan$1(x) {
+	return new this(x).tan();
+}
+function tanh$1(x) {
+	return new this(x).tanh();
+}
+function trunc(x) {
+	return finalise(x = new this(x), x.e + 1, 1);
+}
+P$1[Symbol.for("nodejs.util.inspect.custom")] = P$1.toString;
+P$1[Symbol.toStringTag] = "Decimal";
+var Decimal = P$1.constructor = clone$2(DEFAULTS$1);
+LN10$1 = new Decimal(LN10$1);
+PI = new Decimal(PI);
+//#endregion
+//#region node_modules/mathjs/lib/esm/error/IndexError.js
+/**
+* Create a range error with the message:
+*     'Index out of range (index < min)'
+*     'Index out of range (index < max)'
+*
+* @param {number} index     The actual index
+* @param {number} [min=0]   Minimum index (included)
+* @param {number} [max]     Maximum index (excluded)
+* @extends RangeError
+*/
+function IndexError(index, min, max) {
+	if (!(this instanceof IndexError)) throw new SyntaxError("Constructor must be called with the new operator");
+	this.index = index;
+	if (arguments.length < 3) {
+		this.min = 0;
+		this.max = min;
+	} else {
+		this.min = min;
+		this.max = max;
+	}
+	if (this.min !== void 0 && this.index < this.min) this.message = "Index out of range (" + this.index + " < " + this.min + ")";
+	else if (this.max !== void 0 && this.index >= this.max) this.message = "Index out of range (" + this.index + " > " + (this.max - 1) + ")";
+	else this.message = "Index out of range (" + this.index + ")";
+	this.stack = (/* @__PURE__ */ new Error()).stack;
+}
+IndexError.prototype = /* @__PURE__ */ new RangeError();
+IndexError.prototype.constructor = RangeError;
+IndexError.prototype.name = "IndexError";
+IndexError.prototype.isIndexError = true;
+//#endregion
+//#region node_modules/mathjs/lib/esm/error/DimensionError.js
+/**
+* Create a range error with the message:
+*     'Dimension mismatch (<actual size> != <expected size>)'
+* @param {number | number[]} actual        The actual size
+* @param {number | number[]} expected      The expected size
+* @param {string} [relation='!=']          Optional relation between actual
+*                                          and expected size: '!=', '<', etc.
+* @extends RangeError
+*/
+function DimensionError(actual, expected, relation) {
+	if (!(this instanceof DimensionError)) throw new SyntaxError("Constructor must be called with the new operator");
+	this.actual = actual;
+	this.expected = expected;
+	this.relation = relation;
+	this.message = "Dimension mismatch (" + (Array.isArray(actual) ? "[" + actual.join(", ") + "]" : actual) + " " + (this.relation || "!=") + " " + (Array.isArray(expected) ? "[" + expected.join(", ") + "]" : expected) + ")";
+	this.stack = (/* @__PURE__ */ new Error()).stack;
+}
+DimensionError.prototype = /* @__PURE__ */ new RangeError();
+DimensionError.prototype.constructor = RangeError;
+DimensionError.prototype.name = "DimensionError";
+DimensionError.prototype.isDimensionError = true;
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/array.js
+/**
+* Calculate the size of a multi dimensional array.
+* This function checks the size of the first entry, it does not validate
+* whether all dimensions match. (use function `validate` for that)
+* @param {Array} x
+* @return {number[]} size
+*/
+function arraySize(x) {
+	var s = [];
+	while (Array.isArray(x)) {
+		s.push(x.length);
+		x = x[0];
+	}
+	return s;
+}
+/**
+* Test whether index is an integer number with index >= 0 and index < length
+* when length is provided
+* @param {number} index    Zero-based index
+* @param {number} [length] Length of the array
+*/
+function validateIndex(index, length) {
+	if (index !== void 0) {
+		if (!isNumber(index) || !isInteger$1(index)) throw new TypeError("Index must be an integer (value: " + index + ")");
+		if (index < 0 || typeof length === "number" && index >= length) throw new IndexError(index, length);
+	}
+}
+/**
+* Re-shape a multi dimensional array to fit the specified dimensions
+* @param {Array} array           Array to be reshaped
+* @param {number[]} sizes        List of sizes for each dimension
+* @returns {Array}               Array whose data has been formatted to fit the
+*                                specified dimensions
+*
+* @throws {DimensionError}       If the product of the new dimension sizes does
+*                                not equal that of the old ones
+*/
+function reshape(array, sizes) {
+	var flatArray = flatten(array, true);
+	var currentLength = flatArray.length;
+	if (!Array.isArray(array) || !Array.isArray(sizes)) throw new TypeError("Array expected");
+	if (sizes.length === 0) throw new DimensionError(0, currentLength, "!=");
+	sizes = processSizesWildcard(sizes, currentLength);
+	var newLength = product(sizes);
+	if (currentLength !== newLength) throw new DimensionError(newLength, currentLength, "!=");
+	try {
+		return _reshape(flatArray, sizes);
+	} catch (e) {
+		if (e instanceof DimensionError) throw new DimensionError(newLength, currentLength, "!=");
+		throw e;
+	}
+}
+/**
+* Replaces the wildcard -1 in the sizes array.
+* @param {number[]} sizes  List of sizes for each dimension. At most one wildcard.
+* @param {number} currentLength  Number of elements in the array.
+* @throws {Error}                If more than one wildcard or unable to replace it.
+* @returns {number[]}      The sizes array with wildcard replaced.
+*/
+function processSizesWildcard(sizes, currentLength) {
+	var newLength = product(sizes);
+	var processedSizes = sizes.slice();
+	var WILDCARD = -1;
+	var wildCardIndex = sizes.indexOf(WILDCARD);
+	if (sizes.indexOf(WILDCARD, wildCardIndex + 1) >= 0) throw new Error("More than one wildcard in sizes");
+	var hasWildcard = wildCardIndex >= 0;
+	var canReplaceWildcard = currentLength % newLength === 0;
+	if (hasWildcard) if (canReplaceWildcard) processedSizes[wildCardIndex] = -currentLength / newLength;
+	else throw new Error("Could not replace wildcard, since " + currentLength + " is no multiple of " + -newLength);
+	return processedSizes;
+}
+/**
+* Computes the product of all array elements.
+* @param {number[]} array Array of factors
+* @returns {number}            Product of all elements
+*/
+function product(array) {
+	return array.reduce((prev, curr) => prev * curr, 1);
+}
+/**
+* Iteratively re-shape a multi dimensional array to fit the specified dimensions
+* @param {Array} array           Array to be reshaped
+* @param {number[]} sizes  List of sizes for each dimension
+* @returns {Array}               Array whose data has been formatted to fit the
+*                                specified dimensions
+*/
+function _reshape(array, sizes) {
+	var tmpArray = array;
+	var tmpArray2;
+	for (var sizeIndex = sizes.length - 1; sizeIndex > 0; sizeIndex--) {
+		var size = sizes[sizeIndex];
+		tmpArray2 = [];
+		var length = tmpArray.length / size;
+		for (var i = 0; i < length; i++) tmpArray2.push(tmpArray.slice(i * size, (i + 1) * size));
+		tmpArray = tmpArray2;
+	}
+	return tmpArray;
+}
+/**
+* Flatten a multi dimensional array, put all elements in a one dimensional
+* array
+* @param {Array} array   A multi dimensional array
+* @param {boolean} isRectangular Optional. If the array is rectangular (not jagged)
+* @return {Array}        The flattened array (1 dimensional)
+*/
+function flatten(array) {
+	var isRectangular = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : false;
+	if (!Array.isArray(array)) return array;
+	if (typeof isRectangular !== "boolean") throw new TypeError("Boolean expected for second argument of flatten");
+	var flat = [];
+	if (isRectangular) _flattenRectangular(array);
+	else _flatten(array);
+	return flat;
+	function _flatten(array) {
+		for (var i = 0; i < array.length; i++) {
+			var item = array[i];
+			if (Array.isArray(item)) _flatten(item);
+			else flat.push(item);
+		}
+	}
+	function _flattenRectangular(array) {
+		if (Array.isArray(array[0])) for (var i = 0; i < array.length; i++) _flattenRectangular(array[i]);
+		else for (var _i = 0; _i < array.length; _i++) flat.push(array[_i]);
+	}
+}
+/**
+* A safe map
+* @param {Array} array
+* @param {function} callback
+*/
+function map$1(array, callback) {
+	return Array.prototype.map.call(array, callback);
+}
+/**
+* A safe forEach
+* @param {Array} array
+* @param {function} callback
+*/
+function forEach$1(array, callback) {
+	Array.prototype.forEach.call(array, callback);
+}
+/**
+* A safe filter
+* @param {Array} array
+* @param {function} callback
+*/
+function filter$1(array, callback) {
+	if (arraySize(array).length !== 1) throw new Error("Only one dimensional matrices supported");
+	return Array.prototype.filter.call(array, callback);
+}
+/**
+* Filter values in an array given a regular expression
+* @param {Array} array
+* @param {RegExp} regexp
+* @return {Array} Returns the filtered array
+* @private
+*/
+function filterRegExp(array, regexp) {
+	if (arraySize(array).length !== 1) throw new Error("Only one dimensional matrices supported");
+	return Array.prototype.filter.call(array, (entry) => regexp.test(entry));
+}
+/**
+* A safe join
+* @param {Array} array
+* @param {string} separator
+*/
+function join(array, separator) {
+	return Array.prototype.join.call(array, separator);
+}
+/**
+* Recursively concatenate two matrices.
+* The contents of the matrices are not cloned.
+* @param {Array} a             Multi dimensional array
+* @param {Array} b             Multi dimensional array
+* @param {number} concatDim    The dimension on which to concatenate (zero-based)
+* @param {number} dim          The current dim (zero-based)
+* @return {Array} c            The concatenated matrix
+* @private
+*/
+function concatRecursive(a, b, concatDim, dim) {
+	if (dim < concatDim) {
+		if (a.length !== b.length) throw new DimensionError(a.length, b.length);
+		var c = [];
+		for (var i = 0; i < a.length; i++) c[i] = concatRecursive(a[i], b[i], concatDim, dim + 1);
+		return c;
+	} else return a.concat(b);
+}
+/**
+* Concatenates many arrays in the specified direction
+* @param {...Array} arrays All the arrays to concatenate
+* @param {number} concatDim The dimension on which to concatenate (zero-based)
+* @returns {Array}
+*/
+function concat() {
+	var arrays = Array.prototype.slice.call(arguments, 0, -1);
+	var concatDim = Array.prototype.slice.call(arguments, -1);
+	if (arrays.length === 1) return arrays[0];
+	if (arrays.length > 1) return arrays.slice(1).reduce(function(A, B) {
+		return concatRecursive(A, B, concatDim, 0);
+	}, arrays[0]);
+	else throw new Error("Wrong number of arguments in function concat");
+}
+/**
+* Receives two or more sizes and gets the broadcasted size for both.
+* @param  {...number[]} sizes Sizes to broadcast together
+* @returns {number[]} The broadcasted size
+*/
+function broadcastSizes() {
+	for (var _len = arguments.length, sizes = new Array(_len), _key = 0; _key < _len; _key++) sizes[_key] = arguments[_key];
+	var dimensions = sizes.map((s) => s.length);
+	var N = Math.max(...dimensions);
+	var sizeMax = new Array(N).fill(null);
+	for (var i = 0; i < sizes.length; i++) {
+		var size = sizes[i];
+		var dim = dimensions[i];
+		for (var j = 0; j < dim; j++) {
+			var n = N - dim + j;
+			if (size[j] > sizeMax[n]) sizeMax[n] = size[j];
+		}
+	}
+	for (var _i2 = 0; _i2 < sizes.length; _i2++) checkBroadcastingRules(sizes[_i2], sizeMax);
+	return sizeMax;
+}
+/**
+* Checks if it's possible to broadcast a size to another size
+* @param {number[]} size The size of the array to check
+* @param {number[]} toSize The size of the array to validate if it can be broadcasted to
+*/
+function checkBroadcastingRules(size, toSize) {
+	var N = toSize.length;
+	var dim = size.length;
+	for (var j = 0; j < dim; j++) {
+		var n = N - dim + j;
+		if (size[j] < toSize[n] && size[j] > 1 || size[j] > toSize[n]) throw new Error("shape mismatch: mismatch is found in arg with shape (".concat(size, ") not possible to broadcast dimension ").concat(dim, " with size ").concat(size[j], " to size ").concat(toSize[n]));
+	}
+}
+/**
+* Broadcasts a single array to a certain size
+* @param {Array} array Array to be broadcasted
+* @param {number[]} toSize Size to broadcast the array
+* @returns {Array} The broadcasted array
+*/
+function broadcastTo(array, toSize) {
+	var Asize = arraySize(array);
+	if (deepStrictEqual(Asize, toSize)) return array;
+	checkBroadcastingRules(Asize, toSize);
+	var broadcastedSize = broadcastSizes(Asize, toSize);
+	var N = broadcastedSize.length;
+	var paddedSize = [...Array(N - Asize.length).fill(1), ...Asize];
+	var A = clone$1(array);
+	if (Asize.length < N) {
+		A = reshape(A, paddedSize);
+		Asize = arraySize(A);
+	}
+	for (var dim = 0; dim < N; dim++) if (Asize[dim] < broadcastedSize[dim]) {
+		A = stretch(A, broadcastedSize[dim], dim);
+		Asize = arraySize(A);
+	}
+	return A;
+}
+/**
+* Stretches a matrix up to a certain size in a certain dimension
+* @param {Array} arrayToStretch
+* @param {number[]} sizeToStretch
+* @param {number} dimToStretch
+* @returns {Array} The stretched array
+*/
+function stretch(arrayToStretch, sizeToStretch, dimToStretch) {
+	return concat(...Array(sizeToStretch).fill(arrayToStretch), dimToStretch);
+}
+/**
+* Retrieves a single element from an array given an index.
+*
+* @param {Array} array - The array from which to retrieve the value.
+* @param {Array<number>} index - An array of indices specifying the position of the desired element in each dimension.
+* @returns {*} - The value at the specified position in the array.
+*
+* @example
+* const arr = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]];
+* const index = [1, 0, 1];
+* console.log(get(arr, index)); // 6
+*/
+function get(array, index) {
+	if (!Array.isArray(array)) throw new Error("Array expected");
+	if (!Array.isArray(index)) throw new Error("Array expected for index");
+	var size = arraySize(array);
+	if (index.length !== size.length) throw new DimensionError(index.length, size.length);
+	for (var x = 0; x < index.length; x++) validateIndex(index[x], size[x]);
+	return index.reduce((acc, curr) => acc[curr], array);
+}
+/**
+* Recursively maps over each element of nested array using a provided callback function.
+*
+* @param {Array} array - The array to be mapped.
+* @param {Function} callback - The function to execute on each element, taking three arguments:
+*   - `value` (any): The current element being processed in the array.
+*   - `index` (Array<number>): The index of the current element being processed in the array.
+*   - `array` (Array): The array `deepMap` was called upon.
+* @param {boolean} [skipIndex=false] - If true, the callback function is called with only the value.
+* @returns {Array} A new array with each element being the result of the callback function.
+*/
+function deepMap$1(array, callback) {
+	var skipIndex = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : false;
+	if (array.length === 0) return [];
+	if (skipIndex) return recursiveMap(array);
+	var index = [];
+	return recursiveMapWithIndex(array, 0);
+	function recursiveMapWithIndex(value, depth) {
+		if (Array.isArray(value)) {
+			var N = value.length;
+			var result = Array(N);
+			for (var i = 0; i < N; i++) {
+				index[depth] = i;
+				result[i] = recursiveMapWithIndex(value[i], depth + 1);
+			}
+			return result;
+		} else return callback(value, index.slice(0, depth), array);
+	}
+	function recursiveMap(value) {
+		if (Array.isArray(value)) {
+			var N = value.length;
+			var result = Array(N);
+			for (var i = 0; i < N; i++) result[i] = recursiveMap(value[i]);
+			return result;
+		} else return callback(value);
+	}
+}
+/**
+* Recursively iterates over each element in a multi-dimensional array and applies a callback function.
+*
+* @param {Array} array - The multi-dimensional array to iterate over.
+* @param {Function} callback - The function to execute for each element. It receives three arguments:
+*   - {any} value: The current element being processed in the array.
+*   - {Array<number>} index: The index of the current element in each dimension.
+*   - {Array} array: The original array being processed.
+* @param {boolean} [skipIndex=false] - If true, the callback function is called with only the value.
+*/
+function deepForEach$1(array, callback) {
+	var skipIndex = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : false;
+	if (array.length === 0) return;
+	if (skipIndex) {
+		recursiveForEach(array);
+		return;
+	}
+	var index = [];
+	recursiveForEachWithIndex(array, 0);
+	function recursiveForEachWithIndex(value, depth) {
+		if (Array.isArray(value)) {
+			var N = value.length;
+			for (var i = 0; i < N; i++) {
+				index[depth] = i;
+				recursiveForEachWithIndex(value[i], depth + 1);
+			}
+		} else callback(value, index.slice(0, depth), array);
+	}
+	function recursiveForEach(value) {
+		if (Array.isArray(value)) {
+			var N = value.length;
+			for (var i = 0; i < N; i++) recursiveForEach(value[i]);
+		} else callback(value);
+	}
+}
+/**
+* Deep clones a multidimensional array
+* @param {Array} array
+* @returns {Array} cloned array
+*/
+function clone$1(array) {
+	return _extends([], array);
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/switch.js
+/**
+* Transpose a matrix
+* @param {Array} mat
+* @returns {Array} ret
+* @private
+*/
+function _switch$1(mat) {
+	var I = mat.length;
+	var J = mat[0].length;
+	var i, j;
+	var ret = [];
+	for (j = 0; j < J; j++) {
+		var tmp = [];
+		for (i = 0; i < I; i++) tmp.push(mat[i][j]);
+		ret.push(tmp);
+	}
+	return ret;
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/collection.js
+/**
+* Test whether an array contains collections
+* @param {Array} array
+* @returns {boolean} Returns true when the array contains one or multiple
+*                    collections (Arrays or Matrices). Returns false otherwise.
+*/
+function containsCollections(array) {
+	for (var i = 0; i < array.length; i++) if (isCollection(array[i])) return true;
+	return false;
+}
+/**
+* Recursively loop over all elements in a given multi dimensional array
+* and invoke the callback on each of the elements.
+* @param {Array | Matrix} array
+* @param {Function} callback     The callback method is invoked with one
+*                                parameter: the current element in the array
+*/
+function deepForEach(array, callback) {
+	if (isMatrix(array)) array.forEach((x) => callback(x), false, true);
+	else deepForEach$1(array, callback, true);
+}
+/**
+* Execute the callback function element wise for each element in array and any
+* nested array
+* Returns an array with the results
+* @param {Array | Matrix} array
+* @param {Function} callback   The callback is called with two parameters:
+*                              value1 and value2, which contain the current
+*                              element of both arrays.
+* @param {boolean} [skipZeros] Invoke callback function for non-zero values only.
+*
+* @return {Array | Matrix} res
+*/
+function deepMap(array, callback, skipZeros) {
+	if (!skipZeros) if (isMatrix(array)) return array.map((x) => callback(x), false, true);
+	else return deepMap$1(array, callback, true);
+	var skipZerosCallback = (x) => x === 0 ? x : callback(x);
+	if (isMatrix(array)) return array.map((x) => skipZerosCallback(x), false, true);
+	else return deepMap$1(array, skipZerosCallback, true);
+}
+/**
+* Reduce a given matrix or array to a new matrix or
+* array with one less dimension, applying the given
+* callback in the selected dimension.
+* @param {Array | Matrix} mat
+* @param {number} dim
+* @param {Function} callback
+* @return {Array | Matrix} res
+*/
+function reduce(mat, dim, callback) {
+	var size = Array.isArray(mat) ? arraySize(mat) : mat.size();
+	if (dim < 0 || dim >= size.length) throw new IndexError(dim, size.length);
+	if (isMatrix(mat)) return mat.create(_reduce(mat.valueOf(), dim, callback), mat.datatype());
+	else return _reduce(mat, dim, callback);
+}
+/**
+* Recursively reduce a matrix
+* @param {Array} mat
+* @param {number} dim
+* @param {Function} callback
+* @returns {Array} ret
+* @private
+*/
+function _reduce(mat, dim, callback) {
+	var i, ret, val, tran;
+	if (dim <= 0) if (!Array.isArray(mat[0])) {
+		val = mat[0];
+		for (i = 1; i < mat.length; i++) val = callback(val, mat[i]);
+		return val;
+	} else {
+		tran = _switch$1(mat);
+		ret = [];
+		for (i = 0; i < tran.length; i++) ret[i] = _reduce(tran[i], dim - 1, callback);
+		return ret;
+	}
+	else {
+		ret = [];
+		for (i = 0; i < mat.length; i++) ret[i] = _reduce(mat[i], dim - 1, callback);
+		return ret;
+	}
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/arithmetic/ceil.js
+var name$99 = "ceil";
+new Decimal(10);
+var createCeilNumber = /* @__PURE__ */ factory(name$99, [
+	"typed",
+	"config",
+	"round"
+], (_ref) => {
+	var { typed, config, round } = _ref;
+	function _ceilNumber(x) {
+		var c = Math.ceil(x);
+		var r = round(x);
+		if (c === r) return c;
+		if (nearlyEqual(x, r, config.relTol, config.absTol) && !nearlyEqual(x, c, config.relTol, config.absTol)) return r;
+		return c;
+	}
+	return typed(name$99, {
+		number: _ceilNumber,
+		"number, number": function number_number(x, n) {
+			if (!isInteger$1(n)) throw new RangeError("number of decimals in function ceil must be an integer");
+			if (n < 0 || n > 15) throw new RangeError("number of decimals in ceil number must be in range 0-15");
+			var shift = 10 ** n;
+			return _ceilNumber(x * shift) / shift;
+		}
+	});
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/arithmetic/fix.js
+var name$98 = "fix";
+var createFixNumber = /* @__PURE__ */ factory(name$98, [
+	"typed",
+	"ceil",
+	"floor"
+], (_ref) => {
+	var { typed, ceil, floor } = _ref;
+	return typed(name$98, {
+		number: function number(x) {
+			return x > 0 ? floor(x) : ceil(x);
+		},
+		"number, number": function number_number(x, n) {
+			return x > 0 ? floor(x, n) : ceil(x, n);
+		}
+	});
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/arithmetic/floor.js
+var name$97 = "floor";
+new Decimal(10);
+var createFloorNumber = /* @__PURE__ */ factory(name$97, [
+	"typed",
+	"config",
+	"round"
+], (_ref) => {
+	var { typed, config, round } = _ref;
+	function _floorNumber(x) {
+		var f = Math.floor(x);
+		var r = round(x);
+		if (f === r) return f;
+		if (nearlyEqual(x, r, config.relTol, config.absTol) && !nearlyEqual(x, f, config.relTol, config.absTol)) return r;
+		return f;
+	}
+	return typed(name$97, {
+		number: _floorNumber,
+		"number, number": function number_number(x, n) {
+			if (!isInteger$1(n)) throw new RangeError("number of decimals in function floor must be an integer");
+			if (n < 0 || n > 15) throw new RangeError("number of decimals in floor number must be in range 0 - 15");
+			var shift = 10 ** n;
+			return _floorNumber(x * shift) / shift;
+		}
+	});
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/arithmetic/hypot.js
+var name$96 = "hypot";
+var createHypot = /* @__PURE__ */ factory(name$96, [
+	"typed",
+	"abs",
+	"addScalar",
+	"divideScalar",
+	"multiplyScalar",
+	"sqrt",
+	"smaller",
+	"isPositive"
+], (_ref) => {
+	var { typed, abs, addScalar, divideScalar, multiplyScalar, sqrt, smaller, isPositive } = _ref;
+	/**
+	* Calculate the hypotenuse of a list with values. The hypotenuse is defined as:
+	*
+	*     hypot(a, b, c, ...) = sqrt(a^2 + b^2 + c^2 + ...)
+	*
+	* For matrix input, the hypotenuse is calculated for all values in the matrix.
+	*
+	* Syntax:
+	*
+	*     math.hypot(a, b, ...)
+	*     math.hypot([a, b, c, ...])
+	*
+	* Examples:
+	*
+	*     math.hypot(3, 4)      // 5
+	*     math.hypot(3, 4, 5)   // 7.0710678118654755
+	*     math.hypot([3, 4, 5]) // 7.0710678118654755
+	*     math.hypot(-2)        // 2
+	*
+	* See also:
+	*
+	*     abs, norm
+	*
+	* @param {... number | BigNumber | Array | Matrix} args    A list with numeric values or an Array or Matrix.
+	*                                                          Matrix and Array input is flattened and returns a
+	*                                                          single number for the whole matrix.
+	* @return {number | BigNumber} Returns the hypothenusa of the input values.
+	*/
+	return typed(name$96, {
+		"... number | BigNumber": _hypot,
+		Array: _hypot,
+		Matrix: (M) => _hypot(flatten(M.toArray(), true))
+	});
+	/**
+	* Calculate the hypotenuse for an Array with values
+	* @param {Array.<number | BigNumber>} args
+	* @return {number | BigNumber} Returns the result
+	* @private
+	*/
+	function _hypot(args) {
+		var result = 0;
+		var largest = 0;
+		for (var i = 0; i < args.length; i++) {
+			if (isComplex(args[i])) throw new TypeError("Unexpected type of argument to hypot");
+			var value = abs(args[i]);
+			if (smaller(largest, value)) {
+				result = multiplyScalar(result, multiplyScalar(divideScalar(largest, value), divideScalar(largest, value)));
+				result = addScalar(result, 1);
+				largest = value;
+			} else result = addScalar(result, isPositive(value) ? multiplyScalar(divideScalar(value, largest), divideScalar(value, largest)) : value);
+		}
+		return multiplyScalar(largest, sqrt(result));
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/combinatorics/stirlingS2.js
+var name$95 = "stirlingS2";
+var createStirlingS2 = /* @__PURE__ */ factory(name$95, [
+	"typed",
+	"addScalar",
+	"subtractScalar",
+	"multiplyScalar",
+	"divideScalar",
+	"pow",
+	"factorial",
+	"combinations",
+	"isNegative",
+	"isInteger",
+	"number",
+	"?bignumber",
+	"larger"
+], (_ref) => {
+	var { typed, addScalar, subtractScalar, multiplyScalar, divideScalar, pow, factorial, combinations, isNegative, isInteger, number, bignumber, larger } = _ref;
+	var smallCache = [];
+	var bigCache = [];
+	/**
+	* The Stirling numbers of the second kind, counts the number of ways to partition
+	* a set of n labelled objects into k nonempty unlabelled subsets.
+	* stirlingS2 only takes integer arguments.
+	* The following condition must be enforced: k <= n.
+	*
+	*  If n = k or k = 1 <= n, then s(n,k) = 1
+	*  If k = 0 < n, then s(n,k) = 0
+	*
+	* Note that if either n or k is supplied as a BigNumber, the result will be
+	* as well.
+	*
+	* Syntax:
+	*
+	*   math.stirlingS2(n, k)
+	*
+	* Examples:
+	*
+	*    math.stirlingS2(5, 3) //returns 25
+	*
+	* See also:
+	*
+	*    bellNumbers
+	*
+	* @param {Number | BigNumber} n    Total number of objects in the set
+	* @param {Number | BigNumber} k    Number of objects in the subset
+	* @return {Number | BigNumber}     S(n,k)
+	*/
+	return typed(name$95, { "number | BigNumber, number | BigNumber": function number__BigNumber_number__BigNumber(n, k) {
+		if (!isInteger(n) || isNegative(n) || !isInteger(k) || isNegative(k)) throw new TypeError("Non-negative integer value expected in function stirlingS2");
+		else if (larger(k, n)) throw new TypeError("k must be less than or equal to n in function stirlingS2");
+		var big = !(isNumber(n) && isNumber(k));
+		var cache = big ? bigCache : smallCache;
+		var make = big ? bignumber : number;
+		var nn = number(n);
+		var nk = number(k);
+		if (cache[nn] && cache[nn].length > nk) return cache[nn][nk];
+		for (var m = 0; m <= nn; ++m) {
+			if (!cache[m]) cache[m] = [m === 0 ? make(1) : make(0)];
+			if (m === 0) continue;
+			var row = cache[m];
+			var prev = cache[m - 1];
+			for (var i = row.length; i <= m && i <= nk; ++i) if (i === m) row[i] = 1;
+			else row[i] = addScalar(multiplyScalar(make(i), prev[i]), prev[i - 1]);
+		}
+		return cache[nn][nk];
+	} });
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/combinatorics/bellNumbers.js
+var name$94 = "bellNumbers";
+var createBellNumbers = /* @__PURE__ */ factory(name$94, [
+	"typed",
+	"addScalar",
+	"isNegative",
+	"isInteger",
+	"stirlingS2"
+], (_ref) => {
+	var { typed, addScalar, isNegative, isInteger, stirlingS2 } = _ref;
+	/**
+	* The Bell Numbers count the number of partitions of a set. A partition is a pairwise disjoint subset of S whose union is S.
+	* bellNumbers only takes integer arguments.
+	* The following condition must be enforced: n >= 0
+	*
+	* Syntax:
+	*
+	*   math.bellNumbers(n)
+	*
+	* Examples:
+	*
+	*    math.bellNumbers(3) // returns 5
+	*    math.bellNumbers(8) // returns 4140
+	*
+	* See also:
+	*
+	*    stirlingS2
+	*
+	* @param {Number | BigNumber} n    Total number of objects in the set
+	* @return {Number | BigNumber}     B(n)
+	*/
+	return typed(name$94, { "number | BigNumber": function number__BigNumber(n) {
+		if (!isInteger(n) || isNegative(n)) throw new TypeError("Non-negative integer value expected in function bellNumbers");
+		var result = 0;
+		for (var i = 0; i <= n; i++) result = addScalar(result, stirlingS2(n, i));
+		return result;
+	} });
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/combinatorics/catalan.js
+var name$93 = "catalan";
+var createCatalan = /* @__PURE__ */ factory(name$93, [
+	"typed",
+	"addScalar",
+	"divideScalar",
+	"multiplyScalar",
+	"combinations",
+	"isNegative",
+	"isInteger"
+], (_ref) => {
+	var { typed, addScalar, divideScalar, multiplyScalar, combinations, isNegative, isInteger } = _ref;
+	/**
+	* The Catalan Numbers enumerate combinatorial structures of many different types.
+	* catalan only takes integer arguments.
+	* The following condition must be enforced: n >= 0
+	*
+	* Syntax:
+	*
+	*   math.catalan(n)
+	*
+	* Examples:
+	*
+	*    math.catalan(3) // returns 5
+	*    math.catalan(8) // returns 1430
+	*
+	* See also:
+	*
+	*    bellNumbers
+	*
+	* @param {Number | BigNumber} n    nth Catalan number
+	* @return {Number | BigNumber}     Cn(n)
+	*/
+	return typed(name$93, { "number | BigNumber": function number__BigNumber(n) {
+		if (!isInteger(n) || isNegative(n)) throw new TypeError("Non-negative integer value expected in function catalan");
+		return divideScalar(combinations(multiplyScalar(n, 2), n), addScalar(n, 1));
+	} });
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/combinatorics/composition.js
+var name$92 = "composition";
+var createComposition = /* @__PURE__ */ factory(name$92, [
+	"typed",
+	"addScalar",
+	"combinations",
+	"isNegative",
+	"isPositive",
+	"isInteger",
+	"larger"
+], (_ref) => {
+	var { typed, addScalar, combinations, isPositive, isNegative, isInteger, larger } = _ref;
+	/**
+	* The composition counts of n into k parts.
+	*
+	* composition only takes integer arguments.
+	* The following condition must be enforced: k <= n.
+	*
+	* Syntax:
+	*
+	*   math.composition(n, k)
+	*
+	* Examples:
+	*
+	*    math.composition(5, 3) // returns 6
+	*
+	* See also:
+	*
+	*    combinations
+	*
+	* @param {Number | BigNumber} n    Total number of objects in the set
+	* @param {Number | BigNumber} k    Number of objects in the subset
+	* @return {Number | BigNumber}     Returns the composition counts of n into k parts.
+	*/
+	return typed(name$92, { "number | BigNumber, number | BigNumber": function number__BigNumber_number__BigNumber(n, k) {
+		if (!isInteger(n) || !isPositive(n) || !isInteger(k) || !isPositive(k)) throw new TypeError("Positive integer value expected in function composition");
+		else if (larger(k, n)) throw new TypeError("k must be less than or equal to n in function composition");
+		return combinations(addScalar(n, -1), addScalar(k, -1));
+	} });
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/version.js
+var version$1 = "15.2.0";
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/lruQueue.js
+function lruQueue(limit) {
+	var size = 0;
+	var base = 1;
+	var queue = Object.create(null);
+	var map = Object.create(null);
+	var index = 0;
+	var del = function del(id) {
+		var oldIndex = map[id];
+		if (!oldIndex) return;
+		delete queue[oldIndex];
+		delete map[id];
+		--size;
+		if (base !== oldIndex) return;
+		if (!size) {
+			index = 0;
+			base = 1;
+			return;
+		}
+		while (!Object.prototype.hasOwnProperty.call(queue, ++base));
+	};
+	limit = Math.abs(limit);
+	return {
+		hit: function hit(id) {
+			var oldIndex = map[id];
+			var nuIndex = ++index;
+			queue[nuIndex] = id;
+			map[id] = nuIndex;
+			if (!oldIndex) {
+				++size;
+				if (size <= limit) return void 0;
+				id = queue[base];
+				del(id);
+				return id;
+			}
+			delete queue[oldIndex];
+			if (base !== oldIndex) return void 0;
+			while (!Object.prototype.hasOwnProperty.call(queue, ++base));
+		},
+		delete: del,
+		clear: function clear() {
+			size = index = 0;
+			base = 1;
+			queue = Object.create(null);
+			map = Object.create(null);
+		}
+	};
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/function.js
+/**
+* Memoize a given function by caching the computed result.
+* The cache of a memoized function can be cleared by deleting the `cache`
+* property of the function.
+*
+* @param {function} fn                     The function to be memoized.
+*                                          Must be a pure function.
+* @param {Object} [options]
+* @param {function(args: Array): string} [options.hasher]
+*    A custom hash builder. Is JSON.stringify by default.
+* @param {number | undefined} [options.limit]
+*    Maximum number of values that may be cached. Undefined indicates
+*    unlimited (default)
+* @return {function}                       Returns the memoized function
+*/
+function memoize(fn) {
+	var { hasher, limit } = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {};
+	limit = limit == null ? Number.POSITIVE_INFINITY : limit;
+	hasher = hasher == null ? JSON.stringify : hasher;
+	return function memoize() {
+		if (typeof memoize.cache !== "object") memoize.cache = {
+			values: /* @__PURE__ */ new Map(),
+			lru: lruQueue(limit || Number.POSITIVE_INFINITY)
+		};
+		var args = [];
+		for (var i = 0; i < arguments.length; i++) args[i] = arguments[i];
+		var hash = hasher(args);
+		if (memoize.cache.values.has(hash)) {
+			memoize.cache.lru.hit(hash);
+			return memoize.cache.values.get(hash);
+		}
+		var newVal = fn.apply(fn, args);
+		memoize.cache.values.set(hash, newVal);
+		memoize.cache.values.delete(memoize.cache.lru.hit(hash));
+		return newVal;
+	};
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/bignumber/constants.js
+/**
+* Calculate BigNumber e
+* @param {function} BigNumber   BigNumber constructor
+* @returns {BigNumber} Returns e
+*/
+var createBigNumberE = memoize(function(BigNumber) {
+	return new BigNumber(1).exp();
+}, { hasher });
+/**
+* Calculate BigNumber golden ratio, phi = (1+sqrt(5))/2
+* @param {function} BigNumber   BigNumber constructor
+* @returns {BigNumber} Returns phi
+*/
+var createBigNumberPhi = memoize(function(BigNumber) {
+	return new BigNumber(1).plus(new BigNumber(5).sqrt()).div(2);
+}, { hasher });
+/**
+* Calculate BigNumber pi.
+* @param {function} BigNumber   BigNumber constructor
+* @returns {BigNumber} Returns pi
+*/
+var createBigNumberPi = memoize(function(BigNumber) {
+	return BigNumber.acos(-1);
+}, { hasher });
+/**
+* Calculate BigNumber tau, tau = 2 * pi
+* @param {function} BigNumber   BigNumber constructor
+* @returns {BigNumber} Returns tau
+*/
+var createBigNumberTau = memoize(function(BigNumber) {
+	return createBigNumberPi(BigNumber).times(2);
+}, { hasher });
+/**
+* Create a hash for a BigNumber constructor function. The created has is
+* the configured precision
+* @param {Array} args         Supposed to contain a single entry with
+*                             a BigNumber constructor
+* @return {number} precision
+* @private
+*/
+function hasher(args) {
+	return args[0].precision;
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/constants.js
+var createTrue = /* @__PURE__ */ factory("true", [], () => true);
+var createFalse = /* @__PURE__ */ factory("false", [], () => false);
+var createNull = /* @__PURE__ */ factory("null", [], () => null);
+var createInfinity = /* @__PURE__ */ recreateFactory("Infinity", ["config", "?BigNumber"], (_ref) => {
+	var { config, BigNumber } = _ref;
+	return config.number === "BigNumber" ? new BigNumber(Infinity) : Infinity;
+});
+var createNaN = /* @__PURE__ */ recreateFactory("NaN", ["config", "?BigNumber"], (_ref2) => {
+	var { config, BigNumber } = _ref2;
+	return config.number === "BigNumber" ? new BigNumber(NaN) : NaN;
+});
+var createPi = /* @__PURE__ */ recreateFactory("pi", ["config", "?BigNumber"], (_ref3) => {
+	var { config, BigNumber } = _ref3;
+	return config.number === "BigNumber" ? createBigNumberPi(BigNumber) : pi$1;
+});
+var createTau = /* @__PURE__ */ recreateFactory("tau", ["config", "?BigNumber"], (_ref4) => {
+	var { config, BigNumber } = _ref4;
+	return config.number === "BigNumber" ? createBigNumberTau(BigNumber) : tau$1;
+});
+var createE = /* @__PURE__ */ recreateFactory("e", ["config", "?BigNumber"], (_ref5) => {
+	var { config, BigNumber } = _ref5;
+	return config.number === "BigNumber" ? createBigNumberE(BigNumber) : e$1;
+});
+var createPhi = /* @__PURE__ */ recreateFactory("phi", ["config", "?BigNumber"], (_ref6) => {
+	var { config, BigNumber } = _ref6;
+	return config.number === "BigNumber" ? createBigNumberPhi(BigNumber) : phi$1;
+});
+var createLN2 = /* @__PURE__ */ recreateFactory("LN2", ["config", "?BigNumber"], (_ref7) => {
+	var { config, BigNumber } = _ref7;
+	return config.number === "BigNumber" ? new BigNumber(2).ln() : Math.LN2;
+});
+var createLN10 = /* @__PURE__ */ recreateFactory("LN10", ["config", "?BigNumber"], (_ref8) => {
+	var { config, BigNumber } = _ref8;
+	return config.number === "BigNumber" ? new BigNumber(10).ln() : Math.LN10;
+});
+var createLOG2E = /* @__PURE__ */ recreateFactory("LOG2E", ["config", "?BigNumber"], (_ref9) => {
+	var { config, BigNumber } = _ref9;
+	return config.number === "BigNumber" ? new BigNumber(1).div(new BigNumber(2).ln()) : Math.LOG2E;
+});
+var createLOG10E = /* @__PURE__ */ recreateFactory("LOG10E", ["config", "?BigNumber"], (_ref0) => {
+	var { config, BigNumber } = _ref0;
+	return config.number === "BigNumber" ? new BigNumber(1).div(new BigNumber(10).ln()) : Math.LOG10E;
+});
+var createSQRT1_2 = /* @__PURE__ */ recreateFactory("SQRT1_2", ["config", "?BigNumber"], (_ref1) => {
+	var { config, BigNumber } = _ref1;
+	return config.number === "BigNumber" ? new BigNumber("0.5").sqrt() : Math.SQRT1_2;
+});
+var createSQRT2 = /* @__PURE__ */ recreateFactory("SQRT2", ["config", "?BigNumber"], (_ref10) => {
+	var { config, BigNumber } = _ref10;
+	return config.number === "BigNumber" ? new BigNumber(2).sqrt() : Math.SQRT2;
+});
+var createVersion = /* @__PURE__ */ factory("version", [], () => version$1);
+function recreateFactory(name, dependencies, create) {
+	return factory(name, dependencies, create, { recreateOnConfigChange: true });
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/type/number.js
+var name$91 = "number";
+var dependencies$81 = ["typed"];
+/**
+* Separates the radix, integer part, and fractional part of a non decimal number string
+* @param {string} input string to parse
+* @returns {object} the parts of the string or null if not a valid input
+*/
+function getNonDecimalNumberParts(input) {
+	var nonDecimalWithRadixMatch = input.match(/(0[box])([0-9a-fA-F]*)\.([0-9a-fA-F]*)/);
+	if (nonDecimalWithRadixMatch) return {
+		input,
+		radix: {
+			"0b": 2,
+			"0o": 8,
+			"0x": 16
+		}[nonDecimalWithRadixMatch[1]],
+		integerPart: nonDecimalWithRadixMatch[2],
+		fractionalPart: nonDecimalWithRadixMatch[3]
+	};
+	else return null;
+}
+/**
+* Makes a number from a radix, and integer part, and a fractional part
+* @param {parts} [x] parts of the number string (from getNonDecimalNumberParts)
+* @returns {number} the number
+*/
+function makeNumberFromNonDecimalParts(parts) {
+	var n = parseInt(parts.integerPart, parts.radix);
+	var f = 0;
+	for (var i = 0; i < parts.fractionalPart.length; i++) {
+		var digitValue = parseInt(parts.fractionalPart[i], parts.radix);
+		f += digitValue / Math.pow(parts.radix, i + 1);
+	}
+	var result = n + f;
+	if (isNaN(result)) throw new SyntaxError("String \"" + parts.input + "\" is not a valid number");
+	return result;
+}
+var createNumber = /* @__PURE__ */ factory(name$91, dependencies$81, (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Create a number or convert a string, boolean, or unit to a number.
+	* When value is a matrix, all elements will be converted to number.
+	*
+	* Syntax:
+	*
+	*    math.number(value)
+	*    math.number(unit, valuelessUnit)
+	*
+	* Examples:
+	*
+	*    math.number(2)                         // returns number 2
+	*    math.number('7.2')                     // returns number 7.2
+	*    math.number(true)                      // returns number 1
+	*    math.number([true, false, true, true]) // returns [1, 0, 1, 1]
+	*    math.number(math.unit('52cm'), 'm')    // returns 0.52
+	*
+	* See also:
+	*
+	*    bignumber, bigint, boolean, numeric, complex, index, matrix, string, unit
+	*
+	* @param {string | number | BigNumber | Fraction | boolean | Array | Matrix | Unit | null} [value]  Value to be converted
+	* @param {Unit | string} [valuelessUnit] A valueless unit, used to convert a unit to a number
+	* @return {number | Array | Matrix} The created number
+	*/
+	var number = typed("number", {
+		"": function _() {
+			return 0;
+		},
+		number: function number(x) {
+			return x;
+		},
+		string: function string(x) {
+			if (x === "NaN") return NaN;
+			var nonDecimalNumberParts = getNonDecimalNumberParts(x);
+			if (nonDecimalNumberParts) return makeNumberFromNonDecimalParts(nonDecimalNumberParts);
+			var size = 0;
+			var wordSizeSuffixMatch = x.match(/(0[box][0-9a-fA-F]*)i([0-9]*)/);
+			if (wordSizeSuffixMatch) {
+				size = Number(wordSizeSuffixMatch[2]);
+				x = wordSizeSuffixMatch[1];
+			}
+			var num = Number(x);
+			if (isNaN(num)) throw new SyntaxError("String \"" + x + "\" is not a valid number");
+			if (wordSizeSuffixMatch) {
+				if (num > 2 ** size - 1) throw new SyntaxError("String \"".concat(x, "\" is out of range"));
+				if (num >= 2 ** (size - 1)) num = num - 2 ** size;
+			}
+			return num;
+		},
+		BigNumber: function BigNumber(x) {
+			return x.toNumber();
+		},
+		bigint: function bigint(x) {
+			return Number(x);
+		},
+		Fraction: function Fraction(x) {
+			return x.valueOf();
+		},
+		Unit: typed.referToSelf((self) => (x) => {
+			var clone = x.clone();
+			clone.value = self(x.value);
+			return clone;
+		}),
+		null: function _null(x) {
+			return 0;
+		},
+		"Unit, string | Unit": function Unit_string__Unit(unit, valuelessUnit) {
+			return unit.toNumber(valuelessUnit);
+		},
+		"Array | Matrix": typed.referToSelf((self) => (x) => deepMap(x, self))
+	});
+	number.fromJSON = function(json) {
+		return parseFloat(json.value);
+	};
+	return number;
+});
+var createBigint = /* @__PURE__ */ factory("bigint", ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Create a bigint or convert a string, boolean, or unit to a bigint.
+	* When value is a matrix, all elements will be converted to bigint.
+	*
+	* Syntax:
+	*
+	*    math.bigint(value)
+	*
+	* Examples:
+	*
+	*    math.bigint(2)                         // returns 2n
+	*    math.bigint('123')                     // returns 123n
+	*    math.bigint(true)                      // returns 1n
+	*    math.bigint([true, false, true, true]) // returns [1n, 0n, 1n, 1n]
+	*
+	* See also:
+	*
+	*    number, bignumber, boolean, complex, index, matrix, string, unit
+	*
+	* History:
+	*
+	*    v13      Created
+	*    v14.2.1  Added conversion options
+	*
+	* @param {string | number | BigNumber | bigint | Fraction | boolean | Array | Matrix | null} [value]  Value to be converted
+	* @return {bigint | Array | Matrix} The created bigint
+	*/
+	var bigint = typed("bigint", {
+		"": function _() {
+			return 0n;
+		},
+		bigint: function bigint(x) {
+			return x;
+		},
+		number: function number(x) {
+			return BigInt(x.toFixed());
+		},
+		BigNumber: function BigNumber(x) {
+			return BigInt(x.round().toString());
+		},
+		Fraction: function Fraction(x) {
+			return BigInt(x.valueOf().toFixed());
+		},
+		"string | boolean": function string__boolean(x) {
+			return BigInt(x);
+		},
+		null: function _null(x) {
+			return 0n;
+		},
+		"Array | Matrix": typed.referToSelf((self) => (x) => deepMap(x, self))
+	});
+	bigint.fromJSON = function(json) {
+		return BigInt(json.value);
+	};
+	return bigint;
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/type/string.js
+var name$89 = "string";
+var createString = /* @__PURE__ */ factory(name$89, ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Create a string or convert any object into a string.
+	* Elements of Arrays and Matrices are processed element wise.
+	*
+	* Syntax:
+	*
+	*    math.string(value)
+	*
+	* Examples:
+	*
+	*    math.string(4.2)                // returns string '4.2'
+	*    math.string(math.complex(3, 2)) // returns string '3 + 2i'
+	*
+	*    const u = math.unit(5, 'km')
+	*    math.string(u.to('m'))          // returns string '5000 m'
+	*
+	*    math.string([true, false])      // returns ['true', 'false']
+	*
+	* See also:
+	*
+	*    bignumber, boolean, complex, index, matrix, number, unit
+	*
+	* History:
+	*
+	*    v0.9  Created
+	*
+	* @param {* | Array | Matrix | null} [value]  A value to convert to a string
+	* @return {string | Array | Matrix} The created string
+	*/
+	return typed(name$89, {
+		"": function _() {
+			return "";
+		},
+		number: format$3,
+		null: function _null(x) {
+			return "null";
+		},
+		boolean: function boolean(x) {
+			return x + "";
+		},
+		string: function string(x) {
+			return x;
+		},
+		"Array | Matrix": typed.referToSelf((self) => (x) => deepMap(x, self)),
+		any: function any(x) {
+			return String(x);
+		}
+	});
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/type/boolean.js
+var name$88 = "boolean";
+var createBoolean = /* @__PURE__ */ factory(name$88, ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Create a boolean or convert a string or number to a boolean.
+	* In case of a number, `true` is returned for non-zero numbers, and `false` in
+	* case of zero.
+	* Strings can be `'true'` or `'false'`, or can contain a number.
+	* When value is a matrix, all elements will be converted to boolean.
+	*
+	* Syntax:
+	*
+	*    math.boolean(x)
+	*
+	* Examples:
+	*
+	*    math.boolean(0)     // returns false
+	*    math.boolean(1)     // returns true
+	*    math.boolean(-3)     // returns true
+	*    math.boolean('true')     // returns true
+	*    math.boolean('false')     // returns false
+	*    math.boolean([1, 0, 1, 1])     // returns [true, false, true, true]
+	*
+	* See also:
+	*
+	*    bignumber, complex, index, matrix, string, unit
+	*
+	* History:
+	*
+	*    v0.11    Created
+	*    v0.16    Added conversion from BigNumber
+	*    v14.2.1  Added conversion from bigint
+	*
+	* @param {string | number | boolean | Array | Matrix | null} value  A value of any type
+	* @return {boolean | Array | Matrix} The boolean value
+	*/
+	return typed(name$88, {
+		"": function _() {
+			return false;
+		},
+		boolean: function boolean(x) {
+			return x;
+		},
+		number: function number(x) {
+			return !!x;
+		},
+		null: function _null(x) {
+			return false;
+		},
+		BigNumber: function BigNumber(x) {
+			return !x.isZero();
+		},
+		string: function string(x) {
+			var lcase = x.toLowerCase();
+			if (lcase === "true") return true;
+			else if (lcase === "false") return false;
+			var num = Number(x);
+			if (x !== "" && !isNaN(num)) return !!num;
+			throw new Error("Cannot convert \"" + x + "\" to a boolean");
+		},
+		"Array | Matrix": typed.referToSelf((self) => (x) => deepMap(x, self))
+	});
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/function/parser.js
+var name$87 = "parser";
+var createParser = /* @__PURE__ */ factory(name$87, ["typed", "Parser"], (_ref) => {
+	var { typed, Parser } = _ref;
+	/**
+	* Create a `math.Parser` object that keeps a context of variables and their values, allowing the evaluation of expressions in that context.
+	*
+	* Syntax:
+	*
+	*    math.parser()
+	*
+	* Examples:
+	*
+	*     const parser = new math.parser()
+	*
+	*     // evaluate expressions
+	*     const a = parser.evaluate('sqrt(3^2 + 4^2)') // 5
+	*     const b = parser.evaluate('sqrt(-4)')        // 2i
+	*     const c = parser.evaluate('2 inch in cm')    // 5.08 cm
+	*     const d = parser.evaluate('cos(45 deg)')     // 0.7071067811865476
+	*
+	*     // define variables and functions
+	*     parser.evaluate('x = 7 / 2')             // 3.5
+	*     parser.evaluate('x + 3')                 // 6.5
+	*     parser.evaluate('f(x, y) = x^y')         // f(x, y)
+	*     parser.evaluate('f(2, 3)')               // 8
+	*
+	*     // get and set variables and functions
+	*     const x = parser.get('x')                // 3.5
+	*     const f = parser.get('f')                // function
+	*     const g = f(3, 2)                        // 9
+	*     parser.set('h', 500)
+	*     const i = parser.evaluate('h / 2')       // 250
+	*     parser.set('hello', function (name) {
+	*       return 'hello, ' + name + '!'
+	*     })
+	*     parser.evaluate('hello("user")')         // "hello, user!"
+	*
+	*     // clear defined functions and variables
+	*     parser.clear()
+	*
+	* See also:
+	*
+	*    evaluate, compile, parse
+	*
+	* @return {Parser} Parser
+	*/
+	return typed(name$87, { "": function _() {
+		return new Parser();
+	} });
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/keywords.js
+var keywords = new Set(["end"]);
+var createNode = /* @__PURE__ */ factory("Node", ["mathWithTransform"], (_ref) => {
+	var { mathWithTransform } = _ref;
+	/**
+	* Validate the symbol names of a scope.
+	* Throws an error when the scope contains an illegal symbol.
+	* @param {Object} scope
+	*/
+	function _validateScope(scope) {
+		for (var symbol of [...keywords]) if (scope.has(symbol)) throw new Error("Scope contains an illegal symbol, \"" + symbol + "\" is a reserved keyword");
+	}
+	class Node {
+		get type() {
+			return "Node";
+		}
+		get isNode() {
+			return true;
+		}
+		/**
+		* Evaluate the node
+		* @param {Object} [scope]  Scope to read/write variables
+		* @return {*}              Returns the result
+		*/
+		evaluate(scope) {
+			return this.compile().evaluate(scope);
+		}
+		/**
+		* Compile the node into an optimized, evauatable JavaScript function
+		* @return {{evaluate: function([Object])}} object
+		*                Returns an object with a function 'evaluate',
+		*                which can be invoked as expr.evaluate([scope: Object]),
+		*                where scope is an optional object with
+		*                variables.
+		*/
+		compile() {
+			var expr = this._compile(mathWithTransform, {});
+			var args = {};
+			var context = null;
+			function evaluate(scope) {
+				var s = createMap$1(scope);
+				_validateScope(s);
+				return expr(s, args, context);
+			}
+			return { evaluate };
+		}
+		/**
+		* Compile a node into a JavaScript function.
+		* This basically pre-calculates as much as possible and only leaves open
+		* calculations which depend on a dynamic scope with variables.
+		* @param {Object} math     Math.js namespace with functions and constants.
+		* @param {Object} argNames An object with argument names as key and `true`
+		*                          as value. Used in the SymbolNode to optimize
+		*                          for arguments from user assigned functions
+		*                          (see FunctionAssignmentNode) or special symbols
+		*                          like `end` (see IndexNode).
+		* @return {function} Returns a function which can be called like:
+		*                        evalNode(scope: Object, args: Object, context: *)
+		*/
+		_compile(math, argNames) {
+			throw new Error("Method _compile must be implemented by type " + this.type);
+		}
+		/**
+		* Execute a callback for each of the child nodes of this node
+		* @param {function(child: Node, path: string, parent: Node)} callback
+		*/
+		forEach(callback) {
+			throw new Error("Cannot run forEach on a Node interface");
+		}
+		/**
+		* Create a new Node whose children are the results of calling the
+		* provided callback function for each child of the original node.
+		* @param {function(child: Node, path: string, parent: Node): Node} callback
+		* @returns {OperatorNode} Returns a transformed copy of the node
+		*/
+		map(callback) {
+			throw new Error("Cannot run map on a Node interface");
+		}
+		/**
+		* Validate whether an object is a Node, for use with map
+		* @param {Node} node
+		* @returns {Node} Returns the input if it's a node, else throws an Error
+		* @protected
+		*/
+		_ifNode(node) {
+			if (!isNode(node)) throw new TypeError("Callback function must return a Node");
+			return node;
+		}
+		/**
+		* Recursively traverse all nodes in a node tree. Executes given callback for
+		* this node and each of its child nodes.
+		* @param {function(node: Node, path: string, parent: Node)} callback
+		*          A callback called for every node in the node tree.
+		*/
+		traverse(callback) {
+			callback(this, null, null);
+			function _traverse(node, callback) {
+				node.forEach(function(child, path, parent) {
+					callback(child, path, parent);
+					_traverse(child, callback);
+				});
+			}
+			_traverse(this, callback);
+		}
+		/**
+		* Recursively transform a node tree via a transform function.
+		*
+		* For example, to replace all nodes of type SymbolNode having name 'x' with
+		* a ConstantNode with value 2:
+		*
+		*     const res = Node.transform(function (node, path, parent) {
+		*       if (node && node.isSymbolNode) && (node.name === 'x')) {
+		*         return new ConstantNode(2)
+		*       }
+		*       else {
+		*         return node
+		*       }
+		*     })
+		*
+		* @param {function(node: Node, path: string, parent: Node) : Node} callback
+		*          A mapping function accepting a node, and returning
+		*          a replacement for the node or the original node. The "signature"
+		*          of the callback must be:
+		*          callback(node: Node, index: string, parent: Node) : Node
+		* @return {Node} Returns the original node or its replacement
+		*/
+		transform(callback) {
+			function _transform(child, path, parent) {
+				var replacement = callback(child, path, parent);
+				if (replacement !== child) return replacement;
+				return child.map(_transform);
+			}
+			return _transform(this, null, null);
+		}
+		/**
+		* Find any node in the node tree matching given filter function. For
+		* example, to find all nodes of type SymbolNode having name 'x':
+		*
+		*     const results = Node.filter(function (node) {
+		*       return (node && node.isSymbolNode) && (node.name === 'x')
+		*     })
+		*
+		* @param {function(node: Node, path: string, parent: Node) : Node} callback
+		*            A test function returning true when a node matches, and false
+		*            otherwise. Function signature:
+		*            callback(node: Node, index: string, parent: Node) : boolean
+		* @return {Node[]} nodes
+		*            An array with nodes matching given filter criteria
+		*/
+		filter(callback) {
+			var nodes = [];
+			this.traverse(function(node, path, parent) {
+				if (callback(node, path, parent)) nodes.push(node);
+			});
+			return nodes;
+		}
+		/**
+		* Create a shallow clone of this node
+		* @return {Node}
+		*/
+		clone() {
+			throw new Error("Cannot clone a Node interface");
+		}
+		/**
+		* Create a deep clone of this node
+		* @return {Node}
+		*/
+		cloneDeep() {
+			return this.map(function(node) {
+				return node.cloneDeep();
+			});
+		}
+		/**
+		* Deep compare this node with another node.
+		* @param {Node} other
+		* @return {boolean} Returns true when both nodes are of the same type and
+		*                   contain the same values (as do their childs)
+		*/
+		equals(other) {
+			return other ? this.type === other.type && deepStrictEqual(this, other) : false;
+		}
+		/**
+		* Get string representation. (wrapper function)
+		*
+		* This function can get an object of the following form:
+		* {
+		*    handler: //This can be a callback function of the form
+		*             // "function callback(node, options)"or
+		*             // a map that maps function names (used in FunctionNodes)
+		*             // to callbacks
+		*    parenthesis: "keep" //the parenthesis option (This is optional)
+		* }
+		*
+		* @param {Object} [options]
+		* @return {string}
+		*/
+		toString(options) {
+			var customString = this._getCustomString(options);
+			if (typeof customString !== "undefined") return customString;
+			return this._toString(options);
+		}
+		/**
+		* Internal function to generate the string output.
+		* This has to be implemented by every Node
+		*
+		* @throws {Error}
+		*/
+		_toString() {
+			throw new Error("_toString not implemented for " + this.type);
+		}
+		/**
+		* Get a JSON representation of the node
+		* Both .toJSON() and the static .fromJSON(json) should be implemented by all
+		* implementations of Node
+		* @returns {Object}
+		*/
+		toJSON() {
+			throw new Error("Cannot serialize object: toJSON not implemented by " + this.type);
+		}
+		/**
+		* Get HTML representation. (wrapper function)
+		*
+		* This function can get an object of the following form:
+		* {
+		*    handler: //This can be a callback function of the form
+		*             // "function callback(node, options)" or
+		*             // a map that maps function names (used in FunctionNodes)
+		*             // to callbacks
+		*    parenthesis: "keep" //the parenthesis option (This is optional)
+		* }
+		*
+		* @param {Object} [options]
+		* @return {string}
+		*/
+		toHTML(options) {
+			var customString = this._getCustomString(options);
+			if (typeof customString !== "undefined") return customString;
+			return this._toHTML(options);
+		}
+		/**
+		* Internal function to generate the HTML output.
+		* This has to be implemented by every Node
+		*
+		* @throws {Error}
+		*/
+		_toHTML() {
+			throw new Error("_toHTML not implemented for " + this.type);
+		}
+		/**
+		* Get LaTeX representation. (wrapper function)
+		*
+		* This function can get an object of the following form:
+		* {
+		*    handler: //This can be a callback function of the form
+		*             // "function callback(node, options)"or
+		*             // a map that maps function names (used in FunctionNodes)
+		*             // to callbacks
+		*    parenthesis: "keep" //the parenthesis option (This is optional)
+		* }
+		*
+		* @param {Object} [options]
+		* @return {string}
+		*/
+		toTex(options) {
+			var customString = this._getCustomString(options);
+			if (typeof customString !== "undefined") return customString;
+			return this._toTex(options);
+		}
+		/**
+		* Internal function to generate the LaTeX output.
+		* This has to be implemented by every Node
+		*
+		* @param {Object} [options]
+		* @throws {Error}
+		*/
+		_toTex(options) {
+			throw new Error("_toTex not implemented for " + this.type);
+		}
+		/**
+		* Helper used by `to...` functions.
+		*/
+		_getCustomString(options) {
+			if (options && typeof options === "object") switch (typeof options.handler) {
+				case "object":
+				case "undefined": return;
+				case "function": return options.handler(this, options);
+				default: throw new TypeError("Object or function expected as callback");
+			}
+		}
+		/**
+		* Get identifier.
+		* @return {string}
+		*/
+		getIdentifier() {
+			return this.type;
+		}
+		/**
+		* Get the content of the current Node.
+		* @return {Node} node
+		**/
+		getContent() {
+			return this;
+		}
+	}
+	return Node;
+}, {
+	isClass: true,
+	isNode: true
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/transform/utils/errorTransform.js
+/**
+* Transform zero-based indices to one-based indices in errors
+* @param {Error} err
+* @returns {Error | IndexError} Returns the transformed error
+*/
+function errorTransform(err) {
+	if (err && err.isIndexError) return new IndexError(err.index + 1, err.min + 1, err.max !== void 0 ? err.max + 1 : void 0);
+	return err;
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/node/utils/access.js
+function accessFactory(_ref) {
+	var { subset } = _ref;
+	/**
+	* Retrieve part of an object:
+	*
+	* - Retrieve a property from an object
+	* - Retrieve a part of a string
+	* - Retrieve a matrix subset
+	*
+	* @param {Object | Array | Matrix | string} object
+	* @param {Index} index
+	* @return {Object | Array | Matrix | string} Returns the subset
+	*/
+	return function access(object, index) {
+		try {
+			if (Array.isArray(object)) return subset(object, index);
+			else if (object && typeof object.subset === "function") return object.subset(index);
+			else if (typeof object === "string") return subset(object, index);
+			else if (typeof object === "object") {
+				if (!index.isObjectProperty()) throw new TypeError("Cannot apply a numeric index as object property");
+				return getSafeProperty(object, index.getObjectProperty());
+			} else throw new TypeError("Cannot apply index: unsupported type of object");
+		} catch (err) {
+			throw errorTransform(err);
+		}
+	};
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/node/AccessorNode.js
+var name$85 = "AccessorNode";
+var createAccessorNode = /* @__PURE__ */ factory(name$85, ["subset", "Node"], (_ref) => {
+	var { subset, Node } = _ref;
+	var access = accessFactory({ subset });
+	/**
+	* Are parenthesis needed?
+	* @private
+	*/
+	function needParenthesis(node) {
+		return !(isAccessorNode(node) || isArrayNode(node) || isConstantNode(node) || isFunctionNode(node) || isObjectNode(node) || isParenthesisNode(node) || isSymbolNode(node));
+	}
+	class AccessorNode extends Node {
+		/**
+		* @constructor AccessorNode
+		* @extends {Node}
+		* Access an object property or get a matrix subset
+		*
+		* @param {Node} object                 The object from which to retrieve
+		*                                      a property or subset.
+		* @param {IndexNode} index             IndexNode containing ranges
+		* @param {boolean} [optionalChaining=false]
+		*     Optional property, if the accessor was written as optional-chaining
+		*     using `a?.b`, or `a?.["b"] with bracket notation.
+		*     Forces evaluate to undefined if the given object is undefined or null.
+		*/
+		constructor(object, index) {
+			var optionalChaining = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : false;
+			super();
+			if (!isNode(object)) throw new TypeError("Node expected for parameter \"object\"");
+			if (!isIndexNode(index)) throw new TypeError("IndexNode expected for parameter \"index\"");
+			this.object = object;
+			this.index = index;
+			this.optionalChaining = optionalChaining;
+		}
+		get name() {
+			if (this.index) return this.index.isObjectProperty() ? this.index.getObjectProperty() : "";
+			else return this.object.name || "";
+		}
+		get type() {
+			return name$85;
+		}
+		get isAccessorNode() {
+			return true;
+		}
+		/**
+		* Compile a node into a JavaScript function.
+		* This basically pre-calculates as much as possible and only leaves open
+		* calculations which depend on a dynamic scope with variables.
+		* @param {Object} math     Math.js namespace with functions and constants.
+		* @param {Object} argNames An object with argument names as key and `true`
+		*                          as value. Used in the SymbolNode to optimize
+		*                          for arguments from user assigned functions
+		*                          (see FunctionAssignmentNode) or special symbols
+		*                          like `end` (see IndexNode).
+		* @return {function} Returns a function which can be called like:
+		*                        evalNode(scope: Object, args: Object, context: *)
+		*/
+		_compile(math, argNames) {
+			var evalObject = this.object._compile(math, argNames);
+			var evalIndex = this.index._compile(math, argNames);
+			var optionalChaining = this.optionalChaining;
+			var prevOptionalChaining = isAccessorNode(this.object) && this.object.optionalChaining;
+			if (this.index.isObjectProperty()) {
+				var prop = this.index.getObjectProperty();
+				return function evalAccessorNode(scope, args, context) {
+					var ctx = context || {};
+					var object = evalObject(scope, args, ctx);
+					if (optionalChaining && object == null) {
+						ctx.optionalShortCircuit = true;
+						return;
+					}
+					if (prevOptionalChaining && ctx !== null && ctx !== void 0 && ctx.optionalShortCircuit) return;
+					return getSafeProperty(object, prop);
+				};
+			} else return function evalAccessorNode(scope, args, context) {
+				var ctx = context || {};
+				var object = evalObject(scope, args, ctx);
+				if (optionalChaining && object == null) {
+					ctx.optionalShortCircuit = true;
+					return;
+				}
+				if (prevOptionalChaining && ctx !== null && ctx !== void 0 && ctx.optionalShortCircuit) return;
+				return access(object, evalIndex(scope, args, object));
+			};
+		}
+		/**
+		* Execute a callback for each of the child nodes of this node
+		* @param {function(child: Node, path: string, parent: Node)} callback
+		*/
+		forEach(callback) {
+			callback(this.object, "object", this);
+			callback(this.index, "index", this);
+		}
+		/**
+		* Create a new AccessorNode whose children are the results of calling
+		* the provided callback function for each child of the original node.
+		* @param {function(child: Node, path: string, parent: Node): Node} callback
+		* @returns {AccessorNode} Returns a transformed copy of the node
+		*/
+		map(callback) {
+			return new AccessorNode(this._ifNode(callback(this.object, "object", this)), this._ifNode(callback(this.index, "index", this)), this.optionalChaining);
+		}
+		/**
+		* Create a clone of this node, a shallow copy
+		* @return {AccessorNode}
+		*/
+		clone() {
+			return new AccessorNode(this.object, this.index, this.optionalChaining);
+		}
+		/**
+		* Get string representation
+		* @param {Object} options
+		* @return {string}
+		*/
+		_toString(options) {
+			var object = this.object.toString(options);
+			if (needParenthesis(this.object)) object = "(" + object + ")";
+			var optionalChaining = this.optionalChaining ? this.index.dotNotation ? "?" : "?." : "";
+			return object + optionalChaining + this.index.toString(options);
+		}
+		/**
+		* Get HTML representation
+		* @param {Object} options
+		* @return {string}
+		*/
+		_toHTML(options) {
+			var object = this.object.toHTML(options);
+			if (needParenthesis(this.object)) object = "<span class=\"math-parenthesis math-round-parenthesis\">(</span>" + object + "<span class=\"math-parenthesis math-round-parenthesis\">)</span>";
+			return object + this.index.toHTML(options);
+		}
+		/**
+		* Get LaTeX representation
+		* @param {Object} options
+		* @return {string}
+		*/
+		_toTex(options) {
+			var object = this.object.toTex(options);
+			if (needParenthesis(this.object)) object = "\\left(' + object + '\\right)";
+			return object + this.index.toTex(options);
+		}
+		/**
+		* Get a JSON representation of the node
+		* @returns {Object}
+		*/
+		toJSON() {
+			return {
+				mathjs: name$85,
+				object: this.object,
+				index: this.index,
+				optionalChaining: this.optionalChaining
+			};
+		}
+		/**
+		* Instantiate an AccessorNode from its JSON representation
+		* @param {Object} json
+		*     An object structured like
+		*     `{"mathjs": "AccessorNode", object: ..., index: ...}`,
+		*     where mathjs is optional
+		* @returns {AccessorNode}
+		*/
+		static fromJSON(json) {
+			return new AccessorNode(json.object, json.index, json.optionalChaining);
+		}
+	}
+	_defineProperty(AccessorNode, "name", name$85);
+	return AccessorNode;
+}, {
+	isClass: true,
+	isNode: true
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/node/ArrayNode.js
+var name$84 = "ArrayNode";
+var createArrayNode = /* @__PURE__ */ factory(name$84, ["Node"], (_ref) => {
+	var { Node } = _ref;
+	class ArrayNode extends Node {
+		/**
+		* @constructor ArrayNode
+		* @extends {Node}
+		* Holds an 1-dimensional array with items
+		* @param {Node[]} [items]   1 dimensional array with items
+		*/
+		constructor(items) {
+			super();
+			this.items = items || [];
+			if (!Array.isArray(this.items) || !this.items.every(isNode)) throw new TypeError("Array containing Nodes expected");
+		}
+		get type() {
+			return name$84;
+		}
+		get isArrayNode() {
+			return true;
+		}
+		/**
+		* Compile a node into a JavaScript function.
+		* This basically pre-calculates as much as possible and only leaves open
+		* calculations which depend on a dynamic scope with variables.
+		* @param {Object} math     Math.js namespace with functions and constants.
+		* @param {Object} argNames An object with argument names as key and `true`
+		*                          as value. Used in the SymbolNode to optimize
+		*                          for arguments from user assigned functions
+		*                          (see FunctionAssignmentNode) or special symbols
+		*                          like `end` (see IndexNode).
+		* @return {function} Returns a function which can be called like:
+		*                        evalNode(scope: Object, args: Object, context: *)
+		*/
+		_compile(math, argNames) {
+			var evalItems = map$1(this.items, function(item) {
+				return item._compile(math, argNames);
+			});
+			if (math.config.matrix !== "Array") {
+				var matrix = math.matrix;
+				return function evalArrayNode(scope, args, context) {
+					return matrix(map$1(evalItems, function(evalItem) {
+						return evalItem(scope, args, context);
+					}));
+				};
+			} else return function evalArrayNode(scope, args, context) {
+				return map$1(evalItems, function(evalItem) {
+					return evalItem(scope, args, context);
+				});
+			};
+		}
+		/**
+		* Execute a callback for each of the child nodes of this node
+		* @param {function(child: Node, path: string, parent: Node)} callback
+		*/
+		forEach(callback) {
+			for (var i = 0; i < this.items.length; i++) {
+				var node = this.items[i];
+				callback(node, "items[" + i + "]", this);
+			}
+		}
+		/**
+		* Create a new ArrayNode whose children are the results of calling
+		* the provided callback function for each child of the original node.
+		* @param {function(child: Node, path: string, parent: Node): Node} callback
+		* @returns {ArrayNode} Returns a transformed copy of the node
+		*/
+		map(callback) {
+			var items = [];
+			for (var i = 0; i < this.items.length; i++) items[i] = this._ifNode(callback(this.items[i], "items[" + i + "]", this));
+			return new ArrayNode(items);
+		}
+		/**
+		* Create a clone of this node, a shallow copy
+		* @return {ArrayNode}
+		*/
+		clone() {
+			return new ArrayNode(this.items.slice(0));
+		}
+		/**
+		* Get string representation
+		* @param {Object} options
+		* @return {string} str
+		* @override
+		*/
+		_toString(options) {
+			return "[" + this.items.map(function(node) {
+				return node.toString(options);
+			}).join(", ") + "]";
+		}
+		/**
+		* Get a JSON representation of the node
+		* @returns {Object}
+		*/
+		toJSON() {
+			return {
+				mathjs: name$84,
+				items: this.items
+			};
+		}
+		/**
+		* Instantiate an ArrayNode from its JSON representation
+		* @param {Object} json  An object structured like
+		*                       `{"mathjs": "ArrayNode", items: [...]}`,
+		*                       where mathjs is optional
+		* @returns {ArrayNode}
+		*/
+		static fromJSON(json) {
+			return new ArrayNode(json.items);
+		}
+		/**
+		* Get HTML representation
+		* @param {Object} options
+		* @return {string} str
+		* @override
+		*/
+		_toHTML(options) {
+			return "<span class=\"math-parenthesis math-square-parenthesis\">[</span>" + this.items.map(function(node) {
+				return node.toHTML(options);
+			}).join("<span class=\"math-separator\">,</span>") + "<span class=\"math-parenthesis math-square-parenthesis\">]</span>";
+		}
+		/**
+		* Get LaTeX representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toTex(options) {
+			function itemsToTex(items, nested) {
+				var mixedItems = items.some(isArrayNode) && !items.every(isArrayNode);
+				var itemsFormRow = nested || mixedItems;
+				var itemSep = itemsFormRow ? "&" : "\\\\";
+				var itemsTex = items.map(function(node) {
+					if (node.items) return itemsToTex(node.items, !nested);
+					else return node.toTex(options);
+				}).join(itemSep);
+				return mixedItems || !itemsFormRow || itemsFormRow && !nested ? "\\begin{bmatrix}" + itemsTex + "\\end{bmatrix}" : itemsTex;
+			}
+			return itemsToTex(this.items, false);
+		}
+	}
+	_defineProperty(ArrayNode, "name", name$84);
+	return ArrayNode;
+}, {
+	isClass: true,
+	isNode: true
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/node/utils/assign.js
+function assignFactory(_ref) {
+	var { subset, matrix } = _ref;
+	/**
+	* Replace part of an object:
+	*
+	* - Assign a property to an object
+	* - Replace a part of a string
+	* - Replace a matrix subset
+	*
+	* @param {Object | Array | Matrix | string} object
+	* @param {Index} index
+	* @param {*} value
+	* @return {Object | Array | Matrix | string} Returns the original object
+	*                                            except in case of a string
+	*/
+	return function assign(object, index, value) {
+		try {
+			if (Array.isArray(object)) {
+				matrix(object).subset(index, value).valueOf().forEach((item, index) => {
+					object[index] = item;
+				});
+				return object;
+			} else if (object && typeof object.subset === "function") return object.subset(index, value);
+			else if (typeof object === "string") return subset(object, index, value);
+			else if (typeof object === "object") {
+				if (!index.isObjectProperty()) throw TypeError("Cannot apply a numeric index as object property");
+				setSafeProperty(object, index.getObjectProperty(), value);
+				return object;
+			} else throw new TypeError("Cannot apply index: unsupported type of object");
+		} catch (err) {
+			throw errorTransform(err);
+		}
+	};
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/node/AssignmentNode.js
+var name$83 = "AssignmentNode";
+var createAssignmentNode = /* @__PURE__ */ factory(name$83, [
+	"subset",
+	"?matrix",
+	"Node"
+], (_ref) => {
+	var { subset, matrix, Node } = _ref;
+	var access = accessFactory({ subset });
+	var assign = assignFactory({
+		subset,
+		matrix
+	});
+	function needParenthesis(node, parenthesis, implicit) {
+		if (!parenthesis) parenthesis = "keep";
+		var precedence = getPrecedence(node, parenthesis, implicit);
+		var exprPrecedence = getPrecedence(node.value, parenthesis, implicit);
+		return parenthesis === "all" || exprPrecedence !== null && exprPrecedence <= precedence;
+	}
+	class AssignmentNode extends Node {
+		/**
+		* @constructor AssignmentNode
+		* @extends {Node}
+		*
+		* Define a symbol, like `a=3.2`, update a property like `a.b=3.2`, or
+		* replace a subset of a matrix like `A[2,2]=42`.
+		*
+		* Syntax:
+		*
+		*     new AssignmentNode(symbol, value)
+		*     new AssignmentNode(object, index, value)
+		*
+		* Usage:
+		*
+		*    new AssignmentNode(new SymbolNode('a'), new ConstantNode(2))  // a=2
+		*    new AssignmentNode(new SymbolNode('a'),
+		*                       new IndexNode('b'),
+		*                       new ConstantNode(2))   // a.b=2
+		*    new AssignmentNode(new SymbolNode('a'),
+		*                       new IndexNode(1, 2),
+		*                       new ConstantNode(3))  // a[1,2]=3
+		*
+		* @param {SymbolNode | AccessorNode} object
+		*     Object on which to assign a value
+		* @param {IndexNode} [index=null]
+		*     Index, property name or matrix index. Optional. If not provided
+		*     and `object` is a SymbolNode, the property is assigned to the
+		*     global scope.
+		* @param {Node} value
+		*     The value to be assigned
+		*/
+		constructor(object, index, value) {
+			super();
+			this.object = object;
+			this.index = value ? index : null;
+			this.value = value || index;
+			if (!isSymbolNode(object) && !isAccessorNode(object)) throw new TypeError("SymbolNode or AccessorNode expected as \"object\"");
+			if (isSymbolNode(object) && object.name === "end") throw new Error("Cannot assign to symbol \"end\"");
+			if (this.index && !isIndexNode(this.index)) throw new TypeError("IndexNode expected as \"index\"");
+			if (!isNode(this.value)) throw new TypeError("Node expected as \"value\"");
+		}
+		get name() {
+			if (this.index) return this.index.isObjectProperty() ? this.index.getObjectProperty() : "";
+			else return this.object.name || "";
+		}
+		get type() {
+			return name$83;
+		}
+		get isAssignmentNode() {
+			return true;
+		}
+		/**
+		* Compile a node into a JavaScript function.
+		* This basically pre-calculates as much as possible and only leaves open
+		* calculations which depend on a dynamic scope with variables.
+		* @param {Object} math     Math.js namespace with functions and constants.
+		* @param {Object} argNames An object with argument names as key and `true`
+		*                          as value. Used in the SymbolNode to optimize
+		*                          for arguments from user assigned functions
+		*                          (see FunctionAssignmentNode) or special symbols
+		*                          like `end` (see IndexNode).
+		* @return {function} Returns a function which can be called like:
+		*                        evalNode(scope: Object, args: Object, context: *)
+		*/
+		_compile(math, argNames) {
+			var evalObject = this.object._compile(math, argNames);
+			var evalIndex = this.index ? this.index._compile(math, argNames) : null;
+			var evalValue = this.value._compile(math, argNames);
+			var name = this.object.name;
+			if (!this.index) {
+				if (!isSymbolNode(this.object)) throw new TypeError("SymbolNode expected as object");
+				return function evalAssignmentNode(scope, args, context) {
+					var value = evalValue(scope, args, context);
+					scope.set(name, value);
+					return value;
+				};
+			} else if (this.index.isObjectProperty()) {
+				var prop = this.index.getObjectProperty();
+				return function evalAssignmentNode(scope, args, context) {
+					var object = evalObject(scope, args, context);
+					var value = evalValue(scope, args, context);
+					setSafeProperty(object, prop, value);
+					return value;
+				};
+			} else if (isSymbolNode(this.object)) return function evalAssignmentNode(scope, args, context) {
+				var childObject = evalObject(scope, args, context);
+				var value = evalValue(scope, args, context);
+				var index = evalIndex(scope, args, childObject);
+				scope.set(name, assign(childObject, index, value));
+				return value;
+			};
+			else {
+				var evalParentObject = this.object.object._compile(math, argNames);
+				if (this.object.index.isObjectProperty()) {
+					var parentProp = this.object.index.getObjectProperty();
+					return function evalAssignmentNode(scope, args, context) {
+						var parent = evalParentObject(scope, args, context);
+						var childObject = getSafeProperty(parent, parentProp);
+						var index = evalIndex(scope, args, childObject);
+						var value = evalValue(scope, args, context);
+						setSafeProperty(parent, parentProp, assign(childObject, index, value));
+						return value;
+					};
+				} else {
+					var evalParentIndex = this.object.index._compile(math, argNames);
+					return function evalAssignmentNode(scope, args, context) {
+						var parent = evalParentObject(scope, args, context);
+						var parentIndex = evalParentIndex(scope, args, parent);
+						var childObject = access(parent, parentIndex);
+						var index = evalIndex(scope, args, childObject);
+						var value = evalValue(scope, args, context);
+						assign(parent, parentIndex, assign(childObject, index, value));
+						return value;
+					};
+				}
+			}
+		}
+		/**
+		* Execute a callback for each of the child nodes of this node
+		* @param {function(child: Node, path: string, parent: Node)} callback
+		*/
+		forEach(callback) {
+			callback(this.object, "object", this);
+			if (this.index) callback(this.index, "index", this);
+			callback(this.value, "value", this);
+		}
+		/**
+		* Create a new AssignmentNode whose children are the results of calling
+		* the provided callback function for each child of the original node.
+		* @param {function(child: Node, path: string, parent: Node): Node} callback
+		* @returns {AssignmentNode} Returns a transformed copy of the node
+		*/
+		map(callback) {
+			return new AssignmentNode(this._ifNode(callback(this.object, "object", this)), this.index ? this._ifNode(callback(this.index, "index", this)) : null, this._ifNode(callback(this.value, "value", this)));
+		}
+		/**
+		* Create a clone of this node, a shallow copy
+		* @return {AssignmentNode}
+		*/
+		clone() {
+			return new AssignmentNode(this.object, this.index, this.value);
+		}
+		/**
+		* Get string representation
+		* @param {Object} options
+		* @return {string}
+		*/
+		_toString(options) {
+			var object = this.object.toString(options);
+			var index = this.index ? this.index.toString(options) : "";
+			var value = this.value.toString(options);
+			if (needParenthesis(this, options && options.parenthesis, options && options.implicit)) value = "(" + value + ")";
+			return object + index + " = " + value;
+		}
+		/**
+		* Get a JSON representation of the node
+		* @returns {Object}
+		*/
+		toJSON() {
+			return {
+				mathjs: name$83,
+				object: this.object,
+				index: this.index,
+				value: this.value
+			};
+		}
+		/**
+		* Instantiate an AssignmentNode from its JSON representation
+		* @param {Object} json
+		*     An object structured like
+		*     `{"mathjs": "AssignmentNode", object: ..., index: ..., value: ...}`,
+		*     where mathjs is optional
+		* @returns {AssignmentNode}
+		*/
+		static fromJSON(json) {
+			return new AssignmentNode(json.object, json.index, json.value);
+		}
+		/**
+		* Get HTML representation
+		* @param {Object} options
+		* @return {string}
+		*/
+		_toHTML(options) {
+			var object = this.object.toHTML(options);
+			var index = this.index ? this.index.toHTML(options) : "";
+			var value = this.value.toHTML(options);
+			if (needParenthesis(this, options && options.parenthesis, options && options.implicit)) value = "<span class=\"math-paranthesis math-round-parenthesis\">(</span>" + value + "<span class=\"math-paranthesis math-round-parenthesis\">)</span>";
+			return object + index + "<span class=\"math-operator math-assignment-operator math-variable-assignment-operator math-binary-operator\">=</span>" + value;
+		}
+		/**
+		* Get LaTeX representation
+		* @param {Object} options
+		* @return {string}
+		*/
+		_toTex(options) {
+			var object = this.object.toTex(options);
+			var index = this.index ? this.index.toTex(options) : "";
+			var value = this.value.toTex(options);
+			if (needParenthesis(this, options && options.parenthesis, options && options.implicit)) value = "\\left(".concat(value, "\\right)");
+			return object + index + "=" + value;
+		}
+	}
+	_defineProperty(AssignmentNode, "name", name$83);
+	return AssignmentNode;
+}, {
+	isClass: true,
+	isNode: true
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/node/BlockNode.js
+var name$82 = "BlockNode";
+var createBlockNode = /* @__PURE__ */ factory(name$82, ["ResultSet", "Node"], (_ref) => {
+	var { ResultSet, Node } = _ref;
+	class BlockNode extends Node {
+		/**
+		* @constructor BlockNode
+		* @extends {Node}
+		* Holds a set with blocks
+		* @param {Array.<{node: Node} | {node: Node, visible: boolean}>} blocks
+		*            An array with blocks, where a block is constructed as an
+		*            Object with properties block, which is a Node, and visible,
+		*            which is a boolean. The property visible is optional and
+		*            is true by default
+		*/
+		constructor(blocks) {
+			super();
+			if (!Array.isArray(blocks)) throw new Error("Array expected");
+			this.blocks = blocks.map(function(block) {
+				var node = block && block.node;
+				var visible = block && block.visible !== void 0 ? block.visible : true;
+				if (!isNode(node)) throw new TypeError("Property \"node\" must be a Node");
+				if (typeof visible !== "boolean") throw new TypeError("Property \"visible\" must be a boolean");
+				return {
+					node,
+					visible
+				};
+			});
+		}
+		get type() {
+			return name$82;
+		}
+		get isBlockNode() {
+			return true;
+		}
+		/**
+		* Compile a node into a JavaScript function.
+		* This basically pre-calculates as much as possible and only leaves open
+		* calculations which depend on a dynamic scope with variables.
+		* @param {Object} math     Math.js namespace with functions and constants.
+		* @param {Object} argNames An object with argument names as key and `true`
+		*                          as value. Used in the SymbolNode to optimize
+		*                          for arguments from user assigned functions
+		*                          (see FunctionAssignmentNode) or special symbols
+		*                          like `end` (see IndexNode).
+		* @return {function} Returns a function which can be called like:
+		*                        evalNode(scope: Object, args: Object, context: *)
+		*/
+		_compile(math, argNames) {
+			var evalBlocks = map$1(this.blocks, function(block) {
+				return {
+					evaluate: block.node._compile(math, argNames),
+					visible: block.visible
+				};
+			});
+			return function evalBlockNodes(scope, args, context) {
+				var results = [];
+				forEach$1(evalBlocks, function evalBlockNode(block) {
+					var result = block.evaluate(scope, args, context);
+					if (block.visible) results.push(result);
+				});
+				return new ResultSet(results);
+			};
+		}
+		/**
+		* Execute a callback for each of the child blocks of this node
+		* @param {function(child: Node, path: string, parent: Node)} callback
+		*/
+		forEach(callback) {
+			for (var i = 0; i < this.blocks.length; i++) callback(this.blocks[i].node, "blocks[" + i + "].node", this);
+		}
+		/**
+		* Create a new BlockNode whose children are the results of calling
+		* the provided callback function for each child of the original node.
+		* @param {function(child: Node, path: string, parent: Node): Node} callback
+		* @returns {BlockNode} Returns a transformed copy of the node
+		*/
+		map(callback) {
+			var blocks = [];
+			for (var i = 0; i < this.blocks.length; i++) {
+				var block = this.blocks[i];
+				blocks[i] = {
+					node: this._ifNode(callback(block.node, "blocks[" + i + "].node", this)),
+					visible: block.visible
+				};
+			}
+			return new BlockNode(blocks);
+		}
+		/**
+		* Create a clone of this node, a shallow copy
+		* @return {BlockNode}
+		*/
+		clone() {
+			return new BlockNode(this.blocks.map(function(block) {
+				return {
+					node: block.node,
+					visible: block.visible
+				};
+			}));
+		}
+		/**
+		* Get string representation
+		* @param {Object} options
+		* @return {string} str
+		* @override
+		*/
+		_toString(options) {
+			return this.blocks.map(function(param) {
+				return param.node.toString(options) + (param.visible ? "" : ";");
+			}).join("\n");
+		}
+		/**
+		* Get a JSON representation of the node
+		* @returns {Object}
+		*/
+		toJSON() {
+			return {
+				mathjs: name$82,
+				blocks: this.blocks
+			};
+		}
+		/**
+		* Instantiate an BlockNode from its JSON representation
+		* @param {Object} json
+		*     An object structured like
+		*     `{"mathjs": "BlockNode", blocks: [{node: ..., visible: false}, ...]}`,
+		*     where mathjs is optional
+		* @returns {BlockNode}
+		*/
+		static fromJSON(json) {
+			return new BlockNode(json.blocks);
+		}
+		/**
+		* Get HTML representation
+		* @param {Object} options
+		* @return {string} str
+		* @override
+		*/
+		_toHTML(options) {
+			return this.blocks.map(function(param) {
+				return param.node.toHTML(options) + (param.visible ? "" : "<span class=\"math-separator\">;</span>");
+			}).join("<span class=\"math-separator\"><br /></span>");
+		}
+		/**
+		* Get LaTeX representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toTex(options) {
+			return this.blocks.map(function(param) {
+				return param.node.toTex(options) + (param.visible ? "" : ";");
+			}).join("\\;\\;\n");
+		}
+	}
+	_defineProperty(BlockNode, "name", name$82);
+	return BlockNode;
+}, {
+	isClass: true,
+	isNode: true
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/node/ConditionalNode.js
+var name$81 = "ConditionalNode";
+var createConditionalNode = /* @__PURE__ */ factory(name$81, ["Node"], (_ref) => {
+	var { Node } = _ref;
+	/**
+	* Test whether a condition is met
+	* @param {*} condition
+	* @returns {boolean} true if condition is true or non-zero, else false
+	*/
+	function testCondition(condition) {
+		if (typeof condition === "number" || typeof condition === "boolean" || typeof condition === "string") return !!condition;
+		if (condition) {
+			if (isBigNumber(condition)) return !condition.isZero();
+			if (isComplex(condition)) return !!(condition.re || condition.im);
+			if (isUnit(condition)) return !!condition.value;
+		}
+		if (condition === null || condition === void 0) return false;
+		throw new TypeError("Unsupported type of condition \"" + typeOf$1(condition) + "\"");
+	}
+	class ConditionalNode extends Node {
+		/**
+		* A lazy evaluating conditional operator: 'condition ? trueExpr : falseExpr'
+		*
+		* @param {Node} condition   Condition, must result in a boolean
+		* @param {Node} trueExpr    Expression evaluated when condition is true
+		* @param {Node} falseExpr   Expression evaluated when condition is true
+		*
+		* @constructor ConditionalNode
+		* @extends {Node}
+		*/
+		constructor(condition, trueExpr, falseExpr) {
+			super();
+			if (!isNode(condition)) throw new TypeError("Parameter condition must be a Node");
+			if (!isNode(trueExpr)) throw new TypeError("Parameter trueExpr must be a Node");
+			if (!isNode(falseExpr)) throw new TypeError("Parameter falseExpr must be a Node");
+			this.condition = condition;
+			this.trueExpr = trueExpr;
+			this.falseExpr = falseExpr;
+		}
+		get type() {
+			return name$81;
+		}
+		get isConditionalNode() {
+			return true;
+		}
+		/**
+		* Compile a node into a JavaScript function.
+		* This basically pre-calculates as much as possible and only leaves open
+		* calculations which depend on a dynamic scope with variables.
+		* @param {Object} math     Math.js namespace with functions and constants.
+		* @param {Object} argNames An object with argument names as key and `true`
+		*                          as value. Used in the SymbolNode to optimize
+		*                          for arguments from user assigned functions
+		*                          (see FunctionAssignmentNode) or special symbols
+		*                          like `end` (see IndexNode).
+		* @return {function} Returns a function which can be called like:
+		*                        evalNode(scope: Object, args: Object, context: *)
+		*/
+		_compile(math, argNames) {
+			var evalCondition = this.condition._compile(math, argNames);
+			var evalTrueExpr = this.trueExpr._compile(math, argNames);
+			var evalFalseExpr = this.falseExpr._compile(math, argNames);
+			return function evalConditionalNode(scope, args, context) {
+				return testCondition(evalCondition(scope, args, context)) ? evalTrueExpr(scope, args, context) : evalFalseExpr(scope, args, context);
+			};
+		}
+		/**
+		* Execute a callback for each of the child nodes of this node
+		* @param {function(child: Node, path: string, parent: Node)} callback
+		*/
+		forEach(callback) {
+			callback(this.condition, "condition", this);
+			callback(this.trueExpr, "trueExpr", this);
+			callback(this.falseExpr, "falseExpr", this);
+		}
+		/**
+		* Create a new ConditionalNode whose children are the results of calling
+		* the provided callback function for each child of the original node.
+		* @param {function(child: Node, path: string, parent: Node): Node} callback
+		* @returns {ConditionalNode} Returns a transformed copy of the node
+		*/
+		map(callback) {
+			return new ConditionalNode(this._ifNode(callback(this.condition, "condition", this)), this._ifNode(callback(this.trueExpr, "trueExpr", this)), this._ifNode(callback(this.falseExpr, "falseExpr", this)));
+		}
+		/**
+		* Create a clone of this node, a shallow copy
+		* @return {ConditionalNode}
+		*/
+		clone() {
+			return new ConditionalNode(this.condition, this.trueExpr, this.falseExpr);
+		}
+		/**
+		* Get string representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toString(options) {
+			var parenthesis = options && options.parenthesis ? options.parenthesis : "keep";
+			var precedence = getPrecedence(this, parenthesis, options && options.implicit);
+			var condition = this.condition.toString(options);
+			var conditionPrecedence = getPrecedence(this.condition, parenthesis, options && options.implicit);
+			if (parenthesis === "all" || this.condition.type === "OperatorNode" || conditionPrecedence !== null && conditionPrecedence <= precedence) condition = "(" + condition + ")";
+			var trueExpr = this.trueExpr.toString(options);
+			var truePrecedence = getPrecedence(this.trueExpr, parenthesis, options && options.implicit);
+			if (parenthesis === "all" || this.trueExpr.type === "OperatorNode" || truePrecedence !== null && truePrecedence <= precedence) trueExpr = "(" + trueExpr + ")";
+			var falseExpr = this.falseExpr.toString(options);
+			var falsePrecedence = getPrecedence(this.falseExpr, parenthesis, options && options.implicit);
+			if (parenthesis === "all" || this.falseExpr.type === "OperatorNode" || falsePrecedence !== null && falsePrecedence <= precedence) falseExpr = "(" + falseExpr + ")";
+			return condition + " ? " + trueExpr + " : " + falseExpr;
+		}
+		/**
+		* Get a JSON representation of the node
+		* @returns {Object}
+		*/
+		toJSON() {
+			return {
+				mathjs: name$81,
+				condition: this.condition,
+				trueExpr: this.trueExpr,
+				falseExpr: this.falseExpr
+			};
+		}
+		/**
+		* Instantiate an ConditionalNode from its JSON representation
+		* @param {Object} json
+		*     An object structured like
+		*     ```
+		*     {"mathjs": "ConditionalNode",
+		*      "condition": ...,
+		*      "trueExpr": ...,
+		*      "falseExpr": ...}
+		*     ```
+		*     where mathjs is optional
+		* @returns {ConditionalNode}
+		*/
+		static fromJSON(json) {
+			return new ConditionalNode(json.condition, json.trueExpr, json.falseExpr);
+		}
+		/**
+		* Get HTML representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toHTML(options) {
+			var parenthesis = options && options.parenthesis ? options.parenthesis : "keep";
+			var precedence = getPrecedence(this, parenthesis, options && options.implicit);
+			var condition = this.condition.toHTML(options);
+			var conditionPrecedence = getPrecedence(this.condition, parenthesis, options && options.implicit);
+			if (parenthesis === "all" || this.condition.type === "OperatorNode" || conditionPrecedence !== null && conditionPrecedence <= precedence) condition = "<span class=\"math-parenthesis math-round-parenthesis\">(</span>" + condition + "<span class=\"math-parenthesis math-round-parenthesis\">)</span>";
+			var trueExpr = this.trueExpr.toHTML(options);
+			var truePrecedence = getPrecedence(this.trueExpr, parenthesis, options && options.implicit);
+			if (parenthesis === "all" || this.trueExpr.type === "OperatorNode" || truePrecedence !== null && truePrecedence <= precedence) trueExpr = "<span class=\"math-parenthesis math-round-parenthesis\">(</span>" + trueExpr + "<span class=\"math-parenthesis math-round-parenthesis\">)</span>";
+			var falseExpr = this.falseExpr.toHTML(options);
+			var falsePrecedence = getPrecedence(this.falseExpr, parenthesis, options && options.implicit);
+			if (parenthesis === "all" || this.falseExpr.type === "OperatorNode" || falsePrecedence !== null && falsePrecedence <= precedence) falseExpr = "<span class=\"math-parenthesis math-round-parenthesis\">(</span>" + falseExpr + "<span class=\"math-parenthesis math-round-parenthesis\">)</span>";
+			return condition + "<span class=\"math-operator math-conditional-operator\">?</span>" + trueExpr + "<span class=\"math-operator math-conditional-operator\">:</span>" + falseExpr;
+		}
+		/**
+		* Get LaTeX representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toTex(options) {
+			return "\\begin{cases} {" + this.trueExpr.toTex(options) + "}, &\\quad{\\text{if }\\;" + this.condition.toTex(options) + "}\\\\{" + this.falseExpr.toTex(options) + "}, &\\quad{\\text{otherwise}}\\end{cases}";
+		}
+	}
+	_defineProperty(ConditionalNode, "name", name$81);
+	return ConditionalNode;
+}, {
+	isClass: true,
+	isNode: true
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/latex.js
+var import_dist = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
+	var _extends = Object.assign || function(target) {
+		for (var i = 1; i < arguments.length; i++) {
+			var source = arguments[i];
+			for (var key in source) if (Object.prototype.hasOwnProperty.call(source, key)) target[key] = source[key];
+		}
+		return target;
+	};
+	var defaultEscapes = {
+		"{": "\\{",
+		"}": "\\}",
+		"\\": "\\textbackslash{}",
+		"#": "\\#",
+		$: "\\$",
+		"%": "\\%",
+		"&": "\\&",
+		"^": "\\textasciicircum{}",
+		_: "\\_",
+		"~": "\\textasciitilde{}"
+	};
+	var formatEscapes = {
+		"–": "\\--",
+		"—": "\\---",
+		" ": "~",
+		"	": "\\qquad{}",
+		"\r\n": "\\newline{}",
+		"\n": "\\newline{}"
+	};
+	var defaultEscapeMapFn = function defaultEscapeMapFn(defaultEscapes, formatEscapes) {
+		return _extends({}, defaultEscapes, formatEscapes);
+	};
+	/**
+	* Escape a string to be used in LaTeX documents.
+	* @param {string} str the string to be escaped.
+	* @param {boolean} params.preserveFormatting whether formatting escapes should
+	*  be performed (default: false).
+	* @param {function} params.escapeMapFn the function to modify the escape maps.
+	* @return {string} the escaped string, ready to be used in LaTeX.
+	*/
+	module.exports = function(str) {
+		var _ref = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {}, _ref$preserveFormatti = _ref.preserveFormatting, preserveFormatting = _ref$preserveFormatti === void 0 ? false : _ref$preserveFormatti, _ref$escapeMapFn = _ref.escapeMapFn, escapeMapFn = _ref$escapeMapFn === void 0 ? defaultEscapeMapFn : _ref$escapeMapFn;
+		var runningStr = String(str);
+		var result = "";
+		var escapes = escapeMapFn(_extends({}, defaultEscapes), preserveFormatting ? _extends({}, formatEscapes) : {});
+		var escapeKeys = Object.keys(escapes);
+		var _loop = function _loop() {
+			var specialCharFound = false;
+			escapeKeys.forEach(function(key, index) {
+				if (specialCharFound) return;
+				if (runningStr.length >= key.length && runningStr.slice(0, key.length) === key) {
+					result += escapes[escapeKeys[index]];
+					runningStr = runningStr.slice(key.length, runningStr.length);
+					specialCharFound = true;
+				}
+			});
+			if (!specialCharFound) {
+				result += runningStr.slice(0, 1);
+				runningStr = runningStr.slice(1, runningStr.length);
+			}
+		};
+		while (runningStr) _loop();
+		return result;
+	};
+})))(), 1);
+var latexSymbols = {
+	Alpha: "A",
+	alpha: "\\alpha",
+	Beta: "B",
+	beta: "\\beta",
+	Gamma: "\\Gamma",
+	gamma: "\\gamma",
+	Delta: "\\Delta",
+	delta: "\\delta",
+	Epsilon: "E",
+	epsilon: "\\epsilon",
+	varepsilon: "\\varepsilon",
+	Zeta: "Z",
+	zeta: "\\zeta",
+	Eta: "H",
+	eta: "\\eta",
+	Theta: "\\Theta",
+	theta: "\\theta",
+	vartheta: "\\vartheta",
+	Iota: "I",
+	iota: "\\iota",
+	Kappa: "K",
+	kappa: "\\kappa",
+	varkappa: "\\varkappa",
+	Lambda: "\\Lambda",
+	lambda: "\\lambda",
+	Mu: "M",
+	mu: "\\mu",
+	Nu: "N",
+	nu: "\\nu",
+	Xi: "\\Xi",
+	xi: "\\xi",
+	Omicron: "O",
+	omicron: "o",
+	Pi: "\\Pi",
+	pi: "\\pi",
+	varpi: "\\varpi",
+	Rho: "P",
+	rho: "\\rho",
+	varrho: "\\varrho",
+	Sigma: "\\Sigma",
+	sigma: "\\sigma",
+	varsigma: "\\varsigma",
+	Tau: "T",
+	tau: "\\tau",
+	Upsilon: "\\Upsilon",
+	upsilon: "\\upsilon",
+	Phi: "\\Phi",
+	phi: "\\phi",
+	varphi: "\\varphi",
+	Chi: "X",
+	chi: "\\chi",
+	Psi: "\\Psi",
+	psi: "\\psi",
+	Omega: "\\Omega",
+	omega: "\\omega",
+	true: "\\mathrm{True}",
+	false: "\\mathrm{False}",
+	i: "i",
+	inf: "\\infty",
+	Inf: "\\infty",
+	infinity: "\\infty",
+	Infinity: "\\infty",
+	oo: "\\infty",
+	lim: "\\lim",
+	undefined: "\\mathbf{?}"
+};
+var latexOperators = {
+	transpose: "^\\top",
+	ctranspose: "^H",
+	factorial: "!",
+	pow: "^",
+	dotPow: ".^\\wedge",
+	unaryPlus: "+",
+	unaryMinus: "-",
+	bitNot: "\\~",
+	not: "\\neg",
+	multiply: "\\cdot",
+	divide: "\\frac",
+	dotMultiply: ".\\cdot",
+	dotDivide: ".:",
+	mod: "\\mod",
+	add: "+",
+	subtract: "-",
+	to: "\\rightarrow",
+	leftShift: "<<",
+	rightArithShift: ">>",
+	rightLogShift: ">>>",
+	equal: "=",
+	unequal: "\\neq",
+	smaller: "<",
+	larger: ">",
+	smallerEq: "\\leq",
+	largerEq: "\\geq",
+	bitAnd: "\\&",
+	bitXor: "\\underline{|}",
+	bitOr: "|",
+	and: "\\wedge",
+	xor: "\\veebar",
+	or: "\\vee"
+};
+var latexFunctions = {
+	abs: { 1: "\\left|${args[0]}\\right|" },
+	add: { 2: "\\left(${args[0]}".concat(latexOperators.add, "${args[1]}\\right)") },
+	cbrt: { 1: "\\sqrt[3]{${args[0]}}" },
+	ceil: { 1: "\\left\\lceil${args[0]}\\right\\rceil" },
+	cube: { 1: "\\left(${args[0]}\\right)^3" },
+	divide: { 2: "\\frac{${args[0]}}{${args[1]}}" },
+	dotDivide: { 2: "\\left(${args[0]}".concat(latexOperators.dotDivide, "${args[1]}\\right)") },
+	dotMultiply: { 2: "\\left(${args[0]}".concat(latexOperators.dotMultiply, "${args[1]}\\right)") },
+	dotPow: { 2: "\\left(${args[0]}".concat(latexOperators.dotPow, "${args[1]}\\right)") },
+	exp: { 1: "\\exp\\left(${args[0]}\\right)" },
+	expm1: "\\left(e".concat(latexOperators.pow, "{${args[0]}}-1\\right)"),
+	fix: { 1: "\\mathrm{${name}}\\left(${args[0]}\\right)" },
+	floor: { 1: "\\left\\lfloor${args[0]}\\right\\rfloor" },
+	fraction: { 2: "\\frac{${args[0]}}{${args[1]}}" },
+	gcd: "\\gcd\\left(${args}\\right)",
+	hypot: "\\hypot\\left(${args}\\right)",
+	log: {
+		1: "\\ln\\left(${args[0]}\\right)",
+		2: "\\log_{${args[1]}}\\left(${args[0]}\\right)"
+	},
+	log10: { 1: "\\log_{10}\\left(${args[0]}\\right)" },
+	log1p: {
+		1: "\\ln\\left(${args[0]}+1\\right)",
+		2: "\\log_{${args[1]}}\\left(${args[0]}+1\\right)"
+	},
+	log2: "\\log_{2}\\left(${args[0]}\\right)",
+	mod: { 2: "\\left(${args[0]}".concat(latexOperators.mod, "${args[1]}\\right)") },
+	multiply: { 2: "\\left(${args[0]}".concat(latexOperators.multiply, "${args[1]}\\right)") },
+	norm: {
+		1: "\\left\\|${args[0]}\\right\\|",
+		2: void 0
+	},
+	nthRoot: { 2: "\\sqrt[${args[1]}]{${args[0]}}" },
+	nthRoots: { 2: "\\{y : y^${args[1]} = {${args[0]}}\\}" },
+	pow: { 2: "\\left(${args[0]}\\right)".concat(latexOperators.pow, "{${args[1]}}") },
+	round: {
+		1: "\\left\\lfloor${args[0]}\\right\\rceil",
+		2: void 0
+	},
+	sign: { 1: "\\mathrm{${name}}\\left(${args[0]}\\right)" },
+	sqrt: { 1: "\\sqrt{${args[0]}}" },
+	square: { 1: "\\left(${args[0]}\\right)^2" },
+	subtract: { 2: "\\left(${args[0]}".concat(latexOperators.subtract, "${args[1]}\\right)") },
+	unaryMinus: { 1: "".concat(latexOperators.unaryMinus, "\\left(${args[0]}\\right)") },
+	unaryPlus: { 1: "".concat(latexOperators.unaryPlus, "\\left(${args[0]}\\right)") },
+	bitAnd: { 2: "\\left(${args[0]}".concat(latexOperators.bitAnd, "${args[1]}\\right)") },
+	bitNot: { 1: latexOperators.bitNot + "\\left(${args[0]}\\right)" },
+	bitOr: { 2: "\\left(${args[0]}".concat(latexOperators.bitOr, "${args[1]}\\right)") },
+	bitXor: { 2: "\\left(${args[0]}".concat(latexOperators.bitXor, "${args[1]}\\right)") },
+	leftShift: { 2: "\\left(${args[0]}".concat(latexOperators.leftShift, "${args[1]}\\right)") },
+	rightArithShift: { 2: "\\left(${args[0]}".concat(latexOperators.rightArithShift, "${args[1]}\\right)") },
+	rightLogShift: { 2: "\\left(${args[0]}".concat(latexOperators.rightLogShift, "${args[1]}\\right)") },
+	bellNumbers: { 1: "\\mathrm{B}_{${args[0]}}" },
+	catalan: { 1: "\\mathrm{C}_{${args[0]}}" },
+	stirlingS2: { 2: "\\mathrm{S}\\left(${args}\\right)" },
+	arg: { 1: "\\arg\\left(${args[0]}\\right)" },
+	conj: { 1: "\\left(${args[0]}\\right)^*" },
+	im: { 1: "\\Im\\left\\lbrace${args[0]}\\right\\rbrace" },
+	re: { 1: "\\Re\\left\\lbrace${args[0]}\\right\\rbrace" },
+	and: { 2: "\\left(${args[0]}".concat(latexOperators.and, "${args[1]}\\right)") },
+	not: { 1: latexOperators.not + "\\left(${args[0]}\\right)" },
+	or: { 2: "\\left(${args[0]}".concat(latexOperators.or, "${args[1]}\\right)") },
+	xor: { 2: "\\left(${args[0]}".concat(latexOperators.xor, "${args[1]}\\right)") },
+	cross: { 2: "\\left(${args[0]}\\right)\\times\\left(${args[1]}\\right)" },
+	ctranspose: { 1: "\\left(${args[0]}\\right)".concat(latexOperators.ctranspose) },
+	det: { 1: "\\det\\left(${args[0]}\\right)" },
+	dot: { 2: "\\left(${args[0]}\\cdot${args[1]}\\right)" },
+	expm: { 1: "\\exp\\left(${args[0]}\\right)" },
+	inv: { 1: "\\left(${args[0]}\\right)^{-1}" },
+	pinv: { 1: "\\left(${args[0]}\\right)^{+}" },
+	sqrtm: { 1: "{${args[0]}}".concat(latexOperators.pow, "{\\frac{1}{2}}") },
+	trace: { 1: "\\mathrm{tr}\\left(${args[0]}\\right)" },
+	transpose: { 1: "\\left(${args[0]}\\right)".concat(latexOperators.transpose) },
+	combinations: { 2: "\\binom{${args[0]}}{${args[1]}}" },
+	combinationsWithRep: { 2: "\\left(\\!\\!{\\binom{${args[0]}}{${args[1]}}}\\!\\!\\right)" },
+	factorial: { 1: "\\left(${args[0]}\\right)".concat(latexOperators.factorial) },
+	gamma: { 1: "\\Gamma\\left(${args[0]}\\right)" },
+	lgamma: { 1: "\\ln\\Gamma\\left(${args[0]}\\right)" },
+	equal: { 2: "\\left(${args[0]}".concat(latexOperators.equal, "${args[1]}\\right)") },
+	larger: { 2: "\\left(${args[0]}".concat(latexOperators.larger, "${args[1]}\\right)") },
+	largerEq: { 2: "\\left(${args[0]}".concat(latexOperators.largerEq, "${args[1]}\\right)") },
+	smaller: { 2: "\\left(${args[0]}".concat(latexOperators.smaller, "${args[1]}\\right)") },
+	smallerEq: { 2: "\\left(${args[0]}".concat(latexOperators.smallerEq, "${args[1]}\\right)") },
+	unequal: { 2: "\\left(${args[0]}".concat(latexOperators.unequal, "${args[1]}\\right)") },
+	erf: { 1: "erf\\left(${args[0]}\\right)" },
+	max: "\\max\\left(${args}\\right)",
+	min: "\\min\\left(${args}\\right)",
+	variance: "\\mathrm{Var}\\left(${args}\\right)",
+	acos: { 1: "\\cos^{-1}\\left(${args[0]}\\right)" },
+	acosh: { 1: "\\cosh^{-1}\\left(${args[0]}\\right)" },
+	acot: { 1: "\\cot^{-1}\\left(${args[0]}\\right)" },
+	acoth: { 1: "\\coth^{-1}\\left(${args[0]}\\right)" },
+	acsc: { 1: "\\csc^{-1}\\left(${args[0]}\\right)" },
+	acsch: { 1: "\\mathrm{csch}^{-1}\\left(${args[0]}\\right)" },
+	asec: { 1: "\\sec^{-1}\\left(${args[0]}\\right)" },
+	asech: { 1: "\\mathrm{sech}^{-1}\\left(${args[0]}\\right)" },
+	asin: { 1: "\\sin^{-1}\\left(${args[0]}\\right)" },
+	asinh: { 1: "\\sinh^{-1}\\left(${args[0]}\\right)" },
+	atan: { 1: "\\tan^{-1}\\left(${args[0]}\\right)" },
+	atan2: { 2: "\\mathrm{atan2}\\left(${args}\\right)" },
+	atanh: { 1: "\\tanh^{-1}\\left(${args[0]}\\right)" },
+	cos: { 1: "\\cos\\left(${args[0]}\\right)" },
+	cosh: { 1: "\\cosh\\left(${args[0]}\\right)" },
+	cot: { 1: "\\cot\\left(${args[0]}\\right)" },
+	coth: { 1: "\\coth\\left(${args[0]}\\right)" },
+	csc: { 1: "\\csc\\left(${args[0]}\\right)" },
+	csch: { 1: "\\mathrm{csch}\\left(${args[0]}\\right)" },
+	sec: { 1: "\\sec\\left(${args[0]}\\right)" },
+	sech: { 1: "\\mathrm{sech}\\left(${args[0]}\\right)" },
+	sin: { 1: "\\sin\\left(${args[0]}\\right)" },
+	sinh: { 1: "\\sinh\\left(${args[0]}\\right)" },
+	tan: { 1: "\\tan\\left(${args[0]}\\right)" },
+	tanh: { 1: "\\tanh\\left(${args[0]}\\right)" },
+	to: { 2: "\\left(${args[0]}".concat(latexOperators.to, "${args[1]}\\right)") },
+	numeric: function numeric(node, options) {
+		return node.args[0].toTex();
+	},
+	number: {
+		0: "0",
+		1: "\\left(${args[0]}\\right)",
+		2: "\\left(\\left(${args[0]}\\right)${args[1]}\\right)"
+	},
+	string: {
+		0: "\\mathtt{\"\"}",
+		1: "\\mathrm{string}\\left(${args[0]}\\right)"
+	},
+	bignumber: {
+		0: "0",
+		1: "\\left(${args[0]}\\right)"
+	},
+	bigint: {
+		0: "0",
+		1: "\\left(${args[0]}\\right)"
+	},
+	complex: {
+		0: "0",
+		1: "\\left(${args[0]}\\right)",
+		2: "\\left(\\left(${args[0]}\\right)+".concat(latexSymbols.i, "\\cdot\\left(${args[1]}\\right)\\right)")
+	},
+	matrix: {
+		0: "\\begin{bmatrix}\\end{bmatrix}",
+		1: "\\left(${args[0]}\\right)",
+		2: "\\left(${args[0]}\\right)"
+	},
+	sparse: {
+		0: "\\begin{bsparse}\\end{bsparse}",
+		1: "\\left(${args[0]}\\right)"
+	},
+	unit: {
+		1: "\\left(${args[0]}\\right)",
+		2: "\\left(\\left(${args[0]}\\right)${args[1]}\\right)"
+	}
+};
+var defaultTemplate = "\\mathrm{${name}}\\left(${args}\\right)";
+var latexUnits = { deg: "^\\circ" };
+function escapeLatex(string) {
+	return (0, import_dist.default)(string, { preserveFormatting: true });
+}
+function toSymbol(name, isUnit) {
+	isUnit = typeof isUnit === "undefined" ? false : isUnit;
+	if (isUnit) {
+		if (hasOwnProperty(latexUnits, name)) return latexUnits[name];
+		return "\\mathrm{" + escapeLatex(name) + "}";
+	}
+	if (hasOwnProperty(latexSymbols, name)) return latexSymbols[name];
+	return escapeLatex(name);
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/node/ConstantNode.js
+var name$80 = "ConstantNode";
+var createConstantNode = /* @__PURE__ */ factory(name$80, ["Node", "isBounded"], (_ref) => {
+	var { Node, isBounded } = _ref;
+	class ConstantNode extends Node {
+		/**
+		* A ConstantNode holds a constant value like a number or string.
+		*
+		* Usage:
+		*
+		*     new ConstantNode(2.3)
+		*     new ConstantNode('hello')
+		*
+		* @param {*} value    Value can be any type (number, BigNumber, bigint, string, ...)
+		* @constructor ConstantNode
+		* @extends {Node}
+		*/
+		constructor(value) {
+			super();
+			this.value = value;
+		}
+		get type() {
+			return name$80;
+		}
+		get isConstantNode() {
+			return true;
+		}
+		/**
+		* Compile a node into a JavaScript function.
+		* This basically pre-calculates as much as possible and only leaves open
+		* calculations which depend on a dynamic scope with variables.
+		* @param {Object} math     Math.js namespace with functions and constants.
+		* @param {Object} argNames An object with argument names as key and `true`
+		*                          as value. Used in the SymbolNode to optimize
+		*                          for arguments from user assigned functions
+		*                          (see FunctionAssignmentNode) or special symbols
+		*                          like `end` (see IndexNode).
+		* @return {function} Returns a function which can be called like:
+		*                        evalNode(scope: Object, args: Object, context: *)
+		*/
+		_compile(math, argNames) {
+			var value = this.value;
+			return function evalConstantNode() {
+				return value;
+			};
+		}
+		/**
+		* Execute a callback for each of the child nodes of this node
+		* @param {function(child: Node, path: string, parent: Node)} callback
+		*/
+		forEach(callback) {}
+		/**
+		* Create a new ConstantNode with children produced by the given callback.
+		* Trivial because there are no children.
+		* @param {function(child: Node, path: string, parent: Node) : Node} callback
+		* @returns {ConstantNode} Returns a clone of the node
+		*/
+		map(callback) {
+			return this.clone();
+		}
+		/**
+		* Create a clone of this node, a shallow copy
+		* @return {ConstantNode}
+		*/
+		clone() {
+			return new ConstantNode(this.value);
+		}
+		/**
+		* Get string representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toString(options) {
+			return format$1(this.value, options);
+		}
+		/**
+		* Get HTML representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toHTML(options) {
+			var value = this._toString(options);
+			switch (typeOf$1(this.value)) {
+				case "number":
+				case "bigint":
+				case "BigNumber":
+				case "Fraction": return "<span class=\"math-number\">" + value + "</span>";
+				case "string": return "<span class=\"math-string\">" + value + "</span>";
+				case "boolean": return "<span class=\"math-boolean\">" + value + "</span>";
+				case "null": return "<span class=\"math-null-symbol\">" + value + "</span>";
+				case "undefined": return "<span class=\"math-undefined\">" + value + "</span>";
+				default: return "<span class=\"math-symbol\">" + value + "</span>";
+			}
+		}
+		/**
+		* Get a JSON representation of the node
+		* @returns {Object}
+		*/
+		toJSON() {
+			return {
+				mathjs: name$80,
+				value: this.value
+			};
+		}
+		/**
+		* Instantiate a ConstantNode from its JSON representation
+		* @param {Object} json  An object structured like
+		*                       `{"mathjs": "SymbolNode", value: 2.3}`,
+		*                       where mathjs is optional
+		* @returns {ConstantNode}
+		*/
+		static fromJSON(json) {
+			return new ConstantNode(json.value);
+		}
+		/**
+		* Get LaTeX representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toTex(options) {
+			var value = this._toString(options);
+			switch (typeOf$1(this.value)) {
+				case "string": return "\\mathtt{" + escapeLatex(value) + "}";
+				case "number":
+				case "BigNumber":
+					if (!isBounded(this.value)) return this.value.valueOf() < 0 ? "-\\infty" : "\\infty";
+					var index = value.toLowerCase().indexOf("e");
+					if (index !== -1) return value.substring(0, index) + "\\cdot10^{" + value.substring(index + 1) + "}";
+					return value;
+				case "bigint": return value.toString();
+				case "Fraction": return this.value.toLatex();
+				default: return value;
+			}
+		}
+	}
+	_defineProperty(ConstantNode, "name", name$80);
+	return ConstantNode;
+}, {
+	isClass: true,
+	isNode: true
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/node/FunctionAssignmentNode.js
+var name$79 = "FunctionAssignmentNode";
+var createFunctionAssignmentNode = /* @__PURE__ */ factory(name$79, ["typed", "Node"], (_ref) => {
+	var { typed, Node } = _ref;
+	/**
+	* Is parenthesis needed?
+	* @param {Node} node
+	* @param {Object} parenthesis
+	* @param {string} implicit
+	* @private
+	*/
+	function needParenthesis(node, parenthesis, implicit) {
+		var precedence = getPrecedence(node, parenthesis, implicit);
+		var exprPrecedence = getPrecedence(node.expr, parenthesis, implicit);
+		return parenthesis === "all" || exprPrecedence !== null && exprPrecedence <= precedence;
+	}
+	class FunctionAssignmentNode extends Node {
+		/**
+		* @constructor FunctionAssignmentNode
+		* @extends {Node}
+		* Function assignment
+		*
+		* @param {string} name           Function name
+		* @param {string[] | Array.<{name: string, type: string}>} params
+		*                                Array with function parameter names, or an
+		*                                array with objects containing the name
+		*                                and type of the parameter
+		* @param {Node} expr             The function expression
+		*/
+		constructor(name, params, expr) {
+			super();
+			if (typeof name !== "string") throw new TypeError("String expected for parameter \"name\"");
+			if (!Array.isArray(params)) throw new TypeError("Array containing strings or objects expected for parameter \"params\"");
+			if (!isNode(expr)) throw new TypeError("Node expected for parameter \"expr\"");
+			if (keywords.has(name)) throw new Error("Illegal function name, \"" + name + "\" is a reserved keyword");
+			var paramNames = /* @__PURE__ */ new Set();
+			for (var param of params) {
+				var _name = typeof param === "string" ? param : param.name;
+				if (paramNames.has(_name)) throw new Error("Duplicate parameter name \"".concat(_name, "\""));
+				else paramNames.add(_name);
+			}
+			this.name = name;
+			this.params = params.map(function(param) {
+				return param && param.name || param;
+			});
+			this.types = params.map(function(param) {
+				return param && param.type || "any";
+			});
+			this.expr = expr;
+		}
+		get type() {
+			return name$79;
+		}
+		get isFunctionAssignmentNode() {
+			return true;
+		}
+		/**
+		* Compile a node into a JavaScript function.
+		* This basically pre-calculates as much as possible and only leaves open
+		* calculations which depend on a dynamic scope with variables.
+		* @param {Object} math     Math.js namespace with functions and constants.
+		* @param {Object} argNames An object with argument names as key and `true`
+		*                          as value. Used in the SymbolNode to optimize
+		*                          for arguments from user assigned functions
+		*                          (see FunctionAssignmentNode) or special symbols
+		*                          like `end` (see IndexNode).
+		* @return {function} Returns a function which can be called like:
+		*                        evalNode(scope: Object, args: Object, context: *)
+		*/
+		_compile(math, argNames) {
+			var childArgNames = Object.create(argNames);
+			forEach$1(this.params, function(param) {
+				childArgNames[param] = true;
+			});
+			var expr = this.expr;
+			var evalExpr = expr._compile(math, childArgNames);
+			var name = this.name;
+			var params = this.params;
+			var signature = join(this.types, ",");
+			var syntax = name + "(" + join(this.params, ", ") + ")";
+			return function evalFunctionAssignmentNode(scope, args, context) {
+				var signatures = {};
+				signatures[signature] = function() {
+					var childArgs = Object.create(args);
+					for (var i = 0; i < params.length; i++) childArgs[params[i]] = arguments[i];
+					return evalExpr(scope, childArgs, context);
+				};
+				var fn = typed(name, signatures);
+				fn.syntax = syntax;
+				fn.expr = expr.toString();
+				scope.set(name, fn);
+				return fn;
+			};
+		}
+		/**
+		* Execute a callback for each of the child nodes of this node
+		* @param {function(child: Node, path: string, parent: Node)} callback
+		*/
+		forEach(callback) {
+			callback(this.expr, "expr", this);
+		}
+		/**
+		* Create a new FunctionAssignmentNode whose children are the results of
+		* calling the provided callback function for each child of the original
+		* node.
+		* @param {function(child: Node, path: string, parent: Node): Node} callback
+		* @returns {FunctionAssignmentNode} Returns a transformed copy of the node
+		*/
+		map(callback) {
+			var expr = this._ifNode(callback(this.expr, "expr", this));
+			return new FunctionAssignmentNode(this.name, this.params.slice(0), expr);
+		}
+		/**
+		* Create a clone of this node, a shallow copy
+		* @return {FunctionAssignmentNode}
+		*/
+		clone() {
+			return new FunctionAssignmentNode(this.name, this.params.slice(0), this.expr);
+		}
+		/**
+		* get string representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toString(options) {
+			var parenthesis = options && options.parenthesis ? options.parenthesis : "keep";
+			var expr = this.expr.toString(options);
+			if (needParenthesis(this, parenthesis, options && options.implicit)) expr = "(" + expr + ")";
+			return this.name + "(" + this.params.join(", ") + ") = " + expr;
+		}
+		/**
+		* Get a JSON representation of the node
+		* @returns {Object}
+		*/
+		toJSON() {
+			var types = this.types;
+			return {
+				mathjs: name$79,
+				name: this.name,
+				params: this.params.map(function(param, index) {
+					return {
+						name: param,
+						type: types[index]
+					};
+				}),
+				expr: this.expr
+			};
+		}
+		/**
+		* Instantiate an FunctionAssignmentNode from its JSON representation
+		* @param {Object} json
+		*     An object structured like
+		*     ```
+		*     {"mathjs": "FunctionAssignmentNode",
+		*      name: ..., params: ..., expr: ...}
+		*     ```
+		*     where mathjs is optional
+		* @returns {FunctionAssignmentNode}
+		*/
+		static fromJSON(json) {
+			return new FunctionAssignmentNode(json.name, json.params, json.expr);
+		}
+		/**
+		* get HTML representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toHTML(options) {
+			var parenthesis = options && options.parenthesis ? options.parenthesis : "keep";
+			var params = [];
+			for (var i = 0; i < this.params.length; i++) params.push("<span class=\"math-symbol math-parameter\">" + escape(this.params[i]) + "</span>");
+			var expr = this.expr.toHTML(options);
+			if (needParenthesis(this, parenthesis, options && options.implicit)) expr = "<span class=\"math-parenthesis math-round-parenthesis\">(</span>" + expr + "<span class=\"math-parenthesis math-round-parenthesis\">)</span>";
+			return "<span class=\"math-function\">" + escape(this.name) + "</span><span class=\"math-parenthesis math-round-parenthesis\">(</span>" + params.join("<span class=\"math-separator\">,</span>") + "<span class=\"math-parenthesis math-round-parenthesis\">)</span><span class=\"math-operator math-assignment-operator math-variable-assignment-operator math-binary-operator\">=</span>" + expr;
+		}
+		/**
+		* get LaTeX representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toTex(options) {
+			var parenthesis = options && options.parenthesis ? options.parenthesis : "keep";
+			var expr = this.expr.toTex(options);
+			if (needParenthesis(this, parenthesis, options && options.implicit)) expr = "\\left(".concat(expr, "\\right)");
+			return "\\mathrm{" + this.name + "}\\left(" + this.params.map(toSymbol).join(",") + "\\right)=" + expr;
+		}
+	}
+	_defineProperty(FunctionAssignmentNode, "name", name$79);
+	return FunctionAssignmentNode;
+}, {
+	isClass: true,
+	isNode: true
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/node/IndexNode.js
+var name$78 = "IndexNode";
+var createIndexNode = /* @__PURE__ */ factory(name$78, ["Node", "size"], (_ref) => {
+	var { Node, size } = _ref;
+	class IndexNode extends Node {
+		/**
+		* @constructor IndexNode
+		* @extends Node
+		*
+		* Describes a subset of a matrix or an object property.
+		* Cannot be used on its own, needs to be used within an AccessorNode or
+		* AssignmentNode.
+		*
+		* @param {Node[]} dimensions
+		* @param {boolean} [dotNotation=false]
+		*     Optional property describing whether this index was written using dot
+		*     notation like `a.b`, or using bracket notation like `a["b"]`
+		*     (which is the default). This property is used for string conversion.
+		*/
+		constructor(dimensions, dotNotation) {
+			super();
+			this.dimensions = dimensions;
+			this.dotNotation = dotNotation || false;
+			if (!Array.isArray(dimensions) || !dimensions.every(isNode)) throw new TypeError("Array containing Nodes expected for parameter \"dimensions\"");
+			if (this.dotNotation && !this.isObjectProperty()) throw new Error("dotNotation only applicable for object properties");
+		}
+		get type() {
+			return name$78;
+		}
+		get isIndexNode() {
+			return true;
+		}
+		/**
+		* Compile a node into a JavaScript function.
+		* This basically pre-calculates as much as possible and only leaves open
+		* calculations which depend on a dynamic scope with variables.
+		* @param {Object} math     Math.js namespace with functions and constants.
+		* @param {Object} argNames An object with argument names as key and `true`
+		*                          as value. Used in the SymbolNode to optimize
+		*                          for arguments from user assigned functions
+		*                          (see FunctionAssignmentNode) or special symbols
+		*                          like `end` (see IndexNode).
+		* @return {function} Returns a function which can be called like:
+		*                        evalNode(scope: Object, args: Object, context: *)
+		*/
+		_compile(math, argNames) {
+			var evalDimensions = map$1(this.dimensions, function(dimension, i) {
+				if (dimension.filter((node) => node.isSymbolNode && node.name === "end").length > 0) {
+					var childArgNames = Object.create(argNames);
+					childArgNames.end = true;
+					var _evalDimension = dimension._compile(math, childArgNames);
+					return function evalDimension(scope, args, context) {
+						if (!isMatrix(context) && !isArray(context) && !isString(context)) throw new TypeError("Cannot resolve \"end\": context must be a Matrix, Array, or string but is " + typeOf$1(context));
+						var s = size(context);
+						var childArgs = Object.create(args);
+						childArgs.end = s[i];
+						return _evalDimension(scope, childArgs, context);
+					};
+				} else return dimension._compile(math, argNames);
+			});
+			var index = getSafeProperty(math, "index");
+			return function evalIndexNode(scope, args, context) {
+				return index(...map$1(evalDimensions, function(evalDimension) {
+					return evalDimension(scope, args, context);
+				}));
+			};
+		}
+		/**
+		* Execute a callback for each of the child nodes of this node
+		* @param {function(child: Node, path: string, parent: Node)} callback
+		*/
+		forEach(callback) {
+			for (var i = 0; i < this.dimensions.length; i++) callback(this.dimensions[i], "dimensions[" + i + "]", this);
+		}
+		/**
+		* Create a new IndexNode whose children are the results of calling
+		* the provided callback function for each child of the original node.
+		* @param {function(child: Node, path: string, parent: Node): Node} callback
+		* @returns {IndexNode} Returns a transformed copy of the node
+		*/
+		map(callback) {
+			var dimensions = [];
+			for (var i = 0; i < this.dimensions.length; i++) dimensions[i] = this._ifNode(callback(this.dimensions[i], "dimensions[" + i + "]", this));
+			return new IndexNode(dimensions, this.dotNotation);
+		}
+		/**
+		* Create a clone of this node, a shallow copy
+		* @return {IndexNode}
+		*/
+		clone() {
+			return new IndexNode(this.dimensions.slice(0), this.dotNotation);
+		}
+		/**
+		* Test whether this IndexNode contains a single property name
+		* @return {boolean}
+		*/
+		isObjectProperty() {
+			return this.dimensions.length === 1 && isConstantNode(this.dimensions[0]) && typeof this.dimensions[0].value === "string";
+		}
+		/**
+		* Returns the property name if IndexNode contains a property.
+		* If not, returns null.
+		* @return {string | null}
+		*/
+		getObjectProperty() {
+			return this.isObjectProperty() ? this.dimensions[0].value : null;
+		}
+		/**
+		* Get string representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toString(options) {
+			return this.dotNotation ? "." + this.getObjectProperty() : "[" + this.dimensions.join(", ") + "]";
+		}
+		/**
+		* Get a JSON representation of the node
+		* @returns {Object}
+		*/
+		toJSON() {
+			return {
+				mathjs: name$78,
+				dimensions: this.dimensions,
+				dotNotation: this.dotNotation
+			};
+		}
+		/**
+		* Instantiate an IndexNode from its JSON representation
+		* @param {Object} json
+		*     An object structured like
+		*     `{"mathjs": "IndexNode", dimensions: [...], dotNotation: false}`,
+		*     where mathjs is optional
+		* @returns {IndexNode}
+		*/
+		static fromJSON(json) {
+			return new IndexNode(json.dimensions, json.dotNotation);
+		}
+		/**
+		* Get HTML representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toHTML(options) {
+			var dimensions = [];
+			for (var i = 0; i < this.dimensions.length; i++) dimensions[i] = this.dimensions[i].toHTML();
+			if (this.dotNotation) return "<span class=\"math-operator math-accessor-operator\">.</span><span class=\"math-symbol math-property\">" + escape(this.getObjectProperty()) + "</span>";
+			else return "<span class=\"math-parenthesis math-square-parenthesis\">[</span>" + dimensions.join("<span class=\"math-separator\">,</span>") + "<span class=\"math-parenthesis math-square-parenthesis\">]</span>";
+		}
+		/**
+		* Get LaTeX representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toTex(options) {
+			var dimensions = this.dimensions.map(function(range) {
+				return range.toTex(options);
+			});
+			return this.dotNotation ? "." + this.getObjectProperty() : "_{" + dimensions.join(",") + "}";
+		}
+	}
+	_defineProperty(IndexNode, "name", name$78);
+	return IndexNode;
+}, {
+	isClass: true,
+	isNode: true
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/node/ObjectNode.js
+var name$77 = "ObjectNode";
+var createObjectNode = /* @__PURE__ */ factory(name$77, ["Node"], (_ref) => {
+	var { Node } = _ref;
+	class ObjectNode extends Node {
+		/**
+		* @constructor ObjectNode
+		* @extends {Node}
+		* Holds an object with keys/values
+		* @param {Object.<string, Node>} [properties]   object with key/value pairs
+		*/
+		constructor(properties) {
+			super();
+			this.properties = properties || {};
+			if (properties) {
+				if (!(typeof properties === "object") || !Object.keys(properties).every(function(key) {
+					return isNode(properties[key]);
+				})) throw new TypeError("Object containing Nodes expected");
+			}
+		}
+		get type() {
+			return name$77;
+		}
+		get isObjectNode() {
+			return true;
+		}
+		/**
+		* Compile a node into a JavaScript function.
+		* This basically pre-calculates as much as possible and only leaves open
+		* calculations which depend on a dynamic scope with variables.
+		* @param {Object} math     Math.js namespace with functions and constants.
+		* @param {Object} argNames An object with argument names as key and `true`
+		*                          as value. Used in the SymbolNode to optimize
+		*                          for arguments from user assigned functions
+		*                          (see FunctionAssignmentNode) or special symbols
+		*                          like `end` (see IndexNode).
+		* @return {function} Returns a function which can be called like:
+		*                        evalNode(scope: Object, args: Object, context: *)
+		*/
+		_compile(math, argNames) {
+			var evalEntries = {};
+			for (var key in this.properties) if (hasOwnProperty(this.properties, key)) {
+				var stringifiedKey = stringify(key);
+				var parsedKey = JSON.parse(stringifiedKey);
+				evalEntries[parsedKey] = getSafeProperty(this.properties, key)._compile(math, argNames);
+			}
+			return function evalObjectNode(scope, args, context) {
+				var obj = {};
+				for (var _key in evalEntries) if (hasOwnProperty(evalEntries, _key)) obj[_key] = evalEntries[_key](scope, args, context);
+				return obj;
+			};
+		}
+		/**
+		* Execute a callback for each of the child nodes of this node
+		* @param {function(child: Node, path: string, parent: Node)} callback
+		*/
+		forEach(callback) {
+			for (var key in this.properties) if (hasOwnProperty(this.properties, key)) callback(this.properties[key], "properties[" + stringify(key) + "]", this);
+		}
+		/**
+		* Create a new ObjectNode whose children are the results of calling
+		* the provided callback function for each child of the original node.
+		* @param {function(child: Node, path: string, parent: Node): Node} callback
+		* @returns {ObjectNode} Returns a transformed copy of the node
+		*/
+		map(callback) {
+			var properties = {};
+			for (var key in this.properties) if (hasOwnProperty(this.properties, key)) properties[key] = this._ifNode(callback(this.properties[key], "properties[" + stringify(key) + "]", this));
+			return new ObjectNode(properties);
+		}
+		/**
+		* Create a clone of this node, a shallow copy
+		* @return {ObjectNode}
+		*/
+		clone() {
+			var properties = {};
+			for (var key in this.properties) if (hasOwnProperty(this.properties, key)) properties[key] = this.properties[key];
+			return new ObjectNode(properties);
+		}
+		/**
+		* Get string representation
+		* @param {Object} options
+		* @return {string} str
+		* @override
+		*/
+		_toString(options) {
+			var entries = [];
+			for (var key in this.properties) if (hasOwnProperty(this.properties, key)) entries.push(stringify(key) + ": " + this.properties[key].toString(options));
+			return "{" + entries.join(", ") + "}";
+		}
+		/**
+		* Get a JSON representation of the node
+		* @returns {Object}
+		*/
+		toJSON() {
+			return {
+				mathjs: name$77,
+				properties: this.properties
+			};
+		}
+		/**
+		* Instantiate an OperatorNode from its JSON representation
+		* @param {Object} json  An object structured like
+		*                       `{"mathjs": "ObjectNode", "properties": {...}}`,
+		*                       where mathjs is optional
+		* @returns {ObjectNode}
+		*/
+		static fromJSON(json) {
+			return new ObjectNode(json.properties);
+		}
+		/**
+		* Get HTML representation
+		* @param {Object} options
+		* @return {string} str
+		* @override
+		*/
+		_toHTML(options) {
+			var entries = [];
+			for (var key in this.properties) if (hasOwnProperty(this.properties, key)) entries.push("<span class=\"math-symbol math-property\">" + escape(key) + "</span><span class=\"math-operator math-assignment-operator math-property-assignment-operator math-binary-operator\">:</span>" + this.properties[key].toHTML(options));
+			return "<span class=\"math-parenthesis math-curly-parenthesis\">{</span>" + entries.join("<span class=\"math-separator\">,</span>") + "<span class=\"math-parenthesis math-curly-parenthesis\">}</span>";
+		}
+		/**
+		* Get LaTeX representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toTex(options) {
+			var entries = [];
+			for (var key in this.properties) if (hasOwnProperty(this.properties, key)) entries.push("\\mathbf{" + key + ":} & " + this.properties[key].toTex(options) + "\\\\");
+			return "\\left\\{\\begin{array}{ll}" + entries.join("\n") + "\\end{array}\\right\\}";
+		}
+	}
+	_defineProperty(ObjectNode, "name", name$77);
+	return ObjectNode;
+}, {
+	isClass: true,
+	isNode: true
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/scope.js
+/**
+* Create a new scope which can access the parent scope,
+* but does not affect it when written. This is suitable for variable definitions
+* within a block node, or function definition.
+*
+* If parent scope has a createSubScope method, it delegates to that. Otherwise,
+* creates an empty map, and copies the parent scope to it, adding in
+* the remaining `args`.
+*
+* @param {Map} parentScope
+* @param  {Object} args
+* @returns {PartitionedMap}
+*/
+function createSubScope(parentScope, args) {
+	return new PartitionedMap(parentScope, new ObjectWrappingMap(args), new Set(Object.keys(args)));
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/node/OperatorNode.js
+var name$76 = "OperatorNode";
+var createOperatorNode = /* @__PURE__ */ factory(name$76, ["Node"], (_ref) => {
+	var { Node } = _ref;
+	/**
+	* Returns true if the expression starts with a constant, under
+	* the current parenthesization:
+	* @param {Node} expression
+	* @param {string} parenthesis
+	* @return {boolean}
+	*/
+	function startsWithConstant(expr, parenthesis) {
+		var curNode = expr;
+		if (parenthesis === "auto") while (isParenthesisNode(curNode)) curNode = curNode.content;
+		if (isConstantNode(curNode)) return true;
+		if (isOperatorNode(curNode)) return startsWithConstant(curNode.args[0], parenthesis);
+		return false;
+	}
+	/**
+	* Calculate which parentheses are necessary. Gets an OperatorNode
+	* (which is the root of the tree) and an Array of Nodes
+	* (this.args) and returns an array where 'true' means that an argument
+	* has to be enclosed in parentheses whereas 'false' means the opposite.
+	*
+	* @param {OperatorNode} root
+	* @param {string} parenthesis
+	* @param {Node[]} args
+	* @param {boolean} latex
+	* @return {boolean[]}
+	* @private
+	*/
+	function calculateNecessaryParentheses(root, parenthesis, implicit, args, latex) {
+		var precedence = getPrecedence(root, parenthesis, implicit);
+		var associativity = getAssociativity(root, parenthesis);
+		if (parenthesis === "all" || args.length > 2 && root.getIdentifier() !== "OperatorNode:add" && root.getIdentifier() !== "OperatorNode:multiply") return args.map(function(arg) {
+			switch (arg.getContent().type) {
+				case "ArrayNode":
+				case "ConstantNode":
+				case "SymbolNode":
+				case "ParenthesisNode": return false;
+				default: return true;
+			}
+		});
+		var result;
+		switch (args.length) {
+			case 0:
+				result = [];
+				break;
+			case 1:
+				var operandPrecedence = getPrecedence(args[0], parenthesis, implicit, root);
+				if (latex && operandPrecedence !== null) {
+					var operandIdentifier;
+					var rootIdentifier;
+					if (parenthesis === "keep") {
+						operandIdentifier = args[0].getIdentifier();
+						rootIdentifier = root.getIdentifier();
+					} else {
+						operandIdentifier = args[0].getContent().getIdentifier();
+						rootIdentifier = root.getContent().getIdentifier();
+					}
+					if (properties[precedence][rootIdentifier].latexLeftParens === false) {
+						result = [false];
+						break;
+					}
+					if (properties[operandPrecedence][operandIdentifier].latexParens === false) {
+						result = [false];
+						break;
+					}
+				}
+				if (operandPrecedence === null) {
+					result = [false];
+					break;
+				}
+				if (operandPrecedence <= precedence) {
+					result = [true];
+					break;
+				}
+				result = [false];
+				break;
+			case 2:
+				var lhsParens;
+				var lhsPrecedence = getPrecedence(args[0], parenthesis, implicit, root);
+				var assocWithLhs = isAssociativeWith(root, args[0], parenthesis);
+				if (lhsPrecedence === null) lhsParens = false;
+				else if (lhsPrecedence === precedence && associativity === "right" && !assocWithLhs) lhsParens = true;
+				else if (lhsPrecedence < precedence) lhsParens = true;
+				else lhsParens = false;
+				var rhsParens;
+				var rhsPrecedence = getPrecedence(args[1], parenthesis, implicit, root);
+				var assocWithRhs = isAssociativeWith(root, args[1], parenthesis);
+				if (rhsPrecedence === null) rhsParens = false;
+				else if (rhsPrecedence === precedence && associativity === "left" && !assocWithRhs) rhsParens = true;
+				else if (rhsPrecedence < precedence) rhsParens = true;
+				else rhsParens = false;
+				if (latex) {
+					var _rootIdentifier;
+					var lhsIdentifier;
+					var rhsIdentifier;
+					if (parenthesis === "keep") {
+						_rootIdentifier = root.getIdentifier();
+						lhsIdentifier = root.args[0].getIdentifier();
+						rhsIdentifier = root.args[1].getIdentifier();
+					} else {
+						_rootIdentifier = root.getContent().getIdentifier();
+						lhsIdentifier = root.args[0].getContent().getIdentifier();
+						rhsIdentifier = root.args[1].getContent().getIdentifier();
+					}
+					if (lhsPrecedence !== null) {
+						if (properties[precedence][_rootIdentifier].latexLeftParens === false) lhsParens = false;
+						if (properties[lhsPrecedence][lhsIdentifier].latexParens === false) lhsParens = false;
+					}
+					if (rhsPrecedence !== null) {
+						if (properties[precedence][_rootIdentifier].latexRightParens === false) rhsParens = false;
+						if (properties[rhsPrecedence][rhsIdentifier].latexParens === false) rhsParens = false;
+					}
+				}
+				result = [lhsParens, rhsParens];
+				break;
+			default:
+				if (root.getIdentifier() === "OperatorNode:add" || root.getIdentifier() === "OperatorNode:multiply") result = args.map(function(arg) {
+					var argPrecedence = getPrecedence(arg, parenthesis, implicit, root);
+					var assocWithArg = isAssociativeWith(root, arg, parenthesis);
+					var argAssociativity = getAssociativity(arg, parenthesis);
+					if (argPrecedence === null) return false;
+					else if (precedence === argPrecedence && associativity === argAssociativity && !assocWithArg) return true;
+					else if (argPrecedence < precedence) return true;
+					return false;
+				});
+				break;
+		}
+		if (args.length >= 2 && root.getIdentifier() === "OperatorNode:multiply" && root.implicit && parenthesis !== "all" && implicit === "hide") {
+			for (var i = 1; i < result.length; ++i) if (startsWithConstant(args[i], parenthesis) && !result[i - 1] && (parenthesis !== "keep" || !isParenthesisNode(args[i - 1]))) result[i] = true;
+		}
+		return result;
+	}
+	class OperatorNode extends Node {
+		/**
+		* @constructor OperatorNode
+		* @extends {Node}
+		* An operator with two arguments, like 2+3
+		*
+		* @param {string} op           Operator name, for example '+'
+		* @param {string} fn           Function name, for example 'add'
+		* @param {Node[]} args         Operator arguments
+		* @param {boolean} [implicit]  Is this an implicit multiplication?
+		* @param {boolean} [isPercentage] Is this an percentage Operation?
+		*/
+		constructor(op, fn, args, implicit, isPercentage) {
+			super();
+			if (typeof op !== "string") throw new TypeError("string expected for parameter \"op\"");
+			if (typeof fn !== "string") throw new TypeError("string expected for parameter \"fn\"");
+			if (!Array.isArray(args) || !args.every(isNode)) throw new TypeError("Array containing Nodes expected for parameter \"args\"");
+			this.implicit = implicit === true;
+			this.isPercentage = isPercentage === true;
+			this.op = op;
+			this.fn = fn;
+			this.args = args || [];
+		}
+		get type() {
+			return name$76;
+		}
+		get isOperatorNode() {
+			return true;
+		}
+		/**
+		* Compile a node into a JavaScript function.
+		* This basically pre-calculates as much as possible and only leaves open
+		* calculations which depend on a dynamic scope with variables.
+		* @param {Object} math     Math.js namespace with functions and constants.
+		* @param {Object} argNames An object with argument names as key and `true`
+		*                          as value. Used in the SymbolNode to optimize
+		*                          for arguments from user assigned functions
+		*                          (see FunctionAssignmentNode) or special symbols
+		*                          like `end` (see IndexNode).
+		* @return {function} Returns a function which can be called like:
+		*                        evalNode(scope: Object, args: Object, context: *)
+		*/
+		_compile(math, argNames) {
+			if (typeof this.fn !== "string" || !isSafeMethod(math, this.fn)) if (!math[this.fn]) throw new Error("Function " + this.fn + " missing in provided namespace \"math\"");
+			else throw new Error("No access to function \"" + this.fn + "\"");
+			var fn = getSafeProperty(math, this.fn);
+			var evalArgs = map$1(this.args, function(arg) {
+				return arg._compile(math, argNames);
+			});
+			if (typeof fn === "function" && fn.rawArgs === true) {
+				var rawArgs = this.args;
+				return function evalOperatorNode(scope, args, context) {
+					return fn(rawArgs, math, createSubScope(scope, args));
+				};
+			} else if (evalArgs.length === 1) {
+				var evalArg0 = evalArgs[0];
+				return function evalOperatorNode(scope, args, context) {
+					return fn(evalArg0(scope, args, context));
+				};
+			} else if (evalArgs.length === 2) {
+				var _evalArg = evalArgs[0];
+				var evalArg1 = evalArgs[1];
+				return function evalOperatorNode(scope, args, context) {
+					return fn(_evalArg(scope, args, context), evalArg1(scope, args, context));
+				};
+			} else return function evalOperatorNode(scope, args, context) {
+				return fn.apply(null, map$1(evalArgs, function(evalArg) {
+					return evalArg(scope, args, context);
+				}));
+			};
+		}
+		/**
+		* Execute a callback for each of the child nodes of this node
+		* @param {function(child: Node, path: string, parent: Node)} callback
+		*/
+		forEach(callback) {
+			for (var i = 0; i < this.args.length; i++) callback(this.args[i], "args[" + i + "]", this);
+		}
+		/**
+		* Create a new OperatorNode whose children are the results of calling
+		* the provided callback function for each child of the original node.
+		* @param {function(child: Node, path: string, parent: Node): Node} callback
+		* @returns {OperatorNode} Returns a transformed copy of the node
+		*/
+		map(callback) {
+			var args = [];
+			for (var i = 0; i < this.args.length; i++) args[i] = this._ifNode(callback(this.args[i], "args[" + i + "]", this));
+			return new OperatorNode(this.op, this.fn, args, this.implicit, this.isPercentage);
+		}
+		/**
+		* Create a clone of this node, a shallow copy
+		* @return {OperatorNode}
+		*/
+		clone() {
+			return new OperatorNode(this.op, this.fn, this.args.slice(0), this.implicit, this.isPercentage);
+		}
+		/**
+		* Check whether this is an unary OperatorNode:
+		* has exactly one argument, like `-a`.
+		* @return {boolean}
+		*     Returns true when an unary operator node, false otherwise.
+		*/
+		isUnary() {
+			return this.args.length === 1;
+		}
+		/**
+		* Check whether this is a binary OperatorNode:
+		* has exactly two arguments, like `a + b`.
+		* @return {boolean}
+		*     Returns true when a binary operator node, false otherwise.
+		*/
+		isBinary() {
+			return this.args.length === 2;
+		}
+		/**
+		* Get string representation.
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toString(options) {
+			var parenthesis = options && options.parenthesis ? options.parenthesis : "keep";
+			var implicit = options && options.implicit ? options.implicit : "hide";
+			var args = this.args;
+			var parens = calculateNecessaryParentheses(this, parenthesis, implicit, args, false);
+			if (args.length === 1) {
+				var assoc = getAssociativity(this, parenthesis);
+				var operand = args[0].toString(options);
+				if (parens[0]) operand = "(" + operand + ")";
+				var opIsNamed = /[a-zA-Z]+/.test(this.op);
+				if (assoc === "right") return this.op + (opIsNamed ? " " : "") + operand;
+				else if (assoc === "left") return operand + (opIsNamed ? " " : "") + this.op;
+				return operand + this.op;
+			} else if (args.length === 2) {
+				var lhs = args[0].toString(options);
+				var rhs = args[1].toString(options);
+				if (parens[0]) lhs = "(" + lhs + ")";
+				if (parens[1]) rhs = "(" + rhs + ")";
+				if (this.implicit && this.getIdentifier() === "OperatorNode:multiply" && implicit === "hide") return lhs + " " + rhs;
+				return lhs + " " + this.op + " " + rhs;
+			} else if (args.length > 2 && (this.getIdentifier() === "OperatorNode:add" || this.getIdentifier() === "OperatorNode:multiply")) {
+				var stringifiedArgs = args.map(function(arg, index) {
+					arg = arg.toString(options);
+					if (parens[index]) arg = "(" + arg + ")";
+					return arg;
+				});
+				if (this.implicit && this.getIdentifier() === "OperatorNode:multiply" && implicit === "hide") return stringifiedArgs.join(" ");
+				return stringifiedArgs.join(" " + this.op + " ");
+			} else return this.fn + "(" + this.args.join(", ") + ")";
+		}
+		/**
+		* Get a JSON representation of the node
+		* @returns {Object}
+		*/
+		toJSON() {
+			return {
+				mathjs: name$76,
+				op: this.op,
+				fn: this.fn,
+				args: this.args,
+				implicit: this.implicit,
+				isPercentage: this.isPercentage
+			};
+		}
+		/**
+		* Instantiate an OperatorNode from its JSON representation
+		* @param {Object} json
+		*     An object structured like
+		*     ```
+		*     {"mathjs": "OperatorNode",
+		*      "op": "+", "fn": "add", "args": [...],
+		*      "implicit": false,
+		*      "isPercentage":false}
+		*     ```
+		*     where mathjs is optional
+		* @returns {OperatorNode}
+		*/
+		static fromJSON(json) {
+			return new OperatorNode(json.op, json.fn, json.args, json.implicit, json.isPercentage);
+		}
+		/**
+		* Get HTML representation.
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toHTML(options) {
+			var parenthesis = options && options.parenthesis ? options.parenthesis : "keep";
+			var implicit = options && options.implicit ? options.implicit : "hide";
+			var args = this.args;
+			var parens = calculateNecessaryParentheses(this, parenthesis, implicit, args, false);
+			if (args.length === 1) {
+				var assoc = getAssociativity(this, parenthesis);
+				var operand = args[0].toHTML(options);
+				if (parens[0]) operand = "<span class=\"math-parenthesis math-round-parenthesis\">(</span>" + operand + "<span class=\"math-parenthesis math-round-parenthesis\">)</span>";
+				if (assoc === "right") return "<span class=\"math-operator math-unary-operator math-lefthand-unary-operator\">" + escape(this.op) + "</span>" + operand;
+				else return operand + "<span class=\"math-operator math-unary-operator math-righthand-unary-operator\">" + escape(this.op) + "</span>";
+			} else if (args.length === 2) {
+				var lhs = args[0].toHTML(options);
+				var rhs = args[1].toHTML(options);
+				if (parens[0]) lhs = "<span class=\"math-parenthesis math-round-parenthesis\">(</span>" + lhs + "<span class=\"math-parenthesis math-round-parenthesis\">)</span>";
+				if (parens[1]) rhs = "<span class=\"math-parenthesis math-round-parenthesis\">(</span>" + rhs + "<span class=\"math-parenthesis math-round-parenthesis\">)</span>";
+				if (this.implicit && this.getIdentifier() === "OperatorNode:multiply" && implicit === "hide") return lhs + "<span class=\"math-operator math-binary-operator math-implicit-binary-operator\"></span>" + rhs;
+				return lhs + "<span class=\"math-operator math-binary-operator math-explicit-binary-operator\">" + escape(this.op) + "</span>" + rhs;
+			} else {
+				var stringifiedArgs = args.map(function(arg, index) {
+					arg = arg.toHTML(options);
+					if (parens[index]) arg = "<span class=\"math-parenthesis math-round-parenthesis\">(</span>" + arg + "<span class=\"math-parenthesis math-round-parenthesis\">)</span>";
+					return arg;
+				});
+				if (args.length > 2 && (this.getIdentifier() === "OperatorNode:add" || this.getIdentifier() === "OperatorNode:multiply")) {
+					if (this.implicit && this.getIdentifier() === "OperatorNode:multiply" && implicit === "hide") return stringifiedArgs.join("<span class=\"math-operator math-binary-operator math-implicit-binary-operator\"></span>");
+					return stringifiedArgs.join("<span class=\"math-operator math-binary-operator math-explicit-binary-operator\">" + escape(this.op) + "</span>");
+				} else return "<span class=\"math-function\">" + escape(this.fn) + "</span><span class=\"math-paranthesis math-round-parenthesis\">(</span>" + stringifiedArgs.join("<span class=\"math-separator\">,</span>") + "<span class=\"math-paranthesis math-round-parenthesis\">)</span>";
+			}
+		}
+		/**
+		* Get LaTeX representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toTex(options) {
+			var parenthesis = options && options.parenthesis ? options.parenthesis : "keep";
+			var implicit = options && options.implicit ? options.implicit : "hide";
+			var args = this.args;
+			var parens = calculateNecessaryParentheses(this, parenthesis, implicit, args, true);
+			var op = latexOperators[this.fn];
+			op = typeof op === "undefined" ? this.op : op;
+			if (args.length === 1) {
+				var assoc = getAssociativity(this, parenthesis);
+				var operand = args[0].toTex(options);
+				if (parens[0]) operand = "\\left(".concat(operand, "\\right)");
+				if (assoc === "right") return op + operand;
+				else if (assoc === "left") return operand + op;
+				return operand + op;
+			} else if (args.length === 2) {
+				var lhs = args[0];
+				var lhsTex = lhs.toTex(options);
+				if (parens[0]) lhsTex = "\\left(".concat(lhsTex, "\\right)");
+				var rhsTex = args[1].toTex(options);
+				if (parens[1]) rhsTex = "\\left(".concat(rhsTex, "\\right)");
+				var lhsIdentifier;
+				if (parenthesis === "keep") lhsIdentifier = lhs.getIdentifier();
+				else lhsIdentifier = lhs.getContent().getIdentifier();
+				switch (this.getIdentifier()) {
+					case "OperatorNode:divide": return op + "{" + lhsTex + "}{" + rhsTex + "}";
+					case "OperatorNode:pow":
+						lhsTex = "{" + lhsTex + "}";
+						rhsTex = "{" + rhsTex + "}";
+						switch (lhsIdentifier) {
+							case "ConditionalNode":
+							case "OperatorNode:divide": lhsTex = "\\left(".concat(lhsTex, "\\right)");
+						}
+						break;
+					case "OperatorNode:multiply": if (this.implicit && implicit === "hide") return lhsTex + "~" + rhsTex;
+				}
+				return lhsTex + op + rhsTex;
+			} else if (args.length > 2 && (this.getIdentifier() === "OperatorNode:add" || this.getIdentifier() === "OperatorNode:multiply")) {
+				var texifiedArgs = args.map(function(arg, index) {
+					arg = arg.toTex(options);
+					if (parens[index]) arg = "\\left(".concat(arg, "\\right)");
+					return arg;
+				});
+				if (this.getIdentifier() === "OperatorNode:multiply" && this.implicit && implicit === "hide") return texifiedArgs.join("~");
+				return texifiedArgs.join(op);
+			} else return "\\mathrm{" + this.fn + "}\\left(" + args.map(function(arg) {
+				return arg.toTex(options);
+			}).join(",") + "\\right)";
+		}
+		/**
+		* Get identifier.
+		* @return {string}
+		*/
+		getIdentifier() {
+			return this.type + ":" + this.fn;
+		}
+	}
+	_defineProperty(OperatorNode, "name", name$76);
+	return OperatorNode;
+}, {
+	isClass: true,
+	isNode: true
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/node/ParenthesisNode.js
+var name$75 = "ParenthesisNode";
+var createParenthesisNode = /* @__PURE__ */ factory(name$75, ["Node"], (_ref) => {
+	var { Node } = _ref;
+	class ParenthesisNode extends Node {
+		/**
+		* @constructor ParenthesisNode
+		* @extends {Node}
+		* A parenthesis node describes manual parenthesis from the user input
+		* @param {Node} content
+		* @extends {Node}
+		*/
+		constructor(content) {
+			super();
+			if (!isNode(content)) throw new TypeError("Node expected for parameter \"content\"");
+			this.content = content;
+		}
+		get type() {
+			return name$75;
+		}
+		get isParenthesisNode() {
+			return true;
+		}
+		/**
+		* Compile a node into a JavaScript function.
+		* This basically pre-calculates as much as possible and only leaves open
+		* calculations which depend on a dynamic scope with variables.
+		* @param {Object} math     Math.js namespace with functions and constants.
+		* @param {Object} argNames An object with argument names as key and `true`
+		*                          as value. Used in the SymbolNode to optimize
+		*                          for arguments from user assigned functions
+		*                          (see FunctionAssignmentNode) or special symbols
+		*                          like `end` (see IndexNode).
+		* @return {function} Returns a function which can be called like:
+		*                        evalNode(scope: Object, args: Object, context: *)
+		*/
+		_compile(math, argNames) {
+			return this.content._compile(math, argNames);
+		}
+		/**
+		* Get the content of the current Node.
+		* @return {Node} content
+		* @override
+		**/
+		getContent() {
+			return this.content.getContent();
+		}
+		/**
+		* Execute a callback for each of the child nodes of this node
+		* @param {function(child: Node, path: string, parent: Node)} callback
+		*/
+		forEach(callback) {
+			callback(this.content, "content", this);
+		}
+		/**
+		* Create a new ParenthesisNode whose child is the result of calling
+		* the provided callback function on the child of this node.
+		* @param {function(child: Node, path: string, parent: Node) : Node} callback
+		* @returns {ParenthesisNode} Returns a clone of the node
+		*/
+		map(callback) {
+			return new ParenthesisNode(callback(this.content, "content", this));
+		}
+		/**
+		* Create a clone of this node, a shallow copy
+		* @return {ParenthesisNode}
+		*/
+		clone() {
+			return new ParenthesisNode(this.content);
+		}
+		/**
+		* Get string representation
+		* @param {Object} options
+		* @return {string} str
+		* @override
+		*/
+		_toString(options) {
+			if (!options || options && !options.parenthesis || options && options.parenthesis === "keep") return "(" + this.content.toString(options) + ")";
+			return this.content.toString(options);
+		}
+		/**
+		* Get a JSON representation of the node
+		* @returns {Object}
+		*/
+		toJSON() {
+			return {
+				mathjs: name$75,
+				content: this.content
+			};
+		}
+		/**
+		* Instantiate an ParenthesisNode from its JSON representation
+		* @param {Object} json  An object structured like
+		*                       `{"mathjs": "ParenthesisNode", "content": ...}`,
+		*                       where mathjs is optional
+		* @returns {ParenthesisNode}
+		*/
+		static fromJSON(json) {
+			return new ParenthesisNode(json.content);
+		}
+		/**
+		* Get HTML representation
+		* @param {Object} options
+		* @return {string} str
+		* @override
+		*/
+		_toHTML(options) {
+			if (!options || options && !options.parenthesis || options && options.parenthesis === "keep") return "<span class=\"math-parenthesis math-round-parenthesis\">(</span>" + this.content.toHTML(options) + "<span class=\"math-parenthesis math-round-parenthesis\">)</span>";
+			return this.content.toHTML(options);
+		}
+		/**
+		* Get LaTeX representation
+		* @param {Object} options
+		* @return {string} str
+		* @override
+		*/
+		_toTex(options) {
+			if (!options || options && !options.parenthesis || options && options.parenthesis === "keep") return "\\left(".concat(this.content.toTex(options), "\\right)");
+			return this.content.toTex(options);
+		}
+	}
+	_defineProperty(ParenthesisNode, "name", name$75);
+	return ParenthesisNode;
+}, {
+	isClass: true,
+	isNode: true
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/node/RangeNode.js
+var name$74 = "RangeNode";
+var createRangeNode = /* @__PURE__ */ factory(name$74, ["Node"], (_ref) => {
+	var { Node } = _ref;
+	/**
+	* Calculate the necessary parentheses
+	* @param {Node} node
+	* @param {string} parenthesis
+	* @param {string} implicit
+	* @return {Object} parentheses
+	* @private
+	*/
+	function calculateNecessaryParentheses(node, parenthesis, implicit) {
+		var precedence = getPrecedence(node, parenthesis, implicit);
+		var parens = {};
+		var startPrecedence = getPrecedence(node.start, parenthesis, implicit);
+		parens.start = startPrecedence !== null && startPrecedence <= precedence || parenthesis === "all";
+		if (node.step) {
+			var stepPrecedence = getPrecedence(node.step, parenthesis, implicit);
+			parens.step = stepPrecedence !== null && stepPrecedence <= precedence || parenthesis === "all";
+		}
+		var endPrecedence = getPrecedence(node.end, parenthesis, implicit);
+		parens.end = endPrecedence !== null && endPrecedence <= precedence || parenthesis === "all";
+		return parens;
+	}
+	class RangeNode extends Node {
+		/**
+		* @constructor RangeNode
+		* @extends {Node}
+		* create a range
+		* @param {Node} start  included lower-bound
+		* @param {Node} end    included upper-bound
+		* @param {Node} [step] optional step
+		*/
+		constructor(start, end, step) {
+			super();
+			if (!isNode(start)) throw new TypeError("Node expected");
+			if (!isNode(end)) throw new TypeError("Node expected");
+			if (step && !isNode(step)) throw new TypeError("Node expected");
+			if (arguments.length > 3) throw new Error("Too many arguments");
+			this.start = start;
+			this.end = end;
+			this.step = step || null;
+		}
+		get type() {
+			return name$74;
+		}
+		get isRangeNode() {
+			return true;
+		}
+		/**
+		* Check whether the RangeNode needs the `end` symbol to be defined.
+		* This end is the size of the Matrix in current dimension.
+		* @return {boolean}
+		*/
+		needsEnd() {
+			return this.filter(function(node) {
+				return isSymbolNode(node) && node.name === "end";
+			}).length > 0;
+		}
+		/**
+		* Compile a node into a JavaScript function.
+		* This basically pre-calculates as much as possible and only leaves open
+		* calculations which depend on a dynamic scope with variables.
+		* @param {Object} math     Math.js namespace with functions and constants.
+		* @param {Object} argNames An object with argument names as key and `true`
+		*                          as value. Used in the SymbolNode to optimize
+		*                          for arguments from user assigned functions
+		*                          (see FunctionAssignmentNode) or special symbols
+		*                          like `end` (see IndexNode).
+		* @return {function} Returns a function which can be called like:
+		*                        evalNode(scope: Object, args: Object, context: *)
+		*/
+		_compile(math, argNames) {
+			var range = math.range;
+			var evalStart = this.start._compile(math, argNames);
+			var evalEnd = this.end._compile(math, argNames);
+			if (this.step) {
+				var evalStep = this.step._compile(math, argNames);
+				return function evalRangeNode(scope, args, context) {
+					return range(evalStart(scope, args, context), evalEnd(scope, args, context), evalStep(scope, args, context));
+				};
+			} else return function evalRangeNode(scope, args, context) {
+				return range(evalStart(scope, args, context), evalEnd(scope, args, context));
+			};
+		}
+		/**
+		* Execute a callback for each of the child nodes of this node
+		* @param {function(child: Node, path: string, parent: Node)} callback
+		*/
+		forEach(callback) {
+			callback(this.start, "start", this);
+			callback(this.end, "end", this);
+			if (this.step) callback(this.step, "step", this);
+		}
+		/**
+		* Create a new RangeNode whose children are the results of calling
+		* the provided callback function for each child of the original node.
+		* @param {function(child: Node, path: string, parent: Node): Node} callback
+		* @returns {RangeNode} Returns a transformed copy of the node
+		*/
+		map(callback) {
+			return new RangeNode(this._ifNode(callback(this.start, "start", this)), this._ifNode(callback(this.end, "end", this)), this.step && this._ifNode(callback(this.step, "step", this)));
+		}
+		/**
+		* Create a clone of this node, a shallow copy
+		* @return {RangeNode}
+		*/
+		clone() {
+			return new RangeNode(this.start, this.end, this.step && this.step);
+		}
+		/**
+		* Get string representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toString(options) {
+			var parenthesis = options && options.parenthesis ? options.parenthesis : "keep";
+			var parens = calculateNecessaryParentheses(this, parenthesis, options && options.implicit);
+			var str;
+			var start = this.start.toString(options);
+			if (parens.start) start = "(" + start + ")";
+			str = start;
+			if (this.step) {
+				var step = this.step.toString(options);
+				if (parens.step) step = "(" + step + ")";
+				str += ":" + step;
+			}
+			var end = this.end.toString(options);
+			if (parens.end) end = "(" + end + ")";
+			str += ":" + end;
+			return str;
+		}
+		/**
+		* Get a JSON representation of the node
+		* @returns {Object}
+		*/
+		toJSON() {
+			return {
+				mathjs: name$74,
+				start: this.start,
+				end: this.end,
+				step: this.step
+			};
+		}
+		/**
+		* Instantiate an RangeNode from its JSON representation
+		* @param {Object} json
+		*     An object structured like
+		*     `{"mathjs": "RangeNode", "start": ..., "end": ..., "step": ...}`,
+		*     where mathjs is optional
+		* @returns {RangeNode}
+		*/
+		static fromJSON(json) {
+			return new RangeNode(json.start, json.end, json.step);
+		}
+		/**
+		* Get HTML representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toHTML(options) {
+			var parenthesis = options && options.parenthesis ? options.parenthesis : "keep";
+			var parens = calculateNecessaryParentheses(this, parenthesis, options && options.implicit);
+			var str;
+			var start = this.start.toHTML(options);
+			if (parens.start) start = "<span class=\"math-parenthesis math-round-parenthesis\">(</span>" + start + "<span class=\"math-parenthesis math-round-parenthesis\">)</span>";
+			str = start;
+			if (this.step) {
+				var step = this.step.toHTML(options);
+				if (parens.step) step = "<span class=\"math-parenthesis math-round-parenthesis\">(</span>" + step + "<span class=\"math-parenthesis math-round-parenthesis\">)</span>";
+				str += "<span class=\"math-operator math-range-operator\">:</span>" + step;
+			}
+			var end = this.end.toHTML(options);
+			if (parens.end) end = "<span class=\"math-parenthesis math-round-parenthesis\">(</span>" + end + "<span class=\"math-parenthesis math-round-parenthesis\">)</span>";
+			str += "<span class=\"math-operator math-range-operator\">:</span>" + end;
+			return str;
+		}
+		/**
+		* Get LaTeX representation
+		* @params {Object} options
+		* @return {string} str
+		*/
+		_toTex(options) {
+			var parenthesis = options && options.parenthesis ? options.parenthesis : "keep";
+			var parens = calculateNecessaryParentheses(this, parenthesis, options && options.implicit);
+			var str = this.start.toTex(options);
+			if (parens.start) str = "\\left(".concat(str, "\\right)");
+			if (this.step) {
+				var step = this.step.toTex(options);
+				if (parens.step) step = "\\left(".concat(step, "\\right)");
+				str += ":" + step;
+			}
+			var end = this.end.toTex(options);
+			if (parens.end) end = "\\left(".concat(end, "\\right)");
+			str += ":" + end;
+			return str;
+		}
+	}
+	_defineProperty(RangeNode, "name", name$74);
+	return RangeNode;
+}, {
+	isClass: true,
+	isNode: true
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/node/RelationalNode.js
+var name$73 = "RelationalNode";
+var createRelationalNode = /* @__PURE__ */ factory(name$73, ["Node"], (_ref) => {
+	var { Node } = _ref;
+	var operatorMap = {
+		equal: "==",
+		unequal: "!=",
+		smaller: "<",
+		larger: ">",
+		smallerEq: "<=",
+		largerEq: ">="
+	};
+	class RelationalNode extends Node {
+		/**
+		* A node representing a chained conditional expression, such as 'x > y > z'
+		*
+		* @param {String[]} conditionals
+		*     An array of conditional operators used to compare the parameters
+		* @param {Node[]} params
+		*     The parameters that will be compared
+		*
+		* @constructor RelationalNode
+		* @extends {Node}
+		*/
+		constructor(conditionals, params) {
+			super();
+			if (!Array.isArray(conditionals)) throw new TypeError("Parameter conditionals must be an array");
+			if (!Array.isArray(params)) throw new TypeError("Parameter params must be an array");
+			if (conditionals.length !== params.length - 1) throw new TypeError("Parameter params must contain exactly one more element than parameter conditionals");
+			this.conditionals = conditionals;
+			this.params = params;
+		}
+		get type() {
+			return name$73;
+		}
+		get isRelationalNode() {
+			return true;
+		}
+		/**
+		* Compile a node into a JavaScript function.
+		* This basically pre-calculates as much as possible and only leaves open
+		* calculations which depend on a dynamic scope with variables.
+		* @param {Object} math     Math.js namespace with functions and constants.
+		* @param {Object} argNames An object with argument names as key and `true`
+		*                          as value. Used in the SymbolNode to optimize
+		*                          for arguments from user assigned functions
+		*                          (see FunctionAssignmentNode) or special symbols
+		*                          like `end` (see IndexNode).
+		* @return {function} Returns a function which can be called like:
+		*                        evalNode(scope: Object, args: Object, context: *)
+		*/
+		_compile(math, argNames) {
+			var self = this;
+			var compiled = this.params.map((p) => p._compile(math, argNames));
+			return function evalRelationalNode(scope, args, context) {
+				var evalLhs;
+				var evalRhs = compiled[0](scope, args, context);
+				for (var i = 0; i < self.conditionals.length; i++) {
+					evalLhs = evalRhs;
+					evalRhs = compiled[i + 1](scope, args, context);
+					if (!getSafeProperty(math, self.conditionals[i])(evalLhs, evalRhs)) return false;
+				}
+				return true;
+			};
+		}
+		/**
+		* Execute a callback for each of the child nodes of this node
+		* @param {function(child: Node, path: string, parent: Node)} callback
+		*/
+		forEach(callback) {
+			this.params.forEach((n, i) => callback(n, "params[" + i + "]", this), this);
+		}
+		/**
+		* Create a new RelationalNode whose children are the results of calling
+		* the provided callback function for each child of the original node.
+		* @param {function(child: Node, path: string, parent: Node): Node} callback
+		* @returns {RelationalNode} Returns a transformed copy of the node
+		*/
+		map(callback) {
+			return new RelationalNode(this.conditionals.slice(), this.params.map((n, i) => this._ifNode(callback(n, "params[" + i + "]", this)), this));
+		}
+		/**
+		* Create a clone of this node, a shallow copy
+		* @return {RelationalNode}
+		*/
+		clone() {
+			return new RelationalNode(this.conditionals, this.params);
+		}
+		/**
+		* Get string representation.
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toString(options) {
+			var parenthesis = options && options.parenthesis ? options.parenthesis : "keep";
+			var precedence = getPrecedence(this, parenthesis, options && options.implicit);
+			var paramStrings = this.params.map(function(p, index) {
+				var paramPrecedence = getPrecedence(p, parenthesis, options && options.implicit);
+				return parenthesis === "all" || paramPrecedence !== null && paramPrecedence <= precedence ? "(" + p.toString(options) + ")" : p.toString(options);
+			});
+			var ret = paramStrings[0];
+			for (var i = 0; i < this.conditionals.length; i++) {
+				ret += " " + operatorMap[this.conditionals[i]];
+				ret += " " + paramStrings[i + 1];
+			}
+			return ret;
+		}
+		/**
+		* Get a JSON representation of the node
+		* @returns {Object}
+		*/
+		toJSON() {
+			return {
+				mathjs: name$73,
+				conditionals: this.conditionals,
+				params: this.params
+			};
+		}
+		/**
+		* Instantiate a RelationalNode from its JSON representation
+		* @param {Object} json
+		*     An object structured like
+		*     `{"mathjs": "RelationalNode", "conditionals": ..., "params": ...}`,
+		*     where mathjs is optional
+		* @returns {RelationalNode}
+		*/
+		static fromJSON(json) {
+			return new RelationalNode(json.conditionals, json.params);
+		}
+		/**
+		* Get HTML representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toHTML(options) {
+			var parenthesis = options && options.parenthesis ? options.parenthesis : "keep";
+			var precedence = getPrecedence(this, parenthesis, options && options.implicit);
+			var paramStrings = this.params.map(function(p, index) {
+				var paramPrecedence = getPrecedence(p, parenthesis, options && options.implicit);
+				return parenthesis === "all" || paramPrecedence !== null && paramPrecedence <= precedence ? "<span class=\"math-parenthesis math-round-parenthesis\">(</span>" + p.toHTML(options) + "<span class=\"math-parenthesis math-round-parenthesis\">)</span>" : p.toHTML(options);
+			});
+			var ret = paramStrings[0];
+			for (var i = 0; i < this.conditionals.length; i++) ret += "<span class=\"math-operator math-binary-operator math-explicit-binary-operator\">" + escape(operatorMap[this.conditionals[i]]) + "</span>" + paramStrings[i + 1];
+			return ret;
+		}
+		/**
+		* Get LaTeX representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toTex(options) {
+			var parenthesis = options && options.parenthesis ? options.parenthesis : "keep";
+			var precedence = getPrecedence(this, parenthesis, options && options.implicit);
+			var paramStrings = this.params.map(function(p, index) {
+				var paramPrecedence = getPrecedence(p, parenthesis, options && options.implicit);
+				return parenthesis === "all" || paramPrecedence !== null && paramPrecedence <= precedence ? "\\left(" + p.toTex(options) + "\right)" : p.toTex(options);
+			});
+			var ret = paramStrings[0];
+			for (var i = 0; i < this.conditionals.length; i++) ret += latexOperators[this.conditionals[i]] + paramStrings[i + 1];
+			return ret;
+		}
+	}
+	_defineProperty(RelationalNode, "name", name$73);
+	return RelationalNode;
+}, {
+	isClass: true,
+	isNode: true
+});
+var createSymbolNode = /* @__PURE__ */ factory("SymbolNode", [
+	"math",
+	"?Unit",
+	"Node"
+], (_ref) => {
+	var { math, Unit, Node } = _ref;
+	/**
+	* Check whether some name is a valueless unit like "inch".
+	* @param {string} name
+	* @return {boolean}
+	*/
+	function isValuelessUnit(name) {
+		return Unit ? Unit.isValuelessUnit(name) : false;
+	}
+	class SymbolNode extends Node {
+		/**
+		* @constructor SymbolNode
+		* @extends {Node}
+		* A symbol node can hold and resolve a symbol
+		* @param {string} name
+		* @extends {Node}
+		*/
+		constructor(name) {
+			super();
+			if (typeof name !== "string") throw new TypeError("String expected for parameter \"name\"");
+			this.name = name;
+		}
+		get type() {
+			return "SymbolNode";
+		}
+		get isSymbolNode() {
+			return true;
+		}
+		/**
+		* Compile a node into a JavaScript function.
+		* This basically pre-calculates as much as possible and only leaves open
+		* calculations which depend on a dynamic scope with variables.
+		* @param {Object} math     Math.js namespace with functions and constants.
+		* @param {Object} argNames An object with argument names as key and `true`
+		*                          as value. Used in the SymbolNode to optimize
+		*                          for arguments from user assigned functions
+		*                          (see FunctionAssignmentNode) or special symbols
+		*                          like `end` (see IndexNode).
+		* @return {function} Returns a function which can be called like:
+		*                        evalNode(scope: Object, args: Object, context: *)
+		*/
+		_compile(math, argNames) {
+			var name = this.name;
+			if (argNames[name] === true) return function(scope, args, context) {
+				return getSafeProperty(args, name);
+			};
+			else if (name in math) return function(scope, args, context) {
+				return scope.has(name) ? scope.get(name) : getSafeProperty(math, name);
+			};
+			else {
+				var isUnit = isValuelessUnit(name);
+				return function(scope, args, context) {
+					return scope.has(name) ? scope.get(name) : isUnit ? new Unit(null, name) : SymbolNode.onUndefinedSymbol(name);
+				};
+			}
+		}
+		/**
+		* Execute a callback for each of the child nodes of this node
+		* @param {function(child: Node, path: string, parent: Node)} callback
+		*/
+		forEach(callback) {}
+		/**
+		* Create a new SymbolNode with children produced by the given callback.
+		* Trivial since a SymbolNode has no children
+		* @param {function(child: Node, path: string, parent: Node) : Node} callback
+		* @returns {SymbolNode} Returns a clone of the node
+		*/
+		map(callback) {
+			return this.clone();
+		}
+		/**
+		* Throws an error 'Undefined symbol {name}'
+		* @param {string} name
+		*/
+		static onUndefinedSymbol(name) {
+			throw new Error("Undefined symbol " + name);
+		}
+		/**
+		* Create a clone of this node, a shallow copy
+		* @return {SymbolNode}
+		*/
+		clone() {
+			return new SymbolNode(this.name);
+		}
+		/**
+		* Get string representation
+		* @param {Object} options
+		* @return {string} str
+		* @override
+		*/
+		_toString(options) {
+			return this.name;
+		}
+		/**
+		* Get HTML representation
+		* @param {Object} options
+		* @return {string} str
+		* @override
+		*/
+		_toHTML(options) {
+			var name = escape(this.name);
+			if (name === "true" || name === "false") return "<span class=\"math-symbol math-boolean\">" + name + "</span>";
+			else if (name === "i") return "<span class=\"math-symbol math-imaginary-symbol\">" + name + "</span>";
+			else if (name === "Infinity") return "<span class=\"math-symbol math-infinity-symbol\">" + name + "</span>";
+			else if (name === "NaN") return "<span class=\"math-symbol math-nan-symbol\">" + name + "</span>";
+			else if (name === "null") return "<span class=\"math-symbol math-null-symbol\">" + name + "</span>";
+			else if (name === "undefined") return "<span class=\"math-symbol math-undefined-symbol\">" + name + "</span>";
+			return "<span class=\"math-symbol\">" + name + "</span>";
+		}
+		/**
+		* Get a JSON representation of the node
+		* @returns {Object}
+		*/
+		toJSON() {
+			return {
+				mathjs: "SymbolNode",
+				name: this.name
+			};
+		}
+		/**
+		* Instantiate a SymbolNode from its JSON representation
+		* @param {Object} json  An object structured like
+		*                       `{"mathjs": "SymbolNode", name: "x"}`,
+		*                       where mathjs is optional
+		* @returns {SymbolNode}
+		*/
+		static fromJSON(json) {
+			return new SymbolNode(json.name);
+		}
+		/**
+		* Get LaTeX representation
+		* @param {Object} options
+		* @return {string} str
+		* @override
+		*/
+		_toTex(options) {
+			var isUnit = false;
+			if (typeof math[this.name] === "undefined" && isValuelessUnit(this.name)) isUnit = true;
+			var symbol = toSymbol(this.name, isUnit);
+			if (symbol[0] === "\\") return symbol;
+			return " " + symbol;
+		}
+	}
+	return SymbolNode;
+}, {
+	isClass: true,
+	isNode: true
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/node/FunctionNode.js
+var name$71 = "FunctionNode";
+var createFunctionNode = /* @__PURE__ */ factory(name$71, [
+	"math",
+	"Node",
+	"SymbolNode"
+], (_ref) => {
+	var _FunctionNode;
+	var { math, Node, SymbolNode } = _ref;
+	var strin = (entity) => format$1(entity, { truncate: 78 });
+	function expandTemplate(template, node, options) {
+		var latex = "";
+		var regex = /\$(?:\{([a-z_][a-z_0-9]*)(?:\[([0-9]+)\])?\}|\$)/gi;
+		var inputPos = 0;
+		var match;
+		while ((match = regex.exec(template)) !== null) {
+			latex += template.substring(inputPos, match.index);
+			inputPos = match.index;
+			if (match[0] === "$$") {
+				latex += "$";
+				inputPos++;
+			} else {
+				inputPos += match[0].length;
+				var property = node[match[1]];
+				if (!property) throw new ReferenceError("Template: Property " + match[1] + " does not exist.");
+				if (match[2] === void 0) switch (typeof property) {
+					case "string":
+						latex += property;
+						break;
+					case "object":
+						if (isNode(property)) latex += property.toTex(options);
+						else if (Array.isArray(property)) latex += property.map(function(arg, index) {
+							if (isNode(arg)) return arg.toTex(options);
+							throw new TypeError("Template: " + match[1] + "[" + index + "] is not a Node.");
+						}).join(",");
+						else throw new TypeError("Template: " + match[1] + " has to be a Node, String or array of Nodes");
+						break;
+					default: throw new TypeError("Template: " + match[1] + " has to be a Node, String or array of Nodes");
+				}
+				else if (isNode(property[match[2]] && property[match[2]])) latex += property[match[2]].toTex(options);
+				else throw new TypeError("Template: " + match[1] + "[" + match[2] + "] is not a Node.");
+			}
+		}
+		latex += template.slice(inputPos);
+		return latex;
+	}
+	class FunctionNode extends Node {
+		/**
+		* @constructor FunctionNode
+		* @extends {./Node}
+		* invoke a list with arguments on a node
+		* @param {./Node | string} fn
+		*     Item resolving to a function on which to invoke
+		*     the arguments, typically a SymbolNode or AccessorNode
+		* @param {./Node[]} args
+		*/
+		constructor(fn, args, optional) {
+			super();
+			if (typeof fn === "string") fn = new SymbolNode(fn);
+			if (!isNode(fn)) throw new TypeError("Node expected as parameter \"fn\"");
+			if (!Array.isArray(args) || !args.every(isNode)) throw new TypeError("Array containing Nodes expected for parameter \"args\"");
+			var optionalType = typeof optional;
+			if (!(optionalType === "undefined" || optionalType === "boolean")) throw new TypeError("optional flag, if specified, must be boolean");
+			this.fn = fn;
+			this.args = args || [];
+			this.optional = !!optional;
+		}
+		get name() {
+			return this.fn.name || "";
+		}
+		get type() {
+			return name$71;
+		}
+		get isFunctionNode() {
+			return true;
+		}
+		/**
+		* Compile a node into a JavaScript function.
+		* This basically pre-calculates as much as possible and only leaves open
+		* calculations which depend on a dynamic scope with variables.
+		* @param {Object} math     Math.js namespace with functions and constants.
+		* @param {Object} argNames An object with argument names as key and `true`
+		*                          as value. Used in the SymbolNode to optimize
+		*                          for arguments from user assigned functions
+		*                          (see FunctionAssignmentNode) or special symbols
+		*                          like `end` (see IndexNode).
+		* @return {function} Returns a function which can be called like:
+		*                        evalNode(scope: Object, args: Object, context: *)
+		*/
+		_compile(math, argNames) {
+			var evalArgs = this.args.map((arg) => arg._compile(math, argNames));
+			var fromOptionalChaining = this.optional || isAccessorNode(this.fn) && this.fn.optionalChaining;
+			if (isSymbolNode(this.fn)) {
+				var _name = this.fn.name;
+				if (!argNames[_name]) {
+					var fn = _name in math ? getSafeProperty(math, _name) : void 0;
+					var isRaw = typeof fn === "function" && fn.rawArgs === true;
+					var resolveFn = (scope) => {
+						var value;
+						if (scope.has(_name)) value = scope.get(_name);
+						else if (_name in math) value = getSafeProperty(math, _name);
+						else if (fromOptionalChaining) value = void 0;
+						else return FunctionNode.onUndefinedFunction(_name);
+						if (typeof value === "function" || fromOptionalChaining && value === void 0) return value;
+						throw new TypeError("'".concat(_name, "' is not a function; its value is:\n  ").concat(strin(value)));
+					};
+					if (isRaw) {
+						var rawArgs = this.args;
+						return function evalFunctionNode(scope, args, context) {
+							var fn = resolveFn(scope);
+							if (fn.rawArgs === true) return fn(rawArgs, math, createSubScope(scope, args));
+							else return fn(...evalArgs.map((evalArg) => evalArg(scope, args, context)));
+						};
+					} else switch (evalArgs.length) {
+						case 0: return function evalFunctionNode(scope, args, context) {
+							var fn = resolveFn(scope);
+							if (fromOptionalChaining && fn === void 0) return void 0;
+							return fn();
+						};
+						case 1: return function evalFunctionNode(scope, args, context) {
+							var fn = resolveFn(scope);
+							if (fromOptionalChaining && fn === void 0) return void 0;
+							var evalArg0 = evalArgs[0];
+							return fn(evalArg0(scope, args, context));
+						};
+						case 2: return function evalFunctionNode(scope, args, context) {
+							var fn = resolveFn(scope);
+							if (fromOptionalChaining && fn === void 0) return void 0;
+							var evalArg0 = evalArgs[0];
+							var evalArg1 = evalArgs[1];
+							return fn(evalArg0(scope, args, context), evalArg1(scope, args, context));
+						};
+						default: return function evalFunctionNode(scope, args, context) {
+							var fn = resolveFn(scope);
+							if (fromOptionalChaining && fn === void 0) return void 0;
+							return fn(...evalArgs.map((evalArg) => evalArg(scope, args, context)));
+						};
+					}
+				} else {
+					var _rawArgs = this.args;
+					return function evalFunctionNode(scope, args, context) {
+						var fn = getSafeProperty(args, _name);
+						if (fromOptionalChaining && fn === void 0) return void 0;
+						if (typeof fn !== "function") throw new TypeError("Argument '".concat(_name, "' was not a function; received: ").concat(strin(fn)));
+						if (fn.rawArgs) return fn(_rawArgs, math, createSubScope(scope, args));
+						else {
+							var values = evalArgs.map((evalArg) => evalArg(scope, args, context));
+							return fn.apply(fn, values);
+						}
+					};
+				}
+			} else if (isAccessorNode(this.fn) && isIndexNode(this.fn.index) && this.fn.index.isObjectProperty()) {
+				var evalObject = this.fn.object._compile(math, argNames);
+				var prop = this.fn.index.getObjectProperty();
+				var _rawArgs2 = this.args;
+				return function evalFunctionNode(scope, args, context) {
+					var object = evalObject(scope, args, context);
+					if (fromOptionalChaining && (object == null || object[prop] === void 0)) return;
+					var fn = getSafeMethod(object, prop);
+					if (fn !== null && fn !== void 0 && fn.rawArgs) return fn(_rawArgs2, math, createSubScope(scope, args));
+					else {
+						var values = evalArgs.map((evalArg) => evalArg(scope, args, context));
+						return fn.apply(object, values);
+					}
+				};
+			} else {
+				var fnExpr = this.fn.toString();
+				var evalFn = this.fn._compile(math, argNames);
+				var _rawArgs3 = this.args;
+				return function evalFunctionNode(scope, args, context) {
+					var fn = evalFn(scope, args, context);
+					if (fromOptionalChaining && fn === void 0) return void 0;
+					if (typeof fn !== "function") throw new TypeError("Expression '".concat(fnExpr, "' did not evaluate to a function; value is:") + "\n  ".concat(strin(fn)));
+					if (fn.rawArgs) return fn(_rawArgs3, math, createSubScope(scope, args));
+					else {
+						var values = evalArgs.map((evalArg) => evalArg(scope, args, context));
+						return fn.apply(fn, values);
+					}
+				};
+			}
+		}
+		/**
+		* Execute a callback for each of the child nodes of this node
+		* @param {function(child: Node, path: string, parent: Node)} callback
+		*/
+		forEach(callback) {
+			callback(this.fn, "fn", this);
+			for (var i = 0; i < this.args.length; i++) callback(this.args[i], "args[" + i + "]", this);
+		}
+		/**
+		* Create a new FunctionNode whose children are the results of calling
+		* the provided callback function for each child of the original node.
+		* @param {function(child: Node, path: string, parent: Node): Node} callback
+		* @returns {FunctionNode} Returns a transformed copy of the node
+		*/
+		map(callback) {
+			var fn = this._ifNode(callback(this.fn, "fn", this));
+			var args = [];
+			for (var i = 0; i < this.args.length; i++) args[i] = this._ifNode(callback(this.args[i], "args[" + i + "]", this));
+			return new FunctionNode(fn, args);
+		}
+		/**
+		* Create a clone of this node, a shallow copy
+		* @return {FunctionNode}
+		*/
+		clone() {
+			return new FunctionNode(this.fn, this.args.slice(0));
+		}
+		/**
+		* Throws an error 'Undefined function {name}'
+		* @param {string} name
+		*/
+		/**
+		* Get string representation. (wrapper function)
+		* This overrides parts of Node's toString function.
+		* If callback is an object containing callbacks, it
+		* calls the correct callback for the current node,
+		* otherwise it falls back to calling Node's toString
+		* function.
+		*
+		* @param {Object} options
+		* @return {string} str
+		* @override
+		*/
+		toString(options) {
+			var customString;
+			var name = this.fn.toString(options);
+			if (options && typeof options.handler === "object" && hasOwnProperty(options.handler, name)) customString = options.handler[name](this, options);
+			if (typeof customString !== "undefined") return customString;
+			return super.toString(options);
+		}
+		/**
+		* Get string representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toString(options) {
+			var args = this.args.map(function(arg) {
+				return arg.toString(options);
+			});
+			return (isFunctionAssignmentNode(this.fn) ? "(" + this.fn.toString(options) + ")" : this.fn.toString(options)) + "(" + args.join(", ") + ")";
+		}
+		/**
+		* Get a JSON representation of the node
+		* @returns {Object}
+		*/
+		toJSON() {
+			return {
+				mathjs: name$71,
+				fn: this.fn,
+				args: this.args
+			};
+		}
+		/**
+		* Instantiate an AssignmentNode from its JSON representation
+		* @param {Object} json  An object structured like
+		*                       `{"mathjs": "FunctionNode", fn: ..., args: ...}`,
+		*                       where mathjs is optional
+		* @returns {FunctionNode}
+		*/
+		/**
+		* Get HTML representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toHTML(options) {
+			var args = this.args.map(function(arg) {
+				return arg.toHTML(options);
+			});
+			return "<span class=\"math-function\">" + escape(this.fn) + "</span><span class=\"math-paranthesis math-round-parenthesis\">(</span>" + args.join("<span class=\"math-separator\">,</span>") + "<span class=\"math-paranthesis math-round-parenthesis\">)</span>";
+		}
+		/**
+		* Get LaTeX representation. (wrapper function)
+		* This overrides parts of Node's toTex function.
+		* If callback is an object containing callbacks, it
+		* calls the correct callback for the current node,
+		* otherwise it falls back to calling Node's toTex
+		* function.
+		*
+		* @param {Object} options
+		* @return {string}
+		*/
+		toTex(options) {
+			var customTex;
+			if (options && typeof options.handler === "object" && hasOwnProperty(options.handler, this.name)) customTex = options.handler[this.name](this, options);
+			if (typeof customTex !== "undefined") return customTex;
+			return super.toTex(options);
+		}
+		/**
+		* Get LaTeX representation
+		* @param {Object} options
+		* @return {string} str
+		*/
+		_toTex(options) {
+			var args = this.args.map(function(arg) {
+				return arg.toTex(options);
+			});
+			var latexConverter;
+			if (latexFunctions[this.name]) latexConverter = latexFunctions[this.name];
+			if (math[this.name] && (typeof math[this.name].toTex === "function" || typeof math[this.name].toTex === "object" || typeof math[this.name].toTex === "string")) latexConverter = math[this.name].toTex;
+			var customToTex;
+			switch (typeof latexConverter) {
+				case "function":
+					customToTex = latexConverter(this, options);
+					break;
+				case "string":
+					customToTex = expandTemplate(latexConverter, this, options);
+					break;
+				case "object": switch (typeof latexConverter[args.length]) {
+					case "function":
+						customToTex = latexConverter[args.length](this, options);
+						break;
+					case "string":
+						customToTex = expandTemplate(latexConverter[args.length], this, options);
+						break;
+				}
+			}
+			if (typeof customToTex !== "undefined") return customToTex;
+			return expandTemplate(defaultTemplate, this, options);
+		}
+		/**
+		* Get identifier.
+		* @return {string}
+		*/
+		getIdentifier() {
+			return this.type + ":" + this.name;
+		}
+	}
+	_FunctionNode = FunctionNode;
+	_defineProperty(FunctionNode, "name", name$71);
+	_defineProperty(FunctionNode, "onUndefinedFunction", function(name) {
+		throw new Error("Undefined function " + name);
+	});
+	_defineProperty(FunctionNode, "fromJSON", function(json) {
+		return new _FunctionNode(json.fn, json.args);
+	});
+	return FunctionNode;
+}, {
+	isClass: true,
+	isNode: true
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/parse.js
+var name$70 = "parse";
+var createParse = /* @__PURE__ */ factory(name$70, [
+	"typed",
+	"numeric",
+	"config",
+	"AccessorNode",
+	"ArrayNode",
+	"AssignmentNode",
+	"BlockNode",
+	"ConditionalNode",
+	"ConstantNode",
+	"FunctionAssignmentNode",
+	"FunctionNode",
+	"IndexNode",
+	"ObjectNode",
+	"OperatorNode",
+	"ParenthesisNode",
+	"RangeNode",
+	"RelationalNode",
+	"SymbolNode"
+], (_ref) => {
+	var { typed, numeric, config, AccessorNode, ArrayNode, AssignmentNode, BlockNode, ConditionalNode, ConstantNode, FunctionAssignmentNode, FunctionNode, IndexNode, ObjectNode, OperatorNode, ParenthesisNode, RangeNode, RelationalNode, SymbolNode } = _ref;
+	/**
+	* Parse an expression. Returns a node tree, which can be evaluated by
+	* invoking node.evaluate() or transformed into a functional object via node.compile().
+	*
+	* Note the evaluating arbitrary expressions may involve security risks,
+	* see [https://mathjs.org/docs/expressions/security.html](https://mathjs.org/docs/expressions/security.html) for more information.
+	*
+	* Syntax:
+	*
+	*     math.parse(expr)
+	*     math.parse(expr, options)
+	*     math.parse([expr1, expr2, expr3, ...])
+	*     math.parse([expr1, expr2, expr3, ...], options)
+	*
+	* Example:
+	*
+	*     const node1 = math.parse('sqrt(3^2 + 4^2)')
+	*     node1.compile().evaluate() // 5
+	*
+	*     let scope = {a:3, b:4}
+	*     const node2 = math.parse('a * b')
+	*     node2.evaluate(scope) // 12
+	*     const code2 = node2.compile()
+	*     code2.evaluate(scope) // 12
+	*     scope.a = 5
+	*     code2.evaluate(scope) // 20
+	*
+	*     const nodes = math.parse(['a = 3', 'b = 4', 'a * b'])
+	*     nodes[2].compile().evaluate() // 12
+	*
+	* See also:
+	*
+	*     evaluate, compile
+	*
+	* History:
+	*
+	*     v0.9   Created
+	*     v0.13  Switched to one-based indices
+	*     v0.14  Added `[1,2;3,4]` notation for matrices
+	*     v0.18  Dropped the `function` keyword
+	*     v0.20  Added ternary conditional
+	*     v0.27  Allow multi-line expressions; allow functions that receive
+	*            unevaluated parameters (`rawArgs`)
+	*     v3     Add object notation; allow assignments internal to other
+	*            expressions
+	*     v7.3   Supported binary, octal, and hexadecimal notation
+	*     v9.5   Support for calculations with percentages
+	*     v12.4  Allow trailing commas in matrices
+	*     v14.8  Add nullish coalescing operator
+	*     v15.1  Add optional chaining operator
+	*
+	* @param {string | string[] | Matrix} expr          Expression to be parsed
+	* @param {{nodes: Object<string, Node>}} [options]  Available options:
+	*                                                   - `nodes` a set of custom nodes
+	* @return {Node | Node[]} node
+	* @throws {Error}
+	*/
+	var parse = typed(name$70, {
+		string: function string(expression) {
+			return parseStart(expression, {});
+		},
+		"Array | Matrix": function Array__Matrix(expressions) {
+			return parseMultiple(expressions, {});
+		},
+		"string, Object": function string_Object(expression, options) {
+			return parseStart(expression, options.nodes !== void 0 ? options.nodes : {});
+		},
+		"Array | Matrix, Object": parseMultiple
+	});
+	function parseMultiple(expressions) {
+		var options = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {};
+		var extraNodes = options.nodes !== void 0 ? options.nodes : {};
+		return deepMap(expressions, function(elem) {
+			if (typeof elem !== "string") throw new TypeError("String expected");
+			return parseStart(elem, extraNodes);
+		});
+	}
+	var TOKENTYPE = {
+		NULL: 0,
+		DELIMITER: 1,
+		NUMBER: 2,
+		SYMBOL: 3,
+		UNKNOWN: 4
+	};
+	var DELIMITERS = {
+		",": true,
+		"(": true,
+		")": true,
+		"[": true,
+		"]": true,
+		"{": true,
+		"}": true,
+		"\"": true,
+		"'": true,
+		";": true,
+		"+": true,
+		"-": true,
+		"*": true,
+		".*": true,
+		"/": true,
+		"./": true,
+		"%": true,
+		"^": true,
+		".^": true,
+		"~": true,
+		"!": true,
+		"&": true,
+		"|": true,
+		"^|": true,
+		"=": true,
+		":": true,
+		"?": true,
+		"?.": true,
+		"??": true,
+		"==": true,
+		"!=": true,
+		"<": true,
+		">": true,
+		"<=": true,
+		">=": true,
+		"<<": true,
+		">>": true,
+		">>>": true
+	};
+	var NAMED_DELIMITERS = {
+		mod: true,
+		to: true,
+		in: true,
+		and: true,
+		xor: true,
+		or: true,
+		not: true
+	};
+	var CONSTANTS = {
+		true: true,
+		false: false,
+		null: null,
+		undefined: void 0
+	};
+	var NUMERIC_CONSTANTS = ["NaN", "Infinity"];
+	var ESCAPE_CHARACTERS = {
+		"\"": "\"",
+		"'": "'",
+		"\\": "\\",
+		"/": "/",
+		b: "\b",
+		f: "\f",
+		n: "\n",
+		r: "\r",
+		t: "	"
+	};
+	function initialState() {
+		return {
+			extraNodes: {},
+			expression: "",
+			comment: "",
+			index: 0,
+			token: "",
+			tokenType: TOKENTYPE.NULL,
+			nestingLevel: 0,
+			conditionalLevel: null
+		};
+	}
+	/**
+	* View upto `length` characters of the expression starting at the current character.
+	*
+	* @param {Object} state
+	* @param {number} [length=1] Number of characters to view
+	* @returns {string}
+	* @private
+	*/
+	function currentString(state, length) {
+		return state.expression.substr(state.index, length);
+	}
+	/**
+	* View the current character. Returns '' if end of expression is reached.
+	*
+	* @param {Object} state
+	* @returns {string}
+	* @private
+	*/
+	function currentCharacter(state) {
+		return currentString(state, 1);
+	}
+	/**
+	* Get the next character from the expression.
+	* The character is stored into the char c. If the end of the expression is
+	* reached, the function puts an empty string in c.
+	* @private
+	*/
+	function next(state) {
+		state.index++;
+	}
+	/**
+	* Preview the previous character from the expression.
+	* @return {string} cNext
+	* @private
+	*/
+	function prevCharacter(state) {
+		return state.expression.charAt(state.index - 1);
+	}
+	/**
+	* Preview the next character from the expression.
+	* @return {string} cNext
+	* @private
+	*/
+	function nextCharacter(state) {
+		return state.expression.charAt(state.index + 1);
+	}
+	/**
+	* Get next token in the current string expr.
+	* The token and token type are available as token and tokenType
+	* @private
+	*/
+	function getToken(state) {
+		state.tokenType = TOKENTYPE.NULL;
+		state.token = "";
+		state.comment = "";
+		while (true) {
+			if (currentCharacter(state) === "#") while (currentCharacter(state) !== "\n" && currentCharacter(state) !== "") {
+				state.comment += currentCharacter(state);
+				next(state);
+			}
+			if (parse.isWhitespace(currentCharacter(state), state.nestingLevel)) next(state);
+			else break;
+		}
+		if (currentCharacter(state) === "") {
+			state.tokenType = TOKENTYPE.DELIMITER;
+			return;
+		}
+		if (currentCharacter(state) === "\n" && !state.nestingLevel) {
+			state.tokenType = TOKENTYPE.DELIMITER;
+			state.token = currentCharacter(state);
+			next(state);
+			return;
+		}
+		var c1 = currentCharacter(state);
+		var c2 = currentString(state, 2);
+		var c3 = currentString(state, 3);
+		if (c3.length === 3 && DELIMITERS[c3]) {
+			state.tokenType = TOKENTYPE.DELIMITER;
+			state.token = c3;
+			next(state);
+			next(state);
+			next(state);
+			return;
+		}
+		if (c2.length === 2 && DELIMITERS[c2] && (c2 !== "?." || !parse.isDigit(state.expression.charAt(state.index + 2)))) {
+			state.tokenType = TOKENTYPE.DELIMITER;
+			state.token = c2;
+			next(state);
+			next(state);
+			return;
+		}
+		if (DELIMITERS[c1]) {
+			state.tokenType = TOKENTYPE.DELIMITER;
+			state.token = c1;
+			next(state);
+			return;
+		}
+		if (parse.isDigitDot(c1)) {
+			state.tokenType = TOKENTYPE.NUMBER;
+			var _c = currentString(state, 2);
+			if (_c === "0b" || _c === "0o" || _c === "0x") {
+				state.token += currentCharacter(state);
+				next(state);
+				state.token += currentCharacter(state);
+				next(state);
+				while (parse.isAlpha(currentCharacter(state), prevCharacter(state), nextCharacter(state)) || parse.isDigit(currentCharacter(state))) {
+					state.token += currentCharacter(state);
+					next(state);
+				}
+				if (currentCharacter(state) === ".") {
+					state.token += ".";
+					next(state);
+					while (parse.isAlpha(currentCharacter(state), prevCharacter(state), nextCharacter(state)) || parse.isDigit(currentCharacter(state))) {
+						state.token += currentCharacter(state);
+						next(state);
+					}
+				} else if (currentCharacter(state) === "i") {
+					state.token += "i";
+					next(state);
+					while (parse.isDigit(currentCharacter(state))) {
+						state.token += currentCharacter(state);
+						next(state);
+					}
+				}
+				return;
+			}
+			if (currentCharacter(state) === ".") {
+				state.token += currentCharacter(state);
+				next(state);
+				if (!parse.isDigit(currentCharacter(state))) {
+					state.tokenType = TOKENTYPE.DELIMITER;
+					return;
+				}
+			} else {
+				while (parse.isDigit(currentCharacter(state))) {
+					state.token += currentCharacter(state);
+					next(state);
+				}
+				if (parse.isDecimalMark(currentCharacter(state), nextCharacter(state))) {
+					state.token += currentCharacter(state);
+					next(state);
+				}
+			}
+			while (parse.isDigit(currentCharacter(state))) {
+				state.token += currentCharacter(state);
+				next(state);
+			}
+			if (currentCharacter(state) === "E" || currentCharacter(state) === "e") {
+				if (parse.isDigit(nextCharacter(state)) || nextCharacter(state) === "-" || nextCharacter(state) === "+") {
+					state.token += currentCharacter(state);
+					next(state);
+					if (currentCharacter(state) === "+" || currentCharacter(state) === "-") {
+						state.token += currentCharacter(state);
+						next(state);
+					}
+					if (!parse.isDigit(currentCharacter(state))) throw createSyntaxError(state, "Digit expected, got \"" + currentCharacter(state) + "\"");
+					while (parse.isDigit(currentCharacter(state))) {
+						state.token += currentCharacter(state);
+						next(state);
+					}
+					if (parse.isDecimalMark(currentCharacter(state), nextCharacter(state))) throw createSyntaxError(state, "Digit expected, got \"" + currentCharacter(state) + "\"");
+				} else if (parse.isDecimalMark(nextCharacter(state), state.expression.charAt(state.index + 2))) {
+					next(state);
+					throw createSyntaxError(state, "Digit expected, got \"" + currentCharacter(state) + "\"");
+				}
+			}
+			return;
+		}
+		if (parse.isAlpha(currentCharacter(state), prevCharacter(state), nextCharacter(state))) {
+			while (parse.isAlpha(currentCharacter(state), prevCharacter(state), nextCharacter(state)) || parse.isDigit(currentCharacter(state))) {
+				state.token += currentCharacter(state);
+				next(state);
+			}
+			if (hasOwnProperty(NAMED_DELIMITERS, state.token)) state.tokenType = TOKENTYPE.DELIMITER;
+			else state.tokenType = TOKENTYPE.SYMBOL;
+			return;
+		}
+		state.tokenType = TOKENTYPE.UNKNOWN;
+		while (currentCharacter(state) !== "") {
+			state.token += currentCharacter(state);
+			next(state);
+		}
+		throw createSyntaxError(state, "Syntax error in part \"" + state.token + "\"");
+	}
+	/**
+	* Get next token and skip newline tokens
+	*/
+	function getTokenSkipNewline(state) {
+		do
+			getToken(state);
+		while (state.token === "\n");
+	}
+	/**
+	* Open parameters.
+	* New line characters will be ignored until closeParams(state) is called
+	*/
+	function openParams(state) {
+		state.nestingLevel++;
+	}
+	/**
+	* Close parameters.
+	* New line characters will no longer be ignored
+	*/
+	function closeParams(state) {
+		state.nestingLevel--;
+	}
+	/**
+	* Checks whether the current character `c` is a valid alpha character:
+	*
+	* - A latin letter (upper or lower case) Ascii: a-z, A-Z
+	* - An underscore                        Ascii: _
+	* - A dollar sign                        Ascii: $
+	* - A latin letter with accents          Unicode: \u00C0 - \u02AF
+	* - A greek letter                       Unicode: \u0370 - \u03FF
+	* - A mathematical alphanumeric symbol   Unicode: \u{1D400} - \u{1D7FF} excluding invalid code points
+	*
+	* The previous and next characters are needed to determine whether
+	* this character is part of a unicode surrogate pair.
+	*
+	* @param {string} c      Current character in the expression
+	* @param {string} cPrev  Previous character
+	* @param {string} cNext  Next character
+	* @return {boolean}
+	*/
+	parse.isAlpha = function isAlpha(c, cPrev, cNext) {
+		return parse.isValidLatinOrGreek(c) || parse.isValidMathSymbol(c, cNext) || parse.isValidMathSymbol(cPrev, c);
+	};
+	/**
+	* Test whether a character is a valid latin, greek, or letter-like character
+	* @param {string} c
+	* @return {boolean}
+	*/
+	parse.isValidLatinOrGreek = function isValidLatinOrGreek(c) {
+		return /^[a-zA-Z_$\u00C0-\u02AF\u0370-\u03FF\u2100-\u214F]$/.test(c);
+	};
+	/**
+	* Test whether two given 16 bit characters form a surrogate pair of a
+	* unicode math symbol.
+	*
+	* https://unicode-table.com/en/
+	* https://www.wikiwand.com/en/Mathematical_operators_and_symbols_in_Unicode
+	*
+	* Note: In ES6 will be unicode aware:
+	* https://stackoverflow.com/questions/280712/javascript-unicode-regexes
+	* https://mathiasbynens.be/notes/es6-unicode-regex
+	*
+	* @param {string} high
+	* @param {string} low
+	* @return {boolean}
+	*/
+	parse.isValidMathSymbol = function isValidMathSymbol(high, low) {
+		return /^[\uD835]$/.test(high) && /^[\uDC00-\uDFFF]$/.test(low) && /^[^\uDC55\uDC9D\uDCA0\uDCA1\uDCA3\uDCA4\uDCA7\uDCA8\uDCAD\uDCBA\uDCBC\uDCC4\uDD06\uDD0B\uDD0C\uDD15\uDD1D\uDD3A\uDD3F\uDD45\uDD47-\uDD49\uDD51\uDEA6\uDEA7\uDFCC\uDFCD]$/.test(low);
+	};
+	/**
+	* Check whether given character c is a white space character: space, tab, or enter
+	* @param {string} c
+	* @param {number} nestingLevel
+	* @return {boolean}
+	*/
+	parse.isWhitespace = function isWhitespace(c, nestingLevel) {
+		return c === " " || c === "	" || c === "\xA0" || c === "\n" && nestingLevel > 0;
+	};
+	/**
+	* Test whether the character c is a decimal mark (dot).
+	* This is the case when it's not the start of a delimiter '.*', './', or '.^'
+	* @param {string} c
+	* @param {string} cNext
+	* @return {boolean}
+	*/
+	parse.isDecimalMark = function isDecimalMark(c, cNext) {
+		return c === "." && cNext !== "/" && cNext !== "*" && cNext !== "^";
+	};
+	/**
+	* checks if the given char c is a digit or dot
+	* @param {string} c   a string with one character
+	* @return {boolean}
+	*/
+	parse.isDigitDot = function isDigitDot(c) {
+		return c >= "0" && c <= "9" || c === ".";
+	};
+	/**
+	* checks if the given char c is a digit
+	* @param {string} c   a string with one character
+	* @return {boolean}
+	*/
+	parse.isDigit = function isDigit(c) {
+		return c >= "0" && c <= "9";
+	};
+	/**
+	* Start of the parse levels below, in order of precedence
+	* @return {Node} node
+	* @private
+	*/
+	function parseStart(expression, extraNodes) {
+		var state = initialState();
+		_extends(state, {
+			expression,
+			extraNodes
+		});
+		getToken(state);
+		var node = parseBlock(state);
+		if (state.token !== "") if (state.tokenType === TOKENTYPE.DELIMITER) throw createError(state, "Unexpected operator " + state.token);
+		else throw createSyntaxError(state, "Unexpected part \"" + state.token + "\"");
+		return node;
+	}
+	/**
+	* Parse a block with expressions. Expressions can be separated by a newline
+	* character '\n', or by a semicolon ';'. In case of a semicolon, no output
+	* of the preceding line is returned.
+	* @return {Node} node
+	* @private
+	*/
+	function parseBlock(state) {
+		var node;
+		var blocks = [];
+		var visible;
+		if (state.token !== "" && state.token !== "\n" && state.token !== ";") {
+			node = parseAssignment(state);
+			if (state.comment) node.comment = state.comment;
+		}
+		while (state.token === "\n" || state.token === ";") {
+			if (blocks.length === 0 && node) {
+				visible = state.token !== ";";
+				blocks.push({
+					node,
+					visible
+				});
+			}
+			getToken(state);
+			if (state.token !== "\n" && state.token !== ";" && state.token !== "") {
+				node = parseAssignment(state);
+				if (state.comment) node.comment = state.comment;
+				visible = state.token !== ";";
+				blocks.push({
+					node,
+					visible
+				});
+			}
+		}
+		if (blocks.length > 0) return new BlockNode(blocks);
+		else {
+			if (!node) {
+				node = new ConstantNode(void 0);
+				if (state.comment) node.comment = state.comment;
+			}
+			return node;
+		}
+	}
+	/**
+	* Assignment of a function or variable,
+	* - can be a variable like 'a=2.3'
+	* - or a updating an existing variable like 'matrix(2,3:5)=[6,7,8]'
+	* - defining a function like 'f(x) = x^2'
+	* @return {Node} node
+	* @private
+	*/
+	function parseAssignment(state) {
+		var name, args, value, valid;
+		var node = parseConditional(state);
+		if (state.token === "=") {
+			if (isSymbolNode(node)) {
+				name = node.name;
+				getTokenSkipNewline(state);
+				value = parseAssignment(state);
+				return new AssignmentNode(new SymbolNode(name), value);
+			} else if (isAccessorNode(node)) {
+				if (node.optionalChaining) throw createSyntaxError(state, "Cannot assign to optional chain");
+				getTokenSkipNewline(state);
+				value = parseAssignment(state);
+				return new AssignmentNode(node.object, node.index, value);
+			} else if (isFunctionNode(node) && isSymbolNode(node.fn)) {
+				valid = true;
+				args = [];
+				name = node.name;
+				node.args.forEach(function(arg, index) {
+					if (isSymbolNode(arg)) args[index] = arg.name;
+					else valid = false;
+				});
+				if (valid) {
+					getTokenSkipNewline(state);
+					value = parseAssignment(state);
+					return new FunctionAssignmentNode(name, args, value);
+				}
+			}
+			throw createSyntaxError(state, "Invalid left hand side of assignment operator =");
+		}
+		return node;
+	}
+	/**
+	* conditional operation
+	*
+	*     condition ? truePart : falsePart
+	*
+	* Note: conditional operator is right-associative
+	*
+	* @return {Node} node
+	* @private
+	*/
+	function parseConditional(state) {
+		var node = parseLogicalOr(state);
+		while (state.token === "?") {
+			var prev = state.conditionalLevel;
+			state.conditionalLevel = state.nestingLevel;
+			getTokenSkipNewline(state);
+			var condition = node;
+			var trueExpr = parseAssignment(state);
+			if (state.token !== ":") throw createSyntaxError(state, "False part of conditional expression expected");
+			state.conditionalLevel = null;
+			getTokenSkipNewline(state);
+			node = new ConditionalNode(condition, trueExpr, parseAssignment(state));
+			state.conditionalLevel = prev;
+		}
+		return node;
+	}
+	/**
+	* logical or, 'x or y'
+	* @return {Node} node
+	* @private
+	*/
+	function parseLogicalOr(state) {
+		var node = parseLogicalXor(state);
+		while (state.token === "or") {
+			getTokenSkipNewline(state);
+			node = new OperatorNode("or", "or", [node, parseLogicalXor(state)]);
+		}
+		return node;
+	}
+	/**
+	* logical exclusive or, 'x xor y'
+	* @return {Node} node
+	* @private
+	*/
+	function parseLogicalXor(state) {
+		var node = parseLogicalAnd(state);
+		while (state.token === "xor") {
+			getTokenSkipNewline(state);
+			node = new OperatorNode("xor", "xor", [node, parseLogicalAnd(state)]);
+		}
+		return node;
+	}
+	/**
+	* logical and, 'x and y'
+	* @return {Node} node
+	* @private
+	*/
+	function parseLogicalAnd(state) {
+		var node = parseBitwiseOr(state);
+		while (state.token === "and") {
+			getTokenSkipNewline(state);
+			node = new OperatorNode("and", "and", [node, parseBitwiseOr(state)]);
+		}
+		return node;
+	}
+	/**
+	* bitwise or, 'x | y'
+	* @return {Node} node
+	* @private
+	*/
+	function parseBitwiseOr(state) {
+		var node = parseBitwiseXor(state);
+		while (state.token === "|") {
+			getTokenSkipNewline(state);
+			node = new OperatorNode("|", "bitOr", [node, parseBitwiseXor(state)]);
+		}
+		return node;
+	}
+	/**
+	* bitwise exclusive or (xor), 'x ^| y'
+	* @return {Node} node
+	* @private
+	*/
+	function parseBitwiseXor(state) {
+		var node = parseBitwiseAnd(state);
+		while (state.token === "^|") {
+			getTokenSkipNewline(state);
+			node = new OperatorNode("^|", "bitXor", [node, parseBitwiseAnd(state)]);
+		}
+		return node;
+	}
+	/**
+	* bitwise and, 'x & y'
+	* @return {Node} node
+	* @private
+	*/
+	function parseBitwiseAnd(state) {
+		var node = parseRelational(state);
+		while (state.token === "&") {
+			getTokenSkipNewline(state);
+			node = new OperatorNode("&", "bitAnd", [node, parseRelational(state)]);
+		}
+		return node;
+	}
+	/**
+	* Parse a chained conditional, like 'a > b >= c'
+	* @return {Node} node
+	*/
+	function parseRelational(state) {
+		var params = [parseShift(state)];
+		var conditionals = [];
+		var operators = {
+			"==": "equal",
+			"!=": "unequal",
+			"<": "smaller",
+			">": "larger",
+			"<=": "smallerEq",
+			">=": "largerEq"
+		};
+		while (hasOwnProperty(operators, state.token)) {
+			var cond = {
+				name: state.token,
+				fn: operators[state.token]
+			};
+			conditionals.push(cond);
+			getTokenSkipNewline(state);
+			params.push(parseShift(state));
+		}
+		if (params.length === 1) return params[0];
+		else if (params.length === 2) return new OperatorNode(conditionals[0].name, conditionals[0].fn, params);
+		else return new RelationalNode(conditionals.map((c) => c.fn), params);
+	}
+	/**
+	* Bitwise left shift, bitwise right arithmetic shift, bitwise right logical shift
+	* @return {Node} node
+	* @private
+	*/
+	function parseShift(state) {
+		var node = parseConversion(state), name, fn, params;
+		var operators = {
+			"<<": "leftShift",
+			">>": "rightArithShift",
+			">>>": "rightLogShift"
+		};
+		while (hasOwnProperty(operators, state.token)) {
+			name = state.token;
+			fn = operators[name];
+			getTokenSkipNewline(state);
+			params = [node, parseConversion(state)];
+			node = new OperatorNode(name, fn, params);
+		}
+		return node;
+	}
+	/**
+	* conversion operators 'to' and 'in'
+	* @return {Node} node
+	* @private
+	*/
+	function parseConversion(state) {
+		var node = parseRange(state), name, fn, params;
+		var operators = {
+			to: "to",
+			in: "to"
+		};
+		while (hasOwnProperty(operators, state.token)) {
+			name = state.token;
+			fn = operators[name];
+			getTokenSkipNewline(state);
+			if (name === "in" && "])},;".includes(state.token)) node = new OperatorNode("*", "multiply", [node, new SymbolNode("in")], true);
+			else {
+				params = [node, parseRange(state)];
+				node = new OperatorNode(name, fn, params);
+			}
+		}
+		return node;
+	}
+	/**
+	* parse range, "start:end", "start:step:end", ":", "start:", ":end", etc
+	* @return {Node} node
+	* @private
+	*/
+	function parseRange(state) {
+		var node;
+		var params = [];
+		if (state.token === ":") if (state.conditionalLevel === state.nestingLevel) throw createSyntaxError(state, "The true-expression of a conditional operator may not be empty");
+		else node = new ConstantNode(1);
+		else node = parseAddSubtract(state);
+		if (state.token === ":" && state.conditionalLevel !== state.nestingLevel) {
+			params.push(node);
+			while (state.token === ":" && params.length < 3) {
+				getTokenSkipNewline(state);
+				if (state.token === ")" || state.token === "]" || state.token === "," || state.token === "") params.push(new SymbolNode("end"));
+				else params.push(parseAddSubtract(state));
+			}
+			if (params.length === 3) node = new RangeNode(params[0], params[2], params[1]);
+			else node = new RangeNode(params[0], params[1]);
+		}
+		return node;
+	}
+	/**
+	* add or subtract
+	* @return {Node} node
+	* @private
+	*/
+	function parseAddSubtract(state) {
+		var node = parseMultiplyDivideModulus(state), name, fn, params;
+		var operators = {
+			"+": "add",
+			"-": "subtract"
+		};
+		while (hasOwnProperty(operators, state.token)) {
+			name = state.token;
+			fn = operators[name];
+			getTokenSkipNewline(state);
+			var rightNode = parseMultiplyDivideModulus(state);
+			if (rightNode.isPercentage) params = [node, new OperatorNode("*", "multiply", [node, rightNode])];
+			else params = [node, rightNode];
+			node = new OperatorNode(name, fn, params);
+		}
+		return node;
+	}
+	/**
+	* multiply, divide, modulus
+	* @return {Node} node
+	* @private
+	*/
+	function parseMultiplyDivideModulus(state) {
+		var node = parseImplicitMultiplication(state), last = node, name, fn;
+		var operators = {
+			"*": "multiply",
+			".*": "dotMultiply",
+			"/": "divide",
+			"./": "dotDivide",
+			"%": "mod",
+			mod: "mod"
+		};
+		while (true) if (hasOwnProperty(operators, state.token)) {
+			name = state.token;
+			fn = operators[name];
+			getTokenSkipNewline(state);
+			last = parseImplicitMultiplication(state);
+			node = new OperatorNode(name, fn, [node, last]);
+		} else break;
+		return node;
+	}
+	/**
+	* implicit multiplication
+	* @return {Node} node
+	* @private
+	*/
+	function parseImplicitMultiplication(state) {
+		var node = parseRule2(state), last = node;
+		while (true) if (state.tokenType === TOKENTYPE.SYMBOL || state.token === "in" && isConstantNode(node) || state.token === "in" && isOperatorNode(node) && node.fn === "unaryMinus" && isConstantNode(node.args[0]) || state.tokenType === TOKENTYPE.NUMBER && !isConstantNode(last) && (!isOperatorNode(last) || last.op === "!") || state.token === "(") {
+			last = parseRule2(state);
+			node = new OperatorNode("*", "multiply", [node, last], true);
+		} else break;
+		return node;
+	}
+	/**
+	* Infamous "rule 2" as described in https://github.com/josdejong/mathjs/issues/792#issuecomment-361065370
+	* And as amended in https://github.com/josdejong/mathjs/issues/2370#issuecomment-1054052164
+	* Explicit division gets higher precedence than implicit multiplication
+	* when the division matches this pattern:
+	*   [unaryPrefixOp]?[number] / [number] [symbol]
+	* @return {Node} node
+	* @private
+	*/
+	function parseRule2(state) {
+		var node = parseUnaryPercentage(state);
+		var last = node;
+		var tokenStates = [];
+		while (true) if (state.token === "/" && rule2Node(last)) {
+			tokenStates.push(_extends({}, state));
+			getTokenSkipNewline(state);
+			if (state.tokenType === TOKENTYPE.NUMBER) {
+				tokenStates.push(_extends({}, state));
+				getTokenSkipNewline(state);
+				if (state.tokenType === TOKENTYPE.SYMBOL || state.token === "(" || state.token === "in") {
+					_extends(state, tokenStates.pop());
+					tokenStates.pop();
+					last = parseUnaryPercentage(state);
+					node = new OperatorNode("/", "divide", [node, last]);
+				} else {
+					tokenStates.pop();
+					_extends(state, tokenStates.pop());
+					break;
+				}
+			} else {
+				_extends(state, tokenStates.pop());
+				break;
+			}
+		} else break;
+		return node;
+	}
+	/**
+	* Unary percentage operator (treated as `value / 100`)
+	* @return {Node} node
+	* @private
+	*/
+	function parseUnaryPercentage(state) {
+		var node = parseUnary(state);
+		if (state.token === "%") {
+			var previousState = _extends({}, state);
+			getTokenSkipNewline(state);
+			try {
+				parseUnary(state);
+				_extends(state, previousState);
+			} catch (_unused) {
+				node = new OperatorNode("/", "divide", [node, new ConstantNode(100)], false, true);
+			}
+		}
+		return node;
+	}
+	/**
+	* Unary plus and minus, and logical and bitwise not
+	* @return {Node} node
+	* @private
+	*/
+	function parseUnary(state) {
+		var name, params, fn;
+		var operators = {
+			"-": "unaryMinus",
+			"+": "unaryPlus",
+			"~": "bitNot",
+			not: "not"
+		};
+		if (hasOwnProperty(operators, state.token)) {
+			fn = operators[state.token];
+			name = state.token;
+			getTokenSkipNewline(state);
+			params = [parseUnary(state)];
+			return new OperatorNode(name, fn, params);
+		}
+		return parsePow(state);
+	}
+	/**
+	* power
+	* Note: power operator is right associative
+	* @return {Node} node
+	* @private
+	*/
+	function parsePow(state) {
+		var node = parseNullishCoalescing(state), name, fn, params;
+		if (state.token === "^" || state.token === ".^") {
+			name = state.token;
+			fn = name === "^" ? "pow" : "dotPow";
+			getTokenSkipNewline(state);
+			params = [node, parseUnary(state)];
+			node = new OperatorNode(name, fn, params);
+		}
+		return node;
+	}
+	/**
+	* nullish coalescing operator
+	* @return {Node} node
+	* @private
+	*/
+	function parseNullishCoalescing(state) {
+		var node = parseLeftHandOperators(state);
+		while (state.token === "??") {
+			getTokenSkipNewline(state);
+			node = new OperatorNode("??", "nullish", [node, parseLeftHandOperators(state)]);
+		}
+		return node;
+	}
+	/**
+	* Left hand operators: factorial x!, ctranspose x'
+	* @return {Node} node
+	* @private
+	*/
+	function parseLeftHandOperators(state) {
+		var node = parseCustomNodes(state), name, fn, params;
+		var operators = {
+			"!": "factorial",
+			"'": "ctranspose"
+		};
+		while (hasOwnProperty(operators, state.token)) {
+			name = state.token;
+			fn = operators[name];
+			getToken(state);
+			params = [node];
+			node = new OperatorNode(name, fn, params);
+			node = parseAccessors(state, node);
+		}
+		return node;
+	}
+	/**
+	* Parse a custom node handler. A node handler can be used to process
+	* nodes in a custom way, for example for handling a plot.
+	*
+	* A handler must be passed as second argument of the parse function.
+	* - must extend math.Node
+	* - must contain a function _compile(defs: Object) : string
+	* - must contain a function find(filter: Object) : Node[]
+	* - must contain a function toString() : string
+	* - the constructor is called with a single argument containing all parameters
+	*
+	* For example:
+	*
+	*     nodes = {
+	*       'plot': PlotHandler
+	*     }
+	*
+	* The constructor of the handler is called as:
+	*
+	*     node = new PlotHandler(params)
+	*
+	* The handler will be invoked when evaluating an expression like:
+	*
+	*     node = math.parse('plot(sin(x), x)', nodes)
+	*
+	* @return {Node} node
+	* @private
+	*/
+	function parseCustomNodes(state) {
+		var params = [];
+		if (state.tokenType === TOKENTYPE.SYMBOL && hasOwnProperty(state.extraNodes, state.token)) {
+			var CustomNode = state.extraNodes[state.token];
+			getToken(state);
+			if (state.token === "(") {
+				params = [];
+				openParams(state);
+				getToken(state);
+				if (state.token !== ")") {
+					params.push(parseAssignment(state));
+					while (state.token === ",") {
+						getToken(state);
+						params.push(parseAssignment(state));
+					}
+				}
+				if (state.token !== ")") throw createSyntaxError(state, "Parenthesis ) expected");
+				closeParams(state);
+				getToken(state);
+			}
+			return new CustomNode(params);
+		}
+		return parseSymbol(state);
+	}
+	/**
+	* parse symbols: functions, variables, constants, units
+	* @return {Node} node
+	* @private
+	*/
+	function parseSymbol(state) {
+		var node, name;
+		if (state.tokenType === TOKENTYPE.SYMBOL || state.tokenType === TOKENTYPE.DELIMITER && state.token in NAMED_DELIMITERS) {
+			name = state.token;
+			getToken(state);
+			if (hasOwnProperty(CONSTANTS, name)) node = new ConstantNode(CONSTANTS[name]);
+			else if (NUMERIC_CONSTANTS.includes(name)) node = new ConstantNode(numeric(name, "number"));
+			else node = new SymbolNode(name);
+			node = parseAccessors(state, node);
+			return node;
+		}
+		return parseString(state);
+	}
+	/**
+	* parse accessors:
+	* - function invocation in round brackets (...), for example sqrt(2) or sqrt?.(2) with optional chaining
+	* - index enclosed in square brackets [...], for example A[2,3] or A?.[2,3] with optional chaining
+	* - dot notation for properties, like foo.bar or foo?.bar with optional chaining
+	* @param {Object} state
+	* @param {Node} node    Node on which to apply the parameters. If there
+	*                       are no parameters in the expression, the node
+	*                       itself is returned
+	* @param {string[]} [types]  Filter the types of notations
+	*                            can be ['(', '[', '.']
+	* @return {Node} node
+	* @private
+	*/
+	function parseAccessors(state, node, types) {
+		var params;
+		while (true) {
+			var optional = false;
+			if (state.token === "?.") {
+				optional = true;
+				getToken(state);
+			}
+			var hasNextAccessor = (state.token === "(" || state.token === "[" || state.token === ".") && (!types || types.includes(state.token));
+			if (!(optional || hasNextAccessor)) break;
+			params = [];
+			if (state.token === "(") if (optional || isSymbolNode(node) || isAccessorNode(node)) {
+				openParams(state);
+				getToken(state);
+				if (state.token !== ")") {
+					params.push(parseAssignment(state));
+					while (state.token === ",") {
+						getToken(state);
+						params.push(parseAssignment(state));
+					}
+				}
+				if (state.token !== ")") throw createSyntaxError(state, "Parenthesis ) expected");
+				closeParams(state);
+				getToken(state);
+				node = new FunctionNode(node, params, optional);
+			} else return node;
+			else if (state.token === "[") {
+				openParams(state);
+				getToken(state);
+				if (state.token !== "]") {
+					params.push(parseAssignment(state));
+					while (state.token === ",") {
+						getToken(state);
+						params.push(parseAssignment(state));
+					}
+				}
+				if (state.token !== "]") throw createSyntaxError(state, "Parenthesis ] expected");
+				closeParams(state);
+				getToken(state);
+				node = new AccessorNode(node, new IndexNode(params), optional);
+			} else {
+				if (!optional) getToken(state);
+				if (!(state.tokenType === TOKENTYPE.SYMBOL || state.tokenType === TOKENTYPE.DELIMITER && state.token in NAMED_DELIMITERS)) {
+					var message = "Property name expected after ";
+					message += optional ? "optional chain" : "dot";
+					throw createSyntaxError(state, message);
+				}
+				params.push(new ConstantNode(state.token));
+				getToken(state);
+				node = new AccessorNode(node, new IndexNode(params, true), optional);
+			}
+		}
+		return node;
+	}
+	/**
+	* Parse a single or double quoted string.
+	* @return {Node} node
+	* @private
+	*/
+	function parseString(state) {
+		var node, str;
+		if (state.token === "\"" || state.token === "'") {
+			str = parseStringToken(state, state.token);
+			node = new ConstantNode(str);
+			node = parseAccessors(state, node);
+			return node;
+		}
+		return parseMatrix(state);
+	}
+	/**
+	* Parse a string surrounded by single or double quotes
+	* @param {Object} state
+	* @param {"'" | "\""} quote
+	* @return {string}
+	*/
+	function parseStringToken(state, quote) {
+		var str = "";
+		while (currentCharacter(state) !== "" && currentCharacter(state) !== quote) if (currentCharacter(state) === "\\") {
+			next(state);
+			var char = currentCharacter(state);
+			var escapeChar = ESCAPE_CHARACTERS[char];
+			if (escapeChar !== void 0) {
+				str += escapeChar;
+				state.index += 1;
+			} else if (char === "u") {
+				var unicode = state.expression.slice(state.index + 1, state.index + 5);
+				if (/^[0-9A-Fa-f]{4}$/.test(unicode)) {
+					str += String.fromCharCode(parseInt(unicode, 16));
+					state.index += 5;
+				} else throw createSyntaxError(state, "Invalid unicode character \\u".concat(unicode));
+			} else throw createSyntaxError(state, "Bad escape character \\".concat(char));
+		} else {
+			str += currentCharacter(state);
+			next(state);
+		}
+		getToken(state);
+		if (state.token !== quote) throw createSyntaxError(state, "End of string ".concat(quote, " expected"));
+		getToken(state);
+		return str;
+	}
+	/**
+	* parse the matrix
+	* @return {Node} node
+	* @private
+	*/
+	function parseMatrix(state) {
+		var array, params, rows, cols;
+		if (state.token === "[") {
+			openParams(state);
+			getToken(state);
+			if (state.token !== "]") {
+				var row = parseRow(state);
+				if (state.token === ";") {
+					rows = 1;
+					params = [row];
+					while (state.token === ";") {
+						getToken(state);
+						if (state.token !== "]") {
+							params[rows] = parseRow(state);
+							rows++;
+						}
+					}
+					if (state.token !== "]") throw createSyntaxError(state, "End of matrix ] expected");
+					closeParams(state);
+					getToken(state);
+					cols = params[0].items.length;
+					for (var r = 1; r < rows; r++) if (params[r].items.length !== cols) throw createError(state, "Column dimensions mismatch (" + params[r].items.length + " !== " + cols + ")");
+					array = new ArrayNode(params);
+				} else {
+					if (state.token !== "]") throw createSyntaxError(state, "End of matrix ] expected");
+					closeParams(state);
+					getToken(state);
+					array = row;
+				}
+			} else {
+				closeParams(state);
+				getToken(state);
+				array = new ArrayNode([]);
+			}
+			return parseAccessors(state, array);
+		}
+		return parseObject(state);
+	}
+	/**
+	* Parse a single comma-separated row from a matrix, like 'a, b, c'
+	* @return {ArrayNode} node
+	*/
+	function parseRow(state) {
+		var params = [parseAssignment(state)];
+		var len = 1;
+		while (state.token === ",") {
+			getToken(state);
+			if (state.token !== "]" && state.token !== ";") {
+				params[len] = parseAssignment(state);
+				len++;
+			}
+		}
+		return new ArrayNode(params);
+	}
+	/**
+	* parse an object, enclosed in angle brackets{...}, for example {value: 2}
+	* @return {Node} node
+	* @private
+	*/
+	function parseObject(state) {
+		if (state.token === "{") {
+			openParams(state);
+			var key;
+			var properties = {};
+			do {
+				getToken(state);
+				if (state.token !== "}") {
+					if (state.token === "\"" || state.token === "'") key = parseStringToken(state, state.token);
+					else if (state.tokenType === TOKENTYPE.SYMBOL || state.tokenType === TOKENTYPE.DELIMITER && state.token in NAMED_DELIMITERS) {
+						key = state.token;
+						getToken(state);
+					} else throw createSyntaxError(state, "Symbol or string expected as object key");
+					if (state.token !== ":") throw createSyntaxError(state, "Colon : expected after object key");
+					getToken(state);
+					properties[key] = parseAssignment(state);
+				}
+			} while (state.token === ",");
+			if (state.token !== "}") throw createSyntaxError(state, "Comma , or bracket } expected after object value");
+			closeParams(state);
+			getToken(state);
+			var node = new ObjectNode(properties);
+			node = parseAccessors(state, node);
+			return node;
+		}
+		return parseNumber(state);
+	}
+	/**
+	* parse a number
+	* @return {Node} node
+	* @private
+	*/
+	function parseNumber(state) {
+		var numberStr;
+		if (state.tokenType === TOKENTYPE.NUMBER) {
+			numberStr = state.token;
+			getToken(state);
+			var numericType = safeNumberType(numberStr, config);
+			return new ConstantNode(numeric(numberStr, numericType));
+		}
+		return parseParentheses(state);
+	}
+	/**
+	* parentheses
+	* @return {Node} node
+	* @private
+	*/
+	function parseParentheses(state) {
+		var node;
+		if (state.token === "(") {
+			openParams(state);
+			getToken(state);
+			node = parseAssignment(state);
+			if (state.token !== ")") throw createSyntaxError(state, "Parenthesis ) expected");
+			closeParams(state);
+			getToken(state);
+			node = new ParenthesisNode(node);
+			node = parseAccessors(state, node);
+			return node;
+		}
+		return parseEnd(state);
+	}
+	/**
+	* Evaluated when the expression is not yet ended but expected to end
+	* @return {Node} res
+	* @private
+	*/
+	function parseEnd(state) {
+		if (state.token === "") throw createSyntaxError(state, "Unexpected end of expression");
+		else throw createSyntaxError(state, "Value expected");
+	}
+	/**
+	* Shortcut for getting the current row value (one based)
+	* Returns the line of the currently handled expression
+	* @private
+	*/
+	/**
+	* Shortcut for getting the current col value (one based)
+	* Returns the column (position) where the last state.token starts
+	* @private
+	*/
+	function col(state) {
+		return state.index - state.token.length + 1;
+	}
+	/**
+	* Create an error
+	* @param {Object} state
+	* @param {string} message
+	* @return {SyntaxError} instantiated error
+	* @private
+	*/
+	function createSyntaxError(state, message) {
+		var c = col(state);
+		var error = /* @__PURE__ */ new SyntaxError(message + " (char " + c + ")");
+		error.char = c;
+		return error;
+	}
+	/**
+	* Create an error
+	* @param {Object} state
+	* @param {string} message
+	* @return {Error} instantiated error
+	* @private
+	*/
+	function createError(state, message) {
+		var c = col(state);
+		var error = /* @__PURE__ */ new SyntaxError(message + " (char " + c + ")");
+		error.char = c;
+		return error;
+	}
+	typed.addConversion({
+		from: "string",
+		to: "Node",
+		convert: parse
+	});
+	return parse;
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/function/compile.js
+var name$69 = "compile";
+var createCompile = /* @__PURE__ */ factory(name$69, ["typed", "parse"], (_ref) => {
+	var { typed, parse } = _ref;
+	/**
+	* Parse and compile an expression.
+	* Returns a an object with a function `evaluate([scope])` to evaluate the
+	* compiled expression.
+	*
+	* Syntax:
+	*
+	*     math.compile(expr)                       // returns one node
+	*     math.compile([expr1, expr2, expr3, ...]) // returns an array with nodes
+	*
+	* Examples:
+	*
+	*     const code1 = math.compile('sqrt(3^2 + 4^2)')
+	*     code1.evaluate() // 5
+	*
+	*     let scope = {a: 3, b: 4}
+	*     const code2 = math.compile('a * b') // 12
+	*     code2.evaluate(scope) // 12
+	*     scope.a = 5
+	*     code2.evaluate(scope) // 20
+	*
+	*     const nodes = math.compile(['a = 3', 'b = 4', 'a * b'])
+	*     nodes[2].evaluate() // 12
+	*
+	* See also:
+	*
+	*    parse, evaluate
+	*
+	* @param {string | string[] | Array | Matrix} expr
+	*            The expression to be compiled
+	* @return {{evaluate: Function} | Array.<{evaluate: Function}>} code
+	*            An object with the compiled expression
+	* @throws {Error}
+	*/
+	return typed(name$69, {
+		string: function string(expr) {
+			return parse(expr).compile();
+		},
+		"Array | Matrix": function Array__Matrix(expr) {
+			return deepMap(expr, function(entry) {
+				return parse(entry).compile();
+			});
+		}
+	});
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/function/evaluate.js
+var name$68 = "evaluate";
+var createEvaluate = /* @__PURE__ */ factory(name$68, ["typed", "parse"], (_ref) => {
+	var { typed, parse } = _ref;
+	/**
+	* Evaluate an expression.
+	*
+	* The expression parser does not use JavaScript. Its syntax is close
+	* to JavaScript but more suited for mathematical expressions.
+	* See [https://mathjs.org/docs/expressions/syntax.html](https://mathjs.org/docs/expressions/syntax.html) to learn
+	* the syntax and get an overview of the exact differences from JavaScript.
+	*
+	* Note the evaluating arbitrary expressions may involve security risks,
+	* see [https://mathjs.org/docs/expressions/security.html](https://mathjs.org/docs/expressions/security.html) for more information.
+	*
+	* Syntax:
+	*
+	*     math.evaluate(expr)
+	*     math.evaluate(expr, scope)
+	*     math.evaluate([expr1, expr2, expr3, ...])
+	*     math.evaluate([expr1, expr2, expr3, ...], scope)
+	*
+	* Example:
+	*
+	*     math.evaluate('(2+3)/4')                // 1.25
+	*     math.evaluate('sqrt(3^2 + 4^2)')        // 5
+	*     math.evaluate('sqrt(-4)')               // 2i
+	*     math.evaluate(['a=3', 'b=4', 'a*b'])    // [3, 4, 12]
+	*
+	*     let scope = {a:3, b:4}
+	*     math.evaluate('a * b', scope)           // 12
+	*
+	* See also:
+	*
+	*    parse, compile
+	*
+	* @param {string | string[] | Matrix} expr   The expression to be evaluated
+	* @param {Object} [scope]                    Scope to read/write variables
+	* @return {*} The result of the expression
+	* @throws {Error}
+	*/
+	return typed(name$68, {
+		string: function string(expr) {
+			var scope = createEmptyMap();
+			return parse(expr).compile().evaluate(scope);
+		},
+		"string, Map | Object": function string_Map__Object(expr, scope) {
+			return parse(expr).compile().evaluate(scope);
+		},
+		"Array | Matrix": function Array__Matrix(expr) {
+			var scope = createEmptyMap();
+			return deepMap(expr, function(entry) {
+				return parse(entry).compile().evaluate(scope);
+			});
+		},
+		"Array | Matrix, Map | Object": function Array__Matrix_Map__Object(expr, scope) {
+			return deepMap(expr, function(entry) {
+				return parse(entry).compile().evaluate(scope);
+			});
+		}
+	});
+});
+var createParserClass = /* @__PURE__ */ factory("Parser", ["evaluate", "parse"], (_ref) => {
+	var { evaluate, parse } = _ref;
+	/**
+	* @constructor Parser
+	* Parser contains methods to evaluate or parse expressions, and has a number
+	* of convenience methods to get, set, and remove variables from memory. Parser
+	* keeps a scope containing variables in memory, which is used for all
+	* evaluations.
+	*
+	* Methods:
+	*    const result = parser.evaluate(expr)  // evaluate an expression
+	*    const value = parser.get(name)        // retrieve a variable from the parser
+	*    const values = parser.getAll()        // retrieve all defined variables
+	*    parser.set(name, value)               // set a variable in the parser
+	*    parser.remove(name)                   // clear a variable from the
+	*                                          // parsers scope
+	*    parser.clear()                        // clear the parsers scope
+	*
+	* Example usage:
+	*    const parser = new Parser()
+	*    // Note: there is a convenience method which can be used instead:
+	*    // const parser = new math.parser()
+	*
+	*    // evaluate expressions
+	*    parser.evaluate('sqrt(3^2 + 4^2)')        // 5
+	*    parser.evaluate('sqrt(-4)')               // 2i
+	*    parser.evaluate('2 inch in cm')           // 5.08 cm
+	*    parser.evaluate('cos(45 deg)')            // 0.7071067811865476
+	*
+	*    // define variables and functions
+	*    parser.evaluate('x = 7 / 2')              // 3.5
+	*    parser.evaluate('x + 3')                  // 6.5
+	*    parser.evaluate('f(x, y) = x^y')          // f(x, y)
+	*    parser.evaluate('f(2, 3)')                // 8
+	*
+	*    // get and set variables and functions
+	*    const x = parser.get('x')                 // 3.5
+	*    const f = parser.get('f')                 // function
+	*    const g = f(3, 2)                         // 9
+	*    parser.set('h', 500)
+	*    const i = parser.evaluate('h / 2')        // 250
+	*    parser.set('hello', function (name) {
+	*        return 'hello, ' + name + '!'
+	*    })
+	*    parser.evaluate('hello("user")')          // "hello, user!"
+	*
+	*    // clear defined functions and variables
+	*    parser.clear()
+	*
+	*/
+	function Parser() {
+		if (!(this instanceof Parser)) throw new SyntaxError("Constructor must be called with the new operator");
+		Object.defineProperty(this, "scope", {
+			value: createEmptyMap(),
+			writable: false
+		});
+	}
+	/**
+	* Attach type information
+	*/
+	Parser.prototype.type = "Parser";
+	Parser.prototype.isParser = true;
+	/**
+	* Parse and evaluate the given expression
+	* @param {string | string[]} expr   A string containing an expression,
+	*                                   for example "2+3", or a list with expressions
+	* @return {*} result     The result, or undefined when the expression was empty
+	* @throws {Error}
+	*/
+	Parser.prototype.evaluate = function(expr) {
+		return evaluate(expr, this.scope);
+	};
+	/**
+	* Get a variable (a function or variable) by name from the parsers scope.
+	* Returns undefined when not found
+	* @param {string} name
+	* @return {* | undefined} value
+	*/
+	Parser.prototype.get = function(name) {
+		if (this.scope.has(name)) return this.scope.get(name);
+	};
+	/**
+	* Get a map with all defined variables
+	* @return {Object} values
+	*/
+	Parser.prototype.getAll = function() {
+		return toObject(this.scope);
+	};
+	/**
+	* Get a map with all defined variables
+	* @return {Map} values
+	*/
+	Parser.prototype.getAllAsMap = function() {
+		return this.scope;
+	};
+	function isValidVariableName(name) {
+		if (name.length === 0) return false;
+		for (var i = 0; i < name.length; i++) {
+			var cPrev = name.charAt(i - 1);
+			var c = name.charAt(i);
+			var cNext = name.charAt(i + 1);
+			if (!(parse.isAlpha(c, cPrev, cNext) || i > 0 && parse.isDigit(c))) return false;
+		}
+		return true;
+	}
+	/**
+	* Set a symbol (a function or variable) by name from the parsers scope.
+	* @param {string} name
+	* @param {* | undefined} value
+	*/
+	Parser.prototype.set = function(name, value) {
+		if (!isValidVariableName(name)) throw new Error("Invalid variable name: '".concat(name, "'. Variable names must follow the specified rules."));
+		this.scope.set(name, value);
+		return value;
+	};
+	/**
+	* Remove a variable from the parsers scope
+	* @param {string} name
+	*/
+	Parser.prototype.remove = function(name) {
+		this.scope.delete(name);
+	};
+	/**
+	* Clear the scope with variables and functions
+	*/
+	Parser.prototype.clear = function() {
+		this.scope.clear();
+	};
+	Parser.prototype.toJSON = function() {
+		var json = {
+			mathjs: "Parser",
+			variables: {},
+			functions: {}
+		};
+		for (var [_name2, value] of this.scope) if (isFunction(value)) {
+			if (!isExpressionFunction(value)) throw new Error("Cannot serialize external function ".concat(_name2));
+			json.functions[_name2] = "".concat(value.syntax, " = ").concat(value.expr);
+		} else json.variables[_name2] = value;
+		return json;
+	};
+	Parser.fromJSON = function(json) {
+		var parser = new Parser();
+		Object.entries(json.variables).forEach((_ref2) => {
+			var [name, value] = _ref2;
+			return parser.set(name, value);
+		});
+		Object.entries(json.functions).forEach((_ref3) => {
+			var [_name, fn] = _ref3;
+			return parser.evaluate(fn);
+		});
+		return parser;
+	};
+	return Parser;
+}, { isClass: true });
+function isExpressionFunction(value) {
+	return typeof value === "function" && typeof value.syntax === "string" && typeof value.expr === "string";
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/matrix/mapSlices.js
+var name$66 = "mapSlices";
+var createMapSlices = /* @__PURE__ */ factory(name$66, ["typed", "isInteger"], (_ref) => {
+	var { typed, isInteger } = _ref;
+	/**
+	* Apply a function that maps an array to a scalar
+	* along a given axis of a matrix or array.
+	* Returns a new matrix or array with one less dimension than the input.
+	*
+	* Syntax:
+	*
+	*     math.mapSlices(A, dim, callback)
+	*
+	* Where:
+	*
+	* - `dim: number` is a zero-based dimension over which to concatenate the matrices.
+	*
+	* Examples:
+	*
+	*    const A = [[1, 2], [3, 4]]
+	*    const sum = math.sum
+	*
+	*    math.mapSlices(A, 0, sum)             // returns [4, 6]
+	*    math.mapSlices(A, 1, sum)             // returns [3, 7]
+	*
+	* See also:
+	*
+	*    map, filter, forEach
+	*
+	* Note:
+	*
+	*    `mapSlices()` is also currently available via its deprecated
+	*    synonym `apply()`.
+	*
+	* @param {Array | Matrix} array   The input Matrix
+	* @param {number} dim             The dimension along which the callback is applied
+	* @param {Function} callback      The callback function that is applied. This Function
+	*                                 should take an array or 1-d matrix as an input and
+	*                                 return a number.
+	* @return {Array | Matrix} res    The residual matrix with the function mapped on the slices over some dimension.
+	*/
+	return typed(name$66, { "Array | Matrix, number | BigNumber, function": function Array__Matrix_number__BigNumber_function(mat, dim, callback) {
+		if (!isInteger(dim)) throw new TypeError("Integer number expected for dimension");
+		var size = Array.isArray(mat) ? arraySize(mat) : mat.size();
+		if (dim < 0 || dim >= size.length) throw new IndexError(dim, size.length);
+		if (isMatrix(mat)) return mat.create(_mapSlices(mat.valueOf(), dim, callback), mat.datatype());
+		else return _mapSlices(mat, dim, callback);
+	} });
+}, { formerly: "apply" });
+/**
+* Recursively reduce a matrix
+* @param {Array} mat
+* @param {number} dim
+* @param {Function} callback
+* @returns {Array} ret
+* @private
+*/
+function _mapSlices(mat, dim, callback) {
+	var i, ret, tran;
+	if (dim <= 0) if (!Array.isArray(mat[0])) return callback(mat);
+	else {
+		tran = _switch(mat);
+		ret = [];
+		for (i = 0; i < tran.length; i++) ret[i] = _mapSlices(tran[i], dim - 1, callback);
+		return ret;
+	}
+	else {
+		ret = [];
+		for (i = 0; i < mat.length; i++) ret[i] = _mapSlices(mat[i], dim - 1, callback);
+		return ret;
+	}
+}
+/**
+* Transpose a matrix
+* @param {Array} mat
+* @returns {Array} ret
+* @private
+*/
+function _switch(mat) {
+	var I = mat.length;
+	var J = mat[0].length;
+	var i, j;
+	var ret = [];
+	for (j = 0; j < J; j++) {
+		var tmp = [];
+		for (i = 0; i < I; i++) tmp.push(mat[i][j]);
+		ret.push(tmp);
+	}
+	return ret;
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/optimizeCallback.js
+/**
+* Simplifies a callback function by reducing its complexity and potentially improving its performance.
+*
+* @param {Function} callback The original callback function to simplify.
+* @param {Array|Matrix} array The array that will be used with the callback function.
+* @param {string} name The name of the function that is using the callback.
+* @param {boolean} isUnary If true, the callback function is unary and will be optimized as such.
+* @returns {Function} Returns a simplified version of the callback function.
+*/
+function optimizeCallback(callback, array, name, isUnary) {
+	if (import_typed_function.default.isTypedFunction(callback)) {
+		var numberOfArguments;
+		if (isUnary) numberOfArguments = 1;
+		else {
+			var size = array.isMatrix ? array.size() : arraySize(array);
+			if (size.length ? size[size.length - 1] === 0 : true) return {
+				isUnary,
+				fn: callback
+			};
+			var firstIndex = size.map(() => 0);
+			numberOfArguments = _findNumberOfArgumentsTyped(callback, array.isMatrix ? array.get(firstIndex) : get(array, firstIndex), firstIndex, array);
+		}
+		var fastCallback;
+		if (array.isMatrix && array.dataType !== "mixed" && array.dataType !== void 0) {
+			var singleSignature = _findSingleSignatureWithArity(callback, numberOfArguments);
+			fastCallback = singleSignature !== void 0 ? singleSignature : callback;
+		} else fastCallback = callback;
+		if (numberOfArguments >= 1 && numberOfArguments <= 3) return {
+			isUnary: numberOfArguments === 1,
+			fn: function fn() {
+				for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) args[_key] = arguments[_key];
+				return _tryFunctionWithArgs(fastCallback, args.slice(0, numberOfArguments), name, callback.name);
+			}
+		};
+		return {
+			isUnary: false,
+			fn: function fn() {
+				for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) args[_key2] = arguments[_key2];
+				return _tryFunctionWithArgs(fastCallback, args, name, callback.name);
+			}
+		};
+	}
+	if (isUnary === void 0) return {
+		isUnary: _findIfCallbackIsUnary(callback),
+		fn: callback
+	};
+	else return {
+		isUnary,
+		fn: callback
+	};
+}
+function _findSingleSignatureWithArity(callback, arity) {
+	var matchingFunctions = [];
+	Object.entries(callback.signatures).forEach((_ref) => {
+		var [signature, func] = _ref;
+		if (signature.split(",").length === arity) matchingFunctions.push(func);
+	});
+	if (matchingFunctions.length === 1) return matchingFunctions[0];
+}
+/**
+* Determines if a given callback function is unary (i.e., takes exactly one argument).
+*
+* This function checks the following conditions to determine if the callback is unary:
+* 1. The callback function should have exactly one parameter.
+* 2. The callback function should not use the `arguments` object.
+* 3. The callback function should not use rest parameters (`...`).
+* If in doubt, this function shall return `false` to be safe
+*
+* @param {Function} callback - The callback function to be checked.
+* @returns {boolean} - Returns `true` if the callback is unary, otherwise `false`.
+*/
+function _findIfCallbackIsUnary(callback) {
+	if (callback.length !== 1) return false;
+	var callbackStr = callback.toString();
+	if (/arguments/.test(callbackStr)) return false;
+	var paramsStr = callbackStr.match(/\(.*?\)/);
+	if (/\.\.\./.test(paramsStr)) return false;
+	return true;
+}
+function _findNumberOfArgumentsTyped(callback, value, index, array) {
+	var testArgs = [
+		value,
+		index,
+		array
+	];
+	for (var i = 3; i > 0; i--) {
+		var args = testArgs.slice(0, i);
+		if (import_typed_function.default.resolve(callback, args) !== null) return i;
+	}
+}
+/**
+* @param {function} func The selected function taken from one of the signatures of the callback function
+* @param {Array} args List with arguments to apply to the selected signature
+* @param {string} mappingFnName the name of the function that is using the callback
+* @param {string} callbackName the name of the callback function
+* @returns {*} Returns the return value of the invoked signature
+* @throws {TypeError} Throws an error when no matching signature was found
+*/
+function _tryFunctionWithArgs(func, args, mappingFnName, callbackName) {
+	try {
+		return func(...args);
+	} catch (err) {
+		_createCallbackError(err, args, mappingFnName, callbackName);
+	}
+}
+/**
+* Creates and throws a detailed TypeError when a callback function fails.
+*
+* @param {Error} err The original error thrown by the callback function.
+* @param {Array} args The arguments that were passed to the callback function.
+* @param {string} mappingFnName The name of the function that is using the callback.
+* @param {string} callbackName The name of the callback function.
+* @throws {TypeError} Throws a detailed TypeError with enriched error message.
+*/
+function _createCallbackError(err, args, mappingFnName, callbackName) {
+	var _err$data;
+	if (err instanceof TypeError && ((_err$data = err.data) === null || _err$data === void 0 ? void 0 : _err$data.category) === "wrongType") {
+		var argsDesc = [];
+		argsDesc.push("value: ".concat(typeOf$1(args[0])));
+		if (args.length >= 2) argsDesc.push("index: ".concat(typeOf$1(args[1])));
+		if (args.length >= 3) argsDesc.push("array: ".concat(typeOf$1(args[2])));
+		throw new TypeError("Function ".concat(mappingFnName, " cannot apply callback arguments ") + "".concat(callbackName, "(").concat(argsDesc.join(", "), ") at index ").concat(JSON.stringify(args[1])));
+	} else throw new TypeError("Function ".concat(mappingFnName, " cannot apply callback arguments ") + "to function ".concat(callbackName, ": ").concat(err.message));
+}
+var createFilter = /* @__PURE__ */ factory("filter", ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Filter the items in an array or one dimensional matrix.
+	*
+	* The callback is invoked with three arguments: the current value,
+	* the current index, and the matrix operated upon.
+	* Note that because the matrix/array might be
+	* multidimensional, the "index" argument is always an array of numbers giving
+	* the index in each dimension. This is true even for vectors: the "index"
+	* argument is an array of length 1, rather than simply a number.
+	*
+	* Syntax:
+	*
+	*    math.filter(x, test)
+	*
+	* Examples:
+	*
+	*    function isPositive (x) {
+	*      return x > 0
+	*    }
+	*    math.filter([6, -2, -1, 4, 3], isPositive) // returns [6, 4, 3]
+	*
+	*    math.filter(["23", "foo", "100", "55", "bar"], /[0-9]+/) // returns ["23", "100", "55"]
+	*
+	* See also:
+	*
+	*    forEach, map, sort
+	*
+	* @param {Matrix | Array} x    A one dimensional matrix or array to filter
+	* @param {Function | RegExp} test
+	*        A function or regular expression to test items.
+	*        All entries for which `test` returns true are returned.
+	*        When `test` is a function, it is invoked with three parameters:
+	*        the value of the element, the index of the element, and the
+	*        matrix/array being traversed. The function must return a boolean.
+	* @return {Matrix | Array} Returns the filtered matrix.
+	*/
+	return typed("filter", {
+		"Array, function": _filterCallback,
+		"Matrix, function": function Matrix_function(x, test) {
+			return x.create(_filterCallback(x.valueOf(), test), x.datatype());
+		},
+		"Array, RegExp": filterRegExp,
+		"Matrix, RegExp": function Matrix_RegExp(x, test) {
+			return x.create(filterRegExp(x.valueOf(), test), x.datatype());
+		}
+	});
+});
+/**
+* Filter values in a callback given a callback function
+* @param {Array} x
+* @param {Function} callback
+* @return {Array} Returns the filtered array
+* @private
+*/
+function _filterCallback(x, callback) {
+	var fastCallback = optimizeCallback(callback, x, "filter");
+	if (fastCallback.isUnary) return filter$1(x, fastCallback.fn);
+	return filter$1(x, function(value, index, array) {
+		return fastCallback.fn(value, [index], array);
+	});
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/matrix/forEach.js
+var name$64 = "forEach";
+var createForEach = /* @__PURE__ */ factory(name$64, ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Iterate over all elements of a matrix/array, and executes the given callback function.
+	*
+	* The callback is invoked with three arguments: the current value,
+	* the current index, and the matrix operated upon.
+	* Note that because the matrix/array might be
+	* multidimensional, the "index" argument is always an array of numbers giving
+	* the index in each dimension. This is true even for vectors: the "index"
+	* argument is an array of length 1, rather than simply a number.
+	*
+	* Syntax:
+	*
+	*    math.forEach(x, callback)
+	*
+	* Examples:
+	*
+	*    math.forEach([1, 2, 3], function(value) {
+	*      console.log(value)
+	*    })
+	*    // outputs 1, 2, 3
+	*
+	* See also:
+	*
+	*    filter, map, sort
+	*
+	* @param {Matrix | Array} x    The matrix to iterate on.
+	* @param {Function} callback   The callback function is invoked with three
+	*                              parameters: the value of the element, the index
+	*                              of the element, and the Matrix/array being traversed.
+	*/
+	return typed(name$64, {
+		"Array, function": _forEach,
+		"Matrix, function": function Matrix_function(x, callback) {
+			x.forEach(callback);
+		}
+	});
+});
+/**
+* forEach for a multidimensional array
+* @param {Array} array
+* @param {Function} callback
+* @private
+*/
+function _forEach(array, callback) {
+	var fastCallback = optimizeCallback(callback, array, name$64);
+	deepForEach$1(array, fastCallback.fn, fastCallback.isUnary);
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/matrix/map.js
+var name$63 = "map";
+var createMap = /* @__PURE__ */ factory(name$63, ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Create a new matrix or array with the results of a callback function executed on
+	* each entry of a given matrix/array.
+	*
+	* For each entry of the input,
+	*
+	* the callback is invoked with 2N + 1 arguments:
+	* the N values of the entry, the index at which that entry occurs, and the N full
+	* broadcasted matrix/array being traversed where N is the number of matrices being traversed.
+	* Note that because the matrix/array might be
+	* multidimensional, the "index" argument is always an array of numbers giving
+	* the index in each dimension. This is true even for vectors: the "index"
+	* argument is an array of length 1, rather than simply a number.
+	*
+	* Syntax:
+	*
+	*    math.map(x, callback)
+	*    math.map(x, y, ..., callback)
+	*
+	* Examples:
+	*
+	*    math.map([1, 2, 3], function(value) {
+	*      return value * value
+	*    })  // returns [1, 4, 9]
+	*    math.map([1, 2], [3, 4], function(a, b) {
+	*     return a + b
+	*    })  // returns [4, 6]
+	*
+	*    // The callback is normally called with three arguments:
+	*    //    callback(value, index, Array)
+	*    // If you want to call with only one argument, use:
+	*    math.map([1, 2, 3], x => math.format(x)) // returns ['1', '2', '3']
+	*    // It can also be called with 2N + 1 arguments: for N arrays
+	*    //    callback(value1, value2, index, BroadcastedArray1, BroadcastedArray2)
+	*
+	* History:
+	*
+	*    v0.13  Created
+	*    v1.1   Clone the indices on each callback in case callback mutates
+	*    v13.1  Support multiple inputs to the callback
+	*
+	* See also:
+	*
+	*    filter, forEach, sort
+	*
+	* @param {Matrix | Array} x    The input to iterate on.
+	* @param {Function} callback
+	*     The function to call (as described above) on each entry of the input
+	* @return {Matrix | array}
+	*     Transformed map of x; always has the same type and shape as x
+	*/
+	return typed(name$63, {
+		"Array, function": _mapArray,
+		"Matrix, function": function Matrix_function(x, callback) {
+			return x.map(callback);
+		},
+		"Array|Matrix, Array|Matrix, ...Array|Matrix|function": (A, B, rest) => _mapMultiple([
+			A,
+			B,
+			...rest.slice(0, rest.length - 1)
+		], rest[rest.length - 1])
+	});
+	/**
+	* Maps over multiple arrays or matrices.
+	*
+	* @param {Array<Array|Matrix>} Arrays - An array of arrays or matrices to map over.
+	* @param {function} multiCallback - The callback function to apply to each element.
+	* @throws {Error} If the last argument is not a callback function.
+	* @returns {Array|Matrix} A new array or matrix with each element being the result of the callback function.
+	*
+	* @example
+	* _mapMultiple([[1, 2, 3], [4, 5, 6]], (a, b) => a + b); // Returns [5, 7, 9]
+	*/
+	function _mapMultiple(Arrays, multiCallback) {
+		if (typeof multiCallback !== "function") throw new Error("Last argument must be a callback function");
+		var firstArrayIsMatrix = Arrays[0].isMatrix;
+		var sizes = Arrays.map((M) => M.isMatrix ? M.size() : arraySize(M));
+		var newSize = broadcastSizes(...sizes);
+		var numberOfArrays = Arrays.length;
+		var _get = firstArrayIsMatrix ? (matrix, idx) => matrix.get(idx) : get;
+		var firstValues = Arrays.map((collection, i) => {
+			var firstIndex = sizes[i].map(() => 0);
+			return collection.isMatrix ? collection.get(firstIndex) : get(collection, firstIndex);
+		});
+		var callbackArgCount = typed.isTypedFunction(multiCallback) ? _getTypedCallbackArgCount(multiCallback, firstValues, newSize.map(() => 0), Arrays) : _getCallbackArgCount(multiCallback, numberOfArrays);
+		if (callbackArgCount < 2) return mapMultiple(Arrays, _getLimitedCallback(callbackArgCount, multiCallback, null));
+		var broadcastedArrays = firstArrayIsMatrix ? Arrays.map((M) => M.isMatrix ? M.create(broadcastTo(M.toArray(), newSize), M.datatype()) : Arrays[0].create(broadcastTo(M.valueOf(), newSize))) : Arrays.map((M) => M.isMatrix ? broadcastTo(M.toArray(), newSize) : broadcastTo(M, newSize));
+		var callback = _getLimitedCallback(callbackArgCount, multiCallback, broadcastedArrays);
+		var broadcastedArraysCallback = (x, idx) => callback([x, ...broadcastedArrays.slice(1).map((array) => _get(array, idx))], idx);
+		if (firstArrayIsMatrix) return broadcastedArrays[0].map(broadcastedArraysCallback);
+		else return _mapArray(broadcastedArrays[0], broadcastedArraysCallback);
+	}
+	function mapMultiple(collections, callback) {
+		var firstCollection = collections[0];
+		var arrays = collections.map((collection) => collection.isMatrix ? collection.valueOf() : collection);
+		var sizes = collections.map((collection) => collection.isMatrix ? collection.size() : arraySize(collection));
+		var finalSize = broadcastSizes(...sizes);
+		var offsets = sizes.map((size) => finalSize.length - size.length);
+		var maxDepth = finalSize.length - 1;
+		var index = callback.length > 1 ? [] : null;
+		var resultsArray = iterate(arrays, 0);
+		if (firstCollection.isMatrix) {
+			var resultsMatrix = firstCollection.create();
+			resultsMatrix._data = resultsArray;
+			resultsMatrix._size = finalSize;
+			return resultsMatrix;
+		} else return resultsArray;
+		function iterate(arrays) {
+			var depth = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 0;
+			var currentDimensionSize = finalSize[depth];
+			var result = Array(currentDimensionSize);
+			if (depth < maxDepth) {
+				var _loop = function _loop(i) {
+					if (index) index[depth] = i;
+					result[i] = iterate(arrays.map((array, arrayIndex) => offsets[arrayIndex] > depth ? array : array.length === 1 ? array[0] : array[i]), depth + 1);
+				};
+				for (var i = 0; i < currentDimensionSize; i++) _loop(i);
+			} else {
+				var _loop2 = function _loop2(_i) {
+					if (index) index[depth] = _i;
+					result[_i] = callback(arrays.map((a) => a.length === 1 ? a[0] : a[_i]), index ? index.slice() : void 0);
+				};
+				for (var _i = 0; _i < currentDimensionSize; _i++) _loop2(_i);
+			}
+			return result;
+		}
+	}
+	/**
+	* Creates a limited callback based on the argument pattern.
+	* @param {number} callbackArgCount - The argument pattern (0, 1, or 2)
+	* @param {Function} multiCallback - The original callback function
+	* @param {Array} broadcastedArrays - The broadcasted arrays (for case 2)
+	* @returns {Function} The limited callback function
+	*/
+	function _getLimitedCallback(callbackArgCount, multiCallback, broadcastedArrays) {
+		switch (callbackArgCount) {
+			case 0: return (x) => multiCallback(...x);
+			case 1: return (x, idx) => multiCallback(...x, idx);
+			case 2: return (x, idx) => multiCallback(...x, idx, ...broadcastedArrays);
+		}
+	}
+	/**
+	* Determines the argument pattern of a regular callback function.
+	* @param {Function} callback - The callback function to analyze
+	* @param {number} numberOfArrays - Number of arrays being processed
+	* @returns {number} 0 = values only, 1 = values + index, 2 = values + index + arrays
+	*/
+	function _getCallbackArgCount(callback, numberOfArrays) {
+		var callbackStr = callback.toString();
+		if (/arguments/.test(callbackStr)) return 2;
+		var paramsStr = callbackStr.match(/\(.*?\)/);
+		if (/\.\.\./.test(paramsStr)) return 2;
+		if (callback.length > numberOfArrays + 1) return 2;
+		if (callback.length === numberOfArrays + 1) return 1;
+		return 0;
+	}
+	/**
+	* Determines the argument pattern of a typed callback function.
+	* @param {Function} callback - The typed callback function to analyze
+	* @param {Array} values - Sample values for signature resolution
+	* @param {Array} idx - Sample index for signature resolution
+	* @param {Array} arrays - Sample arrays for signature resolution
+	* @returns {number} 0 = values only, 1 = values + index, 2 = values + index + arrays
+	*/
+	function _getTypedCallbackArgCount(callback, values, idx, arrays) {
+		if (typed.resolve(callback, [
+			...values,
+			idx,
+			...arrays
+		]) !== null) return 2;
+		if (typed.resolve(callback, [...values, idx]) !== null) return 1;
+		if (typed.resolve(callback, values) !== null) return 0;
+		return 0;
+	}
+	/**
+	* Map for a multi dimensional array
+	* @param {Array} array
+	* @param {Function} callback
+	* @return {Array}
+	* @private
+	*/
+	function _mapArray(array, callback) {
+		var fastCallback = optimizeCallback(callback, array, name$63);
+		return deepMap$1(array, fastCallback.fn, fastCallback.isUnary);
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/matrix/range.js
+var name$62 = "range";
+var createRange = /* @__PURE__ */ factory(name$62, [
+	"typed",
+	"config",
+	"?matrix",
+	"?bignumber",
+	"equal",
+	"smaller",
+	"smallerEq",
+	"larger",
+	"largerEq",
+	"add",
+	"isZero",
+	"isPositive"
+], (_ref) => {
+	var { typed, config, matrix, bignumber, smaller, smallerEq, larger, largerEq, add, isZero, isPositive } = _ref;
+	/**
+	* Create a matrix or array containing a range of values.
+	* By default, the range end is excluded. This can be customized by providing
+	* an extra parameter `includeEnd`.
+	*
+	* Syntax:
+	*
+	*     math.range(str [, includeEnd])               // Create a range from a string,
+	*                                                  // where the string contains the
+	*                                                  // start, optional step, and end,
+	*                                                  // separated by a colon.
+	*     math.range(start, end [, includeEnd])        // Create a range with start and
+	*                                                  // end and a step size of 1.
+	*     math.range(start, end, step [, includeEnd])  // Create a range with start, step,
+	*                                                  // and end.
+	*
+	* Where:
+	*
+	* - `str: string`
+	*   A string 'start:end' or 'start:step:end'
+	* - `start: {number | bigint | BigNumber | Fraction | Unit}`
+	*   Start of the range
+	* - `end: number | bigint | BigNumber | Fraction | Unit`
+	*   End of the range, excluded by default, included when parameter includeEnd=true
+	* - `step: number | bigint | BigNumber | Fraction | Unit`
+	*   Step size. Default value is 1.
+	* - `includeEnd: boolean`
+	*   Option to specify whether to include the end or not. False by default.
+	*
+	* The function returns a `DenseMatrix` when the library is configured with
+	* `config = { matrix: 'Matrix' }, and returns an Array otherwise.
+	* Note that the type of the returned values is taken from the type of the
+	* provided start/end value. If only one of these is a built-in `number` type,
+	* it will be promoted to the type of the other endpoint. However, in the case
+	* of Unit values, both endpoints must have compatible units, and the return
+	* value will have compatible units as well.
+	*
+	* Examples:
+	*
+	*     math.range(2, 6)        // [2, 3, 4, 5]
+	*     math.range(2, -3, -1)   // [2, 1, 0, -1, -2]
+	*     math.range('2:1:6')     // [2, 3, 4, 5]
+	*     math.range(2, 6, true)  // [2, 3, 4, 5, 6]
+	*     math.range(2, math.fraction(8,3), math.fraction(1,3)) // [fraction(2), fraction(7,3)]
+	*     math.range(math.unit(2, 'm'), math.unit(-3, 'm'), math.unit(-1, 'm')) // [2 m, 1 m, 0 m , -1 m, -2 m]
+	*
+	* See also:
+	*
+	*     ones, zeros, size, subset
+	*
+	* @param {*} args   Parameters describing the range's `start`, `end`, and optional `step`.
+	* @return {Array | Matrix} range
+	*/
+	return typed(name$62, {
+		string: _strRange,
+		"string, boolean": _strRange,
+		number: function number(oops) {
+			throw new TypeError("Too few arguments to function range(): ".concat(oops));
+		},
+		boolean: function boolean(oops) {
+			throw new TypeError("Unexpected type of argument 1 to function range(): ".concat(oops, ", number|bigint|BigNumber|Fraction"));
+		},
+		"number, number": function number_number(start, end) {
+			return _out(_range(start, end, 1, false));
+		},
+		"number, number, number": function number_number_number(start, end, step) {
+			return _out(_range(start, end, step, false));
+		},
+		"number, number, boolean": function number_number_boolean(start, end, includeEnd) {
+			return _out(_range(start, end, 1, includeEnd));
+		},
+		"number, number, number, boolean": function number_number_number_boolean(start, end, step, includeEnd) {
+			return _out(_range(start, end, step, includeEnd));
+		},
+		"bigint, bigint|number": function bigint_bigintNumber(start, end) {
+			return _out(_range(start, end, 1n, false));
+		},
+		"number, bigint": function number_bigint(start, end) {
+			return _out(_range(BigInt(start), end, 1n, false));
+		},
+		"bigint, bigint|number, bigint|number": function bigint_bigintNumber_bigintNumber(start, end, step) {
+			return _out(_range(start, end, BigInt(step), false));
+		},
+		"number, bigint, bigint|number": function number_bigint_bigintNumber(start, end, step) {
+			return _out(_range(BigInt(start), end, BigInt(step), false));
+		},
+		"bigint, bigint|number, boolean": function bigint_bigintNumber_boolean(start, end, includeEnd) {
+			return _out(_range(start, end, 1n, includeEnd));
+		},
+		"number, bigint, boolean": function number_bigint_boolean(start, end, includeEnd) {
+			return _out(_range(BigInt(start), end, 1n, includeEnd));
+		},
+		"bigint, bigint|number, bigint|number, boolean": function bigint_bigintNumber_bigintNumber_boolean(start, end, step, includeEnd) {
+			return _out(_range(start, end, BigInt(step), includeEnd));
+		},
+		"number, bigint, bigint|number, boolean": function number_bigint_bigintNumber_boolean(start, end, step, includeEnd) {
+			return _out(_range(BigInt(start), end, BigInt(step), includeEnd));
+		},
+		"BigNumber, BigNumber": function BigNumber_BigNumber(start, end) {
+			var BigNumber = start.constructor;
+			return _out(_range(start, end, new BigNumber(1), false));
+		},
+		"BigNumber, BigNumber, BigNumber": function BigNumber_BigNumber_BigNumber(start, end, step) {
+			return _out(_range(start, end, step, false));
+		},
+		"BigNumber, BigNumber, boolean": function BigNumber_BigNumber_boolean(start, end, includeEnd) {
+			var BigNumber = start.constructor;
+			return _out(_range(start, end, new BigNumber(1), includeEnd));
+		},
+		"BigNumber, BigNumber, BigNumber, boolean": function BigNumber_BigNumber_BigNumber_boolean(start, end, step, includeEnd) {
+			return _out(_range(start, end, step, includeEnd));
+		},
+		"Fraction, Fraction": function Fraction_Fraction(start, end) {
+			return _out(_range(start, end, 1, false));
+		},
+		"Fraction, Fraction, Fraction": function Fraction_Fraction_Fraction(start, end, step) {
+			return _out(_range(start, end, step, false));
+		},
+		"Fraction, Fraction, boolean": function Fraction_Fraction_boolean(start, end, includeEnd) {
+			return _out(_range(start, end, 1, includeEnd));
+		},
+		"Fraction, Fraction, Fraction, boolean": function Fraction_Fraction_Fraction_boolean(start, end, step, includeEnd) {
+			return _out(_range(start, end, step, includeEnd));
+		},
+		"Unit, Unit, Unit": function Unit_Unit_Unit(start, end, step) {
+			return _out(_range(start, end, step, false));
+		},
+		"Unit, Unit, Unit, boolean": function Unit_Unit_Unit_boolean(start, end, step, includeEnd) {
+			return _out(_range(start, end, step, includeEnd));
+		}
+	});
+	function _out(arr) {
+		if (config.matrix === "Matrix") return matrix ? matrix(arr) : noMatrix();
+		return arr;
+	}
+	function _strRange(str, includeEnd) {
+		var r = _parse(str);
+		if (!r) throw new SyntaxError("String \"" + str + "\" is no valid range");
+		if (config.number === "BigNumber") {
+			if (bignumber === void 0) noBignumber();
+			return _out(_range(bignumber(r.start), bignumber(r.end), bignumber(r.step)), includeEnd);
+		} else return _out(_range(r.start, r.end, r.step, includeEnd));
+	}
+	/**
+	* Create a range with numbers or BigNumbers
+	* @param {number | BigNumber | Unit} start
+	* @param {number | BigNumber | Unit} end
+	* @param {number | BigNumber | Unit} step
+	* @param {boolean} includeEnd
+	* @returns {Array} range
+	* @private
+	*/
+	function _range(start, end, step, includeEnd) {
+		var array = [];
+		if (isZero(step)) throw new Error("Step must be non-zero");
+		var ongoing = isPositive(step) ? includeEnd ? smallerEq : smaller : includeEnd ? largerEq : larger;
+		var x = start;
+		while (ongoing(x, end)) {
+			array.push(x);
+			x = add(x, step);
+		}
+		return array;
+	}
+	/**
+	* Parse a string into a range,
+	* The string contains the start, optional step, and end, separated by a colon.
+	* If the string does not contain a valid range, null is returned.
+	* For example str='0:2:11'.
+	* @param {string} str
+	* @return {{start: number, end: number, step: number} | null} range Object containing properties start, end, step
+	* @private
+	*/
+	function _parse(str) {
+		var nums = str.split(":").map(function(arg) {
+			return Number(arg);
+		});
+		if (nums.some(function(num) {
+			return isNaN(num);
+		})) return null;
+		switch (nums.length) {
+			case 2: return {
+				start: nums[0],
+				end: nums[1],
+				step: 1
+			};
+			case 3: return {
+				start: nums[0],
+				end: nums[2],
+				step: nums[1]
+			};
+			default: return null;
+		}
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/matrix/size.js
+var name$61 = "size";
+var createSize = /* @__PURE__ */ factory(name$61, ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Calculate the size of a matrix or scalar. Always returns an Array containing numbers.
+	*
+	* Note that in mathjs v14 and older, function size could return a Matrix depending on
+	* the input type and configuration.
+	*
+	* Syntax:
+	*
+	*     math.size(x)
+	*
+	* Examples:
+	*
+	*     math.size(2.3)                       // returns []
+	*     math.size('hello world')             // returns [11]
+	*
+	*     const A = [[1, 2, 3], [4, 5, 6]]
+	*     math.size(A)                         // returns [2, 3]
+	*     math.size(math.range(1,6).toArray()) // returns [5]
+	*
+	* See also:
+	*
+	*     count, resize, squeeze, subset
+	*
+	* @param {boolean | number | Complex | Unit | string | Array | Matrix} x  A matrix
+	* @return {Array} A vector with size of `x`.
+	*/
+	return typed(name$61, {
+		Matrix: (x) => x.size(),
+		Array: arraySize,
+		string: (x) => [x.length],
+		"number | Complex | BigNumber | Unit | boolean | null": (_x) => []
+	});
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/matrix/partitionSelect.js
+var name$60 = "partitionSelect";
+var createPartitionSelect = /* @__PURE__ */ factory(name$60, [
+	"typed",
+	"isNumeric",
+	"isNaN",
+	"compare"
+], (_ref) => {
+	var { typed, isNumeric, isNaN: mathIsNaN, compare } = _ref;
+	var asc = compare;
+	var desc = (a, b) => -compare(a, b);
+	/**
+	* Partition-based selection of an array or 1D matrix.
+	* Will find the kth smallest value, and mutates the input array.
+	* Uses Quickselect.
+	*
+	* Syntax:
+	*
+	*    math.partitionSelect(x, k)
+	*    math.partitionSelect(x, k, compare)
+	*
+	* Examples:
+	*
+	*    math.partitionSelect([5, 10, 1], 2)                               // returns 10
+	*    math.partitionSelect(['C', 'B', 'A', 'D'], 1, math.compareText)   // returns 'B'
+	*
+	*    function sortByLength (a, b) {
+	*      return a.length - b.length
+	*    }
+	*    math.partitionSelect(['Langdon', 'Tom', 'Sara'], 2, sortByLength) // returns 'Langdon'
+	*
+	*    // the input array is mutated
+	*    arr = [5, 2, 1]
+	*    math.partitionSelect(arr, 0) // returns 1, arr is now: [1, 2, 5]
+	*    math.partitionSelect(arr, 1, 'desc') // returns 2, arr is now: [5, 2, 1]
+	*
+	* See also:
+	*
+	*    sort
+	*
+	* @param {Matrix | Array} x    A one dimensional matrix or array to sort
+	* @param {Number} k            The kth smallest value to be retrieved zero-based index
+	* @param {Function | 'asc' | 'desc'} [compare='asc']
+	*        An optional comparator function. The function is called as
+	*        `compare(a, b)`, and must return 1 when a > b, -1 when a < b,
+	*        and 0 when a == b.
+	* @return {*} Returns the kth lowest value.
+	*/
+	return typed(name$60, {
+		"Array | Matrix, number": function Array__Matrix_number(x, k) {
+			return _partitionSelect(x, k, asc);
+		},
+		"Array | Matrix, number, string": function Array__Matrix_number_string(x, k, compare) {
+			if (compare === "asc") return _partitionSelect(x, k, asc);
+			else if (compare === "desc") return _partitionSelect(x, k, desc);
+			else throw new Error("Compare string must be \"asc\" or \"desc\"");
+		},
+		"Array | Matrix, number, function": _partitionSelect
+	});
+	function _partitionSelect(x, k, compare) {
+		if (!isInteger$1(k) || k < 0) throw new Error("k must be a non-negative integer");
+		if (isMatrix(x)) {
+			if (x.size().length > 1) throw new Error("Only one dimensional matrices supported");
+			return quickSelect(x.valueOf(), k, compare);
+		}
+		if (Array.isArray(x)) return quickSelect(x, k, compare);
+	}
+	/**
+	* Quickselect algorithm.
+	* Code adapted from:
+	* https://blog.teamleadnet.com/2012/07/quick-select-algorithm-find-kth-element.html
+	*
+	* @param {Array} arr
+	* @param {Number} k
+	* @param {Function} compare
+	* @private
+	*/
+	function quickSelect(arr, k, compare) {
+		if (k >= arr.length) throw new Error("k out of bounds");
+		for (var i = 0; i < arr.length; i++) if (isNumeric(arr[i]) && mathIsNaN(arr[i])) return arr[i];
+		var from = 0;
+		var to = arr.length - 1;
+		while (from < to) {
+			var r = from;
+			var w = to;
+			var pivot = arr[Math.floor(Math.random() * (to - from + 1)) + from];
+			while (r < w) if (compare(arr[r], pivot) >= 0) {
+				var tmp = arr[w];
+				arr[w] = arr[r];
+				arr[r] = tmp;
+				--w;
+			} else ++r;
+			if (compare(arr[r], pivot) > 0) --r;
+			if (k <= r) to = r;
+			else from = r + 1;
+		}
+		return arr[k];
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/probability/bernoulli.js
+var name$59 = "bernoulli";
+var createBernoulli = /* @__PURE__ */ factory(name$59, [
+	"typed",
+	"config",
+	"isInteger",
+	"number",
+	"?BigNumber",
+	"?Fraction"
+], (_ref) => {
+	var { typed, config, number, BigNumber: _BigNumber, Fraction } = _ref;
+	/**
+	* Return the `n`th Bernoulli number, for positive integers `n`
+	*
+	* Syntax:
+	*
+	*     math.bernoulli(n)
+	*
+	* Examples:
+	*
+	*     math.bernoulli(1)                  // returns -0.5
+	*     // All other odd Bernoulli numbers are 0:
+	*     math.bernoulli(7)                  // returns 0
+	*     math.bernoulli(math.bignumber(6))  // value bignumber(1).div(42)
+	*     // Produces exact rationals for bigint or fraction input:
+	*     math.bernoulli(8n)                 // Fraction -1,30
+	*     math.bernoulli(math.fraction(10))  // Fraction 5,66
+	*
+	* See also:
+	*
+	*     combinations, gamma, stirlingS2
+	*
+	* @param {number | BigNumber | bigint | Fraction} n
+	*    Index of the Bernoulli number
+	* @return {number | BigNumber | Fraction}
+	*    nth Bernoulli number, of a type corresponding to the argument n
+	*/
+	var numberCache = [void 0];
+	var fractionCache = [void 0];
+	var bigCache = [void 0];
+	var cachedPrecision = 50;
+	return typed(name$59, {
+		number: (index) => _bernoulli(index, (n) => n, numberCache, (a, b) => a + b, (a, b) => a * b, (a, b) => a / b),
+		"bigint | Fraction": (index) => _bernoulli(number(index), (n) => new Fraction(n), fractionCache, (a, b) => a.add(b), (a, b) => a.mul(b), (a, b) => a.div(b)),
+		BigNumber: (index) => {
+			if (config.precision !== cachedPrecision) {
+				bigCache = [void 0];
+				cachedPrecision = config.precision;
+			}
+			return _bernoulli(number(index), (n) => new _BigNumber(n), bigCache, (a, b) => a.add(b), (a, b) => a.mul(b), (a, b) => a.div(b));
+		}
+	});
+});
+/**
+* Underlying implementation, with all operations passed in.
+* Parameters:
+* 1. index: a (positive integer) number specifying which Bernoulli number
+*    to compute.
+* 2. promote: a function that takes an integer number and returns
+*    the desired type for the Bernoulli number values.
+* 3. A: a cache array of partial computation data that _bernoulli should use.
+*    Different cache arrays should be provided for different types.
+* 4. plus: a function that adds two values of the desired type.
+* 5. times: a function that multiplies two values of the desired type.
+* 6. divide: a function that divides one value of the desired type by another.
+*/
+function _bernoulli(index, promote, A, plus, times, divide) {
+	if (index < 0 || !isInteger$1(index)) throw new RangeError("Bernoulli index must be nonnegative integer");
+	if (index === 0) return promote(1);
+	if (index === 1) return divide(promote(-1), promote(2));
+	if (index % 2 === 1) return promote(0);
+	var one = promote(1);
+	if (A.length === 1) A.push([
+		divide(one, promote(-3)),
+		divide(one, promote(-2)),
+		divide(one, promote(6))
+	]);
+	var half = index / 2;
+	var zero = promote(0);
+	var two = promote(2);
+	while (A.length <= half) {
+		var i = A.length;
+		var lim = Math.floor((i + 1) / 2);
+		var a = zero;
+		for (var m = 1; m < lim; ++m) a = plus(a, times(A[m][0], A[i - m][0]));
+		a = times(a, two);
+		if (i % 2 === 0) a = plus(a, times(A[lim][0], A[lim][0]));
+		a = divide(a, promote(-(2 * i + 1)));
+		var prefactor = divide(times(A[i - 1][1], promote(-i * (2 * i - 1))), two);
+		A.push([
+			a,
+			prefactor,
+			times(prefactor, a)
+		]);
+	}
+	return A[half][2];
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/probability/combinationsWithRep.js
+var name$58 = "combinationsWithRep";
+var createCombinationsWithRep = /* @__PURE__ */ factory(name$58, ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Compute the number of ways of picking `k` unordered outcomes from `n`
+	* possibilities, allowing individual outcomes to be repeated more than once.
+	*
+	* CombinationsWithRep only takes integer arguments.
+	* The following condition must be enforced: k <= n + k -1.
+	*
+	* Syntax:
+	*
+	*     math.combinationsWithRep(n, k)
+	*
+	* Examples:
+	*
+	*    math.combinationsWithRep(7, 5) // returns 462
+	*
+	* See also:
+	*
+	*    combinations, permutations, factorial
+	*
+	* @param {number | BigNumber} n    Total number of objects in the set
+	* @param {number | BigNumber} k    Number of objects in the subset
+	* @return {number | BigNumber}     Number of possible combinations with replacement.
+	*/
+	return typed(name$58, {
+		"number, number": function number_number(n, k) {
+			if (!isInteger$1(n) || n < 0) throw new TypeError("Positive integer value expected in function combinationsWithRep");
+			if (!isInteger$1(k) || k < 0) throw new TypeError("Positive integer value expected in function combinationsWithRep");
+			if (n < 1) throw new TypeError("k must be less than or equal to n + k - 1");
+			if (k < n - 1) return product$1(n, n + k - 1) / product$1(1, k);
+			return product$1(k + 1, n + k - 1) / product$1(1, n - 1);
+		},
+		"BigNumber, BigNumber": function BigNumber_BigNumber(n, k) {
+			var BigNumber = n.constructor;
+			var result, i;
+			var one = new BigNumber(1);
+			var nMinusOne = n.minus(one);
+			if (!isPositiveInteger$1(n) || !isPositiveInteger$1(k)) throw new TypeError("Positive integer value expected in function combinationsWithRep");
+			if (n.lt(one)) throw new TypeError("k must be less than or equal to n + k - 1 in function combinationsWithRep");
+			result = one;
+			if (k.lt(nMinusOne)) for (i = one; i.lte(nMinusOne); i = i.plus(one)) result = result.times(k.plus(i)).dividedBy(i);
+			else for (i = one; i.lte(k); i = i.plus(one)) result = result.times(nMinusOne.plus(i)).dividedBy(i);
+			return result;
+		}
+	});
+});
+/**
+* Test whether BigNumber n is a positive integer
+* @param {BigNumber} n
+* @returns {boolean} isPositiveInteger
+*/
+function isPositiveInteger$1(n) {
+	return n.isInteger() && n.gte(0);
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/probability/factorial.js
+var name$57 = "factorial";
+var createFactorial = /* @__PURE__ */ factory(name$57, ["typed", "gamma"], (_ref) => {
+	var { typed, gamma } = _ref;
+	/**
+	* Compute the factorial of a value
+	*
+	* Factorial only supports an integer value as argument.
+	* For matrices, the function is evaluated element wise.
+	*
+	* Syntax:
+	*
+	*    math.factorial(n)
+	*
+	* Examples:
+	*
+	*    math.factorial(5)    // returns 120
+	*    math.factorial(3)    // returns 6
+	*
+	* See also:
+	*
+	*    combinations, combinationsWithRep, gamma, permutations
+	*
+	* @param {number | BigNumber | Array | Matrix} n   An integer number
+	* @return {number | BigNumber | Array | Matrix}    The factorial of `n`
+	*/
+	return typed(name$57, {
+		number: function number(n) {
+			if (n < 0) throw new Error("Value must be non-negative");
+			return gamma(n + 1);
+		},
+		BigNumber: function BigNumber(n) {
+			if (n.isNegative()) throw new Error("Value must be non-negative");
+			return gamma(n.plus(1));
+		},
+		"Array | Matrix": typed.referToSelf((self) => (n) => deepMap(n, self))
+	});
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/probability/multinomial.js
+var name$56 = "multinomial";
+var createMultinomial = /* @__PURE__ */ factory(name$56, [
+	"typed",
+	"add",
+	"divide",
+	"multiply",
+	"factorial",
+	"isInteger",
+	"isPositive"
+], (_ref) => {
+	var { typed, add, divide, multiply, factorial, isInteger, isPositive } = _ref;
+	/**
+	* Multinomial Coefficients compute the number of ways of picking a1, a2, ..., ai unordered outcomes from `n` possibilities.
+	*
+	* multinomial takes one array of integers as an argument.
+	* The following condition must be enforced: every ai <= 0
+	*
+	* Syntax:
+	*
+	*     math.multinomial(a) // a is an array type
+	*
+	* Examples:
+	*
+	*    math.multinomial([1,2,1]) // returns 12
+	*
+	* See also:
+	*
+	*    combinations, factorial
+	*
+	* @param {number[] | BigNumber[]} a    Integer numbers of objects in the subset
+	* @return {Number | BigNumber}         Multinomial coefficient.
+	*/
+	return typed(name$56, { "Array | Matrix": function Array__Matrix(a) {
+		var sum = 0;
+		var denom = 1;
+		deepForEach(a, function(ai) {
+			if (!isInteger(ai) || !isPositive(ai)) throw new TypeError("Positive integer value expected in function multinomial");
+			sum = add(sum, ai);
+			denom = multiply(denom, factorial(ai));
+		});
+		return divide(factorial(sum), denom);
+	} });
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/probability/permutations.js
+var name$55 = "permutations";
+var createPermutations = /* @__PURE__ */ factory(name$55, ["typed", "factorial"], (_ref) => {
+	var { typed, factorial } = _ref;
+	/**
+	* Compute the number of ways of obtaining an ordered subset of `k` elements
+	* from a set of `n` elements.
+	*
+	* Permutations only takes integer arguments.
+	* The following condition must be enforced: k <= n.
+	*
+	* Syntax:
+	*
+	*     math.permutations(n)
+	*     math.permutations(n, k)
+	*
+	* Examples:
+	*
+	*    math.permutations(5)     // 120
+	*    math.permutations(5, 3)  // 60
+	*
+	* See also:
+	*
+	*    combinations, combinationsWithRep, factorial
+	*
+	* @param {number | BigNumber} n   The number of objects in total
+	* @param {number | BigNumber} [k] The number of objects in the subset
+	* @return {number | BigNumber}    The number of permutations
+	*/
+	return typed(name$55, {
+		"number | BigNumber": factorial,
+		"number, number": function number_number(n, k) {
+			if (!isInteger$1(n) || n < 0) throw new TypeError("Positive integer value expected in function permutations");
+			if (!isInteger$1(k) || k < 0) throw new TypeError("Positive integer value expected in function permutations");
+			if (k > n) throw new TypeError("second argument k must be less than or equal to first argument n");
+			return product$1(n - k + 1, n);
+		},
+		"BigNumber, BigNumber": function BigNumber_BigNumber(n, k) {
+			var result, i;
+			if (!isPositiveInteger(n) || !isPositiveInteger(k)) throw new TypeError("Positive integer value expected in function permutations");
+			if (k.gt(n)) throw new TypeError("second argument k must be less than or equal to first argument n");
+			result = n.mul(0).add(1);
+			for (i = n.minus(k).plus(1); i.lte(n); i = i.plus(1)) result = result.times(i);
+			return result;
+		}
+	});
+});
+/**
+* Test whether BigNumber n is a positive integer
+* @param {BigNumber} n
+* @returns {boolean} isPositiveInteger
+*/
+function isPositiveInteger(n) {
+	return n.isInteger() && n.gte(0);
+}
+//#endregion
+//#region node_modules/seedrandom/lib/alea.js
+var require_alea = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	(function(global, module$6, define) {
+		function Alea(seed) {
+			var me = this, mash = Mash();
+			me.next = function() {
+				var t = 2091639 * me.s0 + me.c * 23283064365386963e-26;
+				me.s0 = me.s1;
+				me.s1 = me.s2;
+				return me.s2 = t - (me.c = t | 0);
+			};
+			me.c = 1;
+			me.s0 = mash(" ");
+			me.s1 = mash(" ");
+			me.s2 = mash(" ");
+			me.s0 -= mash(seed);
+			if (me.s0 < 0) me.s0 += 1;
+			me.s1 -= mash(seed);
+			if (me.s1 < 0) me.s1 += 1;
+			me.s2 -= mash(seed);
+			if (me.s2 < 0) me.s2 += 1;
+			mash = null;
+		}
+		function copy(f, t) {
+			t.c = f.c;
+			t.s0 = f.s0;
+			t.s1 = f.s1;
+			t.s2 = f.s2;
+			return t;
+		}
+		function impl(seed, opts) {
+			var xg = new Alea(seed), state = opts && opts.state, prng = xg.next;
+			prng.int32 = function() {
+				return xg.next() * 4294967296 | 0;
+			};
+			prng.double = function() {
+				return prng() + (prng() * 2097152 | 0) * 11102230246251565e-32;
+			};
+			prng.quick = prng;
+			if (state) {
+				if (typeof state == "object") copy(state, xg);
+				prng.state = function() {
+					return copy(xg, {});
+				};
+			}
+			return prng;
+		}
+		function Mash() {
+			var n = 4022871197;
+			var mash = function(data) {
+				data = String(data);
+				for (var i = 0; i < data.length; i++) {
+					n += data.charCodeAt(i);
+					var h = .02519603282416938 * n;
+					n = h >>> 0;
+					h -= n;
+					h *= n;
+					n = h >>> 0;
+					h -= n;
+					n += h * 4294967296;
+				}
+				return (n >>> 0) * 23283064365386963e-26;
+			};
+			return mash;
+		}
+		if (module$6 && module$6.exports) module$6.exports = impl;
+		else if (define && define.amd) define(function() {
+			return impl;
+		});
+		else this.alea = impl;
+	})(exports, typeof module == "object" && module, typeof define == "function" && define);
+}));
+//#endregion
+//#region node_modules/seedrandom/lib/xor128.js
+var require_xor128 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	(function(global, module$5, define) {
+		function XorGen(seed) {
+			var me = this, strseed = "";
+			me.x = 0;
+			me.y = 0;
+			me.z = 0;
+			me.w = 0;
+			me.next = function() {
+				var t = me.x ^ me.x << 11;
+				me.x = me.y;
+				me.y = me.z;
+				me.z = me.w;
+				return me.w ^= me.w >>> 19 ^ t ^ t >>> 8;
+			};
+			if (seed === (seed | 0)) me.x = seed;
+			else strseed += seed;
+			for (var k = 0; k < strseed.length + 64; k++) {
+				me.x ^= strseed.charCodeAt(k) | 0;
+				me.next();
+			}
+		}
+		function copy(f, t) {
+			t.x = f.x;
+			t.y = f.y;
+			t.z = f.z;
+			t.w = f.w;
+			return t;
+		}
+		function impl(seed, opts) {
+			var xg = new XorGen(seed), state = opts && opts.state, prng = function() {
+				return (xg.next() >>> 0) / 4294967296;
+			};
+			prng.double = function() {
+				do
+					var result = ((xg.next() >>> 11) + (xg.next() >>> 0) / 4294967296) / (1 << 21);
+				while (result === 0);
+				return result;
+			};
+			prng.int32 = xg.next;
+			prng.quick = prng;
+			if (state) {
+				if (typeof state == "object") copy(state, xg);
+				prng.state = function() {
+					return copy(xg, {});
+				};
+			}
+			return prng;
+		}
+		if (module$5 && module$5.exports) module$5.exports = impl;
+		else if (define && define.amd) define(function() {
+			return impl;
+		});
+		else this.xor128 = impl;
+	})(exports, typeof module == "object" && module, typeof define == "function" && define);
+}));
+//#endregion
+//#region node_modules/seedrandom/lib/xorwow.js
+var require_xorwow = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	(function(global, module$4, define) {
+		function XorGen(seed) {
+			var me = this, strseed = "";
+			me.next = function() {
+				var t = me.x ^ me.x >>> 2;
+				me.x = me.y;
+				me.y = me.z;
+				me.z = me.w;
+				me.w = me.v;
+				return (me.d = me.d + 362437 | 0) + (me.v = me.v ^ me.v << 4 ^ (t ^ t << 1)) | 0;
+			};
+			me.x = 0;
+			me.y = 0;
+			me.z = 0;
+			me.w = 0;
+			me.v = 0;
+			if (seed === (seed | 0)) me.x = seed;
+			else strseed += seed;
+			for (var k = 0; k < strseed.length + 64; k++) {
+				me.x ^= strseed.charCodeAt(k) | 0;
+				if (k == strseed.length) me.d = me.x << 10 ^ me.x >>> 4;
+				me.next();
+			}
+		}
+		function copy(f, t) {
+			t.x = f.x;
+			t.y = f.y;
+			t.z = f.z;
+			t.w = f.w;
+			t.v = f.v;
+			t.d = f.d;
+			return t;
+		}
+		function impl(seed, opts) {
+			var xg = new XorGen(seed), state = opts && opts.state, prng = function() {
+				return (xg.next() >>> 0) / 4294967296;
+			};
+			prng.double = function() {
+				do
+					var result = ((xg.next() >>> 11) + (xg.next() >>> 0) / 4294967296) / (1 << 21);
+				while (result === 0);
+				return result;
+			};
+			prng.int32 = xg.next;
+			prng.quick = prng;
+			if (state) {
+				if (typeof state == "object") copy(state, xg);
+				prng.state = function() {
+					return copy(xg, {});
+				};
+			}
+			return prng;
+		}
+		if (module$4 && module$4.exports) module$4.exports = impl;
+		else if (define && define.amd) define(function() {
+			return impl;
+		});
+		else this.xorwow = impl;
+	})(exports, typeof module == "object" && module, typeof define == "function" && define);
+}));
+//#endregion
+//#region node_modules/seedrandom/lib/xorshift7.js
+var require_xorshift7 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	(function(global, module$3, define) {
+		function XorGen(seed) {
+			var me = this;
+			me.next = function() {
+				var X = me.x, i = me.i, t = X[i], v;
+				t ^= t >>> 7;
+				v = t ^ t << 24;
+				t = X[i + 1 & 7];
+				v ^= t ^ t >>> 10;
+				t = X[i + 3 & 7];
+				v ^= t ^ t >>> 3;
+				t = X[i + 4 & 7];
+				v ^= t ^ t << 7;
+				t = X[i + 7 & 7];
+				t = t ^ t << 13;
+				v ^= t ^ t << 9;
+				X[i] = v;
+				me.i = i + 1 & 7;
+				return v;
+			};
+			function init(me, seed) {
+				var j, X = [];
+				if (seed === (seed | 0)) X[0] = seed;
+				else {
+					seed = "" + seed;
+					for (j = 0; j < seed.length; ++j) X[j & 7] = X[j & 7] << 15 ^ seed.charCodeAt(j) + X[j + 1 & 7] << 13;
+				}
+				while (X.length < 8) X.push(0);
+				for (j = 0; j < 8 && X[j] === 0; ++j);
+				if (j == 8) X[7] = -1;
+				else X[j];
+				me.x = X;
+				me.i = 0;
+				for (j = 256; j > 0; --j) me.next();
+			}
+			init(me, seed);
+		}
+		function copy(f, t) {
+			t.x = f.x.slice();
+			t.i = f.i;
+			return t;
+		}
+		function impl(seed, opts) {
+			if (seed == null) seed = +/* @__PURE__ */ new Date();
+			var xg = new XorGen(seed), state = opts && opts.state, prng = function() {
+				return (xg.next() >>> 0) / 4294967296;
+			};
+			prng.double = function() {
+				do
+					var result = ((xg.next() >>> 11) + (xg.next() >>> 0) / 4294967296) / (1 << 21);
+				while (result === 0);
+				return result;
+			};
+			prng.int32 = xg.next;
+			prng.quick = prng;
+			if (state) {
+				if (state.x) copy(state, xg);
+				prng.state = function() {
+					return copy(xg, {});
+				};
+			}
+			return prng;
+		}
+		if (module$3 && module$3.exports) module$3.exports = impl;
+		else if (define && define.amd) define(function() {
+			return impl;
+		});
+		else this.xorshift7 = impl;
+	})(exports, typeof module == "object" && module, typeof define == "function" && define);
+}));
+//#endregion
+//#region node_modules/seedrandom/lib/xor4096.js
+var require_xor4096 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	(function(global, module$2, define) {
+		function XorGen(seed) {
+			var me = this;
+			me.next = function() {
+				var w = me.w, X = me.X, i = me.i, t, v;
+				me.w = w = w + 1640531527 | 0;
+				v = X[i + 34 & 127];
+				t = X[i = i + 1 & 127];
+				v ^= v << 13;
+				t ^= t << 17;
+				v ^= v >>> 15;
+				t ^= t >>> 12;
+				v = X[i] = v ^ t;
+				me.i = i;
+				return v + (w ^ w >>> 16) | 0;
+			};
+			function init(me, seed) {
+				var t, v, i, j, w, X = [], limit = 128;
+				if (seed === (seed | 0)) {
+					v = seed;
+					seed = null;
+				} else {
+					seed = seed + "\0";
+					v = 0;
+					limit = Math.max(limit, seed.length);
+				}
+				for (i = 0, j = -32; j < limit; ++j) {
+					if (seed) v ^= seed.charCodeAt((j + 32) % seed.length);
+					if (j === 0) w = v;
+					v ^= v << 10;
+					v ^= v >>> 15;
+					v ^= v << 4;
+					v ^= v >>> 13;
+					if (j >= 0) {
+						w = w + 1640531527 | 0;
+						t = X[j & 127] ^= v + w;
+						i = 0 == t ? i + 1 : 0;
+					}
+				}
+				if (i >= 128) X[(seed && seed.length || 0) & 127] = -1;
+				i = 127;
+				for (j = 512; j > 0; --j) {
+					v = X[i + 34 & 127];
+					t = X[i = i + 1 & 127];
+					v ^= v << 13;
+					t ^= t << 17;
+					v ^= v >>> 15;
+					t ^= t >>> 12;
+					X[i] = v ^ t;
+				}
+				me.w = w;
+				me.X = X;
+				me.i = i;
+			}
+			init(me, seed);
+		}
+		function copy(f, t) {
+			t.i = f.i;
+			t.w = f.w;
+			t.X = f.X.slice();
+			return t;
+		}
+		function impl(seed, opts) {
+			if (seed == null) seed = +/* @__PURE__ */ new Date();
+			var xg = new XorGen(seed), state = opts && opts.state, prng = function() {
+				return (xg.next() >>> 0) / 4294967296;
+			};
+			prng.double = function() {
+				do
+					var result = ((xg.next() >>> 11) + (xg.next() >>> 0) / 4294967296) / (1 << 21);
+				while (result === 0);
+				return result;
+			};
+			prng.int32 = xg.next;
+			prng.quick = prng;
+			if (state) {
+				if (state.X) copy(state, xg);
+				prng.state = function() {
+					return copy(xg, {});
+				};
+			}
+			return prng;
+		}
+		if (module$2 && module$2.exports) module$2.exports = impl;
+		else if (define && define.amd) define(function() {
+			return impl;
+		});
+		else this.xor4096 = impl;
+	})(exports, typeof module == "object" && module, typeof define == "function" && define);
+}));
+//#endregion
+//#region node_modules/seedrandom/lib/tychei.js
+var require_tychei = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	(function(global, module$1, define) {
+		function XorGen(seed) {
+			var me = this, strseed = "";
+			me.next = function() {
+				var b = me.b, c = me.c, d = me.d, a = me.a;
+				b = b << 25 ^ b >>> 7 ^ c;
+				c = c - d | 0;
+				d = d << 24 ^ d >>> 8 ^ a;
+				a = a - b | 0;
+				me.b = b = b << 20 ^ b >>> 12 ^ c;
+				me.c = c = c - d | 0;
+				me.d = d << 16 ^ c >>> 16 ^ a;
+				return me.a = a - b | 0;
+			};
+			me.a = 0;
+			me.b = 0;
+			me.c = -1640531527;
+			me.d = 1367130551;
+			if (seed === Math.floor(seed)) {
+				me.a = seed / 4294967296 | 0;
+				me.b = seed | 0;
+			} else strseed += seed;
+			for (var k = 0; k < strseed.length + 20; k++) {
+				me.b ^= strseed.charCodeAt(k) | 0;
+				me.next();
+			}
+		}
+		function copy(f, t) {
+			t.a = f.a;
+			t.b = f.b;
+			t.c = f.c;
+			t.d = f.d;
+			return t;
+		}
+		function impl(seed, opts) {
+			var xg = new XorGen(seed), state = opts && opts.state, prng = function() {
+				return (xg.next() >>> 0) / 4294967296;
+			};
+			prng.double = function() {
+				do
+					var result = ((xg.next() >>> 11) + (xg.next() >>> 0) / 4294967296) / (1 << 21);
+				while (result === 0);
+				return result;
+			};
+			prng.int32 = xg.next;
+			prng.quick = prng;
+			if (state) {
+				if (typeof state == "object") copy(state, xg);
+				prng.state = function() {
+					return copy(xg, {});
+				};
+			}
+			return prng;
+		}
+		if (module$1 && module$1.exports) module$1.exports = impl;
+		else if (define && define.amd) define(function() {
+			return impl;
+		});
+		else this.tychei = impl;
+	})(exports, typeof module == "object" && module, typeof define == "function" && define);
+}));
+//#endregion
+//#region node_modules/seedrandom/seedrandom.js
+var require_seedrandom$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	(function(global, pool, math) {
+		var width = 256, chunks = 6, digits = 52, rngname = "random", startdenom = math.pow(width, chunks), significance = math.pow(2, digits), overflow = significance * 2, mask = width - 1, nodecrypto;
+		function seedrandom(seed, options, callback) {
+			var key = [];
+			options = options == true ? { entropy: true } : options || {};
+			var shortseed = mixkey(flatten(options.entropy ? [seed, tostring(pool)] : seed == null ? autoseed() : seed, 3), key);
+			var arc4 = new ARC4(key);
+			var prng = function() {
+				var n = arc4.g(chunks), d = startdenom, x = 0;
+				while (n < significance) {
+					n = (n + x) * width;
+					d *= width;
+					x = arc4.g(1);
+				}
+				while (n >= overflow) {
+					n /= 2;
+					d /= 2;
+					x >>>= 1;
+				}
+				return (n + x) / d;
+			};
+			prng.int32 = function() {
+				return arc4.g(4) | 0;
+			};
+			prng.quick = function() {
+				return arc4.g(4) / 4294967296;
+			};
+			prng.double = prng;
+			mixkey(tostring(arc4.S), pool);
+			return (options.pass || callback || function(prng, seed, is_math_call, state) {
+				if (state) {
+					if (state.S) copy(state, arc4);
+					prng.state = function() {
+						return copy(arc4, {});
+					};
+				}
+				if (is_math_call) {
+					math[rngname] = prng;
+					return seed;
+				} else return prng;
+			})(prng, shortseed, "global" in options ? options.global : this == math, options.state);
+		}
+		function ARC4(key) {
+			var t, keylen = key.length, me = this, i = 0, j = me.i = me.j = 0, s = me.S = [];
+			if (!keylen) key = [keylen++];
+			while (i < width) s[i] = i++;
+			for (i = 0; i < width; i++) {
+				s[i] = s[j = mask & j + key[i % keylen] + (t = s[i])];
+				s[j] = t;
+			}
+			(me.g = function(count) {
+				var t, r = 0, i = me.i, j = me.j, s = me.S;
+				while (count--) {
+					t = s[i = mask & i + 1];
+					r = r * width + s[mask & (s[i] = s[j = mask & j + t]) + (s[j] = t)];
+				}
+				me.i = i;
+				me.j = j;
+				return r;
+			})(width);
+		}
+		function copy(f, t) {
+			t.i = f.i;
+			t.j = f.j;
+			t.S = f.S.slice();
+			return t;
+		}
+		function flatten(obj, depth) {
+			var result = [], typ = typeof obj, prop;
+			if (depth && typ == "object") for (prop in obj) try {
+				result.push(flatten(obj[prop], depth - 1));
+			} catch (e) {}
+			return result.length ? result : typ == "string" ? obj : obj + "\0";
+		}
+		function mixkey(seed, key) {
+			var stringseed = seed + "", smear, j = 0;
+			while (j < stringseed.length) key[mask & j] = mask & (smear ^= key[mask & j] * 19) + stringseed.charCodeAt(j++);
+			return tostring(key);
+		}
+		function autoseed() {
+			try {
+				var out;
+				if (nodecrypto && (out = nodecrypto.randomBytes)) out = out(width);
+				else {
+					out = new Uint8Array(width);
+					(global.crypto || global.msCrypto).getRandomValues(out);
+				}
+				return tostring(out);
+			} catch (e) {
+				var browser = global.navigator, plugins = browser && browser.plugins;
+				return [
+					+/* @__PURE__ */ new Date(),
+					global,
+					plugins,
+					global.screen,
+					tostring(pool)
+				];
+			}
+		}
+		function tostring(a) {
+			return String.fromCharCode.apply(0, a);
+		}
+		mixkey(math.random(), pool);
+		if (typeof module == "object" && module.exports) {
+			module.exports = seedrandom;
+			try {
+				nodecrypto = require___vite_browser_external();
+			} catch (ex) {}
+		} else if (typeof define == "function" && define.amd) define(function() {
+			return seedrandom;
+		});
+		else math["seed" + rngname] = seedrandom;
+	})(typeof self !== "undefined" ? self : exports, [], Math);
+}));
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/probability/util/seededRNG.js
+var import_seedrandom = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
+	var alea = require_alea();
+	var xor128 = require_xor128();
+	var xorwow = require_xorwow();
+	var xorshift7 = require_xorshift7();
+	var xor4096 = require_xor4096();
+	var tychei = require_tychei();
+	var sr = require_seedrandom$1();
+	sr.alea = alea;
+	sr.xor128 = xor128;
+	sr.xorwow = xorwow;
+	sr.xorshift7 = xorshift7;
+	sr.xor4096 = xor4096;
+	sr.tychei = tychei;
+	module.exports = sr;
+})))(), 1);
+var singletonRandom = /* @__PURE__ */ (0, import_seedrandom.default)(Date.now());
+function createRng(randomSeed) {
+	var random;
+	function setSeed(seed) {
+		random = seed === null ? singletonRandom : (0, import_seedrandom.default)(String(seed));
+	}
+	setSeed(randomSeed);
+	function rng() {
+		return random();
+	}
+	return rng;
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/probability/pickRandom.js
+var name$54 = "pickRandom";
+var createPickRandom = /* @__PURE__ */ factory(name$54, [
+	"typed",
+	"config",
+	"?on"
+], (_ref) => {
+	var { typed, config, on } = _ref;
+	var rng = createRng(config.randomSeed);
+	if (on) on("config", function(curr, prev) {
+		if (curr.randomSeed !== prev.randomSeed) rng = createRng(curr.randomSeed);
+	});
+	/**
+	* Random pick one or more values from a one dimensional array.
+	* Array elements are picked using a random function with uniform or weighted distribution.
+	*
+	* Syntax:
+	*
+	*     math.pickRandom(array)
+	*     math.pickRandom(array, number)
+	*     math.pickRandom(array, weights)
+	*     math.pickRandom(array, number, weights)
+	*     math.pickRandom(array, weights, number)
+	*     math.pickRandom(array, { weights, number, elementWise })
+	*
+	* Examples:
+	*
+	*     math.pickRandom([3, 6, 12, 2])                  // returns one of the values in the array
+	*     math.pickRandom([3, 6, 12, 2], 2)               // returns an array of two of the values in the array
+	*     math.pickRandom([3, 6, 12, 2], { number: 2 })   // returns an array of two of the values in the array
+	*     math.pickRandom([3, 6, 12, 2], [1, 3, 2, 1])    // returns one of the values in the array with weighted distribution
+	*     math.pickRandom([3, 6, 12, 2], 2, [1, 3, 2, 1]) // returns an array of two of the values in the array with weighted distribution
+	*     math.pickRandom([3, 6, 12, 2], [1, 3, 2, 1], 2) // returns an array of two of the values in the array with weighted distribution
+	*
+	*     math.pickRandom([{x: 1.0, y: 2.0}, {x: 1.1, y: 2.0}], { elementWise: false })
+	*         // returns one of the items in the array
+	*
+	* See also:
+	*
+	*     random, randomInt
+	*
+	* @param {Array | Matrix} array     A one dimensional array
+	* @param {Int} number               An int or float
+	* @param {Array | Matrix} weights   An array of ints or floats
+	* @return {number | Array}          Returns a single random value from array when number is undefined.
+	*                                   Returns an array with the configured number of elements when number is defined.
+	*/
+	return typed(name$54, {
+		"Array | Matrix": function Array__Matrix(possibles) {
+			return _pickRandom(possibles, {});
+		},
+		"Array | Matrix, Object": function Array__Matrix_Object(possibles, options) {
+			return _pickRandom(possibles, options);
+		},
+		"Array | Matrix, number": function Array__Matrix_number(possibles, number) {
+			return _pickRandom(possibles, { number });
+		},
+		"Array | Matrix, Array | Matrix": function Array__Matrix_Array__Matrix(possibles, weights) {
+			return _pickRandom(possibles, { weights });
+		},
+		"Array | Matrix, Array | Matrix, number": function Array__Matrix_Array__Matrix_number(possibles, weights, number) {
+			return _pickRandom(possibles, {
+				number,
+				weights
+			});
+		},
+		"Array | Matrix, number, Array | Matrix": function Array__Matrix_number_Array__Matrix(possibles, number, weights) {
+			return _pickRandom(possibles, {
+				number,
+				weights
+			});
+		}
+	});
+	/**
+	* @param {Array | Matrix} possibles
+	* @param {{
+	*   number?: number,
+	*   weights?: Array | Matrix,
+	*   elementWise: boolean
+	* }} options
+	* @returns {number | Array}
+	* @private
+	*/
+	function _pickRandom(possibles, _ref2) {
+		var { number, weights, elementWise = true } = _ref2;
+		var single = typeof number === "undefined";
+		if (single) number = 1;
+		var createMatrix = isMatrix(possibles) ? possibles.create : isMatrix(weights) ? weights.create : null;
+		possibles = possibles.valueOf();
+		if (weights) weights = weights.valueOf();
+		if (elementWise === true) {
+			possibles = flatten(possibles);
+			weights = flatten(weights);
+		}
+		var totalWeights = 0;
+		if (typeof weights !== "undefined") {
+			if (weights.length !== possibles.length) throw new Error("Weights must have the same length as possibles");
+			for (var i = 0, len = weights.length; i < len; i++) {
+				if (!isNumber(weights[i]) || weights[i] < 0) throw new Error("Weights must be an array of positive numbers");
+				totalWeights += weights[i];
+			}
+		}
+		var length = possibles.length;
+		var result = [];
+		var pick;
+		while (result.length < number) {
+			if (typeof weights === "undefined") pick = possibles[Math.floor(rng() * length)];
+			else {
+				var randKey = rng() * totalWeights;
+				for (var _i = 0, _len = possibles.length; _i < _len; _i++) {
+					randKey -= weights[_i];
+					if (randKey < 0) {
+						pick = possibles[_i];
+						break;
+					}
+				}
+			}
+			result.push(pick);
+		}
+		return single ? result[0] : createMatrix ? createMatrix(result) : result;
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/probability/util/randomMatrix.js
+/**
+* This is a util function for generating a random matrix recursively.
+* @param {number[]} size
+* @param {function} random
+* @returns {Array}
+*/
+function randomMatrix(size, random) {
+	var data = [];
+	size = size.slice(0);
+	if (size.length > 1) for (var i = 0, length = size.shift(); i < length; i++) data.push(randomMatrix(size, random));
+	else for (var _i = 0, _length = size.shift(); _i < _length; _i++) data.push(random());
+	return data;
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/probability/random.js
+var name$53 = "random";
+var createRandomNumber = /* @__PURE__ */ factory(name$53, [
+	"typed",
+	"config",
+	"?on"
+], (_ref2) => {
+	var { typed, config, on, matrix } = _ref2;
+	var rng = createRng(config.randomSeed);
+	if (on) on("config", function(curr, prev) {
+		if (curr.randomSeed !== prev.randomSeed) rng = createRng(curr.randomSeed);
+	});
+	return typed(name$53, {
+		"": () => _random(0, 1),
+		number: (max) => _random(0, max),
+		"number, number": (min, max) => _random(min, max)
+	});
+	function _random(min, max) {
+		return min + rng() * (max - min);
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/probability/randomInt.js
+var name$52 = "randomInt";
+var createRandomInt = /* @__PURE__ */ factory(name$52, [
+	"typed",
+	"config",
+	"log2",
+	"?on"
+], (_ref) => {
+	var { typed, config, log2, on } = _ref;
+	var rng = createRng(config.randomSeed);
+	if (on) on("config", function(curr, prev) {
+		if (curr.randomSeed !== prev.randomSeed) rng = createRng(curr.randomSeed);
+	});
+	/**
+	* Return a random integer number larger or equal to `min` and smaller than `max`
+	* using a uniform distribution.
+	*
+	* Syntax:
+	*
+	*     math.randomInt()                // generate either 0 or 1, randomly
+	*     math.randomInt(max)             // generate a random integer between 0 and max
+	*     math.randomInt(min, max)        // generate a random integer between min and max
+	*     math.randomInt(size)            // generate a matrix with random integer between 0 and 1
+	*     math.randomInt(size, max)       // generate a matrix with random integer between 0 and max
+	*     math.randomInt(size, min, max)  // generate a matrix with random integer between min and max
+	*
+	* Examples:
+	*
+	*     math.randomInt(100)    // returns a random integer between 0 and 100
+	*     math.randomInt(30, 40) // returns a random integer between 30 and 40
+	*     math.randomInt([2, 3]) // returns a 2x3 matrix with random integers between 0 and 1
+	*
+	* See also:
+	*
+	*     random, pickRandom
+	*
+	* @param {Array | Matrix} [size] If provided, an array or matrix with given
+	*                                size and filled with random values is returned
+	* @param {number} [min]  Minimum boundary for the random value, included
+	* @param {number} [max]  Maximum boundary for the random value, excluded
+	* @return {number | Array | Matrix} A random integer value
+	*/
+	return typed(name$52, {
+		"": () => _randomInt(0, 2),
+		number: (max) => _randomInt(0, max),
+		"number, number": (min, max) => _randomInt(min, max),
+		bigint: (max) => _randomBigint(0n, max),
+		"bigint, bigint": _randomBigint,
+		"Array | Matrix": (size) => _randomIntMatrix(size, 0, 1),
+		"Array | Matrix, number": (size, max) => _randomIntMatrix(size, 0, max),
+		"Array | Matrix, number, number": (size, min, max) => _randomIntMatrix(size, min, max)
+	});
+	function _randomIntMatrix(size, min, max) {
+		var res = randomMatrix(size.valueOf(), () => _randomInt(min, max));
+		return isMatrix(size) ? size.create(res, "number") : res;
+	}
+	function _randomInt(min, max) {
+		return Math.floor(min + rng() * (max - min));
+	}
+	function _randomBigint(min, max) {
+		var simpleCutoff = 2n ** 30n;
+		var width = max - min;
+		if (width <= simpleCutoff) return min + BigInt(_randomInt(0, Number(width)));
+		var bits = log2(width);
+		var picked = width;
+		while (picked >= width) {
+			picked = 0n;
+			for (var i = 0; i < bits; ++i) picked = 2n * picked + (rng() < .5 ? 0n : 1n);
+		}
+		return min + picked;
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/relational/equalScalar.js
+var name$51 = "equalScalar";
+var createEqualScalarNumber = factory(name$51, ["typed", "config"], (_ref2) => {
+	var { typed, config } = _ref2;
+	return typed(name$51, { "number, number": function number_number(x, y) {
+		return nearlyEqual(x, y, config.relTol, config.absTol);
+	} });
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/relational/compare.js
+var name$50 = "compare";
+var createCompareNumber = /* @__PURE__ */ factory(name$50, ["typed", "config"], (_ref2) => {
+	var { typed, config } = _ref2;
+	return typed(name$50, { "number, number": function number_number(x, y) {
+		return nearlyEqual(x, y, config.relTol, config.absTol) ? 0 : x > y ? 1 : -1;
+	} });
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/relational/compareNatural.js
+var import_naturalSort = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
+	module.exports = function naturalSort(a, b) {
+		"use strict";
+		var re = /(^([+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?)?$|^0x[0-9a-f]+$|\d+)/gi, sre = /(^[ ]*|[ ]*$)/g, dre = /(^([\w ]+,?[\w ]+)?[\w ]+,?[\w ]+\d+:\d+(:\d+)?[\w ]?|^\d{1,4}[\/\-]\d{1,4}[\/\-]\d{1,4}|^\w+, \w+ \d+, \d{4})/, hre = /^0x[0-9a-f]+$/i, ore = /^0/, i = function(s) {
+			return naturalSort.insensitive && ("" + s).toLowerCase() || "" + s;
+		}, x = i(a).replace(sre, "") || "", y = i(b).replace(sre, "") || "", xN = x.replace(re, "\0$1\0").replace(/\0$/, "").replace(/^\0/, "").split("\0"), yN = y.replace(re, "\0$1\0").replace(/\0$/, "").replace(/^\0/, "").split("\0"), xD = parseInt(x.match(hre), 16) || xN.length !== 1 && x.match(dre) && Date.parse(x), yD = parseInt(y.match(hre), 16) || xD && y.match(dre) && Date.parse(y) || null, oFxNcL, oFyNcL;
+		if (yD) {
+			if (xD < yD) return -1;
+			else if (xD > yD) return 1;
+		}
+		for (var cLoc = 0, numS = Math.max(xN.length, yN.length); cLoc < numS; cLoc++) {
+			oFxNcL = !(xN[cLoc] || "").match(ore) && parseFloat(xN[cLoc]) || xN[cLoc] || 0;
+			oFyNcL = !(yN[cLoc] || "").match(ore) && parseFloat(yN[cLoc]) || yN[cLoc] || 0;
+			if (isNaN(oFxNcL) !== isNaN(oFyNcL)) return isNaN(oFxNcL) ? 1 : -1;
+			else if (typeof oFxNcL !== typeof oFyNcL) {
+				oFxNcL += "";
+				oFyNcL += "";
+			}
+			if (oFxNcL < oFyNcL) return -1;
+			if (oFxNcL > oFyNcL) return 1;
+		}
+		return 0;
+	};
+})))(), 1);
+var name$49 = "compareNatural";
+var createCompareNatural = /* @__PURE__ */ factory(name$49, ["typed", "compare"], (_ref) => {
+	var { typed, compare } = _ref;
+	var compareBooleans = compare.signatures["boolean,boolean"];
+	/**
+	* Compare two values of any type in a deterministic, natural way.
+	*
+	* For numeric values, the function works the same as `math.compare`.
+	* For types of values that can't be compared mathematically,
+	* the function compares in a natural way.
+	*
+	* For numeric values, x and y are considered equal when the relative
+	* difference between x and y is smaller than the configured relTol and absTol.
+	* The function cannot be used to compare values smaller than
+	* approximately 2.22e-16.
+	*
+	* For Complex numbers, first the real parts are compared. If equal,
+	* the imaginary parts are compared.
+	*
+	* Strings are compared with a natural sorting algorithm, which
+	* orders strings in a "logic" way following some heuristics.
+	* This differs from the function `compare`, which converts the string
+	* into a numeric value and compares that. The function `compareText`
+	* on the other hand compares text lexically.
+	*
+	* Arrays and Matrices are compared value by value until there is an
+	* unequal pair of values encountered. Objects are compared by sorted
+	* keys until the keys or their values are unequal.
+	*
+	* Syntax:
+	*
+	*    math.compareNatural(x, y)
+	*
+	* Examples:
+	*
+	*    math.compareNatural(6, 1)              // returns 1
+	*    math.compareNatural(2, 3)              // returns -1
+	*    math.compareNatural(7, 7)              // returns 0
+	*
+	*    math.compareNatural('10', '2')         // returns 1
+	*    math.compareText('10', '2')            // returns -1
+	*    math.compare('10', '2')                // returns 1
+	*
+	*    math.compareNatural('Answer: 10', 'Answer: 2') // returns 1
+	*    math.compareText('Answer: 10', 'Answer: 2')    // returns -1
+	*    math.compare('Answer: 10', 'Answer: 2')
+	*    // Error: Cannot convert "Answer: 10" to a number
+	*
+	*    const a = math.unit('5 cm')
+	*    const b = math.unit('40 mm')
+	*    math.compareNatural(a, b)              // returns 1
+	*
+	*    const c = math.complex('2 + 3i')
+	*    const d = math.complex('2 + 4i')
+	*    math.compareNatural(c, d)              // returns -1
+	*
+	*    math.compareNatural([1, 2, 4], [1, 2, 3]) // returns 1
+	*    math.compareNatural([1, 2, 3], [1, 2])    // returns 1
+	*    math.compareNatural([1, 5], [1, 2, 3])    // returns 1
+	*    math.compareNatural([1, 2], [1, 2])       // returns 0
+	*
+	*    math.compareNatural({a: 2}, {a: 4})       // returns -1
+	*
+	* See also:
+	*
+	*    compare, compareText
+	*
+	* History:
+	*
+	*     v15.2   Handle bigints
+	*     v3.14   Created
+	*
+	*
+	* @param  {*} x First value to compare
+	* @param  {*} y Second value to compare
+	* @return {number} Returns the result of the comparison:
+	*                  1 when x > y, -1 when x < y, and 0 when x == y.
+	*/
+	return typed(name$49, { "any, any": _compareNatural });
+	function _compareNatural(x, y) {
+		var typeX = typeOf$1(x);
+		var typeY = typeOf$1(y);
+		var c;
+		if ((typeX === "number" || typeX === "BigNumber" || typeX === "Fraction" || typeX === "bigint") && (typeY === "number" || typeY === "BigNumber" || typeY === "Fraction" || typeY === "bigint")) {
+			c = compare(x, y);
+			if (c.toString() !== "0") return c > 0 ? 1 : -1;
+			else return (0, import_naturalSort.default)(typeX, typeY);
+		}
+		var matTypes = [
+			"Array",
+			"DenseMatrix",
+			"SparseMatrix"
+		];
+		if (matTypes.includes(typeX) || matTypes.includes(typeY)) {
+			c = compareMatricesAndArrays(_compareNatural, x, y);
+			if (c !== 0) return c;
+			else return (0, import_naturalSort.default)(typeX, typeY);
+		}
+		if (typeX !== typeY) return (0, import_naturalSort.default)(typeX, typeY);
+		if (typeX === "Complex") return compareComplexNumbers(x, y);
+		if (typeX === "Unit") {
+			if (x.equalBase(y)) return _compareNatural(x.value, y.value);
+			return compareArrays(_compareNatural, x.formatUnits(), y.formatUnits());
+		}
+		if (typeX === "boolean") return compareBooleans(x, y);
+		if (typeX === "string") return (0, import_naturalSort.default)(x, y);
+		if (typeX === "Object") return compareObjects(_compareNatural, x, y);
+		if (typeX === "null") return 0;
+		if (typeX === "undefined") return 0;
+		throw new TypeError("Unsupported type of value \"" + typeX + "\"");
+	}
+	/**
+	* Compare mixed matrix/array types, by converting to same-shaped array.
+	* This comparator is non-deterministic regarding input types.
+	* @param {Array | SparseMatrix | DenseMatrix | *} x
+	* @param {Array | SparseMatrix | DenseMatrix | *} y
+	* @returns {number} Returns the comparison result: -1, 0, or 1
+	*/
+	function compareMatricesAndArrays(compareNatural, x, y) {
+		if (isSparseMatrix(x) && isSparseMatrix(y)) return compareArrays(compareNatural, x.toJSON().values, y.toJSON().values);
+		if (isSparseMatrix(x)) return compareMatricesAndArrays(compareNatural, x.toArray(), y);
+		if (isSparseMatrix(y)) return compareMatricesAndArrays(compareNatural, x, y.toArray());
+		if (isDenseMatrix(x)) return compareMatricesAndArrays(compareNatural, x.toJSON().data, y);
+		if (isDenseMatrix(y)) return compareMatricesAndArrays(compareNatural, x, y.toJSON().data);
+		if (!Array.isArray(x)) return compareMatricesAndArrays(compareNatural, [x], y);
+		if (!Array.isArray(y)) return compareMatricesAndArrays(compareNatural, x, [y]);
+		return compareArrays(compareNatural, x, y);
+	}
+	/**
+	* Compare two Arrays
+	*
+	* - First, compares value by value
+	* - Next, if all corresponding values are equal,
+	*   look at the length: longest array will be considered largest
+	*
+	* @param {Array} x
+	* @param {Array} y
+	* @returns {number} Returns the comparison result: -1, 0, or 1
+	*/
+	function compareArrays(compareNatural, x, y) {
+		for (var i = 0, ii = Math.min(x.length, y.length); i < ii; i++) {
+			var v = compareNatural(x[i], y[i]);
+			if (v !== 0) return v;
+		}
+		if (x.length > y.length) return 1;
+		if (x.length < y.length) return -1;
+		return 0;
+	}
+	/**
+	* Compare two objects
+	*
+	* - First, compare sorted property names
+	* - Next, compare the property values
+	*
+	* @param {Object} x
+	* @param {Object} y
+	* @returns {number} Returns the comparison result: -1, 0, or 1
+	*/
+	function compareObjects(compareNatural, x, y) {
+		var keysX = Object.keys(x);
+		var keysY = Object.keys(y);
+		keysX.sort(import_naturalSort.default);
+		keysY.sort(import_naturalSort.default);
+		var c = compareArrays(compareNatural, keysX, keysY);
+		if (c !== 0) return c;
+		for (var i = 0; i < keysX.length; i++) {
+			var v = compareNatural(x[keysX[i]], y[keysY[i]]);
+			if (v !== 0) return v;
+		}
+		return 0;
+	}
+});
+/**
+* Compare two complex numbers, `x` and `y`:
+*
+* - First, compare the real values of `x` and `y`
+* - If equal, compare the imaginary values of `x` and `y`
+*
+* @params {Complex} x
+* @params {Complex} y
+* @returns {number} Returns the comparison result: -1, 0, or 1
+*/
+function compareComplexNumbers(x, y) {
+	if (x.re > y.re) return 1;
+	if (x.re < y.re) return -1;
+	if (x.im > y.im) return 1;
+	if (x.im < y.im) return -1;
+	return 0;
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/relational/compareText.js
+var name$48 = "compareText";
+compareText$1.signature = "any, any";
+var createCompareTextNumber = /* @__PURE__ */ factory(name$48, ["typed"], (_ref2) => {
+	var { typed } = _ref2;
+	return typed(name$48, compareText$1);
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/relational/equal.js
+var name$47 = "equal";
+var createEqualNumber = factory(name$47, ["typed", "equalScalar"], (_ref2) => {
+	var { typed, equalScalar } = _ref2;
+	return typed(name$47, { "any, any": function any_any(x, y) {
+		if (x === null) return y === null;
+		if (y === null) return x === null;
+		if (x === void 0) return y === void 0;
+		if (y === void 0) return x === void 0;
+		return equalScalar(x, y);
+	} });
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/relational/equalText.js
+var name$46 = "equalText";
+var createEqualText = /* @__PURE__ */ factory(name$46, [
+	"typed",
+	"compareText",
+	"isZero"
+], (_ref) => {
+	var { typed, compareText, isZero } = _ref;
+	/**
+	* Check equality of two strings. Comparison is case sensitive.
+	*
+	* For matrices, the function is evaluated element wise.
+	*
+	* Syntax:
+	*
+	*    math.equalText(x, y)
+	*
+	* Examples:
+	*
+	*    math.equalText('Hello', 'Hello')     // returns true
+	*    math.equalText('a', 'A')             // returns false
+	*    math.equal('2e3', '2000')            // returns true
+	*    math.equalText('2e3', '2000')        // returns false
+	*
+	*    math.equalText('B', ['A', 'B', 'C']) // returns [false, true, false]
+	*
+	* See also:
+	*
+	*    equal, compareText, compare, compareNatural
+	*
+	* @param  {string | Array | DenseMatrix} x First string to compare
+	* @param  {string | Array | DenseMatrix} y Second string to compare
+	* @return {number | Array | DenseMatrix} Returns true if the values are equal, and false if not.
+	*/
+	return typed(name$46, { "any, any": function any_any(x, y) {
+		return isZero(compareText(x, y));
+	} });
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/relational/smaller.js
+var name$45 = "smaller";
+var createSmallerNumber = /* @__PURE__ */ factory(name$45, ["typed", "config"], (_ref2) => {
+	var { typed, config } = _ref2;
+	return typed(name$45, { "number, number": function number_number(x, y) {
+		return x < y && !nearlyEqual(x, y, config.relTol, config.absTol);
+	} });
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/relational/smallerEq.js
+var name$44 = "smallerEq";
+var createSmallerEqNumber = /* @__PURE__ */ factory(name$44, ["typed", "config"], (_ref2) => {
+	var { typed, config } = _ref2;
+	return typed(name$44, { "number, number": function number_number(x, y) {
+		return x <= y || nearlyEqual(x, y, config.relTol, config.absTol);
+	} });
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/relational/larger.js
+var name$43 = "larger";
+var createLargerNumber = /* @__PURE__ */ factory(name$43, ["typed", "config"], (_ref2) => {
+	var { typed, config } = _ref2;
+	return typed(name$43, { "number, number": function number_number(x, y) {
+		return x > y && !nearlyEqual(x, y, config.relTol, config.absTol);
+	} });
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/relational/largerEq.js
+var name$42 = "largerEq";
+var createLargerEqNumber = /* @__PURE__ */ factory(name$42, ["typed", "config"], (_ref2) => {
+	var { typed, config } = _ref2;
+	return typed(name$42, { "number, number": function number_number(x, y) {
+		return x >= y || nearlyEqual(x, y, config.relTol, config.absTol);
+	} });
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/relational/deepEqual.js
+var name$41 = "deepEqual";
+var createDeepEqual = /* @__PURE__ */ factory(name$41, ["typed", "equal"], (_ref) => {
+	var { typed, equal } = _ref;
+	/**
+	* Test element wise whether two matrices are equal.
+	* The function accepts both matrices and scalar values.
+	*
+	* Strings are compared by their numerical value.
+	*
+	* Syntax:
+	*
+	*    math.deepEqual(x, y)
+	*
+	* Examples:
+	*
+	*    math.deepEqual(2, 4)   // returns false
+	*
+	*    const a = [2, 5, 1]
+	*    const b = [2, 7, 1]
+	*
+	*    math.deepEqual(a, b)   // returns false...
+	*    math.equal(a, b)       // returns [true, false, true]
+	*
+	* See also:
+	*
+	*    equal, unequal
+	*
+	* History:
+	*
+	*    v2     Handle Fractions
+	*    v0.2   Created
+	*
+	* @param  {number | BigNumber | Fraction | Complex | Unit | Array | Matrix} x First matrix to compare
+	* @param  {number | BigNumber | Fraction | Complex | Unit | Array | Matrix} y Second matrix to compare
+	* @return {number | BigNumber | Fraction | Complex | Unit | Array | Matrix}
+	*            Returns true when the input matrices have the same size and each of their elements is equal.
+	*/
+	return typed(name$41, { "any, any": function any_any(x, y) {
+		return _deepEqual(x.valueOf(), y.valueOf());
+	} });
+	/**
+	* Test whether two arrays have the same size and all elements are equal
+	* @param {Array | *} x
+	* @param {Array | *} y
+	* @return {boolean} Returns true if both arrays are deep equal
+	*/
+	function _deepEqual(x, y) {
+		if (Array.isArray(x)) if (Array.isArray(y)) {
+			var len = x.length;
+			if (len !== y.length) return false;
+			for (var i = 0; i < len; i++) if (!_deepEqual(x[i], y[i])) return false;
+			return true;
+		} else return false;
+		else if (Array.isArray(y)) return false;
+		else return equal(x, y);
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/relational/unequal.js
+var name$40 = "unequal";
+var createUnequalNumber = factory(name$40, ["typed", "equalScalar"], (_ref2) => {
+	var { typed, equalScalar } = _ref2;
+	return typed(name$40, { "any, any": function any_any(x, y) {
+		if (x === null) return y !== null;
+		if (y === null) return x !== null;
+		if (x === void 0) return y !== void 0;
+		if (y === void 0) return x !== void 0;
+		return !equalScalar(x, y);
+	} });
+});
+var createErf = /* @__PURE__ */ factory("erf", ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Compute the erf function of a value using a rational Chebyshev
+	* approximations for different intervals of x.
+	*
+	* This is a translation of W. J. Cody's Fortran implementation from 1987
+	* ( https://www.netlib.org/specfun/erf ). See the AMS publication
+	* "Rational Chebyshev Approximations for the Error Function" by W. J. Cody
+	* for an explanation of this process.
+	*
+	* For matrices, the function is evaluated element wise.
+	*
+	* Syntax:
+	*
+	*    math.erf(x)
+	*
+	* Examples:
+	*
+	*    math.erf(0.2)    // returns 0.22270258921047847
+	*    math.erf(-0.5)   // returns -0.5204998778130465
+	*    math.erf(4)      // returns 0.9999999845827421
+	*
+	* See also:
+	*    zeta
+	*
+	* @param {number | Array | Matrix} x   A real number
+	* @return {number | Array | Matrix}    The erf of `x`
+	*/
+	return typed("name", {
+		number: function number(x) {
+			var y = Math.abs(x);
+			if (y >= MAX_NUM) return sign$2(x);
+			if (y <= THRESH) return sign$2(x) * erf1(y);
+			if (y <= 4) return sign$2(x) * (1 - erfc2(y));
+			return sign$2(x) * (1 - erfc3(y));
+		},
+		"Array | Matrix": typed.referToSelf((self) => (n) => deepMap(n, self))
+	});
+	/**
+	* Approximates the error function erf() for x <= 0.46875 using this function:
+	*               n
+	* erf(x) = x * sum (p_j * x^(2j)) / (q_j * x^(2j))
+	*              j=0
+	*/
+	function erf1(y) {
+		var ysq = y * y;
+		var xnum = P[0][4] * ysq;
+		var xden = ysq;
+		var i;
+		for (i = 0; i < 3; i += 1) {
+			xnum = (xnum + P[0][i]) * ysq;
+			xden = (xden + Q[0][i]) * ysq;
+		}
+		return y * (xnum + P[0][3]) / (xden + Q[0][3]);
+	}
+	/**
+	* Approximates the complement of the error function erfc() for
+	* 0.46875 <= x <= 4.0 using this function:
+	*                       n
+	* erfc(x) = e^(-x^2) * sum (p_j * x^j) / (q_j * x^j)
+	*                      j=0
+	*/
+	function erfc2(y) {
+		var xnum = P[1][8] * y;
+		var xden = y;
+		var i;
+		for (i = 0; i < 7; i += 1) {
+			xnum = (xnum + P[1][i]) * y;
+			xden = (xden + Q[1][i]) * y;
+		}
+		var result = (xnum + P[1][7]) / (xden + Q[1][7]);
+		var ysq = parseInt(y * 16) / 16;
+		var del = (y - ysq) * (y + ysq);
+		return Math.exp(-ysq * ysq) * Math.exp(-del) * result;
+	}
+	/**
+	* Approximates the complement of the error function erfc() for x > 4.0 using
+	* this function:
+	*
+	* erfc(x) = (e^(-x^2) / x) * [ 1/sqrt(pi) +
+	*               n
+	*    1/(x^2) * sum (p_j * x^(-2j)) / (q_j * x^(-2j)) ]
+	*              j=0
+	*/
+	function erfc3(y) {
+		var ysq = 1 / (y * y);
+		var xnum = P[2][5] * ysq;
+		var xden = ysq;
+		var i;
+		for (i = 0; i < 4; i += 1) {
+			xnum = (xnum + P[2][i]) * ysq;
+			xden = (xden + Q[2][i]) * ysq;
+		}
+		var result = ysq * (xnum + P[2][4]) / (xden + Q[2][4]);
+		result = (SQRPI - result) / y;
+		ysq = parseInt(y * 16) / 16;
+		var del = (y - ysq) * (y + ysq);
+		return Math.exp(-ysq * ysq) * Math.exp(-del) * result;
+	}
+});
+/**
+* Upper bound for the first approximation interval, 0 <= x <= THRESH
+* @constant
+*/
+var THRESH = .46875;
+/**
+* Constant used by W. J. Cody's Fortran77 implementation to denote sqrt(pi)
+* @constant
+*/
+var SQRPI = .5641895835477563;
+/**
+* Coefficients for each term of the numerator sum (p_j) for each approximation
+* interval (see W. J. Cody's paper for more details)
+* @constant
+*/
+var P = [
+	[
+		3.1611237438705655,
+		113.86415415105016,
+		377.485237685302,
+		3209.3775891384694,
+		.18577770618460315
+	],
+	[
+		.5641884969886701,
+		8.883149794388377,
+		66.11919063714163,
+		298.6351381974001,
+		881.952221241769,
+		1712.0476126340707,
+		2051.0783778260716,
+		1230.3393547979972,
+		2.1531153547440383e-8
+	],
+	[
+		.30532663496123236,
+		.36034489994980445,
+		.12578172611122926,
+		.016083785148742275,
+		.0006587491615298378,
+		.016315387137302097
+	]
+];
+/**
+* Coefficients for each term of the denominator sum (q_j) for each approximation
+* interval (see W. J. Cody's paper for more details)
+* @constant
+*/
+var Q = [
+	[
+		23.601290952344122,
+		244.02463793444417,
+		1282.6165260773723,
+		2844.236833439171
+	],
+	[
+		15.744926110709835,
+		117.6939508913125,
+		537.1811018620099,
+		1621.3895745666903,
+		3290.7992357334597,
+		4362.619090143247,
+		3439.3676741437216,
+		1230.3393548037495
+	],
+	[
+		2.568520192289822,
+		1.8729528499234604,
+		.5279051029514285,
+		.06051834131244132,
+		.0023352049762686918
+	]
+];
+/**
+* Maximum/minimum safe numbers to input to erf() (in ES6+, this number is
+* Number.[MAX|MIN]_SAFE_INTEGER). erf() for all numbers beyond this limit will
+* return 1
+*/
+var MAX_NUM = Math.pow(2, 53);
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/special/zeta.js
+var name$38 = "zeta";
+var createZeta = /* @__PURE__ */ factory(name$38, [
+	"typed",
+	"config",
+	"multiply",
+	"pow",
+	"divide",
+	"factorial",
+	"equal",
+	"smallerEq",
+	"isBounded",
+	"isNegative",
+	"gamma",
+	"sin",
+	"subtract",
+	"add",
+	"?Complex",
+	"?BigNumber",
+	"pi"
+], (_ref) => {
+	var { typed, config, multiply, pow, divide, factorial, equal, smallerEq, isBounded, isNegative, gamma, sin, subtract, add, Complex, BigNumber: _BigNumber, pi } = _ref;
+	/**
+	* Compute the Riemann Zeta function of a value using an infinite series for
+	* all of the complex plane using Riemann's Functional equation.
+	*
+	* Based off the paper by Xavier Gourdon and Pascal Sebah
+	* ( http://numbers.computation.free.fr/Constants/Miscellaneous/zetaevaluations.pdf )
+	*
+	* Implementation and slight modification by Anik Patel
+	*
+	* Note: the implementation is accurate up to about 6 digits.
+	*
+	* Syntax:
+	*
+	*    math.zeta(n)
+	*
+	* Examples:
+	*
+	*    math.zeta(5)       // returns 1.0369277551433895
+	*    math.zeta(-0.5)    // returns -0.2078862249773449
+	*    math.zeta(math.i)  // returns 0.0033002236853253153 - 0.4181554491413212i
+	*
+	* See also:
+	*    erf
+	*
+	* @param {number | Complex | BigNumber} s   A Real, Complex or BigNumber parameter to the Riemann Zeta Function
+	* @return {number | Complex | BigNumber}    The Riemann Zeta of `s`
+	*/
+	return typed(name$38, {
+		number: (s) => zetaNumeric(s, (value) => value, () => 20),
+		BigNumber: (s) => zetaNumeric(s, (value) => new _BigNumber(value), () => {
+			return Math.abs(Math.log10(config.relTol));
+		}),
+		Complex: zetaComplex
+	});
+	/**
+	* @param {number | BigNumber} s
+	* @param {(value: number) => number | BigNumber} createValue
+	* @param {(value: number | BigNumber | Complex) => number} determineDigits
+	* @returns {number | BigNumber}
+	*/
+	function zetaNumeric(s, createValue, determineDigits) {
+		if (equal(s, 0)) return createValue(-.5);
+		if (equal(s, 1)) return createValue(NaN);
+		if (!isBounded(s)) return isNegative(s) ? createValue(NaN) : createValue(1);
+		return zeta(s, createValue, determineDigits, (s) => s);
+	}
+	/**
+	* @param {Complex} s
+	* @returns {Complex}
+	*/
+	function zetaComplex(s) {
+		if (s.re === 0 && s.im === 0) return new Complex(-.5);
+		if (s.re === 1) return new Complex(NaN, NaN);
+		if (s.re === Infinity && s.im === 0) return new Complex(1);
+		if (s.im === Infinity || s.re === -Infinity) return new Complex(NaN, NaN);
+		return zeta(s, (value) => value, (s) => Math.round(1.3 * 15 + .9 * Math.abs(s.im)), (s) => s.re);
+	}
+	/**
+	* @param {number | BigNumber | Complex} s
+	* @param {(value: number) => number | BigNumber | Complex} createValue
+	* @param {(value: number | BigNumber | Complex) => number} determineDigits
+	* @param {(value: number | BigNumber | Complex) => number} getRe
+	* @returns {*|number}
+	*/
+	function zeta(s, createValue, determineDigits, getRe) {
+		var n = determineDigits(s);
+		if (getRe(s) > -(n - 1) / 2) return f(s, createValue(n), createValue);
+		else {
+			var c = multiply(pow(2, s), pow(createValue(pi), subtract(s, 1)));
+			c = multiply(c, sin(multiply(divide(createValue(pi), 2), s)));
+			c = multiply(c, gamma(subtract(1, s)));
+			return multiply(c, zeta(subtract(1, s), createValue, determineDigits, getRe));
+		}
+	}
+	/**
+	* Calculate a portion of the sum
+	* @param {number | BigNumber} k   a positive integer
+	* @param {number | BigNumber} n   a positive integer
+	* @return {number}    the portion of the sum
+	**/
+	function d(k, n) {
+		var S = k;
+		for (var j = k; smallerEq(j, n); j = add(j, 1)) {
+			var factor = divide(multiply(factorial(add(n, subtract(j, 1))), pow(4, j)), multiply(factorial(subtract(n, j)), factorial(multiply(2, j))));
+			S = add(S, factor);
+		}
+		return multiply(n, S);
+	}
+	/**
+	* Calculate the positive Riemann Zeta function
+	* @param {number} s   a real or complex number with s.re > 1
+	* @param {number} n   a positive integer
+	* @param {(number) => number | BigNumber | Complex} createValue
+	* @return {number}    Riemann Zeta of s
+	**/
+	function f(s, n, createValue) {
+		var c = divide(1, multiply(d(createValue(0), n), subtract(1, pow(2, subtract(1, s)))));
+		var S = createValue(0);
+		for (var k = createValue(1); smallerEq(k, n); k = add(k, 1)) S = add(S, divide(multiply((-1) ** (k - 1), d(k, n)), pow(k, s)));
+		return multiply(c, S);
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/statistics/mode.js
+var name$37 = "mode";
+var createMode = /* @__PURE__ */ factory(name$37, [
+	"typed",
+	"isNaN",
+	"isNumeric"
+], (_ref) => {
+	var { typed, isNaN: mathIsNaN, isNumeric } = _ref;
+	/**
+	* Computes the mode of a set of numbers or a list with values(numbers or characters).
+	* If there are multiple modes, it returns a list of those values.
+	*
+	* Syntax:
+	*
+	*     math.mode(a, b, c, ...)
+	*     math.mode(A)
+	*
+	* Examples:
+	*
+	*     math.mode(2, 1, 4, 3, 1)                            // returns [1]
+	*     math.mode([1, 2.7, 3.2, 4, 2.7])                    // returns [2.7]
+	*     math.mode(1, 4, 6, 1, 6)                             // returns [1, 6]
+	*     math.mode('a','a','b','c')                           // returns ["a"]
+	*     math.mode(1, 1.5, 'abc')                             // returns [1, 1.5, "abc"]
+	*
+	* See also:
+	*
+	*     median,
+	*     mean
+	*
+	* @param {... *} args  A single matrix
+	* @return {*} The mode of all values
+	*/
+	return typed(name$37, {
+		"Array | Matrix": _mode,
+		"...": function _(args) {
+			return _mode(args);
+		}
+	});
+	/**
+	* Calculates the mode in an 1-dimensional array
+	* @param {Array} values
+	* @return {Array} mode
+	* @private
+	*/
+	function _mode(values) {
+		values = flatten(values.valueOf());
+		if (values.length === 0) throw new Error("Cannot calculate mode of an empty array");
+		var count = {};
+		var mode = [];
+		var max = 0;
+		for (var i = 0; i < values.length; i++) {
+			var value = values[i];
+			if (isNumeric(value) && mathIsNaN(value)) throw new Error("Cannot calculate mode of an array containing NaN values");
+			if (!(value in count)) count[value] = 0;
+			count[value]++;
+			if (count[value] === max) mode.push(value);
+			else if (count[value] > max) {
+				max = count[value];
+				mode = [value];
+			}
+		}
+		return mode;
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/statistics/utils/improveErrorMessage.js
+/**
+* Improve error messages for statistics functions. Errors are typically
+* thrown in an internally used function like larger, causing the error
+* not to mention the function (like max) which is actually used by the user.
+*
+* @param {Error} err
+* @param {String} fnName
+* @param {*} [value]
+* @return {Error}
+*/
+function improveErrorMessage(err, fnName, value) {
+	var details;
+	if (String(err).includes("Unexpected type")) {
+		details = arguments.length > 2 ? " (type: " + typeOf$1(value) + ", value: " + JSON.stringify(value) + ")" : " (type: " + err.data.actual + ")";
+		return /* @__PURE__ */ new TypeError("Cannot calculate " + fnName + ", unexpected type of argument" + details);
+	}
+	if (String(err).includes("complex numbers")) {
+		details = arguments.length > 2 ? " (type: " + typeOf$1(value) + ", value: " + JSON.stringify(value) + ")" : "";
+		return /* @__PURE__ */ new TypeError("Cannot calculate " + fnName + ", no ordering relation is defined for complex numbers" + details);
+	}
+	return err;
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/statistics/prod.js
+var name$36 = "prod";
+var createProd = /* @__PURE__ */ factory(name$36, [
+	"typed",
+	"config",
+	"multiplyScalar",
+	"numeric"
+], (_ref) => {
+	var { typed, config, multiplyScalar, numeric } = _ref;
+	/**
+	* Compute the product of a matrix or a list with values.
+	* In case of a multidimensional array or matrix, the sum of all
+	* elements will be calculated.
+	*
+	* Syntax:
+	*
+	*     math.prod(a, b, c, ...)
+	*     math.prod(A)
+	*
+	* Examples:
+	*
+	*     math.multiply(2, 3)           // returns 6
+	*     math.prod(2, 3)               // returns 6
+	*     math.prod(2, 3, 4)            // returns 24
+	*     math.prod([2, 3, 4])          // returns 24
+	*     math.prod([[2, 5], [4, 3]])   // returns 120
+	*
+	* See also:
+	*
+	*    mean, median, min, max, sum, std, variance
+	*
+	* @param {... *} args  A single matrix or or multiple scalar values
+	* @return {*} The product of all values
+	*/
+	return typed(name$36, {
+		"Array | Matrix": _prod,
+		"Array | Matrix, number | BigNumber": function Array__Matrix_number__BigNumber(array, dim) {
+			throw new Error("prod(A, dim) is not yet supported");
+		},
+		"...": function _(args) {
+			return _prod(args);
+		}
+	});
+	/**
+	* Recursively calculate the product of an n-dimensional array
+	* @param {Array} array
+	* @return {number} prod
+	* @private
+	*/
+	function _prod(array) {
+		var prod;
+		deepForEach(array, function(value) {
+			try {
+				prod = prod === void 0 ? value : multiplyScalar(prod, value);
+			} catch (err) {
+				throw improveErrorMessage(err, "prod", value);
+			}
+		});
+		if (typeof prod === "string") prod = numeric(prod, safeNumberType(prod, config));
+		if (prod === void 0) throw new Error("Cannot calculate prod of an empty array");
+		return prod;
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/statistics/max.js
+var name$35 = "max";
+var createMax = /* @__PURE__ */ factory(name$35, [
+	"typed",
+	"config",
+	"numeric",
+	"larger",
+	"isNaN"
+], (_ref) => {
+	var { typed, config, numeric, larger, isNaN: mathIsNaN } = _ref;
+	/**
+	* Compute the maximum value of a matrix or a  list with values.
+	* In case of a multidimensional array, the maximum of the flattened array
+	* will be calculated. When `dim` is provided, the maximum over the selected
+	* dimension will be calculated. Parameter `dim` is zero-based.
+	*
+	* Syntax:
+	*
+	*     math.max(a, b, c, ...)
+	*     math.max(A)
+	*     math.max(A, dimension)
+	*
+	* Examples:
+	*
+	*     math.max(2, 1, 4, 3)                  // returns 4
+	*     math.max([2, 1, 4, 3])                // returns 4
+	*
+	*     // maximum over a specified dimension (zero-based)
+	*     math.max([[2, 5], [4, 3], [1, 7]], 0) // returns [4, 7]
+	*     math.max([[2, 5], [4, 3], [1, 7]], 1) // returns [5, 4, 7]
+	*
+	*     math.max(2.7, 7.1, -4.5, 2.0, 4.1)    // returns 7.1
+	*     math.min(2.7, 7.1, -4.5, 2.0, 4.1)    // returns -4.5
+	*
+	* See also:
+	*
+	*    mean, median, min, prod, std, sum, variance
+	*
+	* @param {... *} args  A single matrix or or multiple scalar values
+	* @return {*} The maximum value
+	*/
+	return typed(name$35, {
+		"Array | Matrix": _max,
+		"Array | Matrix, number | BigNumber": function Array__Matrix_number__BigNumber(array, dim) {
+			return reduce(array, dim.valueOf(), _largest);
+		},
+		"...": function _(args) {
+			if (containsCollections(args)) throw new TypeError("Scalar values expected in function max");
+			return _max(args);
+		}
+	});
+	/**
+	* Return the largest of two values
+	* @param {*} x
+	* @param {*} y
+	* @returns {*} Returns x when x is largest, or y when y is largest
+	* @private
+	*/
+	function _largest(x, y) {
+		try {
+			return larger(x, y) ? x : y;
+		} catch (err) {
+			throw improveErrorMessage(err, "max", y);
+		}
+	}
+	/**
+	* Recursively calculate the maximum value in an n-dimensional array
+	* @param {Array} array
+	* @return {number} max
+	* @private
+	*/
+	function _max(array) {
+		var res;
+		deepForEach(array, function(value) {
+			try {
+				if (mathIsNaN(value)) res = value;
+				else if (res === void 0 || larger(value, res)) res = value;
+			} catch (err) {
+				throw improveErrorMessage(err, "max", value);
+			}
+		});
+		if (res === void 0) throw new Error("Cannot calculate max of an empty array");
+		if (typeof res === "string") res = numeric(res, safeNumberType(res, config));
+		return res;
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/statistics/min.js
+var name$34 = "min";
+var createMin = /* @__PURE__ */ factory(name$34, [
+	"typed",
+	"config",
+	"numeric",
+	"smaller",
+	"isNaN"
+], (_ref) => {
+	var { typed, config, numeric, smaller, isNaN: mathIsNaN } = _ref;
+	/**
+	* Compute the minimum value of a matrix or a  list of values.
+	* In case of a multidimensional array, the minimum of the flattened array
+	* will be calculated. When `dim` is provided, the minimum over the selected
+	* dimension will be calculated. Parameter `dim` is zero-based.
+	*
+	* Syntax:
+	*
+	*     math.min(a, b, c, ...)
+	*     math.min(A)
+	*     math.min(A, dimension)
+	*
+	* Examples:
+	*
+	*     math.min(2, 1, 4, 3)                  // returns 1
+	*     math.min([2, 1, 4, 3])                // returns 1
+	*
+	*     // minimum over a specified dimension (zero-based)
+	*     math.min([[2, 5], [4, 3], [1, 7]], 0) // returns [1, 3]
+	*     math.min([[2, 5], [4, 3], [1, 7]], 1) // returns [2, 3, 1]
+	*
+	*     math.max(2.7, 7.1, -4.5, 2.0, 4.1)    // returns 7.1
+	*     math.min(2.7, 7.1, -4.5, 2.0, 4.1)    // returns -4.5
+	*
+	* See also:
+	*
+	*    mean, median, max, prod, std, sum, variance
+	*
+	* @param {... *} args  A single matrix or or multiple scalar values
+	* @return {*} The minimum value
+	*/
+	return typed(name$34, {
+		"Array | Matrix": _min,
+		"Array | Matrix, number | BigNumber": function Array__Matrix_number__BigNumber(array, dim) {
+			return reduce(array, dim.valueOf(), _smallest);
+		},
+		"...": function _(args) {
+			if (containsCollections(args)) throw new TypeError("Scalar values expected in function min");
+			return _min(args);
+		}
+	});
+	/**
+	* Return the smallest of two values
+	* @param {*} x
+	* @param {*} y
+	* @returns {*} Returns x when x is smallest, or y when y is smallest
+	* @private
+	*/
+	function _smallest(x, y) {
+		try {
+			return smaller(x, y) ? x : y;
+		} catch (err) {
+			throw improveErrorMessage(err, "min", y);
+		}
+	}
+	/**
+	* Recursively calculate the minimum value in an n-dimensional array
+	* @param {Array} array
+	* @return {number} min
+	* @private
+	*/
+	function _min(array) {
+		var min;
+		deepForEach(array, function(value) {
+			try {
+				if (mathIsNaN(value)) min = value;
+				else if (min === void 0 || smaller(value, min)) min = value;
+			} catch (err) {
+				throw improveErrorMessage(err, "min", value);
+			}
+		});
+		if (min === void 0) throw new Error("Cannot calculate min of an empty array");
+		if (typeof min === "string") min = numeric(min, safeNumberType(min, config));
+		return min;
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/statistics/sum.js
+var name$33 = "sum";
+var createSum = /* @__PURE__ */ factory(name$33, [
+	"typed",
+	"config",
+	"add",
+	"numeric"
+], (_ref) => {
+	var { typed, config, add, numeric } = _ref;
+	/**
+	* Compute the sum of a matrix or a list with values.
+	* In case of a multidimensional array or matrix, the sum of all
+	* elements will be calculated.
+	*
+	* Syntax:
+	*
+	*     math.sum(a, b, c, ...)
+	*     math.sum(A)
+	*     math.sum(A, dimension)
+	*
+	* Examples:
+	*
+	*     math.sum(2, 1, 4, 3)               // returns 10
+	*     math.sum([2, 1, 4, 3])             // returns 10
+	*     math.sum([[2, 5], [4, 3], [1, 7]]) // returns 22
+	*
+	* See also:
+	*
+	*    mean, median, min, max, prod, std, variance, cumsum
+	*
+	* @param {... *} args  A single matrix or multiple scalar values
+	* @return {*} The sum of all values
+	*/
+	return typed(name$33, {
+		"Array | Matrix": _sum,
+		"Array | Matrix, number | BigNumber": _nsumDim,
+		"...": function _(args) {
+			if (containsCollections(args)) throw new TypeError("Scalar values expected in function sum");
+			return _sum(args);
+		}
+	});
+	/**
+	* Recursively calculate the sum of an n-dimensional array
+	* @param {Array | Matrix} array
+	* @return {number} sum
+	* @private
+	*/
+	function _sum(array) {
+		var sum;
+		deepForEach(array, function(value) {
+			try {
+				sum = sum === void 0 ? value : add(sum, value);
+			} catch (err) {
+				throw improveErrorMessage(err, "sum", value);
+			}
+		});
+		if (sum === void 0) sum = numeric(0, config.number);
+		if (typeof sum === "string") sum = numeric(sum, safeNumberType(sum, config));
+		return sum;
+	}
+	function _nsumDim(array, dim) {
+		try {
+			return reduce(array, dim, add);
+		} catch (err) {
+			throw improveErrorMessage(err, "sum");
+		}
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/statistics/cumsum.js
+var name$32 = "cumsum";
+var createCumSum = /* @__PURE__ */ factory(name$32, [
+	"typed",
+	"add",
+	"unaryPlus"
+], (_ref) => {
+	var { typed, add, unaryPlus } = _ref;
+	/**
+	* Compute the cumulative sum of a matrix or a list with values.
+	* In case of a (multi dimensional) array or matrix, the cumulative sums
+	* along a specified dimension (defaulting to the first) will be calculated.
+	*
+	* Syntax:
+	*
+	*     math.cumsum(a, b, c, ...)
+	*     math.cumsum(A)
+	*
+	* Examples:
+	*
+	*     math.cumsum(2, 1, 4, 3)               // returns [2, 3, 7, 10]
+	*     math.cumsum([2, 1, 4, 3])             // returns [2, 3, 7, 10]
+	*     math.cumsum([[1, 2], [3, 4]])         // returns [[1, 2], [4, 6]]
+	*     math.cumsum([[1, 2], [3, 4]], 0)      // returns [[1, 2], [4, 6]]
+	*     math.cumsum([[1, 2], [3, 4]], 1)      // returns [[1, 3], [3, 7]]
+	*     math.cumsum([[2, 5], [4, 3], [1, 7]]) // returns [[2, 5], [6, 8], [7, 15]]
+	*
+	* See also:
+	*
+	*    mean, median, min, max, prod, std, variance, sum
+	*
+	* @param {... *} args  A single matrix or or multiple scalar values
+	* @return {*} The cumulative sum of all values
+	*/
+	return typed(name$32, {
+		Array: _cumsum,
+		Matrix: function Matrix(matrix) {
+			return matrix.create(_cumsum(matrix.valueOf(), matrix.datatype()));
+		},
+		"Array, number | BigNumber": _ncumSumDim,
+		"Matrix, number | BigNumber": function Matrix_number__BigNumber(matrix, dim) {
+			return matrix.create(_ncumSumDim(matrix.valueOf(), dim), matrix.datatype());
+		},
+		"...": function _(args) {
+			if (containsCollections(args)) throw new TypeError("All values expected to be scalar in function cumsum");
+			return _cumsum(args);
+		}
+	});
+	/**
+	* Recursively calculate the cumulative sum of an n-dimensional array
+	* @param {Array} array
+	* @return {number} cumsum
+	* @private
+	*/
+	function _cumsum(array) {
+		try {
+			return _cumsummap(array);
+		} catch (err) {
+			throw improveErrorMessage(err, name$32);
+		}
+	}
+	function _cumsummap(array) {
+		if (array.length === 0) return [];
+		var sums = [unaryPlus(array[0])];
+		for (var i = 1; i < array.length; ++i) sums.push(add(sums[i - 1], array[i]));
+		return sums;
+	}
+	function _ncumSumDim(array, dim) {
+		var size = arraySize(array);
+		if (dim < 0 || dim >= size.length) throw new IndexError(dim, size.length);
+		try {
+			return _cumsumDimensional(array, dim);
+		} catch (err) {
+			throw improveErrorMessage(err, name$32);
+		}
+	}
+	function _cumsumDimensional(mat, dim) {
+		var i, ret, tran;
+		if (dim <= 0) {
+			var initialValue = mat[0][0];
+			if (!Array.isArray(initialValue)) return _cumsummap(mat);
+			else {
+				tran = _switch$1(mat);
+				ret = [];
+				for (i = 0; i < tran.length; i++) ret[i] = _cumsumDimensional(tran[i], dim - 1);
+				return ret;
+			}
+		} else {
+			ret = [];
+			for (i = 0; i < mat.length; i++) ret[i] = _cumsumDimensional(mat[i], dim - 1);
+			return ret;
+		}
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/statistics/mean.js
+var name$31 = "mean";
+var createMean = /* @__PURE__ */ factory(name$31, [
+	"typed",
+	"add",
+	"divide"
+], (_ref) => {
+	var { typed, add, divide } = _ref;
+	/**
+	* Compute the mean value of matrix or a list with values.
+	* In case of a multidimensional array, the mean of the flattened array
+	* will be calculated. When `dim` is provided, the maximum over the selected
+	* dimension will be calculated. Parameter `dim` is zero-based.
+	*
+	* Syntax:
+	*
+	*     math.mean(a, b, c, ...)
+	*     math.mean(A)
+	*     math.mean(A, dimension)
+	*
+	* Examples:
+	*
+	*     math.mean(2, 1, 4, 3)                     // returns 2.5
+	*     math.mean([1, 2.7, 3.2, 4])               // returns 2.725
+	*
+	*     math.mean([[2, 5], [6, 3], [1, 7]], 0)    // returns [3, 5]
+	*     math.mean([[2, 5], [6, 3], [1, 7]], 1)    // returns [3.5, 4.5, 4]
+	*
+	* See also:
+	*
+	*     median, min, max, sum, prod, std, variance
+	*
+	* @param {... *} args  A single matrix or or multiple scalar values
+	* @return {*} The mean of all values
+	*/
+	return typed(name$31, {
+		"Array | Matrix": _mean,
+		"Array | Matrix, number | BigNumber": _nmeanDim,
+		"...": function _(args) {
+			if (containsCollections(args)) throw new TypeError("Scalar values expected in function mean");
+			return _mean(args);
+		}
+	});
+	/**
+	* Calculate the mean value in an n-dimensional array, returning a
+	* n-1 dimensional array
+	* @param {Array} array
+	* @param {number} dim
+	* @return {number} mean
+	* @private
+	*/
+	function _nmeanDim(array, dim) {
+		try {
+			return divide(reduce(array, dim, add), (Array.isArray(array) ? arraySize(array) : array.size())[dim]);
+		} catch (err) {
+			throw improveErrorMessage(err, "mean");
+		}
+	}
+	/**
+	* Recursively calculate the mean value in an n-dimensional array
+	* @param {Array} array
+	* @return {number} mean
+	* @private
+	*/
+	function _mean(array) {
+		var sum;
+		var num = 0;
+		deepForEach(array, function(value) {
+			try {
+				sum = sum === void 0 ? value : add(sum, value);
+				num++;
+			} catch (err) {
+				throw improveErrorMessage(err, "mean", value);
+			}
+		});
+		if (num === 0) throw new Error("Cannot calculate the mean of an empty array");
+		return divide(sum, num);
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/statistics/median.js
+var name$30 = "median";
+var createMedian = /* @__PURE__ */ factory(name$30, [
+	"typed",
+	"add",
+	"divide",
+	"compare",
+	"partitionSelect"
+], (_ref) => {
+	var { typed, add, divide, compare, partitionSelect } = _ref;
+	/**
+	* Recursively calculate the median of an n-dimensional array
+	* @param {Array} array
+	* @return {Number} median
+	* @private
+	*/
+	function _median(array) {
+		try {
+			array = flatten(array.valueOf());
+			var num = array.length;
+			if (num === 0) throw new Error("Cannot calculate median of an empty array");
+			if (num % 2 === 0) {
+				var mid = num / 2 - 1;
+				var right = partitionSelect(array, mid + 1);
+				var left = array[mid];
+				for (var i = 0; i < mid; ++i) if (compare(array[i], left) > 0) left = array[i];
+				return middle2(left, right);
+			} else return middle(partitionSelect(array, (num - 1) / 2));
+		} catch (err) {
+			throw improveErrorMessage(err, "median");
+		}
+	}
+	var middle = typed({ "number | BigNumber | Complex | Unit": function number__BigNumber__Complex__Unit(value) {
+		return value;
+	} });
+	var middle2 = typed({ "number | BigNumber | Complex | Unit, number | BigNumber | Complex | Unit": function number__BigNumber__Complex__Unit_number__BigNumber__Complex__Unit(left, right) {
+		return divide(add(left, right), 2);
+	} });
+	/**
+	* Compute the median of a matrix or a list with values. The values are
+	* sorted and the middle value is returned. In case of an even number of
+	* values, the average of the two middle values is returned.
+	* Supported types of values are: Number, BigNumber, Unit
+	*
+	* In case of a (multi dimensional) array or matrix, the median of all
+	* elements will be calculated.
+	*
+	* Syntax:
+	*
+	*     math.median(a, b, c, ...)
+	*     math.median(A)
+	*
+	* Examples:
+	*
+	*     math.median(5, 2, 7)        // returns 5
+	*     math.median([3, -1, 5, 7])  // returns 4
+	*
+	* See also:
+	*
+	*     mean, min, max, sum, prod, std, variance, quantileSeq
+	*
+	* @param {... *} args  A single matrix or or multiple scalar values
+	* @return {*} The median
+	*/
+	return typed(name$30, {
+		"Array | Matrix": _median,
+		"Array | Matrix, number | BigNumber": function Array__Matrix_number__BigNumber(array, dim) {
+			throw new Error("median(A, dim) is not yet supported");
+		},
+		"...": function _(args) {
+			if (containsCollections(args)) throw new TypeError("Scalar values expected in function median");
+			return _median(args);
+		}
+	});
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/statistics/mad.js
+var name$29 = "mad";
+var createMad = /* @__PURE__ */ factory(name$29, [
+	"typed",
+	"abs",
+	"map",
+	"median",
+	"subtract"
+], (_ref) => {
+	var { typed, abs, map, median, subtract } = _ref;
+	/**
+	* Compute the median absolute deviation of a matrix or a list with values.
+	* The median absolute deviation is defined as the median of the absolute
+	* deviations from the median.
+	*
+	* Syntax:
+	*
+	*     math.mad(a, b, c, ...)
+	*     math.mad(A)
+	*
+	* Examples:
+	*
+	*     math.mad(10, 20, 30)             // returns 10
+	*     math.mad([1, 2, 3])              // returns 1
+	*     math.mad([[1, 2, 3], [4, 5, 6]]) // returns 1.5
+	*
+	* See also:
+	*
+	*     median, mean, std, abs
+	*
+	* @param {Array | Matrix} array
+	*                        A single matrix or multiple scalar values.
+	* @return {*} The median absolute deviation.
+	*/
+	return typed(name$29, {
+		"Array | Matrix": _mad,
+		"...": function _(args) {
+			return _mad(args);
+		}
+	});
+	function _mad(array) {
+		array = flatten(array.valueOf());
+		if (array.length === 0) throw new Error("Cannot calculate median absolute deviation (mad) of an empty array");
+		try {
+			var med = median(array);
+			return median(map(array, function(value) {
+				return abs(subtract(value, med));
+			}));
+		} catch (err) {
+			if (err instanceof TypeError && err.message.includes("median")) throw new TypeError(err.message.replace("median", "mad"));
+			else throw improveErrorMessage(err, "mad");
+		}
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/statistics/variance.js
+var DEFAULT_NORMALIZATION = "unbiased";
+var name$28 = "variance";
+var createVariance = /* @__PURE__ */ factory(name$28, [
+	"typed",
+	"add",
+	"subtract",
+	"multiply",
+	"divide",
+	"mapSlices",
+	"isNaN"
+], (_ref) => {
+	var { typed, add, subtract, multiply, divide, mapSlices, isNaN: mathIsNaN } = _ref;
+	/**
+	* Compute the variance of a matrix or a  list with values.
+	* In case of a multidimensional array or matrix, the variance over all
+	* elements will be calculated.
+	*
+	* Additionally, it is possible to compute the variance along the rows
+	* or columns of a matrix by specifying the dimension as the second argument.
+	*
+	* Optionally, the type of normalization can be specified as the final
+	* parameter. The parameter `normalization` can be one of the following values:
+	*
+	* - 'unbiased' (default) The sum of squared errors is divided by (n - 1)
+	* - 'uncorrected'        The sum of squared errors is divided by n
+	* - 'biased'             The sum of squared errors is divided by (n + 1)
+	*
+	*
+	* Note that older browser may not like the variable name `var`. In that
+	* case, the function can be called as `math['var'](...)` instead of
+	* `math.var(...)`.
+	*
+	* Syntax:
+	*
+	*     math.variance(a, b, c, ...)
+	*     math.variance(A)
+	*     math.variance(A, normalization)
+	*     math.variance(A, dimension)
+	*     math.variance(A, dimension, normalization)
+	*
+	* Examples:
+	*
+	*     math.variance(2, 4, 6)                     // returns 4
+	*     math.variance([2, 4, 6, 8])                // returns 6.666666666666667
+	*     math.variance([2, 4, 6, 8], 'uncorrected') // returns 5
+	*     math.variance([2, 4, 6, 8], 'biased')      // returns 4
+	*
+	*     math.variance([[1, 2, 3], [4, 5, 6]])      // returns 3.5
+	*     math.variance([[1, 2, 3], [4, 6, 8]], 0)   // returns [4.5, 8, 12.5]
+	*     math.variance([[1, 2, 3], [4, 6, 8]], 1)   // returns [1, 4]
+	*     math.variance([[1, 2, 3], [4, 6, 8]], 1, 'biased') // returns [0.5, 2]
+	*
+	* See also:
+	*
+	*    mean, median, max, min, prod, std, sum
+	*
+	* @param {Array | Matrix} array
+	*                        A single matrix or or multiple scalar values
+	* @param {string} [normalization='unbiased']
+	*                        Determines how to normalize the variance.
+	*                        Choose 'unbiased' (default), 'uncorrected', or 'biased'.
+	* @param dimension {number | BigNumber}
+	*                        Determines the axis to compute the variance for a matrix
+	* @return {*} The variance
+	*/
+	return typed(name$28, {
+		"Array | Matrix": function Array__Matrix(array) {
+			return _var(array, DEFAULT_NORMALIZATION);
+		},
+		"Array | Matrix, string": _var,
+		"Array | Matrix, number | BigNumber": function Array__Matrix_number__BigNumber(array, dim) {
+			return _varDim(array, dim, DEFAULT_NORMALIZATION);
+		},
+		"Array | Matrix, number | BigNumber, string": _varDim,
+		"...": function _(args) {
+			return _var(args, DEFAULT_NORMALIZATION);
+		}
+	});
+	/**
+	* Recursively calculate the variance of an n-dimensional array
+	* @param {Array} array
+	* @param {string} normalization
+	*                        Determines how to normalize the variance:
+	*                        - 'unbiased'    The sum of squared errors is divided by (n - 1)
+	*                        - 'uncorrected' The sum of squared errors is divided by n
+	*                        - 'biased'      The sum of squared errors is divided by (n + 1)
+	* @return {number | BigNumber} variance
+	* @private
+	*/
+	function _var(array, normalization) {
+		var sum;
+		var num = 0;
+		if (array.length === 0) throw new SyntaxError("Function variance requires one or more parameters (0 provided)");
+		deepForEach(array, function(value) {
+			try {
+				sum = sum === void 0 ? value : add(sum, value);
+				num++;
+			} catch (err) {
+				throw improveErrorMessage(err, "variance", value);
+			}
+		});
+		if (num === 0) throw new Error("Cannot calculate variance of an empty array");
+		var mean = divide(sum, num);
+		sum = void 0;
+		deepForEach(array, function(value) {
+			var diff = subtract(value, mean);
+			sum = sum === void 0 ? multiply(diff, diff) : add(sum, multiply(diff, diff));
+		});
+		if (mathIsNaN(sum)) return sum;
+		switch (normalization) {
+			case "uncorrected": return divide(sum, num);
+			case "biased": return divide(sum, num + 1);
+			case "unbiased":
+				var zero = isBigNumber(sum) ? sum.mul(0) : 0;
+				return num === 1 ? zero : divide(sum, num - 1);
+			default: throw new Error("Unknown normalization \"" + normalization + "\". Choose \"unbiased\" (default), \"uncorrected\", or \"biased\".");
+		}
+	}
+	function _varDim(array, dim, normalization) {
+		try {
+			if (array.length === 0) throw new SyntaxError("Function variance requires one or more parameters (0 provided)");
+			return mapSlices(array, dim, (x) => _var(x, normalization));
+		} catch (err) {
+			throw improveErrorMessage(err, "variance");
+		}
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/statistics/quantileSeq.js
+var name$27 = "quantileSeq";
+var createQuantileSeq = /* @__PURE__ */ factory(name$27, [
+	"typed",
+	"?bignumber",
+	"add",
+	"subtract",
+	"divide",
+	"multiply",
+	"partitionSelect",
+	"compare",
+	"isInteger",
+	"smaller",
+	"smallerEq",
+	"larger",
+	"mapSlices"
+], (_ref) => {
+	var { typed, bignumber, add, subtract, divide, multiply, partitionSelect, compare, isInteger, smaller, smallerEq, larger, mapSlices } = _ref;
+	/**
+	* Compute the prob order quantile of a matrix or a list with values.
+	* The sequence is sorted and the middle value is returned.
+	* Supported types of sequence values are: Number, BigNumber, Unit
+	* Supported types of probability are: Number, BigNumber
+	*
+	* In case of a multidimensional array or matrix, the prob order quantile
+	* of all elements will be calculated.
+	*
+	* Syntax:
+	*
+	*     math.quantileSeq(A, prob[, sorted])
+	*     math.quantileSeq(A, [prob1, prob2, ...][, sorted])
+	*     math.quantileSeq(A, N[, sorted])
+	*
+	* Examples:
+	*
+	*     math.quantileSeq([3, -1, 5, 7], 0.5)         // returns 4
+	*     math.quantileSeq([3, -1, 5, 7], [1/3, 2/3])  // returns [3, 5]
+	*     math.quantileSeq([3, -1, 5, 7], 2)           // returns [3, 5]
+	*     math.quantileSeq([-1, 3, 5, 7], 0.5, true)   // returns 4
+	*
+	* See also:
+	*
+	*     median, mean, min, max, sum, prod, std, variance
+	*
+	* @param {Array, Matrix} data                A single matrix or Array
+	* @param {Number, BigNumber, Array} probOrN  prob is the order of the quantile, while N is
+	*                                            the amount of evenly distributed steps of
+	*                                            probabilities; only one of these options can
+	*                                            be provided
+	* @param {Boolean} sorted=false              is data sorted in ascending order
+	* @return {Number, BigNumber, Unit, Array}   Quantile(s)
+	*/
+	return typed(name$27, {
+		"Array | Matrix, number | BigNumber": (data, p) => _quantileSeqProbNumber(data, p, false),
+		"Array | Matrix, number | BigNumber, number": (data, prob, dim) => _quantileSeqDim(data, prob, false, dim, _quantileSeqProbNumber),
+		"Array | Matrix, number | BigNumber, boolean": _quantileSeqProbNumber,
+		"Array | Matrix, number | BigNumber, boolean, number": (data, prob, sorted, dim) => _quantileSeqDim(data, prob, sorted, dim, _quantileSeqProbNumber),
+		"Array | Matrix, Array | Matrix": (data, p) => _quantileSeqProbCollection(data, p, false),
+		"Array | Matrix, Array | Matrix, number": (data, prob, dim) => _quantileSeqDim(data, prob, false, dim, _quantileSeqProbCollection),
+		"Array | Matrix, Array | Matrix, boolean": _quantileSeqProbCollection,
+		"Array | Matrix, Array | Matrix, boolean, number": (data, prob, sorted, dim) => _quantileSeqDim(data, prob, sorted, dim, _quantileSeqProbCollection)
+	});
+	function _quantileSeqDim(data, prob, sorted, dim, fn) {
+		return mapSlices(data, dim, (x) => fn(x, prob, sorted));
+	}
+	function _quantileSeqProbNumber(data, probOrN, sorted) {
+		var probArr;
+		var dataArr = data.valueOf();
+		if (smaller(probOrN, 0)) throw new Error("N/prob must be non-negative");
+		if (smallerEq(probOrN, 1)) return isNumber(probOrN) ? _quantileSeq(dataArr, probOrN, sorted) : bignumber(_quantileSeq(dataArr, probOrN, sorted));
+		if (larger(probOrN, 1)) {
+			if (!isInteger(probOrN)) throw new Error("N must be a positive integer");
+			if (larger(probOrN, 4294967295)) throw new Error("N must be less than or equal to 2^32-1, as that is the maximum length of an Array");
+			var nPlusOne = add(probOrN, 1);
+			probArr = [];
+			for (var i = 0; smaller(i, probOrN); i++) {
+				var prob = divide(i + 1, nPlusOne);
+				probArr.push(_quantileSeq(dataArr, prob, sorted));
+			}
+			return isNumber(probOrN) ? probArr : bignumber(probArr);
+		}
+	}
+	/**
+	* Calculate the prob order quantile of an n-dimensional array.
+	*
+	* @param {Array, Matrix} array
+	* @param {Array, Matrix} prob
+	* @param {Boolean} sorted
+	* @return {Number, BigNumber, Unit} prob order quantile
+	* @private
+	*/
+	function _quantileSeqProbCollection(data, probOrN, sorted) {
+		var dataArr = data.valueOf();
+		var probOrNArr = probOrN.valueOf();
+		var probArr = [];
+		for (var i = 0; i < probOrNArr.length; ++i) probArr.push(_quantileSeq(dataArr, probOrNArr[i], sorted));
+		return probArr;
+	}
+	/**
+	* Calculate the prob order quantile of an n-dimensional array.
+	*
+	* @param {Array} array
+	* @param {Number, BigNumber} prob
+	* @param {Boolean} sorted
+	* @return {Number, BigNumber, Unit} prob order quantile
+	* @private
+	*/
+	function _quantileSeq(array, prob, sorted) {
+		var flat = flatten(array);
+		var len = flat.length;
+		if (len === 0) throw new Error("Cannot calculate quantile of an empty sequence");
+		var index = isNumber(prob) ? prob * (len - 1) : prob.times(len - 1);
+		var integerPart = isNumber(prob) ? Math.floor(index) : index.floor().toNumber();
+		var fracPart = isNumber(prob) ? index % 1 : index.minus(integerPart);
+		if (isInteger(index)) return sorted ? flat[index] : partitionSelect(flat, isNumber(prob) ? index : index.valueOf());
+		var left;
+		var right;
+		if (sorted) {
+			left = flat[integerPart];
+			right = flat[integerPart + 1];
+		} else {
+			right = partitionSelect(flat, integerPart + 1);
+			left = flat[integerPart];
+			for (var i = 0; i < integerPart; ++i) if (compare(flat[i], left) > 0) left = flat[i];
+		}
+		return add(multiply(left, subtract(1, fracPart)), multiply(right, fracPart));
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/statistics/std.js
+var name$26 = "std";
+var createStd = /* @__PURE__ */ factory(name$26, [
+	"typed",
+	"map",
+	"sqrt",
+	"variance"
+], (_ref) => {
+	var { typed, map, sqrt, variance } = _ref;
+	/**
+	* Compute the standard deviation of a matrix or a  list with values.
+	* The standard deviations is defined as the square root of the variance:
+	* `std(A) = sqrt(variance(A))`.
+	* In case of a (multi dimensional) array or matrix, the standard deviation
+	* over all elements will be calculated by default, unless an axis is specified
+	* in which case the standard deviation will be computed along that axis.
+	*
+	* Additionally, it is possible to compute the standard deviation along the rows
+	* or columns of a matrix by specifying the dimension as the second argument.
+	*
+	* Optionally, the type of normalization can be specified as the final
+	* parameter. The parameter `normalization` can be one of the following values:
+	*
+	* - 'unbiased' (default) The sum of squared errors is divided by (n - 1)
+	* - 'uncorrected'        The sum of squared errors is divided by n
+	* - 'biased'             The sum of squared errors is divided by (n + 1)
+	*
+	*
+	* Syntax:
+	*
+	*     math.std(a, b, c, ...)
+	*     math.std(A)
+	*     math.std(A, normalization)
+	*     math.std(A, dimension)
+	*     math.std(A, dimension, normalization)
+	*
+	* Examples:
+	*
+	*     math.std(2, 4, 6)                     // returns 2
+	*     math.std([2, 4, 6, 8])                // returns 2.581988897471611
+	*     math.std([2, 4, 6, 8], 'uncorrected') // returns 2.23606797749979
+	*     math.std([2, 4, 6, 8], 'biased')      // returns 2
+	*
+	*     math.std([[1, 2, 3], [4, 5, 6]])      // returns 1.8708286933869707
+	*     math.std([[1, 2, 3], [4, 6, 8]], 0)    // returns [2.1213203435596424, 2.8284271247461903, 3.5355339059327378]
+	*     math.std([[1, 2, 3], [4, 6, 8]], 1)    // returns [1, 2]
+	*     math.std([[1, 2, 3], [4, 6, 8]], 1, 'biased') // returns [0.7071067811865476, 1.4142135623730951]
+	*
+	* See also:
+	*
+	*    mean, median, max, min, prod, sum, variance
+	*
+	* @param {Array | Matrix} array
+	*                        A single matrix or or multiple scalar values
+	* @param {string} [normalization='unbiased']
+	*                        Determines how to normalize the variance.
+	*                        Choose 'unbiased' (default), 'uncorrected', or 'biased'.
+	* @param dimension {number | BigNumber}
+	*                        Determines the axis to compute the standard deviation for a matrix
+	* @return {*} The standard deviation
+	*/
+	return typed(name$26, {
+		"Array | Matrix": _std,
+		"Array | Matrix, string": _std,
+		"Array | Matrix, number | BigNumber": _std,
+		"Array | Matrix, number | BigNumber, string": _std,
+		"...": function _(args) {
+			return _std(args);
+		}
+	});
+	function _std(array, normalization) {
+		if (array.length === 0) throw new SyntaxError("Function std requires one or more parameters (0 provided)");
+		try {
+			var v = variance.apply(null, arguments);
+			if (isCollection(v)) return map(v, sqrt);
+			else return sqrt(v);
+		} catch (err) {
+			if (err instanceof TypeError && err.message.includes(" variance")) throw new TypeError(err.message.replace(" variance", " std"));
+			else throw err;
+		}
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/statistics/corr.js
+var name$25 = "corr";
+var createCorr = /* @__PURE__ */ factory(name$25, [
+	"typed",
+	"matrix",
+	"mean",
+	"sqrt",
+	"sum",
+	"add",
+	"subtract",
+	"multiply",
+	"pow",
+	"divide"
+], (_ref) => {
+	var { typed, matrix, sqrt, sum, add, subtract, multiply, pow, divide } = _ref;
+	/**
+	* Compute the correlation coefficient of a two list with values, For matrices, the matrix correlation coefficient is calculated.
+	*
+	* Syntax:
+	*
+	*     math.corr(A, B)
+	*
+	* Examples:
+	*
+	*     math.corr([1, 2, 3, 4, 5], [4, 5, 6, 7, 8])     // returns 1
+	*     math.corr([1, 2.2, 3, 4.8, 5], [4, 5.3, 6.6, 7, 8])     //returns 0.9569941688503644
+	*     math.corr([[1, 2.2, 3, 4.8, 5], [4, 5.3, 6.6, 7, 8]],[[1, 2.2, 3, 4.8, 5], [4, 5.3, 6.6, 7, 8]])   // returns [1,1]
+	*
+	* See also:
+	*
+	*     median, mean, min, max, sum, prod, std, variance
+	*
+	* @param {Array | Matrix} A The first array or matrix to compute correlation coefficient
+	* @param {Array | Matrix} B The second array or matrix to compute correlation coefficient
+	* @return {*} The correlation coefficient
+	*/
+	return typed(name$25, {
+		"Array, Array": function Array_Array(A, B) {
+			return _corr(A, B);
+		},
+		"Matrix, Matrix": function Matrix_Matrix(A, B) {
+			var res = _corr(A.toArray(), B.toArray());
+			return Array.isArray(res) ? matrix(res) : res;
+		}
+	});
+	/**
+	* Calculate the correlation coefficient between two arrays or matrices.
+	* @param {Array | Matrix} A
+	* @param {Array | Matrix} B
+	* @return {*} correlation coefficient
+	* @private
+	*/
+	function _corr(A, B) {
+		var correlations = [];
+		if (Array.isArray(A[0]) && Array.isArray(B[0])) {
+			if (A.length !== B.length) throw new SyntaxError("Dimension mismatch. Array A and B must have the same length.");
+			for (var i = 0; i < A.length; i++) {
+				if (A[i].length !== B[i].length) throw new SyntaxError("Dimension mismatch. Array A and B must have the same number of elements.");
+				correlations.push(correlation(A[i], B[i]));
+			}
+			return correlations;
+		} else {
+			if (A.length !== B.length) throw new SyntaxError("Dimension mismatch. Array A and B must have the same number of elements.");
+			return correlation(A, B);
+		}
+	}
+	function correlation(A, B) {
+		var n = A.length;
+		var sumX = sum(A);
+		var sumY = sum(B);
+		var sumXY = A.reduce((acc, x, index) => add(acc, multiply(x, B[index])), 0);
+		var sumXSquare = sum(A.map((x) => pow(x, 2)));
+		var sumYSquare = sum(B.map((y) => pow(y, 2)));
+		return divide(subtract(multiply(n, sumXY), multiply(sumX, sumY)), sqrt(multiply(subtract(multiply(n, sumXSquare), pow(sumX, 2)), subtract(multiply(n, sumYSquare), pow(sumY, 2)))));
+	}
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/string/format.js
+var name$24 = "format";
+var createFormat = /* @__PURE__ */ factory(name$24, ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Format a value of any type into a string.
+	*
+	* Syntax:
+	*
+	*    math.format(value)
+	*    math.format(value, options)
+	*    math.format(value, precision)
+	*    math.format(value, callback)
+	*
+	* Where:
+	*
+	*  - `value: *`
+	*    The value to be formatted
+	*  - `options: Object`
+	*    An object with formatting options. Available options:
+	*    - `notation: string`
+	*      Number notation. Choose from:
+	*      - `'fixed'`
+	*        Always use regular number notation.
+	*        For example `'123.40'` and `'14000000'`
+	*      - `'exponential'`
+	*        Always use exponential notation.
+	*        For example `'1.234e+2'` and `'1.4e+7'`
+	*      - `'engineering'`
+	*        Always use engineering notation: always have exponential notation,
+	*        and select the exponent to be a multiple of `3`.
+	*        For example `'123.4e+0'` and `'14.0e+6'`
+	*      - `'auto'` (default)
+	*        Regular number notation for numbers having an absolute value between
+	*        `lower` and `upper` bounds, and uses exponential notation elsewhere.
+	*        Lower bound is included, upper bound is excluded.
+	*        For example `'123.4'` and `'1.4e7'`.
+	*      - `'bin'`, `'oct'`, or `'hex'`
+	*        Format the number using binary, octal, or hexadecimal notation.
+	*        For example `'0b1101'` and `'0x10fe'`.
+	*    - `wordSize: number | BigNumber`
+	*      The word size in bits to use for formatting in binary, octal, or
+	*      hexadecimal notation. To be used only with `'bin'`, `'oct'`, or `'hex'`
+	*      values for `notation` option. When this option is defined the value
+	*      is formatted as a signed twos complement integer of the given word
+	*      size and the size suffix is appended to the output.
+	*      For example `format(-1, {notation: 'hex', wordSize: 8}) === '0xffi8'`.
+	*      Default value is undefined.
+	*    - `precision: number | BigNumber`
+	*      Limit the number of digits of the formatted value.
+	*      For regular numbers, must be a number between `0` and `16`.
+	*      For bignumbers, the maximum depends on the configured precision,
+	*      see function `config()`.
+	*      In case of notations `'exponential'`, `'engineering'`, and `'auto'`,
+	*      `precision` defines the total number of significant digits returned.
+	*      In case of notation `'fixed'`, `precision` defines the number of
+	*      significant digits after the decimal point.
+	*      `precision` is undefined by default.
+	*    - `lowerExp: number`
+	*      Exponent determining the lower boundary for formatting a value with
+	*      an exponent when `notation='auto'`. Default value is `-3`.
+	*    - `upperExp: number`
+	*      Exponent determining the upper boundary for formatting a value with
+	*      an exponent when `notation='auto'`. Default value is `5`.
+	*    - `fraction: string`. Available values: `'ratio'` (default) or `'decimal'`.
+	*      For example `format(fraction(1, 3))` will output `'1/3'` when `'ratio'`
+	*      is configured, and will output `'0.(3)'` when `'decimal'` is configured.
+	*    - `truncate: number`. Specifies the maximum allowed length of the
+	*      returned string. If it had been longer, the excess characters
+	*      are deleted and replaced with `'...'`.
+	* - `callback: function`
+	*   A custom formatting function, invoked for all numeric elements in `value`,
+	*   for example all elements of a matrix, or the real and imaginary
+	*   parts of a complex number. This callback can be used to override the
+	*   built-in numeric notation with any type of formatting. Function `callback`
+	*   is called with `value` as parameter and must return a string.
+	*
+	* When `value` is an Object:
+	*
+	* - When the object contains a property `format` being a function, this function
+	*   is invoked as `value.format(options)` and the result is returned.
+	* - When the object has its own `toString` method, this method is invoked
+	*   and the result is returned.
+	* - In other cases the function will loop over all object properties and
+	*   return JSON object notation like '{"a": 2, "b": 3}'.
+	*
+	* When value is a function:
+	*
+	* - When the function has a property `syntax`, it returns this
+	*   syntax description.
+	* - In other cases, a string `'function'` is returned.
+	*
+	* Examples:
+	*
+	*    math.format(6.4)                                        // returns '6.4'
+	*    math.format(1240000)                                    // returns '1.24e+6'
+	*    math.format(1/3)                                        // returns '0.3333333333333333'
+	*    math.format(1/3, 3)                                     // returns '0.333'
+	*    math.format(21385, 2)                                   // returns '21000'
+	*    math.format(12e8, {notation: 'fixed'})                  // returns '1200000000'
+	*    math.format(2.3,  {notation: 'fixed', precision: 4})    // returns '2.3000'
+	*    math.format(52.8, {notation: 'exponential'})            // returns '5.28e+1'
+	*    math.format(12400, {notation: 'engineering'})           // returns '12.4e+3'
+	*    math.format(2000, {lowerExp: -2, upperExp: 2})          // returns '2e+3'
+	*
+	*    function formatCurrency(value) {
+	*      // return currency notation with two digits:
+	*      return '$' + value.toFixed(2)
+	*
+	*      // you could also use math.format inside the callback:
+	*      // return '$' + math.format(value, {notation: 'fixed', precision: 2})
+	*    }
+	*    math.format([2.1, 3, 0.016], formatCurrency)            // returns '[$2.10, $3.00, $0.02]'
+	*
+	* See also:
+	*
+	*    print
+	*
+	* History:
+	*
+	*    v0.4     Created
+	*    v0.7     Round to a consistent number of digits (rather than decimals)
+	*    v0.15    Added multiple number notations and configurable precision
+	*    v3       Added support for JSON objects
+	*    v9       Added binary, hexadecimal, and octal notations
+	*    v10.4.2  Add `truncate` option
+	*
+	* @param {*} value                               Value to be stringified
+	* @param {Object | Function | number} [options]  Formatting options
+	* @return {string} The formatted value
+	*/
+	return typed(name$24, {
+		any: format$1,
+		"any, Object | function | number | BigNumber": format$1
+	});
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/utils/print.js
+var printTemplate = /\$([\w.]+)/g;
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/string/print.js
+var name$23 = "print";
+var createPrint = /* @__PURE__ */ factory(name$23, ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Interpolate values into a string template.
+	*
+	* Syntax:
+	*
+	*     math.print(template, values)
+	*     math.print(template, values, precision)
+	*     math.print(template, values, options)
+	*
+	* Example usage:
+	*
+	*     // the following outputs: 'Lucy is 5 years old'
+	*     math.print('Lucy is $age years old', {age: 5})
+	*
+	*     // the following outputs: 'The value of pi is 3.141592654'
+	*     math.print('The value of pi is $pi', {pi: math.pi}, 10)
+	*
+	*     // the following outputs: 'Hello Mary! The date is 2013-03-23'
+	*     math.print('Hello $user.name! The date is $date', {
+	*       user: {
+	*         name: 'Mary',
+	*       },
+	*       date: '2013-03-23'
+	*     })
+	*
+	*     // the following outputs: 'My favorite fruits are apples and bananas !'
+	*     math.print('My favorite fruits are $0 and $1 !', [
+	*       'apples',
+	*       'bananas'
+	*     ])
+	*
+	* See also:
+	*
+	*     format
+	*
+	* @param {string} template           A string containing variable placeholders.
+	* @param {Object | Array | Matrix}   values An object or array containing variables
+	*                                    which will be filled in in the template.
+	* @param {number | Object} [options] Formatting options,
+	*                                    or the number of digits to format numbers.
+	*                                    See function math.format for a description
+	*                                    of all options.
+	* @return {string} Interpolated string
+	*/
+	return typed(name$23, {
+		"string, Object | Array": _print,
+		"string, Object | Array, number | Object": _print
+	});
+});
+/**
+* Interpolate values into a string template.
+* @param {string} template
+* @param {Object} values
+* @param {number | Object} [options]
+* @returns {string} Interpolated string
+* @private
+*/
+function _print(template, values, options) {
+	return template.replace(printTemplate, function(original, key) {
+		var keys = key.split(".");
+		var value = values[keys.shift()];
+		if (value !== void 0 && value.isMatrix) value = value.toArray();
+		while (keys.length && value !== void 0) {
+			var k = keys.shift();
+			value = k ? value[k] : value + ".";
+		}
+		if (value !== void 0) if (!isString(value)) return format$1(value, options);
+		else return value;
+		return original;
+	});
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/transform/mapSlices.transform.js
+function ownKeys(e, r) {
+	var t = Object.keys(e);
+	if (Object.getOwnPropertySymbols) {
+		var o = Object.getOwnPropertySymbols(e);
+		r && (o = o.filter(function(r) {
+			return Object.getOwnPropertyDescriptor(e, r).enumerable;
+		})), t.push.apply(t, o);
+	}
+	return t;
+}
+function _objectSpread(e) {
+	for (var r = 1; r < arguments.length; r++) {
+		var t = null != arguments[r] ? arguments[r] : {};
+		r % 2 ? ownKeys(Object(t), !0).forEach(function(r) {
+			_defineProperty(e, r, t[r]);
+		}) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function(r) {
+			Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r));
+		});
+	}
+	return e;
+}
+/**
+* Attach a transform function to math.mapSlices
+* Adds a property transform containing the transform function.
+*
+* This transform changed the last `dim` parameter of function mapSlices
+* from one-based to zero based
+*/
+var createMapSlicesTransform = /* @__PURE__ */ factory("mapSlices", ["typed", "isInteger"], (_ref) => {
+	var { typed, isInteger } = _ref;
+	var mapSlices = createMapSlices({
+		typed,
+		isInteger
+	});
+	return typed("mapSlices", { "...any": function any(args) {
+		var dim = args[1];
+		if (isNumber(dim)) args[1] = dim - 1;
+		else if (isBigNumber(dim)) args[1] = dim.minus(1);
+		try {
+			return mapSlices.apply(null, args);
+		} catch (err) {
+			throw errorTransform(err);
+		}
+	} });
+}, _objectSpread({ isTransformFunction: true }, createMapSlices.meta));
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/transform/utils/compileInlineExpression.js
+/**
+* Compile an inline expression like "x > 0"
+* @param {Node} expression
+* @param {Object} math
+* @param {Map} scope
+* @return {function} Returns a function with one argument which fills in the
+*                    undefined variable (like "x") and evaluates the expression
+*/
+function compileInlineExpression(expression, math, scope) {
+	var symbol = expression.filter(function(node) {
+		return isSymbolNode(node) && !(node.name in math) && !scope.has(node.name);
+	})[0];
+	if (!symbol) throw new Error("No undefined variable found in inline expression \"" + expression + "\"");
+	var name = symbol.name;
+	var argsScope = /* @__PURE__ */ new Map();
+	var subScope = new PartitionedMap(scope, argsScope, new Set([name]));
+	var eq = expression.compile();
+	return function inlineExpression(x) {
+		argsScope.set(name, x);
+		return eq.evaluate(subScope);
+	};
+}
+var createTransformCallback = /* @__PURE__ */ factory("transformCallback", ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Transforms the given callback function based on its type and number of arrays.
+	*
+	* @param {Function} callback - The callback function to transform.
+	* @param {number} numberOfArrays - The number of arrays to pass to the callback function.
+	* @returns {*} - The transformed callback function.
+	*/
+	return function(callback, numberOfArrays) {
+		if (typed.isTypedFunction(callback)) return _transformTypedCallbackFunction(callback, numberOfArrays);
+		else return _transformCallbackFunction(callback, callback.length, numberOfArrays);
+	};
+	/**
+	* Transforms the given typed callback function based on the number of arrays.
+	*
+	* @param {Function} typedFunction - The typed callback function to transform.
+	* @param {number} numberOfArrays - The number of arrays to pass to the callback function.
+	* @returns {*} - The transformed callback function.
+	*/
+	function _transformTypedCallbackFunction(typedFunction, numberOfArrays) {
+		var signatures = Object.fromEntries(Object.entries(typedFunction.signatures).map((_ref2) => {
+			var [signature, callbackFunction] = _ref2;
+			var numberOfCallbackInputs = signature.split(",").length;
+			if (typed.isTypedFunction(callbackFunction)) return [signature, _transformTypedCallbackFunction(callbackFunction, numberOfArrays)];
+			else return [signature, _transformCallbackFunction(callbackFunction, numberOfCallbackInputs, numberOfArrays)];
+		}));
+		if (typeof typedFunction.name === "string") return typed(typedFunction.name, signatures);
+		else return typed(signatures);
+	}
+});
+/**
+* Transforms the callback function based on the number of callback inputs and arrays.
+* There are three cases:
+* 1. The callback function has N arguments.
+* 2. The callback function has N+1 arguments.
+* 3. The callback function has 2N+1 arguments.
+*
+* @param {Function} callbackFunction - The callback function to transform.
+* @param {number} numberOfCallbackInputs - The number of callback inputs.
+* @param {number} numberOfArrays - The number of arrays.
+* @returns {Function} The transformed callback function.
+*/
+function _transformCallbackFunction(callbackFunction, numberOfCallbackInputs, numberOfArrays) {
+	if (numberOfCallbackInputs === numberOfArrays) return callbackFunction;
+	else if (numberOfCallbackInputs === numberOfArrays + 1) return function() {
+		for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) args[_key] = arguments[_key];
+		var vals = args.slice(0, numberOfArrays);
+		var idx = _transformDims(args[numberOfArrays]);
+		return callbackFunction(...vals, idx);
+	};
+	else if (numberOfCallbackInputs > numberOfArrays + 1) return function() {
+		for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) args[_key2] = arguments[_key2];
+		var vals = args.slice(0, numberOfArrays);
+		var idx = _transformDims(args[numberOfArrays]);
+		var rest = args.slice(numberOfArrays + 1);
+		return callbackFunction(...vals, idx, ...rest);
+	};
+	else return callbackFunction;
+}
+/**
+* Transforms the dimensions by adding 1 to each dimension.
+*
+* @param {Array} dims - The dimensions to transform.
+* @returns {Array} The transformed dimensions.
+*/
+function _transformDims(dims) {
+	return dims.map((dim) => dim + 1);
+}
+var createFilterTransform = /* @__PURE__ */ factory("filter", ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Attach a transform function to math.filter
+	* Adds a property transform containing the transform function.
+	*
+	* This transform adds support for equations as test function for math.filter,
+	* so you can do something like 'filter([3, -2, 5], x > 0)'.
+	*/
+	function filterTransform(args, math, scope) {
+		var filter = createFilter({ typed });
+		var transformCallback = createTransformCallback({ typed });
+		if (args.length === 0) return filter();
+		var x = args[0];
+		if (args.length === 1) return filter(x);
+		var N = args.length - 1;
+		var callback = args[N];
+		if (x) x = _compileAndEvaluate(x, scope);
+		if (callback) if (isSymbolNode(callback) || isFunctionAssignmentNode(callback)) callback = _compileAndEvaluate(callback, scope);
+		else callback = compileInlineExpression(callback, math, scope);
+		return filter(x, transformCallback(callback, N));
+	}
+	filterTransform.rawArgs = true;
+	function _compileAndEvaluate(arg, scope) {
+		return arg.compile().evaluate(scope);
+	}
+	return filterTransform;
+}, { isTransformFunction: true });
+var createForEachTransform = /* @__PURE__ */ factory("forEach", ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Attach a transform function to math.forEach
+	* Adds a property transform containing the transform function.
+	*
+	* This transform creates a one-based index instead of a zero-based index
+	*/
+	var forEach = createForEach({ typed });
+	var transformCallback = createTransformCallback({ typed });
+	function forEachTransform(args, math, scope) {
+		if (args.length === 0) return forEach();
+		var x = args[0];
+		if (args.length === 1) return forEach(x);
+		var N = args.length - 1;
+		var callback = args[N];
+		if (x) x = _compileAndEvaluate(x, scope);
+		if (callback) if (isSymbolNode(callback) || isFunctionAssignmentNode(callback)) callback = _compileAndEvaluate(callback, scope);
+		else callback = compileInlineExpression(callback, math, scope);
+		return forEach(x, transformCallback(callback, N));
+	}
+	forEachTransform.rawArgs = true;
+	function _compileAndEvaluate(arg, scope) {
+		return arg.compile().evaluate(scope);
+	}
+	return forEachTransform;
+}, { isTransformFunction: true });
+var createMapTransform = /* @__PURE__ */ factory("map", ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Attach a transform function to math.map
+	* Adds a property transform containing the transform function.
+	*
+	* This transform creates a one-based index instead of a zero-based index
+	*/
+	var map = createMap({ typed });
+	var transformCallback = createTransformCallback({ typed });
+	function mapTransform(args, math, scope) {
+		if (args.length === 0) return map();
+		if (args.length === 1) return map(args[0]);
+		var N = args.length - 1;
+		var X = args.slice(0, N);
+		var callback = args[N];
+		X = X.map((arg) => _compileAndEvaluate(arg, scope));
+		if (callback) if (isSymbolNode(callback) || isFunctionAssignmentNode(callback)) callback = _compileAndEvaluate(callback, scope);
+		else callback = compileInlineExpression(callback, math, scope);
+		return map(...X, transformCallback(callback, N));
+		function _compileAndEvaluate(arg, scope) {
+			return arg.compile().evaluate(scope);
+		}
+	}
+	mapTransform.rawArgs = true;
+	return mapTransform;
+}, { isTransformFunction: true });
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/transform/utils/dimToZeroBase.js
+/**
+* Change last argument dim from one-based to zero-based.
+*/
+function dimToZeroBase(dim) {
+	if (isNumber(dim)) return dim - 1;
+	else if (isBigNumber(dim)) return dim.minus(1);
+	else return dim;
+}
+function isNumberOrBigNumber(n) {
+	return isNumber(n) || isBigNumber(n);
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/transform/utils/lastDimToZeroBase.js
+/**
+* Change last argument dim from one-based to zero-based.
+*/
+function lastDimToZeroBase(args) {
+	if (args.length === 2 && isCollection(args[0])) {
+		args = args.slice();
+		var dim = args[1];
+		if (isNumberOrBigNumber(dim)) args[1] = dimToZeroBase(dim);
+	}
+	return args;
+}
+var createMaxTransform = /* @__PURE__ */ factory("max", [
+	"typed",
+	"config",
+	"numeric",
+	"larger",
+	"isNaN"
+], (_ref) => {
+	var { typed, config, numeric, larger, isNaN: mathIsNaN } = _ref;
+	var max = createMax({
+		typed,
+		config,
+		numeric,
+		larger,
+		isNaN: mathIsNaN
+	});
+	/**
+	* Attach a transform function to math.max
+	* Adds a property transform containing the transform function.
+	*
+	* This transform changed the last `dim` parameter of function max
+	* from one-based to zero based
+	*/
+	return typed("max", { "...any": function any(args) {
+		args = lastDimToZeroBase(args);
+		try {
+			return max.apply(null, args);
+		} catch (err) {
+			throw errorTransform(err);
+		}
+	} });
+}, { isTransformFunction: true });
+var createMeanTransform = /* @__PURE__ */ factory("mean", [
+	"typed",
+	"add",
+	"divide"
+], (_ref) => {
+	var { typed, add, divide } = _ref;
+	var mean = createMean({
+		typed,
+		add,
+		divide
+	});
+	/**
+	* Attach a transform function to math.mean
+	* Adds a property transform containing the transform function.
+	*
+	* This transform changed the last `dim` parameter of function mean
+	* from one-based to zero based
+	*/
+	return typed("mean", { "...any": function any(args) {
+		args = lastDimToZeroBase(args);
+		try {
+			return mean.apply(null, args);
+		} catch (err) {
+			throw errorTransform(err);
+		}
+	} });
+}, { isTransformFunction: true });
+var createMinTransform = /* @__PURE__ */ factory("min", [
+	"typed",
+	"config",
+	"numeric",
+	"smaller",
+	"isNaN"
+], (_ref) => {
+	var { typed, config, numeric, smaller, isNaN: mathIsNaN } = _ref;
+	var min = createMin({
+		typed,
+		config,
+		numeric,
+		smaller,
+		isNaN: mathIsNaN
+	});
+	/**
+	* Attach a transform function to math.min
+	* Adds a property transform containing the transform function.
+	*
+	* This transform changed the last `dim` parameter of function min
+	* from one-based to zero based
+	*/
+	return typed("min", { "...any": function any(args) {
+		args = lastDimToZeroBase(args);
+		try {
+			return min.apply(null, args);
+		} catch (err) {
+			throw errorTransform(err);
+		}
+	} });
+}, { isTransformFunction: true });
+var createRangeTransform = /* @__PURE__ */ factory("range", [
+	"typed",
+	"config",
+	"?matrix",
+	"?bignumber",
+	"equal",
+	"smaller",
+	"smallerEq",
+	"larger",
+	"largerEq",
+	"add",
+	"isZero",
+	"isPositive"
+], (_ref) => {
+	var { typed, config, matrix, bignumber, equal, smaller, smallerEq, larger, largerEq, add, isZero, isPositive } = _ref;
+	var range = createRange({
+		typed,
+		config,
+		matrix,
+		bignumber,
+		equal,
+		smaller,
+		smallerEq,
+		larger,
+		largerEq,
+		add,
+		isZero,
+		isPositive
+	});
+	/**
+	* Attach a transform function to math.range
+	* Adds a property transform containing the transform function.
+	*
+	* This transform creates a range which includes the end value
+	*/
+	return typed("range", { "...any": function any(args) {
+		if (typeof args[args.length - 1] !== "boolean") args.push(true);
+		return range.apply(null, args);
+	} });
+}, { isTransformFunction: true });
+/**
+* Attach a transform function to math.std
+* Adds a property transform containing the transform function.
+*
+* This transform changed the `dim` parameter of function std
+* from one-based to zero based
+*/
+var createStdTransform = /* @__PURE__ */ factory("std", [
+	"typed",
+	"map",
+	"sqrt",
+	"variance"
+], (_ref) => {
+	var { typed, map, sqrt, variance } = _ref;
+	var std = createStd({
+		typed,
+		map,
+		sqrt,
+		variance
+	});
+	return typed("std", { "...any": function any(args) {
+		args = lastDimToZeroBase(args);
+		try {
+			return std.apply(null, args);
+		} catch (err) {
+			throw errorTransform(err);
+		}
+	} });
+}, { isTransformFunction: true });
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/transform/sum.transform.js
+/**
+* Attach a transform function to math.sum
+* Adds a property transform containing the transform function.
+*
+* This transform changed the last `dim` parameter of function sum
+* from one-based to zero based
+*/
+var name$12 = "sum";
+var createSumTransform = /* @__PURE__ */ factory(name$12, [
+	"typed",
+	"config",
+	"add",
+	"numeric"
+], (_ref) => {
+	var { typed, config, add, numeric } = _ref;
+	var sum = createSum({
+		typed,
+		config,
+		add,
+		numeric
+	});
+	return typed(name$12, { "...any": function any(args) {
+		args = lastDimToZeroBase(args);
+		try {
+			return sum.apply(null, args);
+		} catch (err) {
+			throw errorTransform(err);
+		}
+	} });
+}, { isTransformFunction: true });
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/transform/cumsum.transform.js
+/**
+* Attach a transform function to math.sum
+* Adds a property transform containing the transform function.
+*
+* This transform changed the last `dim` parameter of function sum
+* from one-based to zero based
+*/
+var name$11 = "cumsum";
+var createCumSumTransform = /* @__PURE__ */ factory(name$11, [
+	"typed",
+	"add",
+	"unaryPlus"
+], (_ref) => {
+	var { typed, add, unaryPlus } = _ref;
+	var cumsum = createCumSum({
+		typed,
+		add,
+		unaryPlus
+	});
+	return typed(name$11, { "...any": function any(args) {
+		if (args.length === 2 && isCollection(args[0])) {
+			var dim = args[1];
+			if (isNumber(dim)) args[1] = dim - 1;
+			else if (isBigNumber(dim)) args[1] = dim.minus(1);
+		}
+		try {
+			return cumsum.apply(null, args);
+		} catch (err) {
+			throw errorTransform(err);
+		}
+	} });
+}, { isTransformFunction: true });
+//#endregion
+//#region node_modules/mathjs/lib/esm/expression/transform/variance.transform.js
+var name$10 = "variance";
+/**
+* Attach a transform function to math.var
+* Adds a property transform containing the transform function.
+*
+* This transform changed the `dim` parameter of function var
+* from one-based to zero based
+*/
+var createVarianceTransform = /* @__PURE__ */ factory(name$10, [
+	"typed",
+	"add",
+	"subtract",
+	"multiply",
+	"divide",
+	"mapSlices",
+	"isNaN"
+], (_ref) => {
+	var { typed, add, subtract, multiply, divide, mapSlices, isNaN: mathIsNaN } = _ref;
+	var variance = createVariance({
+		typed,
+		add,
+		subtract,
+		multiply,
+		divide,
+		mapSlices,
+		isNaN: mathIsNaN
+	});
+	return typed(name$10, { "...any": function any(args) {
+		args = lastDimToZeroBase(args);
+		try {
+			return variance.apply(null, args);
+		} catch (err) {
+			throw errorTransform(err);
+		}
+	} });
+}, { isTransformFunction: true });
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/utils/clone.js
+var name$9 = "clone";
+var createClone = /* @__PURE__ */ factory(name$9, ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Clone an object. Will make a deep copy of the data.
+	*
+	* Syntax:
+	*
+	*     math.clone(x)
+	*
+	* Examples:
+	*
+	*    math.clone(3.5)                   // returns number 3.5
+	*    math.clone(math.complex('2-4i'))  // returns Complex 2 - 4i
+	*    math.clone(math.unit(45, 'deg'))  // returns Unit 45 deg
+	*    math.clone([[1, 2], [3, 4]])      // returns Array [[1, 2], [3, 4]]
+	*    math.clone("hello world")         // returns string "hello world"
+	*
+	* @param {*} x   Object to be cloned
+	* @return {*} A clone of object x
+	*/
+	return typed(name$9, { any: clone$3 });
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/utils/isNumeric.js
+var name$8 = "isNumeric";
+var createIsNumeric = /* @__PURE__ */ factory(name$8, ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Test whether a value is an numeric value.
+	*
+	* The function is evaluated element-wise in case of Array or Matrix input.
+	*
+	* Syntax:
+	*
+	*     math.isNumeric(x)
+	*
+	* Examples:
+	*
+	*    math.isNumeric(2)                     // returns true
+	*    math.isNumeric('2')                   // returns false
+	*    math.hasNumericValue('2')             // returns true
+	*    math.isNumeric(0)                     // returns true
+	*    math.isNumeric(math.bignumber('42'))  // returns true
+	*    math.isNumeric(math.bigint('42'))     // returns true
+	*    math.isNumeric(math.fraction(4))      // returns true
+	*    math.isNumeric(math.complex('2-4i'))  // returns false
+	*    math.isNumeric([2.3, 'foo', false])   // returns [true, false, true]
+	*
+	* See also:
+	*
+	*    isZero, isPositive, isNegative, isInteger, hasNumericValue, isFinite, isBounded
+	*
+	* @param {*} x       Value to be tested
+	* @return {boolean}  Returns true when `x` is a `number`, `BigNumber`,
+	*                    `Fraction`, or `boolean`. Returns false for other types.
+	*                    Throws an error in case of unknown types.
+	*/
+	return typed(name$8, {
+		"number | BigNumber | bigint | Fraction | boolean": () => true,
+		"Complex | Unit | string | null | undefined | Node": () => false,
+		"Array | Matrix": typed.referToSelf((self) => (x) => deepMap(x, self))
+	});
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/utils/hasNumericValue.js
+var name$7 = "hasNumericValue";
+var createHasNumericValue = /* @__PURE__ */ factory(name$7, ["typed", "isNumeric"], (_ref) => {
+	var { typed, isNumeric } = _ref;
+	/**
+	* Test whether a value is an numeric value.
+	*
+	* In case of a string, true is returned if the string contains a numeric value.
+	*
+	* Syntax:
+	*
+	*     math.hasNumericValue(x)
+	*
+	* Examples:
+	*
+	*    math.hasNumericValue(2)                     // returns true
+	*    math.hasNumericValue('2')                   // returns true
+	*    math.isNumeric('2')                         // returns false
+	*    math.hasNumericValue(0)                     // returns true
+	*    math.hasNumericValue(math.bignumber('500')) // returns true
+	*    math.hasNumericValue(math.bigint('42'))     // returns true
+	*    math.hasNumericValue(42n)                   // returns true
+	*    math.hasNumericValue(math.fraction(4))      // returns true
+	*    math.hasNumericValue(math.complex('2-4i'))  // returns false
+	*    math.hasNumericValue(false)                 // returns true
+	*    math.hasNumericValue([2.3, 'foo', false])   // returns [true, false, true]
+	*
+	* See also:
+	*
+	*    isZero, isPositive, isNegative, isInteger, isNumeric
+	*
+	* @param {*} x       Value to be tested
+	* @return {boolean}  Returns true when `x` is a `number`, `BigNumber`,
+	*                    `Fraction`, `Boolean`, or a `String` containing number. Returns false for other types.
+	*                    Throws an error in case of unknown types.
+	*/
+	return typed(name$7, {
+		boolean: () => true,
+		string: function string(x) {
+			return x.trim().length > 0 && !isNaN(Number(x));
+		},
+		any: function any(x) {
+			return isNumeric(x);
+		}
+	});
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/utils/isBounded.js
+var name$6 = "isBounded";
+var createIsBounded = /* @__PURE__ */ factory(name$6, ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Test whether a value is bounded. For scalars, this test is equivalent
+	* to the isFinite finiteness test. On the other hand, a Matrix or Array
+	* is defined to be bounded if every entry is finite.
+	*
+	* Syntax:
+	*
+	*     math.isBounded(x)
+	*
+	* Examples:
+	*
+	*    math.isBounded(0)                        // returns true
+	*    math.isBounded(NaN)                      // returns false
+	*    math.isBounded(math.bignumber(Infinity)) // returns false
+	*    math.isBounded(math.fraction(1,3))       // returns true
+	*    math.isBounded(math.complex('2 - 4i'))   // returns true
+	*    math.isBounded(-10000000000000000n)      // returns true
+	*    math.isBounded(undefined)                // returns false
+	*    math.isBounded(null)                     // returns false
+	*    math.isBounded([0.001, -3n, 0])          // returns true
+	*    math.isBounded([2, -Infinity, -3])       // returns false
+	*
+	* See also:
+	*
+	*    isFinite, isNumeric, isPositive, isNegative, isNaN
+	*
+	* @param {number | BigNumber | bigint | Complex | Fraction | Unit | Array | Matrix} x       Value to be tested
+	* @return {boolean}  Returns true when `x` is bounded.
+	*/
+	return typed(name$6, {
+		number: (n) => Number.isFinite(n),
+		"BigNumber | Complex": (x) => x.isFinite(),
+		"bigint | Fraction": () => true,
+		"null | undefined": () => false,
+		Unit: typed.referToSelf((self) => (x) => self(x.value)),
+		"Array | Matrix": typed.referToSelf((self) => (A) => {
+			if (!Array.isArray(A)) A = A.valueOf();
+			return A.every((entry) => self(entry));
+		})
+	});
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/utils/isFinite.js
+var name$5 = "isFinite";
+var createIsFinite = /* @__PURE__ */ factory(name$5, [
+	"typed",
+	"isBounded",
+	"map"
+], (_ref) => {
+	var { typed, isBounded, map } = _ref;
+	/**
+	* Test whether a value is finite.
+	*
+	* Operates elementwise on Array and Matrix values. To test if all entries
+	* of an Array or Matrix are finite, use isBounded.
+	*
+	* Syntax:
+	*
+	*     math.isFinite(x)
+	*
+	* Examples:
+	*
+	*    math.isFinite(0)                        // returns true
+	*    math.isFinite(NaN)                      // returns false
+	*    math.isFinite(math.bignumber(Infinity)) // returns false
+	*    math.isFinite(math.fraction(1,3))       // returns true
+	*    math.isFinite(math.complex('2 - 4i'))   // returns true
+	*    math.isFinite(-10000000000000000n)      // returns true
+	*    math.isFinite(undefined)                // returns false
+	*    math.isFinite(null)                     // returns false
+	*    math.isFinite([0.001, -3n, 0])          // Array [true, true, true]
+	*    math.isFinite([2, -Infinity, -3])       // Array [true, false, true]
+	*
+	* See also:
+	*
+	*    isBounded isNumeric, isPositive, isNegative, isNaN
+	*
+	* History:
+	*
+	*    v15.1   Created
+	*
+	* @param {number | BigNumber | bigint | Complex | Fraction | Unit | Array | Matrix} x
+	*     Value to be tested
+	* @return {boolean | Array | Matrix}
+	*     Whether the value, or its entries, are finite, as appropriate
+	*     to its type
+	*/
+	return typed(name$5, {
+		"Array | Matrix": (A) => map(A, isBounded),
+		any: (x) => isBounded(x)
+	});
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/utils/typeOf.js
+var name$4 = "typeOf";
+var createTypeOf = /* @__PURE__ */ factory(name$4, ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Determine the type of an entity.
+	*
+	* Syntax:
+	*
+	*    math.typeOf(x)
+	*
+	* Examples:
+	*
+	*    // This list is intended to include all relevant types, for testing
+	*    // purposes:
+	*    math.typeOf(3.5)                      // returns 'number'
+	*    math.typeOf(42n)                      // returns 'bigint'
+	*    math.typeOf(math.complex('2-4i'))     // returns 'Complex'
+	*    math.typeOf(math.unit('45 deg'))      // returns 'Unit'
+	*    math.typeOf('hello world')            // returns 'string'
+	*    math.typeOf(null)                     // returns 'null'
+	*    math.typeOf(true)                     // returns 'boolean'
+	*    math.typeOf([1, 2, 3])                // returns 'Array'
+	*    math.typeOf(new Date())               // returns 'Date'
+	*    math.typeOf(function () {})           // returns 'function'
+	*    math.typeOf({a: 2, b: 3})             // returns 'Object'
+	*    math.typeOf(/a regexp/)               // returns 'RegExp'
+	*    math.typeOf(undefined)                // returns 'undefined'
+	*    math.typeOf(math.bignumber('23e99'))  // returns 'BigNumber'
+	*    math.typeOf(math.chain(2))            // returns 'Chain'
+	*    math.typeOf(math.fraction(1, 3))      // returns 'Fraction'
+	*    math.typeOf(math.help('sqrt'))        // returns 'Help'
+	*    math.typeOf(math.index(1, 3))         // returns 'Index'
+	*    math.typeOf(math.matrix([[1],[3]]))   // returns 'DenseMatrix'
+	*    math.typeOf(math.matrix([],'sparse')) // returns 'SparseMatrix'
+	*    math.typeOf(new math.Range(0, 10))    // returns 'Range'
+	*    math.typeOf(math.evaluate('a=2\na'))  // returns 'ResultSet'
+	*    math.typeOf(math.parse('A[2]'))       // returns 'AccessorNode'
+	*    math.typeOf(math.parse('[1,2,3]'))    // returns 'ArrayNode'
+	*    math.typeOf(math.parse('x=2'))        // returns 'AssignmentNode'
+	*    math.typeOf(math.parse('a=2; b=3'))   // returns 'BlockNode'
+	*    math.typeOf(math.parse('x<0?-1:1'))   // returns 'ConditionalNode'
+	*    math.typeOf(math.parse('2.3'))        // returns 'ConstantNode'
+	*    math.typeOf(math.parse('f(x)=x^2'))   // returns 'FunctionAssignmentNode'
+	*    math.typeOf(math.parse('sqrt(4)'))    // returns 'FunctionNode'
+	*    math.typeOf(math.parse('A[2]').index) // returns 'IndexNode'
+	*    math.typeOf(math.parse('{a:2}'))      // returns 'ObjectNode'
+	*    math.typeOf(math.parse('(2+3)'))      // returns 'ParenthesisNode'
+	*    math.typeOf(math.parse('1:10'))       // returns 'RangeNode'
+	*    math.typeOf(math.parse('a<b<c'))      // returns 'RelationalNode'
+	*    math.typeOf(math.parse('x'))          // returns 'SymbolNode'
+	*
+	* @param {*} x     The variable for which to test the type.
+	* @return {string} Returns the name of the type. Primitive types are lower case,
+	*                  non-primitive types are upper-camel-case.
+	*                  For example 'number', 'string', 'Array', 'Date'.
+	*/
+	return typed(name$4, { any: typeOf$1 });
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/function/utils/isPrime.js
+var name$3 = "isPrime";
+var createIsPrime = /* @__PURE__ */ factory(name$3, ["typed"], (_ref) => {
+	var { typed } = _ref;
+	/**
+	* Test whether a value is prime: has no divisors other than itself and one.
+	* The function supports type `number`, `bignumber`.
+	*
+	* The function is evaluated element-wise in case of Array or Matrix input.
+	*
+	* Syntax:
+	*
+	*     math.isPrime(x)
+	*
+	* Examples:
+	*
+	*    math.isPrime(3)                     // returns true
+	*    math.isPrime(-2)                    // returns false
+	*    math.isPrime(0)                     // returns false
+	*    math.isPrime(-0)                    // returns false
+	*    math.isPrime(0.5)                   // returns false
+	*    math.isPrime('2')                   // returns true
+	*    math.isPrime([2, 17, 100])           // returns [true, true, false]
+	*
+	* See also:
+	*
+	*    isNumeric, isZero, isNegative, isInteger
+	*
+	* @param {number | BigNumber | bigint | Array | Matrix} x  Value to be tested
+	* @return {boolean}  Returns true when `x` is larger than zero.
+	*                    Throws an error in case of an unknown data type.
+	*/
+	return typed(name$3, {
+		number: function number(x) {
+			if (x <= 3) return x > 1;
+			if (x % 2 === 0 || x % 3 === 0) return false;
+			for (var i = 5; i * i <= x; i += 6) if (x % i === 0 || x % (i + 2) === 0) return false;
+			return true;
+		},
+		bigint: function bigint(x) {
+			if (x <= 3n) return x > 1n;
+			if (x % 2n === 0n || x % 3n === 0n) return false;
+			for (var i = 5n; i * i <= x; i += 6n) if (x % i === 0n || x % (i + 2n) === 0n) return false;
+			return true;
+		},
+		BigNumber: function BigNumber(n) {
+			if (n.lte(3)) return n.gt(1);
+			if (n.mod(2).eq(0) || n.mod(3).eq(0)) return false;
+			if (n.lt(Math.pow(2, 32))) {
+				var x = n.toNumber();
+				for (var i = 5; i * i <= x; i += 6) if (x % i === 0 || x % (i + 2) === 0) return false;
+				return true;
+			}
+			function modPow(base, exponent, modulus) {
+				var accumulator = 1;
+				while (!exponent.eq(0)) if (exponent.mod(2).eq(0)) {
+					exponent = exponent.div(2);
+					base = base.mul(base).mod(modulus);
+				} else {
+					exponent = exponent.sub(1);
+					accumulator = base.mul(accumulator).mod(modulus);
+				}
+				return accumulator;
+			}
+			n = new (n.constructor.clone({ precision: n.toFixed(0).length * 2 }))(n);
+			var r = 0;
+			var d = n.sub(1);
+			while (d.mod(2).eq(0)) {
+				d = d.div(2);
+				r += 1;
+			}
+			var bases = null;
+			if (n.lt("3317044064679887385961981")) bases = [
+				2,
+				3,
+				5,
+				7,
+				11,
+				13,
+				17,
+				19,
+				23,
+				29,
+				31,
+				37,
+				41
+			].filter((x) => x < n);
+			else {
+				var max = Math.min(n.toNumber() - 2, Math.floor(2 * Math.pow(n.toFixed(0).length * Math.log(10), 2)));
+				bases = [];
+				for (var _i = 2; _i <= max; _i += 1) bases.push(max);
+			}
+			for (var _i2 = 0; _i2 < bases.length; _i2 += 1) {
+				var a = bases[_i2];
+				var adn = modPow(n.sub(n).add(a), d, n);
+				if (!adn.eq(1)) {
+					for (var _i3 = 0, _x = adn; !_x.eq(n.sub(1)); _i3 += 1, _x = _x.mul(_x).mod(n)) if (_i3 === r - 1) return false;
+				}
+			}
+			return true;
+		},
+		"Array | Matrix": typed.referToSelf((self) => (x) => deepMap(x, self))
+	});
+});
+var createNumeric = /* @__PURE__ */ factory("numeric", [
+	"number",
+	"?bignumber",
+	"?fraction"
+], (_ref) => {
+	var { number: _number, bignumber, fraction } = _ref;
+	var validInputTypes = {
+		string: true,
+		number: true,
+		BigNumber: true,
+		Fraction: true
+	};
+	var validOutputTypes = {
+		number: (x) => _number(x),
+		BigNumber: bignumber ? (x) => bignumber(x) : noBignumber,
+		bigint: (x) => BigInt(x),
+		Fraction: fraction ? (x) => fraction(x) : noFraction
+	};
+	/**
+	* Convert a numeric input to a specific numeric type: number, BigNumber, bigint, or Fraction.
+	*
+	* Syntax:
+	*
+	*    math.numeric(x)
+	*    math.numeric(value, outputType)
+	*
+	* Examples:
+	*
+	*    math.numeric('4')                           // returns 4
+	*    math.numeric('4', 'number')                 // returns 4
+	*    math.numeric('4', 'bigint')                 // returns 4n
+	*    math.numeric('4', 'BigNumber')              // returns BigNumber 4
+	*    math.numeric('4', 'Fraction')               // returns Fraction 4
+	*    math.numeric(4, 'Fraction')                 // returns Fraction 4
+	*    math.numeric(math.fraction(2, 5), 'number') // returns 0.4
+	*
+	* See also:
+	*
+	*    number, fraction, bignumber, bigint, string, format
+	*
+	* History:
+	*
+	*    v6       Created
+	*    v13      Added `bigint` support
+	*    v14.2.1  Prefer mathjs `bigint()` to built-in `BigInt()`
+	*
+	* @param {string | number | BigNumber | bigint | Fraction } value
+	*              A numeric value or a string containing a numeric value
+	* @param {string} outputType
+	*              Desired numeric output type.
+	*              Available values: 'number', 'BigNumber', or 'Fraction'
+	* @return {number | BigNumber | bigint | Fraction}
+	*              Returns an instance of the numeric in the requested type
+	*/
+	return function numeric(value) {
+		var outputType = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : "number";
+		if ((arguments.length > 2 ? arguments[2] : void 0) !== void 0) throw new SyntaxError("numeric() takes one or two arguments");
+		var inputType = typeOf$1(value);
+		if (!(inputType in validInputTypes)) throw new TypeError("Cannot convert " + value + " of type \"" + inputType + "\"; valid input types are " + Object.keys(validInputTypes).join(", "));
+		if (!(outputType in validOutputTypes)) throw new TypeError("Cannot convert " + value + " to type \"" + outputType + "\"; valid output types are " + Object.keys(validOutputTypes).join(", "));
+		if (outputType === inputType) return value;
+		else return validOutputTypes[outputType](value);
+	};
+});
+var createReviver = /* @__PURE__ */ factory("reviver", ["classes"], (_ref) => {
+	var { classes } = _ref;
+	/**
+	* Instantiate mathjs data types from their JSON representation
+	* @param {string} key
+	* @param {*} value
+	* @returns {*} Returns the revived object
+	*/
+	return function reviver(key, value) {
+		var constructor = classes[value && value.mathjs];
+		if (constructor && typeof constructor.fromJSON === "function") return constructor.fromJSON(value);
+		return value;
+	};
+});
+var createReplacer = /* @__PURE__ */ factory("replacer", [], () => {
+	/**
+	* Stringify data types into their JSON representation.
+	* Most data types can be serialized using their `.toJSON` method,
+	* but not all, for example the number `Infinity`. For these cases you have
+	* to use the replacer. Example usage:
+	*
+	*     JSON.stringify([2, Infinity], math.replacer)
+	*
+	* @param {string} key
+	* @param {*} value
+	* @returns {*} Returns the replaced object
+	*/
+	return function replacer(key, value) {
+		if (typeof value === "number" && (!Number.isFinite(value) || isNaN(value))) return {
+			mathjs: "number",
+			value: String(value)
+		};
+		if (typeof value === "bigint") return {
+			mathjs: "bigint",
+			value: String(value)
+		};
+		return value;
+	};
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/factoriesNumber.js
+var createUnaryMinus = /* @__PURE__ */ createNumberFactory("unaryMinus", unaryMinusNumber);
+var createUnaryPlus = /* @__PURE__ */ createNumberFactory("unaryPlus", unaryPlusNumber);
+var createAbs = /* @__PURE__ */ createNumberFactory("abs", absNumber);
+var createAddScalar = /* @__PURE__ */ createNumberFactory("addScalar", addNumber);
+var createSubtractScalar = /* @__PURE__ */ createNumberFactory("subtractScalar", subtractNumber);
+var createCbrt = /* @__PURE__ */ createNumberFactory("cbrt", cbrtNumber);
+var createCube = /* @__PURE__ */ createNumberFactory("cube", cubeNumber);
+var createExp = /* @__PURE__ */ createNumberFactory("exp", expNumber);
+var createExpm1 = /* @__PURE__ */ createNumberFactory("expm1", expm1Number);
+var createGcd = /* @__PURE__ */ createNumberFactory("gcd", gcdNumber);
+var createLcm = /* @__PURE__ */ createNumberFactory("lcm", lcmNumber);
+var createLog10 = /* @__PURE__ */ createNumberFactory("log10", log10Number);
+var createLog2 = /* @__PURE__ */ createNumberFactory("log2", log2Number);
+var createMod = /* @__PURE__ */ createNumberFactory("mod", modNumber);
+var createMultiplyScalar = /* @__PURE__ */ createNumberFactory("multiplyScalar", multiplyNumber);
+var createMultiply = /* @__PURE__ */ createNumberFactory("multiply", multiplyNumber);
+var createNthRoot = /* @__PURE__ */ createNumberOptionalSecondArgFactory("nthRoot", nthRootNumber);
+var createSign = /* @__PURE__ */ createNumberFactory("sign", signNumber);
+var createSqrt = /* @__PURE__ */ createNumberFactory("sqrt", sqrtNumber);
+var createSquare = /* @__PURE__ */ createNumberFactory("square", squareNumber);
+var createSubtract = /* @__PURE__ */ createNumberFactory("subtract", subtractNumber);
+var createXgcd = /* @__PURE__ */ createNumberFactory("xgcd", xgcdNumber);
+var createDivideScalar = /* @__PURE__ */ createNumberFactory("divideScalar", divideNumber);
+var createPow = /* @__PURE__ */ createNumberFactory("pow", powNumber);
+var createRound = /* @__PURE__ */ createNumberOptionalSecondArgFactory("round", roundNumber);
+var createLog = /* @__PURE__ */ createNumberOptionalSecondArgFactory("log", logNumber);
+var createLog1p = /* @__PURE__ */ createNumberFactory("log1p", log1pNumber);
+var createAdd = /* @__PURE__ */ createNumberFactory("add", addNumber);
+var createNorm = /* @__PURE__ */ createNumberFactory("norm", normNumber);
+var createDivide = /* @__PURE__ */ createNumberFactory("divide", divideNumber);
+var createBitAnd = /* @__PURE__ */ createNumberFactory("bitAnd", bitAndNumber);
+var createBitNot = /* @__PURE__ */ createNumberFactory("bitNot", bitNotNumber);
+var createBitOr = /* @__PURE__ */ createNumberFactory("bitOr", bitOrNumber);
+var createBitXor = /* @__PURE__ */ createNumberFactory("bitXor", bitXorNumber);
+var createLeftShift = /* @__PURE__ */ createNumberFactory("leftShift", leftShiftNumber);
+var createRightArithShift = /* @__PURE__ */ createNumberFactory("rightArithShift", rightArithShiftNumber);
+var createRightLogShift = /* @__PURE__ */ createNumberFactory("rightLogShift", rightLogShiftNumber);
+var createAnd = /* @__PURE__ */ createNumberFactory("and", andNumber);
+var createNot = /* @__PURE__ */ createNumberFactory("not", notNumber);
+var createOr = /* @__PURE__ */ createNumberFactory("or", orNumber);
+var createXor = /* @__PURE__ */ createNumberFactory("xor", xorNumber);
+var createIndex = /* @__PURE__ */ factory("index", [], () => noIndex);
+var createMatrix = /* @__PURE__ */ factory("matrix", [], () => noMatrix);
+var createSubset = /* @__PURE__ */ factory("subset", [], () => noSubset);
+var createCombinations = createNumberFactory("combinations", combinationsNumber);
+var createGamma = createNumberFactory("gamma", gammaNumber);
+var createLgamma = createNumberFactory("lgamma", lgammaNumber);
+var createAcos = /* @__PURE__ */ createNumberFactory("acos", acosNumber);
+var createAcosh = /* @__PURE__ */ createNumberFactory("acosh", acoshNumber);
+var createAcot = /* @__PURE__ */ createNumberFactory("acot", acotNumber);
+var createAcoth = /* @__PURE__ */ createNumberFactory("acoth", acothNumber);
+var createAcsc = /* @__PURE__ */ createNumberFactory("acsc", acscNumber);
+var createAcsch = /* @__PURE__ */ createNumberFactory("acsch", acschNumber);
+var createAsec = /* @__PURE__ */ createNumberFactory("asec", asecNumber);
+var createAsech = /* @__PURE__ */ createNumberFactory("asech", asechNumber);
+var createAsin = /* @__PURE__ */ createNumberFactory("asin", asinNumber);
+var createAsinh = /* @__PURE__ */ createNumberFactory("asinh", asinhNumber);
+var createAtan = /* @__PURE__ */ createNumberFactory("atan", atanNumber);
+var createAtan2 = /* @__PURE__ */ createNumberFactory("atan2", atan2Number);
+var createAtanh = /* @__PURE__ */ createNumberFactory("atanh", atanhNumber);
+var createCos = /* @__PURE__ */ createNumberFactory("cos", cosNumber);
+var createCosh = /* @__PURE__ */ createNumberFactory("cosh", coshNumber);
+var createCot = /* @__PURE__ */ createNumberFactory("cot", cotNumber);
+var createCoth = /* @__PURE__ */ createNumberFactory("coth", cothNumber);
+var createCsc = /* @__PURE__ */ createNumberFactory("csc", cscNumber);
+var createCsch = /* @__PURE__ */ createNumberFactory("csch", cschNumber);
+var createSec = /* @__PURE__ */ createNumberFactory("sec", secNumber);
+var createSech = /* @__PURE__ */ createNumberFactory("sech", sechNumber);
+var createSin = /* @__PURE__ */ createNumberFactory("sin", sinNumber);
+var createSinh = /* @__PURE__ */ createNumberFactory("sinh", sinhNumber);
+var createTan = /* @__PURE__ */ createNumberFactory("tan", tanNumber);
+var createTanh = /* @__PURE__ */ createNumberFactory("tanh", tanhNumber);
+var createSubsetTransform = /* @__PURE__ */ factory("subset", [], () => noSubset, { isTransformFunction: true });
+var createIsInteger = /* @__PURE__ */ createNumberFactory("isInteger", isIntegerNumber);
+var createIsNegative = /* @__PURE__ */ createNumberFactory("isNegative", isNegativeNumber);
+var createIsPositive = /* @__PURE__ */ createNumberFactory("isPositive", isPositiveNumber);
+var createIsZero = /* @__PURE__ */ createNumberFactory("isZero", isZeroNumber);
+var createIsNaN = /* @__PURE__ */ createNumberFactory("isNaN", isNaNNumber);
+function createNumberFactory(name, fn) {
+	return factory(name, ["typed"], (_ref) => {
+		var { typed } = _ref;
+		return typed(fn);
+	});
+}
+function createNumberOptionalSecondArgFactory(name, fn) {
+	return factory(name, ["typed"], (_ref2) => {
+		var { typed } = _ref2;
+		return typed({
+			number: fn,
+			"number,number": fn
+		});
+	});
+}
+//#endregion
+//#region node_modules/mathjs/lib/esm/entry/pureFunctionsNumber.generated.js
+/**
+* THIS FILE IS AUTO-GENERATED
+* DON'T MAKE CHANGES HERE
+*/
+var e = /* @__PURE__ */ createE({ config: config$1 });
+var _false = /* @__PURE__ */ createFalse({});
+var index = /* @__PURE__ */ createIndex({});
+var _Infinity = /* @__PURE__ */ createInfinity({ config: config$1 });
+var LN10 = /* @__PURE__ */ createLN10({ config: config$1 });
+var LOG10E = /* @__PURE__ */ createLOG10E({ config: config$1 });
+var matrix = /* @__PURE__ */ createMatrix({});
+var _NaN = /* @__PURE__ */ createNaN({ config: config$1 });
+var _null = /* @__PURE__ */ createNull({});
+var phi = /* @__PURE__ */ createPhi({ config: config$1 });
+var Range = /* @__PURE__ */ createRangeClass({});
+var replacer = /* @__PURE__ */ createReplacer({});
+var ResultSet = /* @__PURE__ */ createResultSet({});
+var SQRT1_2 = /* @__PURE__ */ createSQRT1_2({ config: config$1 });
+var subset = /* @__PURE__ */ createSubset({});
+var tau = /* @__PURE__ */ createTau({ config: config$1 });
+var typed = /* @__PURE__ */ createTyped({});
+var unaryPlus = /* @__PURE__ */ createUnaryPlus({ typed });
+var version = /* @__PURE__ */ createVersion({});
+var xor = /* @__PURE__ */ createXor({ typed });
+var abs = /* @__PURE__ */ createAbs({ typed });
+var acos = /* @__PURE__ */ createAcos({ typed });
+var acot = /* @__PURE__ */ createAcot({ typed });
+var acsc = /* @__PURE__ */ createAcsc({ typed });
+var add = /* @__PURE__ */ createAdd({ typed });
+var and = /* @__PURE__ */ createAnd({ typed });
+var asec = /* @__PURE__ */ createAsec({ typed });
+var asin = /* @__PURE__ */ createAsin({ typed });
+var atan = /* @__PURE__ */ createAtan({ typed });
+var atanh = /* @__PURE__ */ createAtanh({ typed });
+var bigint = /* @__PURE__ */ createBigint({ typed });
+var bitNot = /* @__PURE__ */ createBitNot({ typed });
+var bitXor = /* @__PURE__ */ createBitXor({ typed });
+var boolean = /* @__PURE__ */ createBoolean({ typed });
+var cbrt = /* @__PURE__ */ createCbrt({ typed });
+var combinations = /* @__PURE__ */ createCombinations({ typed });
+var compare = /* @__PURE__ */ createCompareNumber({
+	config: config$1,
+	typed
+});
+var compareText = /* @__PURE__ */ createCompareTextNumber({ typed });
+var cos = /* @__PURE__ */ createCos({ typed });
+var cot = /* @__PURE__ */ createCot({ typed });
+var csc = /* @__PURE__ */ createCsc({ typed });
+var cube = /* @__PURE__ */ createCube({ typed });
+var divide = /* @__PURE__ */ createDivide({ typed });
+var equalScalar = /* @__PURE__ */ createEqualScalarNumber({
+	config: config$1,
+	typed
+});
+var erf = /* @__PURE__ */ createErf({ typed });
+var exp = /* @__PURE__ */ createExp({ typed });
+var filter = /* @__PURE__ */ createFilter({ typed });
+var forEach = /* @__PURE__ */ createForEach({ typed });
+var format = /* @__PURE__ */ createFormat({ typed });
+var gamma = /* @__PURE__ */ createGamma({ typed });
+var isBounded = /* @__PURE__ */ createIsBounded({ typed });
+var isInteger = /* @__PURE__ */ createIsInteger({ typed });
+var isNegative = /* @__PURE__ */ createIsNegative({ typed });
+var isPositive = /* @__PURE__ */ createIsPositive({ typed });
+var isZero = /* @__PURE__ */ createIsZero({ typed });
+var LOG2E = /* @__PURE__ */ createLOG2E({ config: config$1 });
+var largerEq = /* @__PURE__ */ createLargerEqNumber({
+	config: config$1,
+	typed
+});
+var leftShift = /* @__PURE__ */ createLeftShift({ typed });
+var log = /* @__PURE__ */ createLog({ typed });
+var log1p = /* @__PURE__ */ createLog1p({ typed });
+var map = /* @__PURE__ */ createMap({ typed });
+var mean = /* @__PURE__ */ createMean({
+	add,
+	divide,
+	typed
+});
+var mod = /* @__PURE__ */ createMod({ typed });
+var multiply = /* @__PURE__ */ createMultiply({ typed });
+var not = /* @__PURE__ */ createNot({ typed });
+var number = /* @__PURE__ */ createNumber({ typed });
+var or = /* @__PURE__ */ createOr({ typed });
+var pi = /* @__PURE__ */ createPi({ config: config$1 });
+var pow = /* @__PURE__ */ createPow({ typed });
+var random = /* @__PURE__ */ createRandomNumber({
+	config: config$1,
+	typed
+});
+var rightLogShift = /* @__PURE__ */ createRightLogShift({ typed });
+var SQRT2 = /* @__PURE__ */ createSQRT2({ config: config$1 });
+var sech = /* @__PURE__ */ createSech({ typed });
+var sin = /* @__PURE__ */ createSin({ typed });
+var size = /* @__PURE__ */ createSize({ typed });
+var smallerEq = /* @__PURE__ */ createSmallerEqNumber({
+	config: config$1,
+	typed
+});
+var square = /* @__PURE__ */ createSquare({ typed });
+var string = /* @__PURE__ */ createString({ typed });
+var subtract = /* @__PURE__ */ createSubtract({ typed });
+var tanh = /* @__PURE__ */ createTanh({ typed });
+var typeOf = /* @__PURE__ */ createTypeOf({ typed });
+var unequal = /* @__PURE__ */ createUnequalNumber({
+	equalScalar,
+	typed
+});
+var xgcd = /* @__PURE__ */ createXgcd({ typed });
+var acoth = /* @__PURE__ */ createAcoth({ typed });
+var addScalar = /* @__PURE__ */ createAddScalar({ typed });
+var asech = /* @__PURE__ */ createAsech({ typed });
+var bernoulli = /* @__PURE__ */ createBernoulli({
+	config: config$1,
+	isInteger,
+	number,
+	typed
+});
+var bitOr = /* @__PURE__ */ createBitOr({ typed });
+var combinationsWithRep = /* @__PURE__ */ createCombinationsWithRep({ typed });
+var cosh = /* @__PURE__ */ createCosh({ typed });
+var csch = /* @__PURE__ */ createCsch({ typed });
+var divideScalar = /* @__PURE__ */ createDivideScalar({ typed });
+var equalText = /* @__PURE__ */ createEqualText({
+	compareText,
+	isZero,
+	typed
+});
+var expm1 = /* @__PURE__ */ createExpm1({ typed });
+var isNaN$1 = /* @__PURE__ */ createIsNaN({ typed });
+var isPrime = /* @__PURE__ */ createIsPrime({ typed });
+var larger = /* @__PURE__ */ createLargerNumber({
+	config: config$1,
+	typed
+});
+var lgamma = /* @__PURE__ */ createLgamma({ typed });
+var log2 = /* @__PURE__ */ createLog2({ typed });
+var mapSlices = /* @__PURE__ */ createMapSlices({
+	isInteger,
+	typed
+});
+var multiplyScalar = /* @__PURE__ */ createMultiplyScalar({ typed });
+var nthRoot = /* @__PURE__ */ createNthRoot({ typed });
+var pickRandom = /* @__PURE__ */ createPickRandom({
+	config: config$1,
+	typed
+});
+var randomInt = /* @__PURE__ */ createRandomInt({
+	config: config$1,
+	log2,
+	typed
+});
+var rightArithShift = /* @__PURE__ */ createRightArithShift({ typed });
+var sec = /* @__PURE__ */ createSec({ typed });
+var sinh = /* @__PURE__ */ createSinh({ typed });
+var sqrt = /* @__PURE__ */ createSqrt({ typed });
+var tan = /* @__PURE__ */ createTan({ typed });
+var unaryMinus = /* @__PURE__ */ createUnaryMinus({ typed });
+var variance = /* @__PURE__ */ createVariance({
+	add,
+	divide,
+	isNaN: isNaN$1,
+	mapSlices,
+	multiply,
+	subtract,
+	typed
+});
+var acosh = /* @__PURE__ */ createAcosh({ typed });
+var atan2 = /* @__PURE__ */ createAtan2({ typed });
+var bitAnd = /* @__PURE__ */ createBitAnd({ typed });
+var catalan = /* @__PURE__ */ createCatalan({
+	addScalar,
+	combinations,
+	divideScalar,
+	isInteger,
+	isNegative,
+	multiplyScalar,
+	typed
+});
+var clone = /* @__PURE__ */ createClone({ typed });
+var composition = /* @__PURE__ */ createComposition({
+	addScalar,
+	combinations,
+	isInteger,
+	isNegative,
+	isPositive,
+	larger,
+	typed
+});
+var coth = /* @__PURE__ */ createCoth({ typed });
+var equal = /* @__PURE__ */ createEqualNumber({
+	equalScalar,
+	typed
+});
+var factorial = /* @__PURE__ */ createFactorial({
+	gamma,
+	typed
+});
+var isFinite$1 = /* @__PURE__ */ createIsFinite({
+	isBounded,
+	map,
+	typed
+});
+var LN2 = /* @__PURE__ */ createLN2({ config: config$1 });
+var log10 = /* @__PURE__ */ createLog10({ typed });
+var multinomial = /* @__PURE__ */ createMultinomial({
+	add,
+	divide,
+	factorial,
+	isInteger,
+	isPositive,
+	multiply,
+	typed
+});
+var numeric = /* @__PURE__ */ createNumeric({ number });
+var permutations = /* @__PURE__ */ createPermutations({
+	factorial,
+	typed
+});
+var prod = /* @__PURE__ */ createProd({
+	config: config$1,
+	multiplyScalar,
+	numeric,
+	typed
+});
+var round = /* @__PURE__ */ createRound({ typed });
+var smaller = /* @__PURE__ */ createSmallerNumber({
+	config: config$1,
+	typed
+});
+var subtractScalar = /* @__PURE__ */ createSubtractScalar({ typed });
+var zeta = /* @__PURE__ */ createZeta({
+	add,
+	config: config$1,
+	divide,
+	equal,
+	factorial,
+	gamma,
+	isBounded,
+	isNegative,
+	multiply,
+	pi,
+	pow,
+	sin,
+	smallerEq,
+	subtract,
+	typed
+});
+var acsch = /* @__PURE__ */ createAcsch({ typed });
+var compareNatural = /* @__PURE__ */ createCompareNatural({
+	compare,
+	typed
+});
+var cumsum = /* @__PURE__ */ createCumSum({
+	add,
+	typed,
+	unaryPlus
+});
+var floor = /* @__PURE__ */ createFloorNumber({
+	config: config$1,
+	round,
+	typed
+});
+var hypot = /* @__PURE__ */ createHypot({
+	abs,
+	addScalar,
+	divideScalar,
+	isPositive,
+	multiplyScalar,
+	smaller,
+	sqrt,
+	typed
+});
+var lcm = /* @__PURE__ */ createLcm({ typed });
+var max = /* @__PURE__ */ createMax({
+	config: config$1,
+	isNaN: isNaN$1,
+	larger,
+	numeric,
+	typed
+});
+var min = /* @__PURE__ */ createMin({
+	config: config$1,
+	isNaN: isNaN$1,
+	numeric,
+	smaller,
+	typed
+});
+var norm = /* @__PURE__ */ createNorm({ typed });
+var print = /* @__PURE__ */ createPrint({ typed });
+var range = /* @__PURE__ */ createRange({
+	matrix,
+	add,
+	config: config$1,
+	equal,
+	isPositive,
+	isZero,
+	larger,
+	largerEq,
+	smaller,
+	smallerEq,
+	typed
+});
+var sign = /* @__PURE__ */ createSign({ typed });
+var std = /* @__PURE__ */ createStd({
+	map,
+	sqrt,
+	typed,
+	variance
+});
+var sum = /* @__PURE__ */ createSum({
+	add,
+	config: config$1,
+	numeric,
+	typed
+});
+var asinh = /* @__PURE__ */ createAsinh({ typed });
+var ceil = /* @__PURE__ */ createCeilNumber({
+	config: config$1,
+	round,
+	typed
+});
+var corr = /* @__PURE__ */ createCorr({
+	add,
+	divide,
+	matrix,
+	mean,
+	multiply,
+	pow,
+	sqrt,
+	subtract,
+	sum,
+	typed
+});
+var fix = /* @__PURE__ */ createFixNumber({
+	ceil,
+	floor,
+	typed
+});
+var isNumeric = /* @__PURE__ */ createIsNumeric({ typed });
+var partitionSelect = /* @__PURE__ */ createPartitionSelect({
+	compare,
+	isNaN: isNaN$1,
+	isNumeric,
+	typed
+});
+var stirlingS2 = /* @__PURE__ */ createStirlingS2({
+	addScalar,
+	combinations,
+	divideScalar,
+	factorial,
+	isInteger,
+	isNegative,
+	larger,
+	multiplyScalar,
+	number,
+	pow,
+	subtractScalar,
+	typed
+});
+var bellNumbers = /* @__PURE__ */ createBellNumbers({
+	addScalar,
+	isInteger,
+	isNegative,
+	stirlingS2,
+	typed
+});
+var deepEqual = /* @__PURE__ */ createDeepEqual({
+	equal,
+	typed
+});
+var gcd = /* @__PURE__ */ createGcd({ typed });
+var median = /* @__PURE__ */ createMedian({
+	add,
+	compare,
+	divide,
+	partitionSelect,
+	typed
+});
+var quantileSeq = /* @__PURE__ */ createQuantileSeq({
+	add,
+	compare,
+	divide,
+	isInteger,
+	larger,
+	mapSlices,
+	multiply,
+	partitionSelect,
+	smaller,
+	smallerEq,
+	subtract,
+	typed
+});
+var mode = /* @__PURE__ */ createMode({
+	isNaN: isNaN$1,
+	isNumeric,
+	typed
+});
+var _true = /* @__PURE__ */ createTrue({});
+var hasNumericValue = /* @__PURE__ */ createHasNumericValue({
+	isNumeric,
+	typed
+});
+var mad = /* @__PURE__ */ createMad({
+	abs,
+	map,
+	median,
+	subtract,
+	typed
+});
+//#endregion
+//#region node_modules/mathjs/lib/esm/entry/impureFunctionsNumber.generated.js
+/**
+* THIS FILE IS AUTO-GENERATED
+* DON'T MAKE CHANGES HERE
+*/
+var math = {};
+var mathWithTransform = {};
+var classes = {};
+var Chain = createChainClass({
+	math,
+	typed
+});
+var Node = createNode({ mathWithTransform });
+var ObjectNode = createObjectNode({ Node });
+var RangeNode = createRangeNode({ Node });
+var RelationalNode = createRelationalNode({ Node });
+var reviver = createReviver({ classes });
+var SymbolNode = createSymbolNode({
+	Node,
+	math
+});
+var AccessorNode = createAccessorNode({
+	Node,
+	subset
+});
+var AssignmentNode = createAssignmentNode({
+	matrix,
+	Node,
+	subset
+});
+var chain = createChain({
+	Chain,
+	typed
+});
+var ConditionalNode = createConditionalNode({ Node });
+var FunctionNode = createFunctionNode({
+	Node,
+	SymbolNode,
+	math
+});
+var IndexNode = createIndexNode({
+	Node,
+	size
+});
+var OperatorNode = createOperatorNode({ Node });
+var ArrayNode = createArrayNode({ Node });
+var FunctionAssignmentNode = createFunctionAssignmentNode({
+	Node,
+	typed
+});
+var BlockNode = createBlockNode({
+	Node,
+	ResultSet
+});
+var ConstantNode = createConstantNode({
+	Node,
+	isBounded
+});
+var simplifyConstant = createSimplifyConstant({
+	AccessorNode,
+	ArrayNode,
+	ConstantNode,
+	FunctionNode,
+	IndexNode,
+	ObjectNode,
+	OperatorNode,
+	SymbolNode,
+	config: config$1,
+	isBounded,
+	mathWithTransform,
+	matrix,
+	typed
+});
+var ParenthesisNode = createParenthesisNode({ Node });
+var parse = createParse({
+	AccessorNode,
+	ArrayNode,
+	AssignmentNode,
+	BlockNode,
+	ConditionalNode,
+	ConstantNode,
+	FunctionAssignmentNode,
+	FunctionNode,
+	IndexNode,
+	ObjectNode,
+	OperatorNode,
+	ParenthesisNode,
+	RangeNode,
+	RelationalNode,
+	SymbolNode,
+	config: config$1,
+	numeric,
+	typed
+});
+var resolve = createResolve({
+	ConstantNode,
+	FunctionNode,
+	OperatorNode,
+	ParenthesisNode,
+	parse,
+	typed
+});
+var simplifyCore = createSimplifyCore({
+	AccessorNode,
+	ArrayNode,
+	ConstantNode,
+	FunctionNode,
+	IndexNode,
+	ObjectNode,
+	OperatorNode,
+	ParenthesisNode,
+	SymbolNode,
+	add,
+	divide,
+	equal,
+	isZero,
+	multiply,
+	parse,
+	pow,
+	subtract,
+	typed
+});
+var compile = createCompile({
+	parse,
+	typed
+});
+var evaluate = createEvaluate({
+	parse,
+	typed
+});
+var Help = createHelpClass({ evaluate });
+var Parser = createParserClass({
+	evaluate,
+	parse
+});
+var simplify$1 = createSimplify({
+	AccessorNode,
+	ArrayNode,
+	ConstantNode,
+	FunctionNode,
+	IndexNode,
+	ObjectNode,
+	OperatorNode,
+	ParenthesisNode,
+	SymbolNode,
+	equal,
+	parse,
+	replacer,
+	resolve,
+	simplifyConstant,
+	simplifyCore,
+	typed
+});
+var derivative = createDerivative({
+	ConstantNode,
+	FunctionNode,
+	OperatorNode,
+	ParenthesisNode,
+	SymbolNode,
+	config: config$1,
+	equal,
+	isZero,
+	numeric,
+	parse,
+	simplify: simplify$1,
+	typed
+});
+var help = createHelp({
+	Help,
+	mathWithTransform,
+	typed
+});
+var parser = createParser({
+	Parser,
+	typed
+});
+var rationalize = createRationalize({
+	AccessorNode,
+	ArrayNode,
+	ConstantNode,
+	FunctionNode,
+	IndexNode,
+	ObjectNode,
+	OperatorNode,
+	ParenthesisNode,
+	SymbolNode,
+	add,
+	config: config$1,
+	divide,
+	equal,
+	isZero,
+	mathWithTransform,
+	matrix,
+	multiply,
+	parse,
+	pow,
+	simplify: simplify$1,
+	simplifyConstant,
+	simplifyCore,
+	subtract,
+	typed
+});
+_extends(math, {
+	e,
+	false: _false,
+	index,
+	Infinity: _Infinity,
+	LN10,
+	LOG10E,
+	matrix,
+	NaN: _NaN,
+	null: _null,
+	phi,
+	replacer,
+	SQRT1_2,
+	subset,
+	tau,
+	typed,
+	unaryPlus,
+	"E": e,
+	version,
+	xor,
+	abs,
+	acos,
+	acot,
+	acsc,
+	add,
+	and,
+	asec,
+	asin,
+	atan,
+	atanh,
+	bigint,
+	bitNot,
+	bitXor,
+	boolean,
+	cbrt,
+	combinations,
+	compare,
+	compareText,
+	cos,
+	cot,
+	csc,
+	cube,
+	divide,
+	equalScalar,
+	erf,
+	exp,
+	filter,
+	forEach,
+	format,
+	gamma,
+	isBounded,
+	isInteger,
+	isNegative,
+	isPositive,
+	isZero,
+	LOG2E,
+	largerEq,
+	leftShift,
+	log,
+	log1p,
+	map,
+	mean,
+	mod,
+	multiply,
+	not,
+	number,
+	or,
+	pi,
+	pow,
+	random,
+	reviver,
+	rightLogShift,
+	SQRT2,
+	sech,
+	sin,
+	size,
+	smallerEq,
+	square,
+	string,
+	subtract,
+	tanh,
+	typeOf,
+	unequal,
+	xgcd,
+	acoth,
+	addScalar,
+	asech,
+	bernoulli,
+	bitOr,
+	chain,
+	combinationsWithRep,
+	cosh,
+	csch,
+	divideScalar,
+	equalText,
+	expm1,
+	isNaN: isNaN$1,
+	isPrime,
+	larger,
+	lgamma,
+	log2,
+	mapSlices,
+	multiplyScalar,
+	nthRoot,
+	pickRandom,
+	randomInt,
+	rightArithShift,
+	sec,
+	sinh,
+	sqrt,
+	tan,
+	unaryMinus,
+	variance,
+	acosh,
+	atan2,
+	bitAnd,
+	catalan,
+	clone,
+	composition,
+	coth,
+	equal,
+	factorial,
+	isFinite: isFinite$1,
+	LN2,
+	log10,
+	multinomial,
+	numeric,
+	permutations,
+	prod,
+	round,
+	smaller,
+	subtractScalar,
+	"PI": pi,
+	zeta,
+	acsch,
+	compareNatural,
+	cumsum,
+	floor,
+	hypot,
+	lcm,
+	max,
+	min,
+	norm,
+	print,
+	range,
+	sign,
+	simplifyConstant,
+	std,
+	sum,
+	asinh,
+	ceil,
+	corr,
+	fix,
+	isNumeric,
+	partitionSelect,
+	stirlingS2,
+	bellNumbers,
+	deepEqual,
+	gcd,
+	median,
+	parse,
+	quantileSeq,
+	resolve,
+	simplifyCore,
+	compile,
+	evaluate,
+	mode,
+	simplify: simplify$1,
+	derivative,
+	help,
+	parser,
+	true: _true,
+	hasNumericValue,
+	rationalize,
+	mad,
+	config: config$1
+});
+_extends(mathWithTransform, math, {
+	cumsum: createCumSumTransform({
+		add,
+		typed,
+		unaryPlus
+	}),
+	mapSlices: createMapSlicesTransform({
+		isInteger,
+		typed
+	}),
+	filter: createFilterTransform({ typed }),
+	forEach: createForEachTransform({ typed }),
+	mean: createMeanTransform({
+		add,
+		divide,
+		typed
+	}),
+	subset: createSubsetTransform({}),
+	map: createMapTransform({ typed }),
+	std: createStdTransform({
+		map,
+		sqrt,
+		typed,
+		variance
+	}),
+	sum: createSumTransform({
+		add,
+		config: config$1,
+		numeric,
+		typed
+	}),
+	variance: createVarianceTransform({
+		add,
+		divide,
+		isNaN: isNaN$1,
+		mapSlices,
+		multiply,
+		subtract,
+		typed
+	}),
+	max: createMaxTransform({
+		config: config$1,
+		isNaN: isNaN$1,
+		larger,
+		numeric,
+		typed
+	}),
+	min: createMinTransform({
+		config: config$1,
+		isNaN: isNaN$1,
+		numeric,
+		smaller,
+		typed
+	}),
+	range: createRangeTransform({
+		matrix,
+		add,
+		config: config$1,
+		equal,
+		isPositive,
+		isZero,
+		larger,
+		largerEq,
+		smaller,
+		smallerEq,
+		typed
+	})
+});
+_extends(classes, {
+	Range,
+	ResultSet,
+	Chain,
+	Node,
+	ObjectNode,
+	RangeNode,
+	RelationalNode,
+	SymbolNode,
+	AccessorNode,
+	AssignmentNode,
+	ConditionalNode,
+	FunctionNode,
+	IndexNode,
+	OperatorNode,
+	ArrayNode,
+	FunctionAssignmentNode,
+	BlockNode,
+	ConstantNode,
+	ParenthesisNode,
+	Help,
+	Parser
+});
+Chain.createProxy(math);
+//#endregion
 //#region ui/js/SignalKHelper.js
-var import_client = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
-	module.exports = require_dist();
-})))());
+var import_client = /* @__PURE__ */ __toESM(require_client());
 var SIGNALK_DEFAULT_FRESHNESS_SEC = 60;
 var SignalKHelper = class SignalKHelper {
 	constructor({ baseUrl = "", pluginName = null } = {}) {
@@ -2801,7 +29157,7 @@ var SignalKHelper = class SignalKHelper {
 		let format = null;
 		const displayUnits = delta.meta?.displayUnits;
 		if (displayUnits) {
-			if (displayUnits.formula && typeof value === "number") value = new Function("value", `return ${displayUnits.formula};`)(value);
+			if (displayUnits.formula && typeof value === "number") value = evaluate(displayUnits.formula, { value });
 			if (displayUnits.symbol) symbol = displayUnits.symbol;
 			if (displayUnits.displayFormat) format = displayUnits.displayFormat;
 		}
@@ -2814,7 +29170,7 @@ var SignalKHelper = class SignalKHelper {
 	}
 	static convertFromDisplay(delta, value) {
 		const displayUnits = delta.meta?.displayUnits;
-		if (displayUnits?.inverseFormula && typeof value === "number") value = new Function("value", `return ${displayUnits.inverseFormula};`)(value);
+		if (displayUnits?.inverseFormula && typeof value === "number") value = evaluate(displayUnits.inverseFormula, { value });
 		return value;
 	}
 	static formatDisplay(delta, decimals = false, value = false) {

@@ -4,6 +4,8 @@
 // replace the REST fetchers (subscribing to deltas and serving values from a
 // local cache) without changing the static helpers or call sites that use them.
 
+import { evaluate } from "mathjs/number";
+
 const SIGNALK_DEFAULT_FRESHNESS_SEC = 60;
 
 export class SignalKHelper {
@@ -102,8 +104,7 @@ export class SignalKHelper {
     const displayUnits = delta.meta?.displayUnits;
     if (displayUnits) {
       if (displayUnits.formula && typeof value === "number") {
-        const fn = new Function("value", `return ${displayUnits.formula};`);
-        value = fn(value);
+        value = evaluate(displayUnits.formula, { value });
       }
       if (displayUnits.symbol)
         symbol = displayUnits.symbol;
@@ -123,8 +124,7 @@ export class SignalKHelper {
   static convertFromDisplay(delta, value) {
     const displayUnits = delta.meta?.displayUnits;
     if (displayUnits?.inverseFormula && typeof value === "number") {
-      const fn = new Function("value", `return ${displayUnits.inverseFormula};`);
-      value = fn(value);
+      value = evaluate(displayUnits.inverseFormula, { value });
     }
     return value;
   }
