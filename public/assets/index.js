@@ -3488,7 +3488,7 @@ var FleetLayer = class {
 		]);
 		track.options.max++;
 		this.trackPointCounts[mmsi] = (this.trackPointCounts[mmsi] || 0) + 1;
-		if (this.trackPointCounts[mmsi] >= this.getSimplifyThreshold()) this.simplifyTrack(mmsi);
+		if (this.trackPointCounts[mmsi] >= this.getSimplifyThreshold(mmsi)) this.simplifyTrack(mmsi);
 	}
 	simplifyTrack(mmsi) {
 		const track = this.vesselTracks[mmsi];
