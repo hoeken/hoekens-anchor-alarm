@@ -11,7 +11,10 @@
 - holy plugin abomination - needs refactor
 - all functions -> plugin members
 - all global variables -> plugin members
-- getAnchorAlarmDelta -> updateAnchorAlarm(state, message) -> use queueDelta
+- getAnchorAlarmDelta change to updateAnchorAlarm(state, message) -> use queueDelta() then sendUpdates()
+- getAnchorDelta change to updateAnchorState(params) -> use queueDelta() then sendUpdates()
+- organize the put handler stuff
+- organize the web http stuff
 
 
 # LONG TERM
