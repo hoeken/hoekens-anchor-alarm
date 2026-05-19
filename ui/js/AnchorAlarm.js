@@ -148,6 +148,8 @@ class AnchorAlarm {
         this.state.calculate();
         this.checkFreshness();
 
+        console.log(this.state);
+
         this.buildMap();
         this.updateMap();
         this.map.fitBounds(this.anchorOverlay.getBounds());

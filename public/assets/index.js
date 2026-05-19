@@ -2958,13 +2958,16 @@ var BoatConfig = class BoatConfig {
 		config.mmsi = data.mmsi ?? DEFAULTS.mmsi;
 		config.loa = SignalKHelper.value(data, "design.length")?.overall ?? DEFAULTS.loa;
 		config.beam = SignalKHelper.value(data, "design.beam") ?? DEFAULTS.beam;
-		config.anchorRollerHeight = SignalKHelper.value(data, "design.bowAnchorRollerHeight") ?? DEFAULTS.rollerHeight;
-		if (data.sensors.gps) {
+		config.anchorRollerHeight = SignalKHelper.value(data, "design.bowAnchorRollerHeight") ?? DEFAULTS.anchorRollerHeight;
+		if (data.sensors?.gps) {
 			config.gpsBowXDistance = SignalKHelper.value(data, "sensors.gps.fromCenter") ?? DEFAULTS.gpsBowXDistance;
 			config.gpsBowYDistance = SignalKHelper.value(data, "sensors.gps.fromBow") ?? DEFAULTS.gpsBowYDistance;
-		} else if (data.sensors.ais) {
+		} else if (data.sensors?.ais) {
 			config.gpsBowXDistance = SignalKHelper.value(data, "sensors.ais.fromCenter") ?? DEFAULTS.gpsBowXDistance;
 			config.gpsBowYDistance = SignalKHelper.value(data, "sensors.ais.fromBow") ?? config.loa / 2;
+		} else {
+			config.gpsBowXDistance = DEFAULTS.gpsBowXDistance;
+			config.gpsBowYDistance = DEFAULTS.gpsBowYDistance;
 		}
 		config.aisShipType = SignalKHelper.value(data, "design.aisShipType")?.id ?? DEFAULTS.aisShipType;
 		return new BoatConfig(config);
@@ -3125,6 +3128,12 @@ var DELTA_SLOW_SPEED = 1e3;
 var AppState = class {
 	constructor() {
 		this.anchor = {};
+		this.tidalRise = 0;
+		this.tidalFall = 0;
+		this.scope7 = 0;
+		this.scope5 = 0;
+		this.scope4 = 0;
+		this.scope3 = 0;
 	}
 	websocketSubscribe(client) {
 		client.subscribe([{
@@ -3225,37 +3234,43 @@ var AppState = class {
 		this.anchor.notification = this.extract(data, "notifications.navigation.anchor", false) ?? this.anchor.notification;
 	}
 	handleDelta(timestamp, delta) {
-		let data = null;
 		const path = delta.path;
-		if (path == "navigation.position") data = this.currentCoordinates;
-		else if (path == "navigation.headingTrue") data = this.heading;
-		else if (path == "environment.depth.belowKeel") data = this.belowKeel;
-		else if (path == "environment.depth.belowSurface") data = this.belowSurface;
-		else if (path == "environment.wind.directionTrue") data = this.twa;
-		else if (path == "environment.wind.speedApparent") data = this.aws;
-		else if (path == "environment.tide.heightHigh") data = this.tide.heightHigh;
-		else if (path == "environment.tide.heightLow") data = this.tide.heightLow;
-		else if (path == "environment.tide.heightNow") data = this.tide.heightNow;
-		else if (path == "environment.tide.stationName") data = this.tide.stationName;
-		else if (path == "environment.tide.timeHigh") data = this.tide.timeHigh;
-		else if (path == "environment.tide.timeLow") data = this.tide.timeLow;
-		else if (path == "navigation.anchor.position") data = this.anchor.position;
-		else if (path == "navigation.anchor.state") data = this.anchor.state;
-		else if (path == "navigation.anchor.maxRadius") data = this.anchor.maxRadius;
-		else if (path == "notifications.navigation.anchor") data = this.anchor.notification;
+		const apply = (current) => {
+			if (current) {
+				current.value = delta.value;
+				current.timestamp = timestamp;
+				return current;
+			}
+			return {
+				value: delta.value,
+				timestamp
+			};
+		};
+		if (path == "navigation.position") this.currentCoordinates = apply(this.currentCoordinates);
+		else if (path == "navigation.headingTrue") this.heading = apply(this.heading);
+		else if (path == "environment.depth.belowKeel") this.belowKeel = apply(this.belowKeel);
+		else if (path == "environment.depth.belowSurface") this.belowSurface = apply(this.belowSurface);
+		else if (path == "environment.wind.directionTrue") this.twa = apply(this.twa);
+		else if (path == "environment.wind.speedApparent") this.aws = apply(this.aws);
+		else if (path == "environment.tide.heightHigh") (this.tide ??= {}).heightHigh = apply(this.tide.heightHigh);
+		else if (path == "environment.tide.heightLow") (this.tide ??= {}).heightLow = apply(this.tide.heightLow);
+		else if (path == "environment.tide.heightNow") (this.tide ??= {}).heightNow = apply(this.tide.heightNow);
+		else if (path == "environment.tide.stationName") (this.tide ??= {}).stationName = apply(this.tide.stationName);
+		else if (path == "environment.tide.timeHigh") (this.tide ??= {}).timeHigh = apply(this.tide.timeHigh);
+		else if (path == "environment.tide.timeLow") (this.tide ??= {}).timeLow = apply(this.tide.timeLow);
+		else if (path == "navigation.anchor.position") this.anchor.position = apply(this.anchor.position);
+		else if (path == "navigation.anchor.state") this.anchor.state = apply(this.anchor.state);
+		else if (path == "navigation.anchor.maxRadius") this.anchor.maxRadius = apply(this.anchor.maxRadius);
+		else if (path == "notifications.navigation.anchor") this.anchor.notification = apply(this.anchor.notification);
 		else if (!path.startsWith("notifications")) console.log(`[websocket] Ignoring: ${path}`);
-		if (data) {
-			data.timestamp = timestamp;
-			data.value = delta.value;
-		}
 	}
 	calculate() {
 		this.calculateTides();
-		this.boatConfig.heading = this.computeOwnHeading();
+		if (this.boatConfig) this.boatConfig.heading = this.computeOwnHeading();
 		this.calculateScopes();
 	}
 	calculateTides() {
-		if (!this.tide) return;
+		if (!this.tide || !this.tide.timeLow || !this.tide.heightLow || !this.tide.timeHigh || !this.tide.heightHigh) return;
 		this.currentTide = GeoMath.estimateTideHeightSmooth(this.tide.timeLow.value, this.tide.heightLow.value, this.tide.timeHigh.value, this.tide.heightHigh.value);
 		this.tidalRise = this.tide.heightHigh.value - this.currentTide;
 		this.tidalFall = this.currentTide - this.tide.heightLow.value;
@@ -3267,6 +3282,7 @@ var AppState = class {
 		this.scope3 = this.calculateScope(3);
 	}
 	calculateScope(scope) {
+		if (!this.belowSurface || !this.boatConfig) return 0;
 		let maxHeight = this.belowSurface.value;
 		maxHeight += this.boatConfig.anchorRollerHeight;
 		maxHeight += this.tidalRise;
@@ -3274,7 +3290,7 @@ var AppState = class {
 	}
 	computeOwnHeading() {
 		if (this.heading) return GeoMath.rad2deg(this.heading.value);
-		if (this.anchorPosition && this.currentCoordinates) return Math.round(GeoMath.calculateBearing(this.currentCoordinates.value.latitude, this.currentCoordinates.value.longitude, this.anchorPosition.value.latitude, this.anchorPosition.value.longitude));
+		if (this.anchor.position && this.anchor.position.value && this.currentCoordinates) return Math.round(GeoMath.calculateBearing(this.currentCoordinates.value.latitude, this.currentCoordinates.value.longitude, this.anchor.position.value.latitude, this.anchor.position.value.longitude));
 		if (this.twa) return GeoMath.rad2deg(this.twa.value);
 		return 0;
 	}
@@ -3910,8 +3926,8 @@ var WindPanel = L.Control.extend({
 		}
 		if (this._barbSvg) {
 			let angle = 0;
-			if (twa) angle = GeoMath.rad2deg(Math.round(twa.value));
-			const transform = `rotate(${Math.round(angle)}deg)`;
+			if (twa) angle = Math.round(GeoMath.rad2deg(twa.value));
+			const transform = `rotate(${angle}deg)`;
 			if (transform !== this._lastTransform) {
 				this._barbSvg.style.transform = transform;
 				this._lastTransform = transform;
@@ -3920,7 +3936,7 @@ var WindPanel = L.Control.extend({
 	},
 	setAngle: function(twa) {
 		if (!twa || !this._barbSvg) return;
-		const transform = `rotate(${GeoMath.rad2deg(Math.round(twa.value))}deg)`;
+		const transform = `rotate(${Math.round(GeoMath.rad2deg(twa.value))}deg)`;
 		if (transform !== this._lastTransform) {
 			this._barbSvg.style.transform = transform;
 			this._lastTransform = transform;
@@ -4289,7 +4305,8 @@ var AnchorController = class {
 	}
 	setRadius(newRadius) {
 		this.maxRadius = newRadius;
-		this._appState.anchor.maxRadius.value = this.maxRadius;
+		if (!this._appState.anchor.maxRadius) this._appState.anchor.maxRadius = { value: newRadius };
+		else this._appState.anchor.maxRadius.value = newRadius;
 		this._toolbar.setRadius(newRadius);
 		this._overlay.setRadius(newRadius);
 		if (this.state === AnchorState.ANCHORED) this._signalK.setRadius(newRadius).catch((err) => this._reportError("Failed to set radius", err));
@@ -4319,7 +4336,7 @@ var AnchorController = class {
 		if (this.state !== AnchorState.UP && this.state !== AnchorState.ANCHORED) return;
 		if (this._appState.anchor.position && this._appState.anchor.position.value) {
 			this.anchorCoordinates = this._appState.getAnchorPosition();
-			this.maxRadius = this._appState.anchor.maxRadius.value;
+			this.maxRadius = this._appState.anchor.maxRadius?.value ?? this.maxRadius;
 			if (this.state === AnchorState.UP) {
 				this.state = AnchorState.ANCHORED;
 				this._enterDropped(this.anchorCoordinates, this.maxRadius);
@@ -4533,6 +4550,7 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 			}
 			this.state.calculate();
 			this.checkFreshness();
+			console.log(this.state);
 			this.buildMap();
 			this.updateMap();
 			this.map.fitBounds(this.anchorOverlay.getBounds());

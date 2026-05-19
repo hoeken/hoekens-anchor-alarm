@@ -98,7 +98,10 @@ export class AnchorController {
 
   setRadius(newRadius) {
     this.maxRadius = newRadius;
-    this._appState.anchor.maxRadius.value = this.maxRadius;
+    if (!this._appState.anchor.maxRadius)
+      this._appState.anchor.maxRadius = { value: newRadius };
+    else
+      this._appState.anchor.maxRadius.value = newRadius;
     this._toolbar.setRadius(newRadius);
     this._overlay.setRadius(newRadius);
 
@@ -169,7 +172,8 @@ export class AnchorController {
       this._appState.anchor.position.value
     ) {
       this.anchorCoordinates = this._appState.getAnchorPosition();
-      this.maxRadius = this._appState.anchor.maxRadius.value;
+      this.maxRadius =
+        this._appState.anchor.maxRadius?.value ?? this.maxRadius;
       if (this.state === AnchorState.UP) {
         this.state = AnchorState.ANCHORED;
         this._enterDropped(this.anchorCoordinates, this.maxRadius);

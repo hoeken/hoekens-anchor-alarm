@@ -12,6 +12,12 @@ const DELTA_SLOW_SPEED = 1000;
 export class AppState {
   constructor() {
     this.anchor = {};
+    this.tidalRise = 0;
+    this.tidalFall = 0;
+    this.scope7 = 0;
+    this.scope5 = 0;
+    this.scope4 = 0;
+    this.scope3 = 0;
   }
 
   websocketSubscribe(client) {
@@ -149,58 +155,71 @@ export class AppState {
   }
 
   handleDelta(timestamp, delta) {
-    // console.log(delta);
-    let data = null;
     const path = delta.path;
+
+    // Mutate the existing envelope so meta/$source/pgn/values populated by
+    // extractAll survive delta updates. Only create a new envelope the first
+    // time we see a path.
+    const apply = (current) => {
+      if (current) {
+        current.value = delta.value;
+        current.timestamp = timestamp;
+        return current;
+      }
+      return { value: delta.value, timestamp };
+    };
+
     if (path == "navigation.position")
-      data = this.currentCoordinates;
+      this.currentCoordinates = apply(this.currentCoordinates);
     else if (path == "navigation.headingTrue")
-      data = this.heading;
+      this.heading = apply(this.heading);
     else if (path == "environment.depth.belowKeel")
-      data = this.belowKeel;
+      this.belowKeel = apply(this.belowKeel);
     else if (path == "environment.depth.belowSurface")
-      data = this.belowSurface;
+      this.belowSurface = apply(this.belowSurface);
     else if (path == "environment.wind.directionTrue")
-      data = this.twa;
+      this.twa = apply(this.twa);
     else if (path == "environment.wind.speedApparent")
-      data = this.aws;
+      this.aws = apply(this.aws);
     else if (path == "environment.tide.heightHigh")
-      data = this.tide.heightHigh;
+      (this.tide ??= {}).heightHigh = apply(this.tide.heightHigh);
     else if (path == "environment.tide.heightLow")
-      data = this.tide.heightLow;
+      (this.tide ??= {}).heightLow = apply(this.tide.heightLow);
     else if (path == "environment.tide.heightNow")
-      data = this.tide.heightNow;
+      (this.tide ??= {}).heightNow = apply(this.tide.heightNow);
     else if (path == "environment.tide.stationName")
-      data = this.tide.stationName;
+      (this.tide ??= {}).stationName = apply(this.tide.stationName);
     else if (path == "environment.tide.timeHigh")
-      data = this.tide.timeHigh;
+      (this.tide ??= {}).timeHigh = apply(this.tide.timeHigh);
     else if (path == "environment.tide.timeLow")
-      data = this.tide.timeLow;
+      (this.tide ??= {}).timeLow = apply(this.tide.timeLow);
     else if (path == "navigation.anchor.position")
-      data = this.anchor.position;
+      this.anchor.position = apply(this.anchor.position);
     else if (path == "navigation.anchor.state")
-      data = this.anchor.state;
+      this.anchor.state = apply(this.anchor.state);
     else if (path == "navigation.anchor.maxRadius")
-      data = this.anchor.maxRadius;
+      this.anchor.maxRadius = apply(this.anchor.maxRadius);
     else if (path == "notifications.navigation.anchor")
-      data = this.anchor.notification;
+      this.anchor.notification = apply(this.anchor.notification);
     else if (!path.startsWith("notifications"))
       console.log(`[websocket] Ignoring: ${path}`);
-
-    if (data) {
-      data.timestamp = timestamp;
-      data.value = delta.value;
-    }
   }
 
   calculate() {
     this.calculateTides();
-    this.boatConfig.heading = this.computeOwnHeading();
+    if (this.boatConfig)
+      this.boatConfig.heading = this.computeOwnHeading();
     this.calculateScopes();
   }
 
   calculateTides() {
-    if (!this.tide)
+    if (
+      !this.tide ||
+      !this.tide.timeLow ||
+      !this.tide.heightLow ||
+      !this.tide.timeHigh ||
+      !this.tide.heightHigh
+    )
       return;
 
     this.currentTide = GeoMath.estimateTideHeightSmooth(
@@ -222,6 +241,8 @@ export class AppState {
   }
 
   calculateScope(scope) {
+    if (!this.belowSurface || !this.boatConfig)
+      return 0;
     let maxHeight = this.belowSurface.value;
     maxHeight += this.boatConfig.anchorRollerHeight; // height of the bow roller
     maxHeight += this.tidalRise; // delta to high tide
@@ -237,13 +258,17 @@ export class AppState {
     if (this.heading)
       return GeoMath.rad2deg(this.heading.value);
 
-    if (this.anchorPosition && this.currentCoordinates) {
+    if (
+      this.anchor.position &&
+      this.anchor.position.value &&
+      this.currentCoordinates
+    ) {
       return Math.round(
         GeoMath.calculateBearing(
           this.currentCoordinates.value.latitude,
           this.currentCoordinates.value.longitude,
-          this.anchorPosition.value.latitude,
-          this.anchorPosition.value.longitude,
+          this.anchor.position.value.latitude,
+          this.anchor.position.value.longitude,
         ),
       );
     }

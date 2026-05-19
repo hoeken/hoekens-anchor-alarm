@@ -56,8 +56,8 @@ export const WindPanel = L.Control.extend({
     if (this._barbSvg) {
       let angle = 0;
       if (twa)
-        angle = GeoMath.rad2deg(Math.round(twa.value));
-      const transform = `rotate(${Math.round(angle)}deg)`;
+        angle = Math.round(GeoMath.rad2deg(twa.value));
+      const transform = `rotate(${angle}deg)`;
       if (transform !== this._lastTransform) {
         this._barbSvg.style.transform = transform;
         this._lastTransform = transform;
@@ -70,7 +70,7 @@ export const WindPanel = L.Control.extend({
     if (!twa || !this._barbSvg)
       return;
 
-    const angle = GeoMath.rad2deg(Math.round(twa.value));
+    const angle = Math.round(GeoMath.rad2deg(twa.value));
     const transform = `rotate(${angle}deg)`;
     if (transform !== this._lastTransform) {
       this._barbSvg.style.transform = transform;

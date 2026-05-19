@@ -51,20 +51,23 @@ export class BoatConfig {
     config.beam = SignalKHelper.value(data, "design.beam") ?? DEFAULTS.beam;
     config.anchorRollerHeight =
       SignalKHelper.value(data, "design.bowAnchorRollerHeight") ??
-      DEFAULTS.rollerHeight;
-    if (data.sensors.gps) {
+      DEFAULTS.anchorRollerHeight;
+    if (data.sensors?.gps) {
       config.gpsBowXDistance =
         SignalKHelper.value(data, "sensors.gps.fromCenter") ??
         DEFAULTS.gpsBowXDistance;
       config.gpsBowYDistance =
         SignalKHelper.value(data, "sensors.gps.fromBow") ??
         DEFAULTS.gpsBowYDistance;
-    } else if (data.sensors.ais) {
+    } else if (data.sensors?.ais) {
       config.gpsBowXDistance =
         SignalKHelper.value(data, "sensors.ais.fromCenter") ??
         DEFAULTS.gpsBowXDistance;
       config.gpsBowYDistance =
         SignalKHelper.value(data, "sensors.ais.fromBow") ?? config.loa / 2;
+    } else {
+      config.gpsBowXDistance = DEFAULTS.gpsBowXDistance;
+      config.gpsBowYDistance = DEFAULTS.gpsBowYDistance;
     }
     config.aisShipType =
       SignalKHelper.value(data, "design.aisShipType")?.id ??
