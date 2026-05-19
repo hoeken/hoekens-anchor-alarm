@@ -118,7 +118,6 @@ class AnchorAlarm {
     this.map = L.map("map", { zoomControl: false }).setView([0, 0], 5);
     this.statusBar = new StatusBar();
     this.map.addControl(this.statusBar);
-    SignalKHelper.errorHandler = (msg) => this.statusBar.setWarning(msg);
 
     this.toolbar = new ControlToolbar({
       parent: document.getElementById("map_container"),
@@ -137,16 +136,16 @@ class AnchorAlarm {
     this.signalK
       .fetchSelf()
       .then((data) => {
+        this.statusBar.clear("initial-load");
         this.state.extractAll(data);
 
         if (!this.state.currentCoordinates) {
-          this.statusBar.setError("Waiting for GPS position...");
+          this.statusBar.update(this.state);
           setTimeout(() => this.loadInitialData(), INITIAL_LOAD_RETRY_MS);
           return;
         }
 
         this.state.calculate();
-        this.checkFreshness();
 
         console.log(this.state);
 
@@ -167,9 +166,8 @@ class AnchorAlarm {
         const status = error.status ? `${error.status} ` : "";
         const msg = `Failed to load initial data: ${status}${detail}`;
 
-        this.statusBar.setError(msg);
+        this.statusBar.set("initial-load", msg, "error");
         console.error(msg, error);
-
         setTimeout(() => this.loadInitialData(), INITIAL_LOAD_RETRY_MS);
       });
   }
@@ -231,7 +229,7 @@ class AnchorAlarm {
       signalK: this.signalK,
       infoPanel: this.infoPanel,
       scopePanel: this.scopePanel,
-      onError: (msg) => this.statusBar.setError(msg),
+      statusBar: this.statusBar,
     });
 
     this.anchorOverlay.onCrosshairDrag((pos) =>
@@ -244,28 +242,11 @@ class AnchorAlarm {
   updateMap() {
     this.windPanel.update(this.state);
     this.infoPanel.update(this.state);
+    this.statusBar.update(this.state);
     this.scopePanel.update(this.state);
     this.anchorController.reconcile();
     this.anchorOverlay.update(this.state);
     this.fleetLayer.update(this.state);
-  }
-
-  checkFreshness() {
-    if (SignalKHelper.isStale(this.state.currentCoordinates))
-      this.statusBar.setError("Current Position data is stale.");
-    else if (SignalKHelper.isStale(this.state.heading))
-      this.statusBar.setError("Heading data is stale.");
-    else if (SignalKHelper.isStale(this.state.belowKeel))
-      this.statusBar.setError("Depth Below Keel data is stale.");
-    else if (SignalKHelper.isStale(this.state.belowSurface))
-      this.statusBar.setError("Depth Below Surface data is stale.");
-    else if (SignalKHelper.isStale(this.state.twa))
-      this.statusBar.setError("True Wind Angle data is stale.");
-    else if (SignalKHelper.isStale(this.state.aws))
-      this.statusBar.setError("Apparent Wind Speed data is stale.");
-    else
-      this.statusBar.hide();
-
   }
 
   // === Live polling ================================================================
@@ -283,17 +264,16 @@ class AnchorAlarm {
     this.signalK
       .fetchSelf()
       .then((data) => {
+        this.statusBar.clear("self-poll");
         this.state.extractAll(data);
         this.state.calculate();
-        this.checkFreshness();
         this.updateMap();
       })
       .catch((error) => {
         const detail = error.statusText || error.message || "unknown error";
         const status = error.status ? `${error.status} ` : "";
         const msg = `Self update failed: ${status}${detail}`;
-
-        this.statusBar.setWarning(msg);
+        this.statusBar.set("self-poll", msg, "warning");
         console.error(msg, error);
       })
       .finally(() => {
@@ -304,14 +284,13 @@ class AnchorAlarm {
   update() {
     try {
       this.state.calculate();
-      this.checkFreshness();
       this.updateMap();
+      this.statusBar.clear("update");
     } catch (error) {
       const detail = error.statusText || error.message || "unknown error";
       const status = error.status ? `${error.status} ` : "";
       const msg = `Update failed: ${status}${detail}`;
-
-      this.statusBar.setWarning(msg);
+      this.statusBar.set("update", msg, "warning");
       console.error(msg, error);
     }
   }

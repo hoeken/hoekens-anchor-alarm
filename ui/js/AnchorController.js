@@ -26,7 +26,7 @@ export class AnchorController {
     signalK,
     infoPanel,
     scopePanel,
-    onError,
+    statusBar,
   }) {
     this._appState = appState;
     this._overlay = overlay;
@@ -34,18 +34,13 @@ export class AnchorController {
     this._signalK = signalK;
     this._infoPanel = infoPanel;
     this._scopePanel = scopePanel;
-    this._onError = onError;
+    this._statusBar = statusBar;
 
     this.state = AnchorState.UP;
     this.anchorCoordinates = null;
     this.maxRadius = 0;
 
     this.reconcile();
-  }
-
-  _reportError(prefix, err) {
-    const detail = err?.statusText || err?.message || "unknown error";
-    this._onError?.(`${prefix}: ${detail}`);
   }
 
   // === User-initiated transitions =================================================
@@ -64,13 +59,15 @@ export class AnchorController {
       .then(() => {
         this.state = AnchorState.ANCHORED;
         this._toolbar.setState(this.state);
+        this._statusBar.clear("anchor-drop");
       })
       .catch((err) => {
         // Roll back to UP so the user sees the actual server state instead of
         // a green "anchored" UI that doesn't match reality.
         this.state = AnchorState.UP;
         this._enterRaised();
-        this._reportError("Failed to drop anchor", err);
+        const detail = err?.statusText || err?.message || "unknown error";
+        this._statusBar.set("anchor-drop", `Failed to drop anchor: ${detail}`, "error");
       });
   }
 
@@ -88,11 +85,13 @@ export class AnchorController {
       .then(() => {
         this.state = AnchorState.UP;
         this._toolbar.setState(this.state);
+        this._statusBar.clear("anchor-raise");
       })
       .catch((err) => {
         this.state = AnchorState.ANCHORED;
         this._enterDropped(previousAnchor, previousRadius);
-        this._reportError("Failed to raise anchor", err);
+        const detail = err?.statusText || err?.message || "unknown error";
+        this._statusBar.set("anchor-raise", `Failed to raise anchor: ${detail}`, "error");
       });
   }
 
@@ -108,7 +107,11 @@ export class AnchorController {
     if (this.state === AnchorState.ANCHORED) {
       this._signalK
         .setRadius(newRadius)
-        .catch((err) => this._reportError("Failed to set radius", err));
+        .then(() => this._statusBar.clear("anchor-radius"))
+        .catch((err) => {
+          const detail = err?.statusText || err?.message || "unknown error";
+          this._statusBar.set("anchor-radius", `Failed to set radius: ${detail}`, "error");
+        });
     }
   }
 

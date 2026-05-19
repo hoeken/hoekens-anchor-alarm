@@ -46,6 +46,7 @@ export class FleetLayer {
     this.app.signalK
       .fetchTracks(this.filterRadius)
       .then((tracks) => {
+        this.app.statusBar.clear("tracks-plugin");
         this.loadHistoricalTracks(
           tracks,
           this.app.state.getPosition(),
@@ -54,7 +55,11 @@ export class FleetLayer {
       })
       .catch((err) => {
         const detail = err.statusText || err.message || "unknown error";
-        this.app.statusBar.setWarning(`Tracks plugin not available: ${detail}`);
+        this.app.statusBar.set(
+          "tracks-plugin",
+          `Tracks plugin not available: ${detail}`,
+          "warning",
+        );
       });
 
     this.fleetTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
@@ -68,6 +73,7 @@ export class FleetLayer {
     this.app.signalK
       .fetchAllVessels()
       .then((vessels) => {
+        this.app.statusBar.clear("fleet-poll");
         this.syncOtherVessels(vessels, {
           ownLatLng: this.app.state.getPosition(),
           filterRadius: this.filterRadius,
@@ -79,7 +85,7 @@ export class FleetLayer {
         const status = error.status ? `${error.status} ` : "";
         const msg = `Fleet update failed: ${status}${detail}`;
 
-        this.app.statusBar.setWarning(msg);
+        this.app.statusBar.set("fleet-poll", msg, "warning");
         console.error(msg, error);
       })
       .finally(() => {

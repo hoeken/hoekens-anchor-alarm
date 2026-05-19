@@ -2,6 +2,19 @@
 // onAdd, and exposes update methods so the host can drive it without
 // touching the document directly. Element IDs are preserved for CSS hooks
 // in style.css; do not rename without updating the stylesheet.
+//
+// Statuses are keyed by id so transient conditions (stale data, failed
+// fetches) can be cleared when they resolve. The most recently set entry
+// wins. Levels map to a color: "status" (black), "warning" (amber),
+// "error" (red).
+
+import { SignalKHelper } from "../SignalKHelper.js";
+
+const LEVEL_COLORS = {
+  status: "black",
+  warning: "#d97706",
+  error: "red",
+};
 
 export const StatusBar = L.Control.extend({
   options: { position: "bottomright" },
@@ -12,33 +25,83 @@ export const StatusBar = L.Control.extend({
     container.id = "statusBarUI";
     container.style.display = "none";
     this._container = container;
+    this._items = new Map();
+
     return container;
   },
 
-  setStatus: function (text) {
-    this._render(text, "black");
-  },
-  setWarning: function (text) {
-    this._render(text, "#d97706");
-  },
-  setError: function (text) {
-    this._render(text, "red");
+  set: function (id, text, level = "error") {
+    if (!text) {
+      this.clear(id);
+      return;
+    }
+    this._items.set(id, { text, level, t: Date.now() });
+    this._render();
   },
 
-  _render: function (text, color) {
+  clear: function (id) {
+    if (this._items.delete(id))
+      this._render();
+  },
+
+  // Reconcile staleness-driven entries against the current state every tick.
+  // Other sources (page-load failures, plugin errors) push their own ids
+  // through set()/clear() and coexist with these.
+  update: function (state) {
+    this.set(
+      "gps",
+      !state.currentCoordinates ? "Waiting for GPS position..." : null,
+    );
+    this.set(
+      "position-stale",
+      SignalKHelper.isStale(state.currentCoordinates)
+        ? "Current Position data is stale."
+        : null,
+    );
+    this.set(
+      "heading-stale",
+      SignalKHelper.isStale(state.heading) ? "Heading data is stale." : null,
+    );
+    this.set(
+      "below-keel-stale",
+      SignalKHelper.isStale(state.belowKeel)
+        ? "Depth Below Keel data is stale."
+        : null,
+    );
+    this.set(
+      "below-surface-stale",
+      SignalKHelper.isStale(state.belowSurface)
+        ? "Depth Below Surface data is stale."
+        : null,
+    );
+    this.set(
+      "twa-stale",
+      SignalKHelper.isStale(state.twa)
+        ? "True Wind Angle data is stale."
+        : null,
+    );
+    this.set(
+      "aws-stale",
+      SignalKHelper.isStale(state.aws)
+        ? "Apparent Wind Speed data is stale."
+        : null,
+    );
+  },
+
+  _render: function () {
     if (!this._container)
       return;
-    this._container.textContent = text;
-    this._container.style.color = color;
-    this._container.style.display = "";
-  },
-
-  show: function () {
-    if (this._container)
-      this._container.style.display = "";
-  },
-  hide: function () {
-    if (this._container)
+    if (!this._items.size) {
       this._container.style.display = "none";
+      return;
+    }
+    let latest = null;
+    for (const item of this._items.values()) {
+      if (!latest || item.t > latest.t)
+        latest = item;
+    }
+    this._container.textContent = latest.text;
+    this._container.style.color = LEVEL_COLORS[latest.level] || "black";
+    this._container.style.display = "";
   },
 });

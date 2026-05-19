@@ -2801,7 +2801,6 @@ var SignalKHelper = class SignalKHelper {
 		if (!this.isFresh(node, maxAge)) {
 			const ageSec = node.timestamp ? Math.round((Date.now() - new Date(node.timestamp).getTime()) / 1e3) : "unknown";
 			const msg = `Stale SignalK value: ${path || "(root)"} — Age ${ageSec}s, Max ${maxAge}s`;
-			SignalKHelper.errorHandler?.(msg);
 			console.warn(msg);
 			console.trace();
 			return fallback;
@@ -3401,10 +3400,11 @@ var FleetLayer = class {
 	}
 	loadInitialData() {
 		this.app.signalK.fetchTracks(this.filterRadius).then((tracks) => {
+			this.app.statusBar.clear("tracks-plugin");
 			this.loadHistoricalTracks(tracks, this.app.state.getPosition(), this.filterRadius);
 		}).catch((err) => {
 			const detail = err.statusText || err.message || "unknown error";
-			this.app.statusBar.setWarning(`Tracks plugin not available: ${detail}`);
+			this.app.statusBar.set("tracks-plugin", `Tracks plugin not available: ${detail}`, "warning");
 		});
 		this.fleetTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS$1);
 		this.poll();
@@ -3413,6 +3413,7 @@ var FleetLayer = class {
 		if (this._pollInFlight) return;
 		this._pollInFlight = true;
 		this.app.signalK.fetchAllVessels().then((vessels) => {
+			this.app.statusBar.clear("fleet-poll");
 			this.syncOtherVessels(vessels, {
 				ownLatLng: this.app.state.getPosition(),
 				filterRadius: this.filterRadius,
@@ -3421,7 +3422,7 @@ var FleetLayer = class {
 		}).catch((error) => {
 			const detail = error.statusText || error.message || "unknown error";
 			const msg = `Fleet update failed: ${error.status ? `${error.status} ` : ""}${detail}`;
-			this.app.statusBar.setWarning(msg);
+			this.app.statusBar.set("fleet-poll", msg, "warning");
 			console.error(msg, error);
 		}).finally(() => {
 			this._pollInFlight = false;
@@ -3613,6 +3614,11 @@ function toTuple(p) {
 }
 //#endregion
 //#region ui/js/hud/StatusBar.js
+var LEVEL_COLORS = {
+	status: "black",
+	warning: "#d97706",
+	error: "red"
+};
 var StatusBar = L.Control.extend({
 	options: { position: "bottomright" },
 	onAdd: function() {
@@ -3621,28 +3627,44 @@ var StatusBar = L.Control.extend({
 		container.id = "statusBarUI";
 		container.style.display = "none";
 		this._container = container;
+		this._items = /* @__PURE__ */ new Map();
 		return container;
 	},
-	setStatus: function(text) {
-		this._render(text, "black");
+	set: function(id, text, level = "error") {
+		if (!text) {
+			this.clear(id);
+			return;
+		}
+		this._items.set(id, {
+			text,
+			level,
+			t: Date.now()
+		});
+		this._render();
 	},
-	setWarning: function(text) {
-		this._render(text, "#d97706");
+	clear: function(id) {
+		if (this._items.delete(id)) this._render();
 	},
-	setError: function(text) {
-		this._render(text, "red");
+	update: function(state) {
+		this.set("gps", !state.currentCoordinates ? "Waiting for GPS position..." : null);
+		this.set("position-stale", SignalKHelper.isStale(state.currentCoordinates) ? "Current Position data is stale." : null);
+		this.set("heading-stale", SignalKHelper.isStale(state.heading) ? "Heading data is stale." : null);
+		this.set("below-keel-stale", SignalKHelper.isStale(state.belowKeel) ? "Depth Below Keel data is stale." : null);
+		this.set("below-surface-stale", SignalKHelper.isStale(state.belowSurface) ? "Depth Below Surface data is stale." : null);
+		this.set("twa-stale", SignalKHelper.isStale(state.twa) ? "True Wind Angle data is stale." : null);
+		this.set("aws-stale", SignalKHelper.isStale(state.aws) ? "Apparent Wind Speed data is stale." : null);
 	},
-	_render: function(text, color) {
+	_render: function() {
 		if (!this._container) return;
-		this._container.textContent = text;
-		this._container.style.color = color;
+		if (!this._items.size) {
+			this._container.style.display = "none";
+			return;
+		}
+		let latest = null;
+		for (const item of this._items.values()) if (!latest || item.t > latest.t) latest = item;
+		this._container.textContent = latest.text;
+		this._container.style.color = LEVEL_COLORS[latest.level] || "black";
 		this._container.style.display = "";
-	},
-	show: function() {
-		if (this._container) this._container.style.display = "";
-	},
-	hide: function() {
-		if (this._container) this._container.style.display = "none";
 	}
 });
 //#endregion
@@ -4253,22 +4275,18 @@ var AnchorState = Object.freeze({
 	RAISING: "RAISING"
 });
 var AnchorController = class {
-	constructor({ appState, overlay, toolbar, signalK, infoPanel, scopePanel, onError }) {
+	constructor({ appState, overlay, toolbar, signalK, infoPanel, scopePanel, statusBar }) {
 		this._appState = appState;
 		this._overlay = overlay;
 		this._toolbar = toolbar;
 		this._signalK = signalK;
 		this._infoPanel = infoPanel;
 		this._scopePanel = scopePanel;
-		this._onError = onError;
+		this._statusBar = statusBar;
 		this.state = AnchorState.UP;
 		this.anchorCoordinates = null;
 		this.maxRadius = 0;
 		this.reconcile();
-	}
-	_reportError(prefix, err) {
-		const detail = err?.statusText || err?.message || "unknown error";
-		this._onError?.(`${prefix}: ${detail}`);
 	}
 	requestDrop() {
 		if (this.state !== AnchorState.UP) return;
@@ -4282,10 +4300,12 @@ var AnchorController = class {
 		}, this.maxRadius).then(() => {
 			this.state = AnchorState.ANCHORED;
 			this._toolbar.setState(this.state);
+			this._statusBar.clear("anchor-drop");
 		}).catch((err) => {
 			this.state = AnchorState.UP;
 			this._enterRaised();
-			this._reportError("Failed to drop anchor", err);
+			const detail = err?.statusText || err?.message || "unknown error";
+			this._statusBar.set("anchor-drop", `Failed to drop anchor: ${detail}`, "error");
 		});
 	}
 	requestRaise() {
@@ -4297,10 +4317,12 @@ var AnchorController = class {
 		this._signalK.raiseAnchor().then(() => {
 			this.state = AnchorState.UP;
 			this._toolbar.setState(this.state);
+			this._statusBar.clear("anchor-raise");
 		}).catch((err) => {
 			this.state = AnchorState.ANCHORED;
 			this._enterDropped(previousAnchor, previousRadius);
-			this._reportError("Failed to raise anchor", err);
+			const detail = err?.statusText || err?.message || "unknown error";
+			this._statusBar.set("anchor-raise", `Failed to raise anchor: ${detail}`, "error");
 		});
 	}
 	setRadius(newRadius) {
@@ -4309,7 +4331,10 @@ var AnchorController = class {
 		else this._appState.anchor.maxRadius.value = newRadius;
 		this._toolbar.setRadius(newRadius);
 		this._overlay.setRadius(newRadius);
-		if (this.state === AnchorState.ANCHORED) this._signalK.setRadius(newRadius).catch((err) => this._reportError("Failed to set radius", err));
+		if (this.state === AnchorState.ANCHORED) this._signalK.setRadius(newRadius).then(() => this._statusBar.clear("anchor-radius")).catch((err) => {
+			const detail = err?.statusText || err?.message || "unknown error";
+			this._statusBar.set("anchor-radius", `Failed to set radius: ${detail}`, "error");
+		});
 	}
 	estimateAnchorPosition() {
 		if (!this._appState.currentCoordinates) return;
@@ -4530,7 +4555,6 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 		this.map = L.map("map", { zoomControl: false }).setView([0, 0], 5);
 		this.statusBar = new StatusBar();
 		this.map.addControl(this.statusBar);
-		SignalKHelper.errorHandler = (msg) => this.statusBar.setWarning(msg);
 		this.toolbar = new ControlToolbar({
 			parent: document.getElementById("map_container"),
 			getMapContainer: () => this.map && this.map.getContainer(),
@@ -4542,14 +4566,14 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 	}
 	loadInitialData() {
 		this.signalK.fetchSelf().then((data) => {
+			this.statusBar.clear("initial-load");
 			this.state.extractAll(data);
 			if (!this.state.currentCoordinates) {
-				this.statusBar.setError("Waiting for GPS position...");
+				this.statusBar.update(this.state);
 				setTimeout(() => this.loadInitialData(), INITIAL_LOAD_RETRY_MS);
 				return;
 			}
 			this.state.calculate();
-			this.checkFreshness();
 			console.log(this.state);
 			this.buildMap();
 			this.updateMap();
@@ -4559,7 +4583,7 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 		}).catch((error) => {
 			const detail = error.statusText || error.message || "unknown error";
 			const msg = `Failed to load initial data: ${error.status ? `${error.status} ` : ""}${detail}`;
-			this.statusBar.setError(msg);
+			this.statusBar.set("initial-load", msg, "error");
 			console.error(msg, error);
 			setTimeout(() => this.loadInitialData(), INITIAL_LOAD_RETRY_MS);
 		});
@@ -4600,7 +4624,7 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 			signalK: this.signalK,
 			infoPanel: this.infoPanel,
 			scopePanel: this.scopePanel,
-			onError: (msg) => this.statusBar.setError(msg)
+			statusBar: this.statusBar
 		});
 		this.anchorOverlay.onCrosshairDrag((pos) => this.anchorController.updateCrosshairPosition(pos));
 		this.anchorController.estimateAnchorPosition();
@@ -4608,32 +4632,24 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 	updateMap() {
 		this.windPanel.update(this.state);
 		this.infoPanel.update(this.state);
+		this.statusBar.update(this.state);
 		this.scopePanel.update(this.state);
 		this.anchorController.reconcile();
 		this.anchorOverlay.update(this.state);
 		this.fleetLayer.update(this.state);
 	}
-	checkFreshness() {
-		if (SignalKHelper.isStale(this.state.currentCoordinates)) this.statusBar.setError("Current Position data is stale.");
-		else if (SignalKHelper.isStale(this.state.heading)) this.statusBar.setError("Heading data is stale.");
-		else if (SignalKHelper.isStale(this.state.belowKeel)) this.statusBar.setError("Depth Below Keel data is stale.");
-		else if (SignalKHelper.isStale(this.state.belowSurface)) this.statusBar.setError("Depth Below Surface data is stale.");
-		else if (SignalKHelper.isStale(this.state.twa)) this.statusBar.setError("True Wind Angle data is stale.");
-		else if (SignalKHelper.isStale(this.state.aws)) this.statusBar.setError("Apparent Wind Speed data is stale.");
-		else this.statusBar.hide();
-	}
 	poll() {
 		if (this._pollInFlight) return;
 		this._pollInFlight = true;
 		this.signalK.fetchSelf().then((data) => {
+			this.statusBar.clear("self-poll");
 			this.state.extractAll(data);
 			this.state.calculate();
-			this.checkFreshness();
 			this.updateMap();
 		}).catch((error) => {
 			const detail = error.statusText || error.message || "unknown error";
 			const msg = `Self update failed: ${error.status ? `${error.status} ` : ""}${detail}`;
-			this.statusBar.setWarning(msg);
+			this.statusBar.set("self-poll", msg, "warning");
 			console.error(msg, error);
 		}).finally(() => {
 			this._pollInFlight = false;
@@ -4642,12 +4658,12 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 	update() {
 		try {
 			this.state.calculate();
-			this.checkFreshness();
 			this.updateMap();
+			this.statusBar.clear("update");
 		} catch (error) {
 			const detail = error.statusText || error.message || "unknown error";
 			const msg = `Update failed: ${error.status ? `${error.status} ` : ""}${detail}`;
-			this.statusBar.setWarning(msg);
+			this.statusBar.set("update", msg, "warning");
 			console.error(msg, error);
 		}
 	}
