@@ -8,9 +8,6 @@
 
 # v2.1 - Server
 
-- organize the put handler stuff
-- organize the web http stuff
-
 
 # LONG TERM
 

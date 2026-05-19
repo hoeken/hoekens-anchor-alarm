@@ -16,6 +16,10 @@
 module.exports = function (app) {
   var plugin = {};
 
+  // ============================================================
+  // PLUGIN IDENTITY & STATE
+  // ============================================================
+
   plugin.id = "hoekens-anchor-alarm";
   plugin.name = "Hoeken's Anchor Alarm";
   plugin.description = "Anchor alarm with scope calculator, scribble tracks, engine override, and physically accurate icons.";
@@ -31,6 +35,10 @@ module.exports = function (app) {
   plugin.configuration = undefined;
   plugin.lastAlarmSent = 0;
   plugin.positionWatchdogTimer = false;
+
+  // ============================================================
+  // SIGNALK PATH METADATA
+  // ============================================================
 
   plugin.metas = {
     "design.bowAnchorRollerHeight": {
@@ -107,6 +115,10 @@ module.exports = function (app) {
         "Optional - used to display size-accurate icon. GPS Antenna position. Edit Server -> Settings",
     },
   ];
+
+  // ============================================================
+  // CONFIGURATION SCHEMA
+  // ============================================================
 
   plugin.schema = function () {
     plugin.updateSchema();
@@ -200,6 +212,10 @@ module.exports = function (app) {
     plugin.schemaData.properties.pathChecks.properties = pathChecks;
   };
 
+  // ============================================================
+  // PLUGIN LIFECYCLE
+  // ============================================================
+
   plugin.start = function (props) {
     app.setPluginStatus("Started");
 
@@ -269,6 +285,25 @@ module.exports = function (app) {
     plugin.sendUpdates();
   };
 
+  plugin.stop = function () {
+    if (plugin.alarm_state != "normal") {
+      plugin.alarm_state = "normal";
+      plugin.updateAnchorAlarm(plugin.alarm_state, "Stopped");
+    }
+
+    plugin.updateAnchorState({
+      isSet: false,
+    });
+
+    plugin.stopWatchingPosition();
+
+    app.setPluginStatus("Stopped");
+  };
+
+  // ============================================================
+  // DELTA & META QUEUEING
+  // ============================================================
+
   plugin.queueDelta = function (path, value) {
     plugin.deltaQueue.push({ "path": path, "value": value });
   };
@@ -313,14 +348,232 @@ module.exports = function (app) {
     plugin.sendMetas();
   };
 
-  plugin.savePluginOptions = function () {
-    //app.debug('saving options..')
-    app.savePluginOptions(plugin.configuration, (err) => {
-      if (err) {
-        app.error(err);
-      }
+  // ============================================================
+  // ANCHOR STATE UPDATES
+  // ============================================================
+
+  plugin.updateAnchorAlarm = function (state, message, method) {
+    if (!message)
+      message = state.charAt(0).toUpperCase() + state.slice(1);
+
+    if (!method)
+      method = ["visual", "sound"];
+
+    plugin.queueDelta("notifications.navigation.anchor", {
+      state: state,
+      method: method,
+      message: message,
     });
+
+    plugin.sendUpdates();
   };
+
+  plugin.updateAnchorState = function (params) {
+    if (params.vesselPosition == null) {
+      params.vesselPosition = app.getSelfPath("navigation.position.value");
+    }
+
+    if (params.anchorPosition) {
+      var anchorPosition = {
+        latitude: parseFloat(params.anchorPosition.latitude),
+        longitude: parseFloat(params.anchorPosition.longitude),
+      };
+
+      plugin.queueDelta("navigation.anchor.position", anchorPosition);
+      plugin.queueDelta("navigation.anchor.state", "on");
+
+      if (params.currentRadius != null) {
+        plugin.queueDelta(
+          "navigation.anchor.currentRadius",
+          parseFloat(params.currentRadius),
+        );
+      }
+
+      if (params.maxRadius != null) {
+        var maxRadius = parseFloat(params.maxRadius);
+        plugin.queueDelta("navigation.anchor.maxRadius", maxRadius);
+        var zones = [
+          {
+            state: "normal",
+            lower: 0,
+            upper: maxRadius,
+          },
+          {
+            state: plugin.configuration.state,
+            lower: maxRadius,
+          },
+        ];
+        plugin.queueDelta("navigation.anchor.meta", { zones: zones });
+      }
+    } else {
+      plugin.queueDelta("navigation.anchor.position", null);
+      plugin.queueDelta("navigation.anchor.state", "off");
+      plugin.queueDelta("navigation.anchor.currentRadius", null);
+      plugin.queueDelta("navigation.anchor.maxRadius", null);
+    }
+
+    plugin.sendUpdates();
+  };
+
+  // ============================================================
+  // ANCHOR OPERATIONS
+  // ============================================================
+
+  plugin.raiseAnchor = function () {
+    app.debug("raise anchor");
+
+    plugin.updateAnchorState({
+      isSet: false,
+    });
+
+    delete plugin.configuration["position"];
+    delete plugin.configuration["radius"];
+    plugin.configuration["on"] = false;
+
+    plugin.stopWatchingPosition();
+
+    plugin.savePluginOptions();
+  };
+
+  // ============================================================
+  // POSITION MONITORING
+  // ============================================================
+
+  plugin.startWatchingPosition = function () {
+    if (plugin.onStop.length > 0)
+      return;
+
+    plugin.alarm_state = "normal";
+    plugin.updateAnchorAlarm(plugin.alarm_state, "Watching");
+
+    app.setPluginStatus("Watching");
+
+    if (plugin.positionWatchdogTimer)
+      plugin.positionWatchdogTimer.start();
+
+    app.subscriptionmanager.subscribe(
+      {
+        context: "vessels.self",
+        subscribe: [
+          {
+            path: "navigation.position",
+            period: plugin.subscriberPeriod,
+          },
+        ],
+      },
+      plugin.onStop,
+      (err) => {
+        app.error(err);
+        app.setProviderError(err);
+      },
+      (delta) => {
+        let vesselPosition;
+
+        if (delta.updates) {
+          delta.updates.forEach((update) => {
+            if (update.values) {
+              update.values.forEach((vp) => {
+                if (vp.path === "navigation.position") {
+                  vesselPosition = vp.value;
+                }
+              });
+            }
+          });
+        }
+
+        if (vesselPosition) {
+          if (plugin.positionWatchdogTimer)
+            plugin.positionWatchdogTimer.reset();
+          plugin.checkPosition(app, plugin, vesselPosition, plugin.configuration);
+        }
+      },
+    );
+  };
+
+  plugin.stopWatchingPosition = function () {
+    plugin.alarm_state = "normal";
+    plugin.updateAnchorAlarm(plugin.alarm_state, "Off");
+
+    if (plugin.positionWatchdogTimer)
+      plugin.positionWatchdogTimer.stop();
+
+    app.setPluginStatus("Off");
+
+    plugin.onStop.forEach((f) => f());
+    plugin.onStop = [];
+  };
+
+  plugin.checkPosition = function (app, plugin, vesselPosition, configuration) {
+    //app.debug("in checkPosition: " + position.latitude + ',' + anchor_position.latitude)
+
+    let maxRadius = configuration.radius;
+    let anchorPosition = configuration.position;
+
+    var currentRadius = plugin.calc_distance(
+      vesselPosition.latitude,
+      vesselPosition.longitude,
+      anchorPosition.latitude,
+      anchorPosition.longitude,
+    );
+
+    //app.debug("currentRadius: " + currentRadius + ", maxRadius: " + maxRadius);
+
+    plugin.updateAnchorState({
+      vesselPosition: vesselPosition,
+      anchorPosition: anchorPosition,
+      currentRadius: currentRadius,
+      maxRadius: maxRadius,
+      isSet: false,
+    });
+
+    let new_state = "normal";
+    let do_update = false;
+    let message = "Watching";
+
+    //compare our radius
+    if (maxRadius != null && currentRadius > maxRadius) {
+      //okay, we're dragging.
+      new_state = configuration.state;
+      message = `Anchor Dragging (${Math.round(currentRadius)}m)`;
+
+      //how often should we send it?
+      let interval = configuration["anchorAlarmInterval"];
+      if (typeof interval !== "undefined")
+        if (plugin.lastAlarmSent + interval * 1000 < Date.now())
+          do_update = true;
+
+      //wait, do we have engines on?
+      if (configuration.enableEngineCheck) {
+        if (plugin.checkEngineState(app)) {
+          app.debug("anchor alarm disabled due to engines on");
+          do_update = true;
+          new_state = "normal";
+          message = "Engines on, alarm disabled.";
+
+          plugin.raiseAnchor();
+
+          app.setPluginStatus(message);
+        }
+      }
+    }
+
+    if (new_state !== plugin.alarm_state || do_update) {
+      plugin.alarm_state = new_state;
+      app.debug("alarm state change: %s -> %s", plugin.alarm_state, message);
+      plugin.updateAnchorAlarm(plugin.alarm_state, message);
+
+      if (plugin.alarm_state == "normal")
+        app.setPluginStatus("Watching");
+      else {
+        plugin.lastAlarmSent = Date.now();
+        app.setPluginError("Dragging");
+      }
+    }
+  };
+
+  // ============================================================
+  // PUT / ACTION HANDLERS
+  // ============================================================
 
   plugin.putRadius = function (context, path, value) {
     try {
@@ -391,100 +644,9 @@ module.exports = function (app) {
     }
   };
 
-  plugin.stop = function () {
-    if (plugin.alarm_state != "normal") {
-      plugin.alarm_state = "normal";
-      plugin.updateAnchorAlarm(plugin.alarm_state, "Stopped");
-    }
-
-    plugin.updateAnchorState({
-      isSet: false,
-    });
-
-    plugin.stopWatchingPosition();
-
-    app.setPluginStatus("Stopped");
-  };
-
-  plugin.startWatchingPosition = function () {
-    if (plugin.onStop.length > 0)
-      return;
-
-    plugin.alarm_state = "normal";
-    plugin.updateAnchorAlarm(plugin.alarm_state, "Watching");
-
-    app.setPluginStatus("Watching");
-
-    if (plugin.positionWatchdogTimer)
-      plugin.positionWatchdogTimer.start();
-
-    app.subscriptionmanager.subscribe(
-      {
-        context: "vessels.self",
-        subscribe: [
-          {
-            path: "navigation.position",
-            period: plugin.subscriberPeriod,
-          },
-        ],
-      },
-      plugin.onStop,
-      (err) => {
-        app.error(err);
-        app.setProviderError(err);
-      },
-      (delta) => {
-        let vesselPosition;
-
-        if (delta.updates) {
-          delta.updates.forEach((update) => {
-            if (update.values) {
-              update.values.forEach((vp) => {
-                if (vp.path === "navigation.position") {
-                  vesselPosition = vp.value;
-                }
-              });
-            }
-          });
-        }
-
-        if (vesselPosition) {
-          if (plugin.positionWatchdogTimer)
-            plugin.positionWatchdogTimer.reset();
-          plugin.checkPosition(app, plugin, vesselPosition, plugin.configuration);
-        }
-      },
-    );
-  };
-
-  plugin.stopWatchingPosition = function () {
-    plugin.alarm_state = "normal";
-    plugin.updateAnchorAlarm(plugin.alarm_state, "Off");
-
-    if (plugin.positionWatchdogTimer)
-      plugin.positionWatchdogTimer.stop();
-
-    app.setPluginStatus("Off");
-
-    plugin.onStop.forEach((f) => f());
-    plugin.onStop = [];
-  };
-
-  plugin.raiseAnchor = function () {
-    app.debug("raise anchor");
-
-    plugin.updateAnchorState({
-      isSet: false,
-    });
-
-    delete plugin.configuration["position"];
-    delete plugin.configuration["radius"];
-    plugin.configuration["on"] = false;
-
-    plugin.stopWatchingPosition();
-
-    plugin.savePluginOptions();
-  };
+  // ============================================================
+  // HTTP API ROUTES
+  // ============================================================
 
   plugin.registerWithRouter = function (router) {
     router.post("/dropAnchor", (req, res) => {
@@ -616,120 +778,22 @@ module.exports = function (app) {
     });
   };
 
-  plugin.updateAnchorState = function (params) {
-    if (params.vesselPosition == null) {
-      params.vesselPosition = app.getSelfPath("navigation.position.value");
-    }
+  // ============================================================
+  // PERSISTENCE
+  // ============================================================
 
-    if (params.anchorPosition) {
-      var anchorPosition = {
-        latitude: parseFloat(params.anchorPosition.latitude),
-        longitude: parseFloat(params.anchorPosition.longitude),
-      };
-
-      plugin.queueDelta("navigation.anchor.position", anchorPosition);
-      plugin.queueDelta("navigation.anchor.state", "on");
-
-      if (params.currentRadius != null) {
-        plugin.queueDelta(
-          "navigation.anchor.currentRadius",
-          parseFloat(params.currentRadius),
-        );
+  plugin.savePluginOptions = function () {
+    //app.debug('saving options..')
+    app.savePluginOptions(plugin.configuration, (err) => {
+      if (err) {
+        app.error(err);
       }
-
-      if (params.maxRadius != null) {
-        var maxRadius = parseFloat(params.maxRadius);
-        plugin.queueDelta("navigation.anchor.maxRadius", maxRadius);
-        var zones = [
-          {
-            state: "normal",
-            lower: 0,
-            upper: maxRadius,
-          },
-          {
-            state: plugin.configuration.state,
-            lower: maxRadius,
-          },
-        ];
-        plugin.queueDelta("navigation.anchor.meta", { zones: zones });
-      }
-    } else {
-      plugin.queueDelta("navigation.anchor.position", null);
-      plugin.queueDelta("navigation.anchor.state", "off");
-      plugin.queueDelta("navigation.anchor.currentRadius", null);
-      plugin.queueDelta("navigation.anchor.maxRadius", null);
-    }
-
-    plugin.sendUpdates();
-  };
-
-  plugin.checkPosition = function (app, plugin, vesselPosition, configuration) {
-    //app.debug("in checkPosition: " + position.latitude + ',' + anchor_position.latitude)
-
-    let maxRadius = configuration.radius;
-    let anchorPosition = configuration.position;
-
-    var currentRadius = plugin.calc_distance(
-      vesselPosition.latitude,
-      vesselPosition.longitude,
-      anchorPosition.latitude,
-      anchorPosition.longitude,
-    );
-
-    //app.debug("currentRadius: " + currentRadius + ", maxRadius: " + maxRadius);
-
-    plugin.updateAnchorState({
-      vesselPosition: vesselPosition,
-      anchorPosition: anchorPosition,
-      currentRadius: currentRadius,
-      maxRadius: maxRadius,
-      isSet: false,
     });
-
-    let new_state = "normal";
-    let do_update = false;
-    let message = "Watching";
-
-    //compare our radius
-    if (maxRadius != null && currentRadius > maxRadius) {
-      //okay, we're dragging.
-      new_state = configuration.state;
-      message = `Anchor Dragging (${Math.round(currentRadius)}m)`;
-
-      //how often should we send it?
-      let interval = configuration["anchorAlarmInterval"];
-      if (typeof interval !== "undefined")
-        if (plugin.lastAlarmSent + interval * 1000 < Date.now())
-          do_update = true;
-
-      //wait, do we have engines on?
-      if (configuration.enableEngineCheck) {
-        if (plugin.checkEngineState(app)) {
-          app.debug("anchor alarm disabled due to engines on");
-          do_update = true;
-          new_state = "normal";
-          message = "Engines on, alarm disabled.";
-
-          plugin.raiseAnchor();
-
-          app.setPluginStatus(message);
-        }
-      }
-    }
-
-    if (new_state !== plugin.alarm_state || do_update) {
-      plugin.alarm_state = new_state;
-      app.debug("alarm state change: %s -> %s", plugin.alarm_state, message);
-      plugin.updateAnchorAlarm(plugin.alarm_state, message);
-
-      if (plugin.alarm_state == "normal")
-        app.setPluginStatus("Watching");
-      else {
-        plugin.lastAlarmSent = Date.now();
-        app.setPluginError("Dragging");
-      }
-    }
   };
+
+  // ============================================================
+  // UTILITIES
+  // ============================================================
 
   plugin.checkEngineState = function (app) {
     const propulsion = app.getSelfPath("propulsion");
@@ -772,22 +836,6 @@ module.exports = function (app) {
     var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     var d = R * c; // Distance in m
     return d;
-  };
-
-  plugin.updateAnchorAlarm = function (state, message, method) {
-    if (!message)
-      message = state.charAt(0).toUpperCase() + state.slice(1);
-
-    if (!method)
-      method = ["visual", "sound"];
-
-    plugin.queueDelta("notifications.navigation.anchor", {
-      state: state,
-      method: method,
-      message: message,
-    });
-
-    plugin.sendUpdates();
   };
 
   plugin.degsToRad = function (degrees) {
