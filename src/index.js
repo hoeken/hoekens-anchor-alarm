@@ -18,6 +18,7 @@ const Schema = require("./schema");
 const SignalKBus = require("./signalk-bus");
 const AnchorState = require("./anchor-state");
 const PositionMonitor = require("./position-monitor");
+const AnchorService = require("./anchor-service");
 const HttpRoutes = require("./http-routes");
 
 module.exports = function (app) {
@@ -55,62 +56,19 @@ module.exports = function (app) {
 
   AnchorState.attach(app, plugin);
   PositionMonitor.attach(app, plugin);
+  AnchorService.attach(app, plugin);
 
   // ============================================================
-  // ANCHOR OPERATIONS
+  // PUT / ACTION HANDLERS (legacy — HTTP routes are canonical)
   // ============================================================
 
-  plugin.raiseAnchor = function () {
-    app.debug("raise anchor");
-
-    plugin.updateAnchorState({
-      isSet: false,
-    });
-
-    delete plugin.configuration["position"];
-    delete plugin.configuration["radius"];
-    plugin.configuration["on"] = false;
-
-    plugin.stopWatchingPosition();
-
-    plugin.savePluginOptions();
-  };
-
-  // ============================================================
-  // PUT / ACTION HANDLERS
-  // ============================================================
-
-  plugin.putRadius = function (context, path, value) {
+  plugin.putPosition = function (context, path, value) {
     try {
-      const radius = parseFloat(value);
-
-      if (plugin.configuration.position) {
-        // Emit the full anchor delta so navigation.anchor.meta.zones gets the
-        // new threshold — pushing maxRadius alone leaves dragging detection
-        // pinned to the old value.
-        plugin.updateAnchorState({
-          vesselPosition: app.getSelfPath("navigation.position.value"),
-          anchorPosition: plugin.configuration.position,
-          maxRadius: radius,
-          isSet: false,
-        });
+      if (value == null) {
+        plugin.anchor.raise();
       } else {
-        app.handleMessage(plugin.id, {
-          updates: [
-            {
-              values: [{ path: "navigation.anchor.maxRadius", value: radius }],
-            },
-          ],
-        });
+        plugin.anchor.drop({ position: value, radius: value.radius });
       }
-
-      plugin.configuration["radius"] = radius;
-      if (plugin.configuration["position"]) {
-        plugin.configuration["on"] = true;
-        plugin.startWatchingPosition();
-      }
-
-      plugin.savePluginOptions();
       return { state: "SUCCESS" };
     } catch (err) {
       app.error(err);
@@ -118,30 +76,9 @@ module.exports = function (app) {
     }
   };
 
-  plugin.putPosition = function (context, path, value) {
+  plugin.putRadius = function (context, path, value) {
     try {
-      if (value == null) {
-        plugin.raiseAnchor();
-      } else {
-        plugin.updateAnchorState({
-          anchorPosition: value,
-          maxRadius: plugin.configuration["radius"],
-          isSet: true,
-        });
-
-        plugin.configuration["position"] = {
-          latitude: parseFloat(value.latitude),
-          longitude: parseFloat(value.longitude),
-        };
-
-        plugin.configuration["radius"] = parseFloat(value.radius);
-        if (plugin.configuration["radius"]) {
-          plugin.configuration["on"] = true;
-          plugin.startWatchingPosition();
-        }
-
-        plugin.savePluginOptions();
-      }
+      plugin.anchor.setRadius(value);
       return { state: "SUCCESS" };
     } catch (err) {
       app.error(err);

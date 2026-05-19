@@ -13,132 +13,54 @@
  * limitations under the License.
  */
 
-function register(app, plugin, router) {
-  router.post("/dropAnchor", (req, res) => {
-    const position = req.body["position"];
+const { AnchorError } = require("./anchor-service");
 
-    if (typeof position == "undefined") {
-      app.debug("no position supplied");
-      res.status(403);
-      res.json({
+function register(app, plugin, router) {
+  function fail(res, err) {
+    if (err instanceof AnchorError) {
+      app.debug(err.message);
+      res.status(403).json({
         statusCode: 403,
         state: "FAILED",
-        message: "no position supplied",
+        message: err.message,
       });
     } else {
-      app.debug(
-        "set anchor position to: " +
-        position.latitude +
-        " " +
-        position.longitude,
-      );
-      let radius = req.body["radius"];
-      if (typeof radius == "undefined")
-        radius = null;
-
-      plugin.updateAnchorState({
-        anchorPosition: position,
-        currentRadius: 0,
-        maxRadius: radius,
-        isSet: true,
+      app.error(err);
+      res.status(500).json({
+        statusCode: 500,
+        state: "FAILED",
+        message: err.message || "internal error",
       });
+    }
+  }
 
-      plugin.configuration["position"] = {
-        latitude: parseFloat(position.latitude),
-        longitude: parseFloat(position.longitude),
-      };
-      plugin.configuration["radius"] = parseFloat(radius);
-      plugin.configuration["on"] = true;
-
-      plugin.startWatchingPosition();
-
-      try {
-        plugin.savePluginOptions();
-        res.json({
-          statusCode: 200,
-          state: "COMPLETED",
-        });
-      } catch (err) {
-        app.error(err);
-        res.status(500);
-        res.json({
-          statusCode: 500,
-          state: "FAILED",
-          message: "can't save config",
-        });
-      }
+  router.post("/dropAnchor", (req, res) => {
+    try {
+      plugin.anchor.drop({
+        position: req.body.position,
+        radius: req.body.radius,
+      });
+      res.json({ statusCode: 200, state: "COMPLETED" });
+    } catch (err) {
+      fail(res, err);
     }
   });
 
   router.post("/setRadius", (req, res) => {
-    let position = app.getSelfPath("navigation.position");
-    if (position.value)
-      position = position.value;
-    if (typeof position == "undefined") {
-      app.debug("no position supplied");
-      res.status(403);
-      res.json({
-        statusCode: 403,
-        state: "FAILED",
-        message: "no position supplied",
-      });
-    } else {
-      const radius = req.body["radius"];
-      if (typeof radius == "undefined") {
-        app.debug("no radius supplied");
-        res.status(403);
-        res.json({
-          statusCode: 403,
-          state: "FAILED",
-          message: "no radius supplied",
-        });
-        return;
-      }
-
-      app.debug("set anchor radius: " + radius);
-
-      plugin.updateAnchorState({
-        vesselPosition: position,
-        anchorPosition: plugin.configuration.position,
-        maxRadius: radius,
-        isSet: false,
-      });
-
-      plugin.configuration["radius"] = parseFloat(radius);
-
-      try {
-        plugin.savePluginOptions();
-        res.json({
-          statusCode: 200,
-          state: "COMPLETED",
-        });
-      } catch (err) {
-        app.error(err);
-        res.status(500);
-        res.json({
-          statusCode: 500,
-          state: "FAILED",
-          message: "can't save config",
-        });
-      }
+    try {
+      plugin.anchor.setRadius(req.body.radius);
+      res.json({ statusCode: 200, state: "COMPLETED" });
+    } catch (err) {
+      fail(res, err);
     }
   });
 
   router.post("/raiseAnchor", (req, res) => {
     try {
-      plugin.raiseAnchor();
-      res.json({
-        statusCode: 200,
-        state: "COMPLETED",
-      });
+      plugin.anchor.raise();
+      res.json({ statusCode: 200, state: "COMPLETED" });
     } catch (err) {
-      app.error(err);
-      res.status(500);
-      res.json({
-        statusCode: 500,
-        state: "FAILED",
-        message: "can't save config",
-      });
+      fail(res, err);
     }
   });
 }

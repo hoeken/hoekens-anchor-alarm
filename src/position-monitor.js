@@ -124,7 +124,7 @@ function attach(app, plugin) {
           new_state = "normal";
           message = "Engines on, alarm disabled.";
 
-          plugin.raiseAnchor();
+          plugin.anchor.raise();
 
           app.setPluginStatus(message);
         }
