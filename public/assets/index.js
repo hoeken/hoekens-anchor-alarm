@@ -4274,6 +4274,7 @@ var AnchorState = Object.freeze({
 	ANCHORED: "ANCHORED",
 	RAISING: "RAISING"
 });
+var POST_ACTION_SETTLE_MS = 3e3;
 var AnchorController = class {
 	constructor({ appState, overlay, toolbar, signalK, infoPanel, scopePanel, statusBar }) {
 		this._appState = appState;
@@ -4286,6 +4287,7 @@ var AnchorController = class {
 		this.state = AnchorState.UP;
 		this.anchorCoordinates = null;
 		this.maxRadius = 0;
+		this._lastUserActionAt = 0;
 		this.reconcile();
 	}
 	requestDrop() {
@@ -4299,6 +4301,8 @@ var AnchorController = class {
 			longitude: pos.lng
 		}, this.maxRadius).then(() => {
 			this.state = AnchorState.ANCHORED;
+			this._writeLocalAnchor(pos, this.maxRadius);
+			this._lastUserActionAt = Date.now();
 			this._toolbar.setState(this.state);
 			this._statusBar.clear("anchor-drop");
 		}).catch((err) => {
@@ -4316,6 +4320,8 @@ var AnchorController = class {
 		this._enterRaised();
 		this._signalK.raiseAnchor().then(() => {
 			this.state = AnchorState.UP;
+			this._clearLocalAnchor();
+			this._lastUserActionAt = Date.now();
 			this._toolbar.setState(this.state);
 			this._statusBar.clear("anchor-raise");
 		}).catch((err) => {
@@ -4339,9 +4345,6 @@ var AnchorController = class {
 	estimateAnchorPosition() {
 		if (!this._appState.currentCoordinates) return;
 		if (this.state !== AnchorState.UP) return;
-		console.log(this.state);
-		console.log(this._appState);
-		console.trace();
 		const distance = this._appState.calculateScope(5);
 		this.setRadius(this.computeDefaultRadius(distance, this._appState.boatConfig.gpsBowXDistance, this._appState.boatConfig.gpsBowYDistance));
 		const bow = GeoMath.calculateBowCoordinates(this._appState.getPosition(), this._appState.boatConfig.heading, this._appState.boatConfig.gpsBowXDistance, this._appState.boatConfig.gpsBowYDistance);
@@ -4359,7 +4362,9 @@ var AnchorController = class {
 	}
 	reconcile() {
 		if (this.state !== AnchorState.UP && this.state !== AnchorState.ANCHORED) return;
-		if (this._appState.anchor.position && this._appState.anchor.position.value) {
+		const serverAnchored = !!(this._appState.anchor.position && this._appState.anchor.position.value);
+		if (serverAnchored !== (this.state === AnchorState.ANCHORED) && Date.now() - this._lastUserActionAt < POST_ACTION_SETTLE_MS) return;
+		if (serverAnchored) {
 			this.anchorCoordinates = this._appState.getAnchorPosition();
 			this.maxRadius = this._appState.anchor.maxRadius?.value ?? this.maxRadius;
 			if (this.state === AnchorState.UP) {
@@ -4374,10 +4379,6 @@ var AnchorController = class {
 			this._enterRaised();
 		}
 	}
-	restoreDropped(position, radius) {
-		this.state = AnchorState.ANCHORED;
-		this._enterDropped(position, radius);
-	}
 	restoreRaised(guessPosition) {
 		this.anchorCoordinates = guessPosition;
 		this._enterRaised();
@@ -4385,6 +4386,38 @@ var AnchorController = class {
 	updateCrosshairPosition(pos) {
 		if (this.state === AnchorState.ANCHORED) return;
 		this.anchorCoordinates = pos;
+	}
+	_writeLocalAnchor(position, radius) {
+		const timestamp = (/* @__PURE__ */ new Date()).toISOString();
+		const value = {
+			latitude: position.lat,
+			longitude: position.lng
+		};
+		if (this._appState.anchor.position) {
+			this._appState.anchor.position.value = value;
+			this._appState.anchor.position.timestamp = timestamp;
+		} else this._appState.anchor.position = {
+			value,
+			timestamp
+		};
+		if (this._appState.anchor.maxRadius) {
+			this._appState.anchor.maxRadius.value = radius;
+			this._appState.anchor.maxRadius.timestamp = timestamp;
+		} else this._appState.anchor.maxRadius = {
+			value: radius,
+			timestamp
+		};
+	}
+	_clearLocalAnchor() {
+		const timestamp = (/* @__PURE__ */ new Date()).toISOString();
+		if (this._appState.anchor.position) {
+			this._appState.anchor.position.value = null;
+			this._appState.anchor.position.timestamp = timestamp;
+		}
+		if (this._appState.anchor.maxRadius) {
+			this._appState.anchor.maxRadius.value = null;
+			this._appState.anchor.maxRadius.timestamp = timestamp;
+		}
 	}
 	_enterDropped(position, radius) {
 		this.anchorCoordinates = position;
