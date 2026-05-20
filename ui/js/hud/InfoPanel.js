@@ -5,6 +5,15 @@
 
 import { SignalKHelper } from "../SignalKHelper";
 
+function formatClockTime(value) {
+  const d = new Date(value);
+  let h = d.getHours();
+  const m = d.getMinutes();
+  const ampm = h >= 12 ? "pm" : "am";
+  h = h % 12 || 12;
+  return `${h}:${m.toString().padStart(2, "0")} ${ampm}`;
+}
+
 export const InfoPanel = L.Control.extend({
   options: { position: "bottomright" },
 
@@ -14,9 +23,21 @@ export const InfoPanel = L.Control.extend({
     container.id = "infoUI";
     container.innerHTML = `
         <table>
+          <tr id="currentTideRow">
+            <th><a href="/signalk-tides">Current&nbsp;Tide:</a></th>
+            <td><span title="Current Tide" id='currentTide'>~</span></td>
+          </tr>
+          <tr id="highTideRow">
+            <th>High&nbsp;Tide:</th>
+            <td><span title="High Tide" id='highTide'>~</span></td>
+          </tr>
+          <tr id="lowTideRow">
+            <th>Low&nbsp;Tide:</th>
+            <td><span title="Low Tide" id='lowTide'>~</span></td>
+          </tr>
           <tr>
             <th>Depth:</th>
-            <td><span title="Below Surface" id='belowSurface'>~</span></td>
+            <td><span title="Depth" id='depthValue'>~</span></td>
           </tr>
           <tr>
             <th>Status:</th>
@@ -25,21 +46,79 @@ export const InfoPanel = L.Control.extend({
         </table>
     `;
     this._container = container;
-    this._belowSurface = container.querySelector("#belowSurface");
+    this._depthValue = container.querySelector("#depthValue");
+    this._currentTide = container.querySelector("#currentTide");
+    this._currentTideRow = container.querySelector("#currentTideRow");
+    this._tideHighTime = container.querySelector("#highTide");
+    this._tideHighTimeRow = container.querySelector("#highTideRow");
+    this._tideLowTime = container.querySelector("#lowTide");
+    this._tideLowTimeRow = container.querySelector("#lowTideRow");
     this._pluginStatus = container.querySelector("#pluginStatus");
     return container;
   },
 
   update: function (state) {
-    this.setBelowSurface(state.belowSurface);
+
+    if (state.tide) {
+      this.setCurrentTide(state.tide.heightNow);
+      this.arrangeTideTimes(state.tide.timeHigh, state.tide.timeLow);
+      this.setHighTime(state.tide.timeHigh);
+      this.setLowTime(state.tide.timeLow);
+    }
+
+    if (state.belowSurface)
+      this.setDepthValue(state.belowSurface);
+    else if (state.belowKeel)
+      this.setDepthValue(state.belowKeel);
+    else if (state.belowTransducer)
+      this.setDepthValue(state.belowTransducer);
+    else
+      this.setDepthValue(null);
     this.setStatus(state.anchor.notification);
   },
 
-  setBelowSurface: function (dbs) {
-    if (dbs)
-      this._belowSurface.textContent = SignalKHelper.formatDisplay(dbs);
+  setCurrentTide: function (currentTide) {
+    if (currentTide) {
+      this._currentTide.textContent = SignalKHelper.formatDisplay(currentTide);
+      this._currentTideRow.style.display = "";
+    } else {
+      this._currentTideRow.style.display = "none";
+    }
+  },
+
+  arrangeTideTimes: function (highTime, lowTime) {
+    if (!highTime || !lowTime)
+      return;
+    const parent = this._tideHighTimeRow.parentNode;
+    if (new Date(highTime.value) > new Date(lowTime.value))
+      parent.insertBefore(this._tideLowTimeRow, this._tideHighTimeRow);
     else
-      this._belowSurface.textContent = "~";
+      parent.insertBefore(this._tideHighTimeRow, this._tideLowTimeRow);
+  },
+
+  setHighTime: function (highTime) {
+    if (highTime) {
+      this._tideHighTime.textContent = formatClockTime(highTime.value);
+      this._tideHighTimeRow.style.display = "";
+    } else {
+      this._tideHighTimeRow.style.display = "none";
+    }
+  },
+
+  setLowTime: function (lowTime) {
+    if (lowTime) {
+      this._tideLowTime.textContent = formatClockTime(lowTime.value);
+      this._tideLowTimeRow.style.display = "";
+    } else {
+      this._tideLowTimeRow.style.display = "none";
+    }
+  },
+
+  setDepthValue: function (depth) {
+    if (depth)
+      this._depthValue.textContent = SignalKHelper.formatDisplay(depth);
+    else
+      this._depthValue.textContent = "~";
   },
 
   setStatus: function (notification) {

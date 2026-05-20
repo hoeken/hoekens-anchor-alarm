@@ -58,7 +58,7 @@ button {
 
 .info {
   padding: 5px;
-  width: 150px;
+  width: 200px;
   font-size: 11pt;
   line-height: 1.1;
   background-color: white;
@@ -69,6 +69,30 @@ button {
   text-align: left;
 }
 
+.info.leaflet-bar a,
+.leaflet-touch .info.leaflet-bar a {
+  display: inline;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  line-height: inherit;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  text-align: left;
+  text-decoration: underline;
+  color: #0066cc;
+}
+
+.info.leaflet-bar a:hover,
+.info.leaflet-bar a:focus,
+.leaflet-touch .info.leaflet-bar a:hover,
+.leaflet-touch .info.leaflet-bar a:focus {
+  background-color: transparent;
+  color: #004499;
+}
+
 .info td,
 .scope td {
   width: 100%;
@@ -77,7 +101,7 @@ button {
 
 .scope {
   padding: 5px;
-  width: 180px;
+  width: 200px;
   font-size: 11pt;
   line-height: 1.1;
   background-color: white;
