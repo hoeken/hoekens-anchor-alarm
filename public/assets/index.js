@@ -31211,7 +31211,10 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 	constructor() {
 		this.signalK = new SignalKHelper({ pluginName: "hoekens-anchor-alarm" });
 		this.state = new AppState();
-		this.config = {};
+		this.config = {
+			connectionType: "WEBSOCKET",
+			fleetFilterRadius: 500
+		};
 		this.map = void 0;
 		this.fleetLayer = void 0;
 		this.anchorOverlay = void 0;
@@ -31280,23 +31283,15 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 		this.loadInitialData();
 	}
 	loadInitialData() {
-		Promise.all([this.signalK.fetchSelf(), this.signalK.fetchConfig()]).then(([data, config]) => {
+		this.signalK.fetchSelf().then((data) => {
 			this.statusBar.clear("initial-load");
-			this.config = config;
 			this.state.extractAll(data);
 			if (!this.state.currentCoordinates) {
 				this.statusBar.update(this.state);
 				setTimeout(() => this.loadInitialData(), INITIAL_LOAD_RETRY_MS);
 				return;
 			}
-			if (this.config.connectionType === "WEBSOCKET") {
-				console.log("Using Websockets");
-				this.setupWebsockets();
-				this.updateTimer = setInterval(() => this.update(), UPDATE_INTERVAL_MS);
-			} else {
-				console.log("Using REST Polling");
-				this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
-			}
+			this.loadConfig();
 			this.state.calculate();
 			console.log(this.state);
 			this.buildMap();
@@ -31308,6 +31303,22 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 			this.statusBar.set("initial-load", msg, "error");
 			console.error(msg, error);
 			setTimeout(() => this.loadInitialData(), INITIAL_LOAD_RETRY_MS);
+		});
+	}
+	loadConfig() {
+		this.signalK.fetchConfig().then((config) => {
+			this.config = config;
+		}).catch((error) => {
+			console.error("Failed to load config, using defaults", error);
+		}).finally(() => {
+			if (this.config.connectionType === "WEBSOCKET") {
+				console.log("Using Websockets");
+				this.setupWebsockets();
+				this.updateTimer = setInterval(() => this.update(), UPDATE_INTERVAL_MS);
+			} else {
+				console.log("Using REST Polling");
+				this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
+			}
 		});
 	}
 	buildMap() {

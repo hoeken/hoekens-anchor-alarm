@@ -25,7 +25,10 @@ class AnchorAlarm {
   constructor() {
     this.signalK = new SignalKHelper({ pluginName: "hoekens-anchor-alarm" });
     this.state = new AppState();
-    this.config = {};
+    this.config = {
+      connectionType: "WEBSOCKET",
+      fleetFilterRadius: 500,
+    };
 
     this.map = undefined;
     this.fleetLayer = undefined;
@@ -125,10 +128,10 @@ class AnchorAlarm {
   // === Initial load (one /self call, broken into phases) ===========================
 
   loadInitialData() {
-    Promise.all([this.signalK.fetchSelf(), this.signalK.fetchConfig()])
-      .then(([data, config]) => {
+    this.signalK
+      .fetchSelf()
+      .then((data) => {
         this.statusBar.clear("initial-load");
-        this.config = config;
         this.state.extractAll(data);
 
         if (!this.state.currentCoordinates) {
@@ -137,17 +140,7 @@ class AnchorAlarm {
           return;
         }
 
-        if (this.config.connectionType === "WEBSOCKET") {
-          console.log("Using Websockets");
-          this.setupWebsockets();
-          this.updateTimer = setInterval(
-            () => this.update(),
-            UPDATE_INTERVAL_MS,
-          );
-        } else {
-          console.log("Using REST Polling");
-          this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
-        }
+        this.loadConfig();
 
         this.state.calculate();
 
@@ -165,6 +158,32 @@ class AnchorAlarm {
         this.statusBar.set("initial-load", msg, "error");
         console.error(msg, error);
         setTimeout(() => this.loadInitialData(), INITIAL_LOAD_RETRY_MS);
+      });
+  }
+
+  // Config fetch is independent: a 401 (user not logged in) must not block
+  // startup, so on failure we keep the defaults and start pollers anyway.
+  loadConfig() {
+    this.signalK
+      .fetchConfig()
+      .then((config) => {
+        this.config = config;
+      })
+      .catch((error) => {
+        console.error("Failed to load config, using defaults", error);
+      })
+      .finally(() => {
+        if (this.config.connectionType === "WEBSOCKET") {
+          console.log("Using Websockets");
+          this.setupWebsockets();
+          this.updateTimer = setInterval(
+            () => this.update(),
+            UPDATE_INTERVAL_MS,
+          );
+        } else {
+          console.log("Using REST Polling");
+          this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
+        }
       });
   }
 
