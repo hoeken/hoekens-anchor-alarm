@@ -70,6 +70,10 @@ export class SignalKHelper {
   fetchTracks(radius) {
     return this.request(`tracks?radius=${radius}`);
   }
+  fetchConfig() {
+    return fetch(`${this.baseUrl}/plugins/${this.pluginName}/ui-config`)
+      .then(SignalKHelper._toJsonOrReject);
+  }
 
   // Walk a subtree by dot-separated path. An empty path returns the tree itself
   // so callers can pass a notification envelope and read its `.value` via value().

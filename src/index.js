@@ -119,7 +119,7 @@ module.exports = function (app) {
     for (const [key, value] of Object.entries(Schema.metas))
       plugin.bus.queueMeta(key, value);
 
-    plugin.configuration = props;
+    plugin.configuration = Schema.applyDefaults(app, props || {});
     try {
       //save our anchor roller height to the tree so we can access it from the web side
       if (typeof plugin.configuration["bowAnchorRollerHeight"] != "undefined")

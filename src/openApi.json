@@ -18,6 +18,10 @@
     {
       "name": "anchor",
       "description": "Anchor control operations"
+    },
+    {
+      "name": "config",
+      "description": "Plugin configuration exposed to the UI"
     }
   ],
   "components": {
@@ -53,6 +57,22 @@
           "state": {
             "type": "string",
             "enum": ["COMPLETED"]
+          }
+        }
+      },
+      "Config": {
+        "type": "object",
+        "description": "UI-relevant plugin configuration. Properties are omitted when unset; the UI falls back to its own defaults.",
+        "properties": {
+          "fleetFilterRadius": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Radius (meters) around own vessel for displaying other vessels and historical tracks."
+          },
+          "connectionType": {
+            "type": "string",
+            "enum": ["POLLING", "WEBSOCKET"],
+            "description": "How the UI connects to SignalK for live data updates."
           }
         }
       },
@@ -230,6 +250,29 @@
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/ui-config": {
+      "get": {
+        "tags": ["config"],
+        "summary": "Get UI-relevant plugin configuration",
+        "description": "Returns plugin configuration values that the web UI needs at startup. Unset properties are omitted; the UI applies its own defaults in that case.",
+        "responses": {
+          "200": {
+            "description": "Plugin configuration returned successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Config"
+                },
+                "example": {
+                  "fleetFilterRadius": 500,
+                  "connectionType": "WEBSOCKET"
+                }
+              }
+            }
           }
         }
       }

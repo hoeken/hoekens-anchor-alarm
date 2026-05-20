@@ -25,6 +25,7 @@ class AnchorAlarm {
   constructor() {
     this.signalK = new SignalKHelper({ pluginName: "hoekens-anchor-alarm" });
     this.state = new AppState();
+    this.config = {};
 
     this.map = undefined;
     this.fleetLayer = undefined;
@@ -134,10 +135,10 @@ class AnchorAlarm {
   // === Initial load (one /self call, broken into phases) ===========================
 
   loadInitialData() {
-    this.signalK
-      .fetchSelf()
-      .then((data) => {
+    Promise.all([this.signalK.fetchSelf(), this.signalK.fetchConfig()])
+      .then(([data, config]) => {
         this.statusBar.clear("initial-load");
+        this.config = config;
         this.state.extractAll(data);
 
         if (!this.state.currentCoordinates) {
@@ -208,6 +209,7 @@ class AnchorAlarm {
       app: this,
       map: this.map,
       ownMmsi: this.state.boatConfig.mmsi,
+      filterRadius: this.config.fleetFilterRadius,
     });
 
     this.buildAnchorWidgets();

@@ -29137,6 +29137,9 @@ var SignalKHelper = class SignalKHelper {
 	fetchTracks(radius) {
 		return this.request(`tracks?radius=${radius}`);
 	}
+	fetchConfig() {
+		return fetch(`${this.baseUrl}/plugins/${this.pluginName}/config`).then(SignalKHelper._toJsonOrReject);
+	}
 	static extract(tree, path = "") {
 		if (!tree) return null;
 		if (!path) return tree;
@@ -29795,7 +29798,7 @@ var GPS_ANTENNA_ICON = L.icon({
 	iconAnchor: [13, 25]
 });
 var FleetLayer = class {
-	constructor({ app, map, ownMmsi }) {
+	constructor({ app, map, ownMmsi, filterRadius }) {
 		this.app = app;
 		this.map = map;
 		this.ownMmsi = ownMmsi;
@@ -29807,7 +29810,7 @@ var FleetLayer = class {
 		this.ownBoatConfig = void 0;
 		this.fleetTimer = null;
 		this._pollInFlight = false;
-		this.filterRadius = DEFAULT_FILTER_RADIUS;
+		this.filterRadius = filterRadius ?? DEFAULT_FILTER_RADIUS;
 		this.setOwnVessel(this.app.state.getPosition(), this.app.state.boatConfig);
 		this.loadInitialData();
 	}
@@ -31010,6 +31013,7 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 	constructor() {
 		this.signalK = new SignalKHelper({ pluginName: "hoekens-anchor-alarm" });
 		this.state = new AppState();
+		this.config = {};
 		this.map = void 0;
 		this.fleetLayer = void 0;
 		this.anchorOverlay = void 0;
@@ -31083,8 +31087,9 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 		this.loadInitialData();
 	}
 	loadInitialData() {
-		this.signalK.fetchSelf().then((data) => {
+		Promise.all([this.signalK.fetchSelf(), this.signalK.fetchConfig()]).then(([data, config]) => {
 			this.statusBar.clear("initial-load");
+			this.config = config;
 			this.state.extractAll(data);
 			if (!this.state.currentCoordinates) {
 				this.statusBar.update(this.state);
@@ -31126,7 +31131,8 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 		this.fleetLayer = new FleetLayer({
 			app: this,
 			map: this.map,
-			ownMmsi: this.state.boatConfig.mmsi
+			ownMmsi: this.state.boatConfig.mmsi,
+			filterRadius: this.config.fleetFilterRadius
 		});
 		this.buildAnchorWidgets();
 	}

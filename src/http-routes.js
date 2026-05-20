@@ -66,6 +66,14 @@ function register(app, plugin, router) {
       fail(res, err);
     }
   });
+
+  router.get("/ui-config", (req, res) => {
+    const config = plugin.configuration || {};
+    res.json({
+      fleetFilterRadius: config.fleetFilterRadius,
+      connectionType: config.connectionType,
+    });
+  });
 }
 
 module.exports = { register };

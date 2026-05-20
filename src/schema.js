@@ -99,6 +99,20 @@ function buildSchema(app) {
         type: "object",
         properties: {},
       },
+      fleetFilterRadius: {
+        type: "integer",
+        title: "Fleet Filter Radius (m)",
+        description:
+          "Radius around own vessel to display other vessels and historical tracks.",
+        default: 500,
+      },
+      connectionType: {
+        type: "string",
+        title: "Connection Type",
+        description: "How the UI connects to SignalK for live data updates.",
+        default: "WEBSOCKET",
+        enum: ["POLLING", "WEBSOCKET"],
+      },
       state: {
         title: "Alarm Severity",
         description: "Anchor alarm notification level",
@@ -176,4 +190,18 @@ function buildSchema(app) {
   return schemaData;
 }
 
-module.exports = { metas, requiredPaths, buildSchema };
+// Mutates config in place, filling in top-level schema defaults for any keys
+// the user hasn't explicitly saved. SignalK does not materialize schema
+// defaults into the saved options blob, so downstream code (and the
+// /ui-config endpoint) would otherwise see undefined for unset properties.
+function applyDefaults(app, config) {
+  const schema = buildSchema(app);
+  for (const [key, prop] of Object.entries(schema.properties)) {
+    if (config[key] === undefined && prop.default !== undefined) {
+      config[key] = prop.default;
+    }
+  }
+  return config;
+}
+
+module.exports = { metas, requiredPaths, buildSchema, applyDefaults };

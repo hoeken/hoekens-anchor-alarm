@@ -23,7 +23,7 @@ const GPS_ANTENNA_ICON = L.icon({
 });
 
 export class FleetLayer {
-  constructor({ app, map, ownMmsi }) {
+  constructor({ app, map, ownMmsi, filterRadius }) {
     this.app = app;
     this.map = map;
     this.ownMmsi = ownMmsi;
@@ -35,7 +35,7 @@ export class FleetLayer {
     this.ownBoatConfig = undefined;
     this.fleetTimer = null;
     this._pollInFlight = false;
-    this.filterRadius = DEFAULT_FILTER_RADIUS;
+    this.filterRadius = filterRadius ?? DEFAULT_FILTER_RADIUS;
 
     this.setOwnVessel(this.app.state.getPosition(), this.app.state.boatConfig);
 
