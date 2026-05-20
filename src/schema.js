@@ -118,19 +118,19 @@ function buildSchema(app) {
         type: "object",
         properties: {},
       },
-      fleetFilterRadius: {
-        type: "integer",
-        title: "Fleet Filter Radius (m)",
-        description:
-          "Radius around own vessel to display other vessels and historical tracks.",
-        default: 500,
-      },
       connectionType: {
         type: "string",
         title: "Connection Type",
         description: "How the UI connects to SignalK for live data updates.",
         default: "WEBSOCKET",
         enum: ["REST_POLLING", "WEBSOCKET"],
+      },
+      fleetFilterRadius: {
+        type: "integer",
+        title: "Fleet Filter Radius (m)",
+        description:
+          "Radius around own vessel to display other vessels and historical tracks.",
+        default: 500,
       },
       state: {
         title: "Alarm Severity",
