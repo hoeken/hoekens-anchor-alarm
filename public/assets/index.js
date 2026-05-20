@@ -29138,7 +29138,7 @@ var SignalKHelper = class SignalKHelper {
 		return this.request(`tracks?radius=${radius}`);
 	}
 	fetchConfig() {
-		return fetch(`${this.baseUrl}/plugins/${this.pluginName}/config`).then(SignalKHelper._toJsonOrReject);
+		return fetch(`${this.baseUrl}/plugins/${this.pluginName}/ui-config`).then(SignalKHelper._toJsonOrReject);
 	}
 	static extract(tree, path = "") {
 		if (!tree) return null;
@@ -31023,7 +31023,6 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 		this.windPanel = void 0;
 		this.homeButton = void 0;
 		this.toolbar = void 0;
-		this.useWebsockets = true;
 		this.updateTimer = null;
 		this.pollTimer = null;
 		this._pollInFlight = false;
@@ -31053,10 +31052,6 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 		}
 	}
 	init() {
-		if (this.useWebsockets) {
-			console.log("Using Websockets");
-			this.setupWebsockets();
-		} else console.log("Using REST Polling");
 		new StaleReloader({ staleThresholdMs: 300 * 1e3 }).start();
 		this.satelliteLayer = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
 			attribution: "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
@@ -31096,13 +31091,19 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 				setTimeout(() => this.loadInitialData(), INITIAL_LOAD_RETRY_MS);
 				return;
 			}
+			if (this.config.connectionType === "WEBSOCKET") {
+				console.log("Using Websockets");
+				this.setupWebsockets();
+				this.updateTimer = setInterval(() => this.update(), UPDATE_INTERVAL_MS);
+			} else {
+				console.log("Using REST Polling");
+				this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
+			}
 			this.state.calculate();
 			console.log(this.state);
 			this.buildMap();
 			this.updateMap();
 			this.map.fitBounds(this.anchorOverlay.getBounds());
-			if (this.useWebsockets) this.updateTimer = setInterval(() => this.update(), UPDATE_INTERVAL_MS);
-			else this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
 		}).catch((error) => {
 			const detail = error.statusText || error.message || "unknown error";
 			const msg = `Failed to load initial data: ${error.status ? `${error.status} ` : ""}${detail}`;

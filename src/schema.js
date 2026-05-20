@@ -111,7 +111,7 @@ function buildSchema(app) {
         title: "Connection Type",
         description: "How the UI connects to SignalK for live data updates.",
         default: "WEBSOCKET",
-        enum: ["POLLING", "WEBSOCKET"],
+        enum: ["REST_POLLING", "WEBSOCKET"],
       },
       state: {
         title: "Alarm Severity",

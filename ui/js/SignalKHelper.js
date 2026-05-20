@@ -15,8 +15,7 @@ export class SignalKHelper {
   }
 
   // Fetchers return native Promises that resolve with the parsed JSON body and
-  // reject with { status, statusText } on HTTP errors. A WS rewrite would swap
-  // these for delta-fed cache reads without changing call sites.
+  // reject with { status, statusText } on HTTP errors.
   request(path) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort("Request timed out"), 5000);

@@ -36,9 +36,6 @@ class AnchorAlarm {
     this.windPanel = undefined;
     this.homeButton = undefined;
     this.toolbar = undefined;
-
-    this.useWebsockets = true;
-
     this.updateTimer = null;
     this.pollTimer = null;
     this._pollInFlight = false;
@@ -80,13 +77,6 @@ class AnchorAlarm {
   }
 
   init() {
-    if (this.useWebsockets) {
-      console.log("Using Websockets");
-      this.setupWebsockets();
-    } else {
-      console.log("Using REST Polling");
-    }
-
     new StaleReloader({ staleThresholdMs: 5 * 60 * 1000 }).start();
 
     this.satelliteLayer = L.tileLayer(
@@ -147,6 +137,18 @@ class AnchorAlarm {
           return;
         }
 
+        if (this.config.connectionType === "WEBSOCKET") {
+          console.log("Using Websockets");
+          this.setupWebsockets();
+          this.updateTimer = setInterval(
+            () => this.update(),
+            UPDATE_INTERVAL_MS,
+          );
+        } else {
+          console.log("Using REST Polling");
+          this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
+        }
+
         this.state.calculate();
 
         console.log(this.state);
@@ -154,14 +156,6 @@ class AnchorAlarm {
         this.buildMap();
         this.updateMap();
         this.map.fitBounds(this.anchorOverlay.getBounds());
-
-        if (this.useWebsockets)
-          this.updateTimer = setInterval(
-            () => this.update(),
-            UPDATE_INTERVAL_MS,
-          );
-        else
-          this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
       })
       .catch((error) => {
         const detail = error.statusText || error.message || "unknown error";
