@@ -42,8 +42,10 @@ export class SignalKHelper {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data ?? {}),
     }).then((response) => {
-      if (response.status === 401)
-        location.href = "/admin/#/login";
+      if (response.status === 401) {
+        const here = window.location.pathname + window.location.search + window.location.hash;
+        window.location.href = "/admin/#/login?redirect=" + encodeURIComponent(here);
+      }
       return SignalKHelper._toJsonOrReject(response);
     });
   }
