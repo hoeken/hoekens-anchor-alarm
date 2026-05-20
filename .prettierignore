@@ -6,3 +6,6 @@ public/icons
 public/anchoralarm.png
 *.md
 *.js
+*.yml
+*.yaml
+public/index.html
