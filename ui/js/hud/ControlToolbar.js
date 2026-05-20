@@ -5,7 +5,7 @@
 // style.css; do not rename without updating it.
 
 import { AnchorState } from "../AnchorController.js";
-import { SignalKHelper } from "../SignalKHelper.js";
+import { DisplayUnit } from "../DisplayUnit.js";
 
 export class ControlToolbar {
   constructor({ parent, getMapContainer, onDrop, onRaise, onSetRadius }) {
@@ -129,7 +129,7 @@ export class ControlToolbar {
 
   update(appState) {
     if (appState.anchor?.maxRadius)
-      this._radiusEl.innerHTML = SignalKHelper.formatDisplay(appState.anchor.maxRadius, false, this._radius);
+      this._radiusEl.innerHTML = DisplayUnit.formatDisplay(appState.anchor.maxRadius, 0, this._radius);
     else
       this._radiusEl.innerHTML = this._radius;
   }

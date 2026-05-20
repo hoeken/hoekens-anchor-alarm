@@ -4,8 +4,6 @@
 // replace the REST fetchers (subscribing to deltas and serving values from a
 // local cache) without changing the static helpers or call sites that use them.
 
-import { evaluate } from "mathjs/number";
-
 const SIGNALK_DEFAULT_FRESHNESS_SEC = 60;
 
 export class SignalKHelper {
@@ -93,69 +91,6 @@ export class SignalKHelper {
   static value(tree, path = "", fallback = undefined) {
     const node = this.extract(tree, path);
     return node && node.value !== undefined ? node.value : fallback;
-  }
-
-  // Apply meta.displayUnits (formula + symbol + displayFormat) to a delta's
-  // value. Returns { value, symbol, format } so callers can either format the
-  // result or use the converted numeric value directly.
-  static convertToDisplay(delta, value = false) {
-    if (value === false)
-      value = delta.value;
-    let symbol = delta.meta?.units ?? "";
-    let format = null;
-
-    const displayUnits = delta.meta?.displayUnits;
-    if (displayUnits) {
-      if (displayUnits.formula && typeof value === "number") {
-        value = evaluate(displayUnits.formula, { value });
-      }
-      if (displayUnits.symbol)
-        symbol = displayUnits.symbol;
-      if (displayUnits.displayFormat)
-        format = displayUnits.displayFormat;
-    }
-
-    if (symbol == "foot")
-      symbol = "ft";
-
-    return { value, symbol, format };
-  }
-
-  // Apply meta.displayUnits.inverseFormula to convert a display-unit value
-  // back to the delta's base unit. Returns the converted numeric value, or
-  // the input unchanged when no inverseFormula is defined.
-  static convertFromDisplay(delta, value) {
-    const displayUnits = delta.meta?.displayUnits;
-    if (displayUnits?.inverseFormula && typeof value === "number") {
-      value = evaluate(displayUnits.inverseFormula, { value });
-    }
-    return value;
-  }
-
-  // Apply meta.displayUnits (formula + symbol + displayFormat) to a delta and
-  // return a display-ready string. Falls back to meta.units when displayUnits
-  // is absent, and to a bare String(value) when neither side specifies units.
-  static formatDisplay(delta, decimals = false, value = false) {
-    if (!delta)
-      return "";
-    if (value === false && (delta.value === undefined || delta.value === null))
-      return "";
-
-    const { value: converted, symbol, format } = this.convertToDisplay(delta, value);
-
-    if (symbol == "ft")
-      decimals = 0;
-
-    let text;
-    if (format && typeof converted === "number") {
-      if (decimals === false)
-        decimals = (format.split(".")[1] || "").length;
-      text = converted.toFixed(decimals);
-    } else {
-      text = String(converted);
-    }
-
-    return symbol ? `${text} ${symbol}` : text;
   }
 
   static freshValue(

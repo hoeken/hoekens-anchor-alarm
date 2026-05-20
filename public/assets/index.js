@@ -2728,10 +2728,1008 @@ var require_dist$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.default = _client.default;
 }));
 //#endregion
-//#region node_modules/@signalk/client/index.js
-var require_client = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+//#region ui/js/SignalKHelper.js
+var import_client = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
 	module.exports = require_dist$1();
-}));
+})))());
+var SIGNALK_DEFAULT_FRESHNESS_SEC = 60;
+var SignalKHelper = class SignalKHelper {
+	constructor({ baseUrl = "", pluginName = null } = {}) {
+		this.baseUrl = baseUrl;
+		this.pluginName = pluginName;
+	}
+	request(path) {
+		const controller = new AbortController();
+		const timer = setTimeout(() => controller.abort("Request timed out"), 5e3);
+		return fetch(`${this.baseUrl}/signalk/v1/api/${path}`, { signal: controller.signal }).finally(() => clearTimeout(timer)).then(SignalKHelper._toJsonOrReject);
+	}
+	raiseAnchor() {
+		return this.pluginPost("raiseAnchor");
+	}
+	dropAnchor(position, radius) {
+		return this.pluginPost("dropAnchor", {
+			position,
+			radius
+		});
+	}
+	setRadius(radius) {
+		return this.pluginPost("setRadius", { radius });
+	}
+	pluginPost(action, data) {
+		return fetch(`${this.baseUrl}/plugins/${this.pluginName}/${action}`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(data ?? {})
+		}).then((response) => {
+			if (response.status === 401) location.href = "/admin/#/login";
+			return SignalKHelper._toJsonOrReject(response);
+		});
+	}
+	static _toJsonOrReject(response) {
+		if (!response.ok) return Promise.reject({
+			status: response.status,
+			statusText: response.statusText
+		});
+		return response.json();
+	}
+	fetchSelf() {
+		return this.request("vessels/self");
+	}
+	fetchAllVessels() {
+		return this.request("vessels");
+	}
+	fetchTracks(radius) {
+		return this.request(`tracks?radius=${radius}`);
+	}
+	fetchConfig() {
+		return fetch(`${this.baseUrl}/plugins/${this.pluginName}/ui-config`).then(SignalKHelper._toJsonOrReject);
+	}
+	static extract(tree, path = "") {
+		if (!tree) return null;
+		if (!path) return tree;
+		let node = tree;
+		for (const key of path.split(".")) {
+			if (node == null || typeof node !== "object") return null;
+			node = node[key];
+		}
+		return node ?? null;
+	}
+	static value(tree, path = "", fallback = void 0) {
+		const node = this.extract(tree, path);
+		return node && node.value !== void 0 ? node.value : fallback;
+	}
+	static freshValue(tree, path = "", { maxAge = SIGNALK_DEFAULT_FRESHNESS_SEC, fallback = void 0 } = {}) {
+		const node = this.extract(tree, path);
+		if (!node || node.value === void 0) return fallback;
+		if (!this.isFresh(node, maxAge)) {
+			const ageSec = node.timestamp ? Math.round((Date.now() - new Date(node.timestamp).getTime()) / 1e3) : "unknown";
+			const msg = `Stale SignalK value: ${path || "(root)"} — Age ${ageSec}s, Max ${maxAge}s`;
+			console.warn(msg);
+			console.trace();
+			return fallback;
+		}
+		return node.value;
+	}
+	static isFresh(delta, maxAge = SIGNALK_DEFAULT_FRESHNESS_SEC) {
+		if (!delta || !delta.timestamp) return false;
+		return (Date.now() - new Date(delta.timestamp).getTime()) / 1e3 <= maxAge;
+	}
+	static isStale(delta, maxAge = SIGNALK_DEFAULT_FRESHNESS_SEC) {
+		return !this.isFresh(delta, maxAge);
+	}
+};
+//#endregion
+//#region ui/js/ShipIcons.js
+var RANGES = [
+	{
+		start: 20,
+		end: 29,
+		icon: "wing-in-ground.png"
+	},
+	{
+		start: 30,
+		end: 30,
+		icon: "fishing.png"
+	},
+	{
+		start: 31,
+		end: 32,
+		icon: "towing.png"
+	},
+	{
+		start: 33,
+		end: 33,
+		icon: "dredging.png"
+	},
+	{
+		start: 34,
+		end: 34,
+		icon: "diving.png"
+	},
+	{
+		start: 35,
+		end: 35,
+		icon: "military.png"
+	},
+	{
+		start: 37,
+		end: 37,
+		icon: "pleasure.png"
+	},
+	{
+		start: 40,
+		end: 49,
+		icon: "high-speed-craft.png"
+	},
+	{
+		start: 50,
+		end: 50,
+		icon: "pilot.png"
+	},
+	{
+		start: 51,
+		end: 51,
+		icon: "sar.png"
+	},
+	{
+		start: 52,
+		end: 52,
+		icon: "tug.png"
+	},
+	{
+		start: 53,
+		end: 53,
+		icon: "port-tender.png"
+	},
+	{
+		start: 54,
+		end: 54,
+		icon: "anti-pollution.png"
+	},
+	{
+		start: 55,
+		end: 55,
+		icon: "police.png"
+	},
+	{
+		start: 58,
+		end: 58,
+		icon: "medical.png"
+	},
+	{
+		start: 59,
+		end: 59,
+		icon: "noncombatant.png"
+	},
+	{
+		start: 60,
+		end: 69,
+		icon: "passenger.png"
+	},
+	{
+		start: 70,
+		end: 79,
+		icon: "cargo.png"
+	},
+	{
+		start: 80,
+		end: 89,
+		icon: "tanker.png"
+	},
+	{
+		start: 90,
+		end: 99,
+		icon: "other.png"
+	}
+];
+var ShipIcons = class {
+	static iconFor(aisShipType, aspectRatio) {
+		aisShipType = parseInt(aisShipType, 10);
+		if (aisShipType === 36) return aspectRatio >= 2.5 ? "icons/ships/png/sailboat.png" : "icons/ships/png/catamaran.png";
+		const range = RANGES.find((r) => aisShipType >= r.start && aisShipType <= r.end);
+		return range ? `icons/ships/png/${range.icon}` : "icons/ships/png/default.png";
+	}
+};
+//#endregion
+//#region ui/js/BoatConfig.js
+var DEFAULTS$1 = {
+	name: "Unknown",
+	loa: 14,
+	beam: 4,
+	anchorRollerHeight: 0,
+	gpsBowXDistance: 0,
+	gpsBowYDistance: 0,
+	aisShipType: 36,
+	mmsi: "",
+	heading: 0
+};
+var BoatConfig = class BoatConfig {
+	constructor({ loa, beam, anchorRollerHeight, gpsBowXDistance, gpsBowYDistance, aisShipType, mmsi, heading }) {
+		this.loa = loa;
+		this.beam = beam;
+		this.anchorRollerHeight = anchorRollerHeight;
+		this.gpsBowXDistance = gpsBowXDistance;
+		this.gpsBowYDistance = gpsBowYDistance;
+		this.aisShipType = aisShipType;
+		this.mmsi = mmsi;
+		this.heading = heading;
+	}
+	static extract(data) {
+		let config = {};
+		config.name = data.name ?? DEFAULTS$1.name;
+		config.mmsi = data.mmsi ?? DEFAULTS$1.mmsi;
+		config.loa = SignalKHelper.value(data, "design.length")?.overall ?? DEFAULTS$1.loa;
+		config.beam = SignalKHelper.value(data, "design.beam") ?? DEFAULTS$1.beam;
+		config.anchorRollerHeight = SignalKHelper.value(data, "design.bowAnchorRollerHeight") ?? DEFAULTS$1.anchorRollerHeight;
+		if (data.sensors?.gps) {
+			config.gpsBowXDistance = SignalKHelper.value(data, "sensors.gps.fromCenter") ?? DEFAULTS$1.gpsBowXDistance;
+			config.gpsBowYDistance = SignalKHelper.value(data, "sensors.gps.fromBow") ?? DEFAULTS$1.gpsBowYDistance;
+		} else if (data.sensors?.ais) {
+			config.gpsBowXDistance = SignalKHelper.value(data, "sensors.ais.fromCenter") ?? DEFAULTS$1.gpsBowXDistance;
+			config.gpsBowYDistance = SignalKHelper.value(data, "sensors.ais.fromBow") ?? config.loa / 2;
+		} else {
+			config.gpsBowXDistance = DEFAULTS$1.gpsBowXDistance;
+			config.gpsBowYDistance = DEFAULTS$1.gpsBowYDistance;
+		}
+		config.aisShipType = SignalKHelper.value(data, "design.aisShipType")?.id ?? DEFAULTS$1.aisShipType;
+		return new BoatConfig(config);
+	}
+	get bowOffset() {
+		return {
+			x: this.beam / 2 + this.gpsBowXDistance,
+			y: this.gpsBowYDistance
+		};
+	}
+	get gpsOffset() {
+		return {
+			x: this.gpsBowXDistance,
+			y: this.gpsBowYDistance
+		};
+	}
+	get loaToBeam() {
+		return this.loa / this.beam;
+	}
+	get icon() {
+		return ShipIcons.iconFor(this.aisShipType, this.loaToBeam);
+	}
+};
+//#endregion
+//#region ui/js/GeoMath.js
+var GeoMath = class GeoMath {
+	static deg2rad(deg) {
+		return deg * (Math.PI / 180);
+	}
+	static rad2deg(radians) {
+		return radians * 180 / Math.PI;
+	}
+	static normalizeAngle(angle) {
+		return (angle % 360 + 360) % 360;
+	}
+	/**
+	* Returns the length of the vector (x, y) from the origin.
+	* @param {number} x – x-coordinate
+	* @param {number} y – y-coordinate
+	* @returns {number} distance from (0,0) to (x,y)
+	*/
+	static calculateVectorDistance(x, y) {
+		return Math.sqrt(x * x + y * y);
+	}
+	static calculateDistance(lat1, lon1, lat2, lon2) {
+		let R = 6371e3;
+		let dLat = GeoMath.deg2rad(lat2 - lat1);
+		let dLon = GeoMath.deg2rad(lon2 - lon1);
+		let a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(GeoMath.deg2rad(lat1)) * Math.cos(GeoMath.deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+		return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+	}
+	static calculateBearing(lat1, lon1, lat2, lon2) {
+		var θa = GeoMath.deg2rad(lat1);
+		var θb = GeoMath.deg2rad(lat2);
+		var ΔL = GeoMath.deg2rad(lon2 - lon1);
+		var X = Math.cos(θb) * Math.sin(ΔL);
+		var Y = Math.cos(θa) * Math.sin(θb) - Math.sin(θa) * Math.cos(θb) * Math.cos(ΔL);
+		var β = Math.atan2(X, Y);
+		var bearing = GeoMath.rad2deg(β);
+		bearing = (bearing + 360) % 360;
+		return bearing;
+	}
+	/**
+	* Calculates the destination point given starting latitude and longitude,
+	* bearing, and distance using the haversine formula.
+	*
+	* @param {number} lat1 - Starting latitude in degrees.
+	* @param {number} lon1 - Starting longitude in degrees.
+	* @param {number} bearing - Bearing in degrees (clockwise from north).
+	* @param {number} distance - Distance to travel from the starting point in meters.
+	* @returns {{ latitude: number, longitude: number }} - The destination latitude and longitude.
+	*/
+	static calculateDestinationPoint(lat1, lon1, bearing, distance) {
+		const R = 6371e3;
+		const φ1 = lat1 * Math.PI / 180;
+		const λ1 = lon1 * Math.PI / 180;
+		const θ = bearing * Math.PI / 180;
+		const δ = distance / R;
+		const sinφ1 = Math.sin(φ1);
+		const cosφ1 = Math.cos(φ1);
+		const sinδ = Math.sin(δ);
+		const cosδ = Math.cos(δ);
+		const sinθ = Math.sin(θ);
+		const cosθ = Math.cos(θ);
+		const sinφ2 = sinφ1 * cosδ + cosφ1 * sinδ * cosθ;
+		const φ2 = Math.asin(sinφ2);
+		const y = sinθ * sinδ * cosφ1;
+		const x = cosδ - sinφ1 * sinφ2;
+		const λ2 = λ1 + Math.atan2(y, x);
+		return {
+			latitude: φ2 * 180 / Math.PI,
+			longitude: (λ2 * 180 / Math.PI + 540) % 360 - 180
+		};
+	}
+	static calculateBowCoordinates(current, heading, xOffset, yOffset) {
+		let bc = GeoMath.calculateDestinationPoint(current.lat, current.lng, heading, yOffset);
+		if (xOffset != 0) bc = GeoMath.calculateDestinationPoint(bc.latitude, bc.longitude, heading - 90, xOffset);
+		return L.latLng(bc.latitude, bc.longitude);
+	}
+	/**
+	* Estimate current tide height with sinusoidal easing
+	*
+	* @param {Date|string|number} lowTime      — time of low tide
+	* @param {number}            lowHeight    — height at low tide
+	* @param {Date|string|number} highTime     — time of high tide
+	* @param {number}            highHeight   — height at high tide
+	* @param {Date|string|number} [currentTime=new Date()] — time to estimate
+	* @returns {number} smoothly interpolated tide height
+	*/
+	static estimateTideHeightSmooth(lowTime, lowHeight, highTime, highHeight, currentTime = /* @__PURE__ */ new Date()) {
+		const tLow = (lowTime instanceof Date ? lowTime : new Date(lowTime)).getTime();
+		const tHigh = (highTime instanceof Date ? highTime : new Date(highTime)).getTime();
+		const tCurrent = (currentTime instanceof Date ? currentTime : new Date(currentTime)).getTime();
+		let t0, h0, t1, h1;
+		if (tLow < tHigh) if (tCurrent <= tLow) {
+			t0 = tLow - (tHigh - tLow);
+			h0 = highHeight;
+			t1 = tLow;
+			h1 = lowHeight;
+		} else if (tCurrent >= tHigh) {
+			t0 = tHigh;
+			h0 = highHeight;
+			t1 = tHigh + (tHigh - tLow);
+			h1 = lowHeight;
+		} else {
+			t0 = tLow;
+			h0 = lowHeight;
+			t1 = tHigh;
+			h1 = highHeight;
+		}
+		else if (tCurrent <= tHigh) {
+			t0 = tHigh - (tLow - tHigh);
+			h0 = lowHeight;
+			t1 = tHigh;
+			h1 = highHeight;
+		} else if (tCurrent >= tLow) {
+			t0 = tLow;
+			h0 = lowHeight;
+			t1 = tLow + (tLow - tHigh);
+			h1 = highHeight;
+		} else {
+			t0 = tHigh;
+			h0 = highHeight;
+			t1 = tLow;
+			h1 = lowHeight;
+		}
+		const frac = (tCurrent - t0) / (t1 - t0);
+		const sineFrac = (1 - Math.cos(Math.PI * frac)) / 2;
+		return h0 + (h1 - h0) * sineFrac;
+	}
+};
+//#endregion
+//#region ui/js/AppState.js
+var DEFAULT_FRESHNESS_SEC = 300;
+var DELTA_FAST_SPEED = 250;
+var DELTA_SLOW_SPEED = 1e3;
+var AppState = class {
+	constructor() {
+		this.anchor = {};
+		this.tidalRise = 0;
+		this.tidalFall = 0;
+		this.scope7 = 0;
+		this.scope5 = 0;
+		this.scope4 = 0;
+		this.scope3 = 0;
+	}
+	websocketSubscribe(client) {
+		client.subscribe({
+			context: "vessels.self",
+			subscribe: [
+				{
+					path: "navigation.position",
+					period: DELTA_FAST_SPEED,
+					format: "full",
+					policy: "fixed",
+					sendMeta: "all"
+				},
+				{
+					path: "navigation.headingTrue",
+					period: DELTA_FAST_SPEED,
+					format: "full",
+					policy: "fixed",
+					sendMeta: "all"
+				},
+				{
+					path: "environment.depth.belowKeel",
+					period: DELTA_SLOW_SPEED,
+					format: "full",
+					policy: "fixed",
+					sendMeta: "all"
+				},
+				{
+					path: "environment.depth.belowSurface",
+					period: DELTA_SLOW_SPEED,
+					format: "full",
+					policy: "fixed",
+					sendMeta: "all"
+				},
+				{
+					path: "environment.wind.directionTrue",
+					period: DELTA_SLOW_SPEED,
+					format: "full",
+					policy: "fixed",
+					sendMeta: "all"
+				},
+				{
+					path: "environment.wind.speedApparent",
+					period: DELTA_SLOW_SPEED,
+					format: "full",
+					policy: "fixed",
+					sendMeta: "all"
+				},
+				{
+					path: "environment.tide",
+					minPeriod: 60 * 1e3,
+					format: "full",
+					policy: "instant",
+					sendMeta: "all"
+				},
+				{
+					path: "navigation.anchor.position",
+					minPeriod: DELTA_FAST_SPEED,
+					format: "full",
+					policy: "instant",
+					sendMeta: "all"
+				},
+				{
+					path: "navigation.anchor.state",
+					minPeriod: DELTA_FAST_SPEED,
+					format: "full",
+					policy: "instant",
+					sendMeta: "all"
+				},
+				{
+					path: "navigation.anchor.maxRadius",
+					minPeriod: DELTA_FAST_SPEED,
+					format: "full",
+					policy: "instant",
+					sendMeta: "all"
+				},
+				{
+					path: "notifications.navigation.anchor",
+					minPeriod: DELTA_FAST_SPEED,
+					format: "full",
+					policy: "instant",
+					sendMeta: "all"
+				}
+			]
+		});
+	}
+	getPosition() {
+		if (this.currentCoordinates) return L.latLng(this.currentCoordinates.value.latitude, this.currentCoordinates.value.longitude);
+		else return L.latLng(0, 0);
+	}
+	getAnchorPosition() {
+		if (this.anchor.position && this.anchor.position.value) return L.latLng(this.anchor.position.value.latitude, this.anchor.position.value.longitude);
+		else return L.latLng(0, 0);
+	}
+	extract(tree, path, fresh = true, maxAge = DEFAULT_FRESHNESS_SEC) {
+		let data = SignalKHelper.extract(tree, path);
+		if (!data) return null;
+		if (fresh && !SignalKHelper.isFresh(data, maxAge)) {
+			const ageSec = data.timestamp ? Math.round((Date.now() - new Date(data.timestamp).getTime()) / 1e3) : "unknown";
+			const msg = `Stale SignalK value: ${path || "(root)"} — Age ${ageSec}s, Max ${maxAge}s`;
+			SignalKHelper.errorHandler?.(msg);
+			console.warn(msg);
+			console.trace();
+			return null;
+		}
+		return data;
+	}
+	extractAll(data) {
+		this.boatConfig = BoatConfig.extract(data);
+		this.currentCoordinates = this.extract(data, "navigation.position");
+		this.heading = this.extract(data, "navigation.headingTrue") ?? this.heading;
+		this.belowKeel = this.extract(data, "environment.depth.belowKeel") ?? this.belowKeel;
+		this.belowSurface = this.extract(data, "environment.depth.belowSurface") ?? this.belowSurface;
+		this.twa = this.extract(data, "environment.wind.directionTrue") ?? this.twa;
+		this.aws = this.extract(data, "environment.wind.speedApparent") ?? this.aws;
+		this.tide = this.extract(data, "environment.tide", false) ?? this.tide;
+		if (!this.anchor) this.anchor = {};
+		this.anchor.position = this.extract(data, "navigation.anchor.position", false) ?? this.anchor.position;
+		this.anchor.state = this.extract(data, "navigation.anchor.state", false) ?? this.anchor.state;
+		this.anchor.maxRadius = this.extract(data, "navigation.anchor.maxRadius", false) ?? this.anchor.maxRadius;
+		this.anchor.notification = this.extract(data, "notifications.navigation.anchor", false) ?? this.anchor.notification;
+	}
+	handleDelta(timestamp, delta) {
+		const path = delta.path;
+		if (delta.meta) console.log(delta);
+		const apply = (current) => {
+			if (current) {
+				current.value = delta.value;
+				current.timestamp = timestamp;
+				if (delta.meta) current.meta = delta.meta;
+				return current;
+			}
+			return {
+				value: delta.value,
+				timestamp
+			};
+		};
+		if (path == "navigation.position") this.currentCoordinates = apply(this.currentCoordinates);
+		else if (path == "navigation.headingTrue") this.heading = apply(this.heading);
+		else if (path == "environment.depth.belowKeel") this.belowKeel = apply(this.belowKeel);
+		else if (path == "environment.depth.belowSurface") this.belowSurface = apply(this.belowSurface);
+		else if (path == "environment.wind.directionTrue") this.twa = apply(this.twa);
+		else if (path == "environment.wind.speedApparent") this.aws = apply(this.aws);
+		else if (path == "environment.tide.heightHigh") (this.tide ??= {}).heightHigh = apply(this.tide.heightHigh);
+		else if (path == "environment.tide.heightLow") (this.tide ??= {}).heightLow = apply(this.tide.heightLow);
+		else if (path == "environment.tide.heightNow") (this.tide ??= {}).heightNow = apply(this.tide.heightNow);
+		else if (path == "environment.tide.stationName") (this.tide ??= {}).stationName = apply(this.tide.stationName);
+		else if (path == "environment.tide.timeHigh") (this.tide ??= {}).timeHigh = apply(this.tide.timeHigh);
+		else if (path == "environment.tide.timeLow") (this.tide ??= {}).timeLow = apply(this.tide.timeLow);
+		else if (path == "navigation.anchor.position") this.anchor.position = apply(this.anchor.position);
+		else if (path == "navigation.anchor.state") this.anchor.state = apply(this.anchor.state);
+		else if (path == "navigation.anchor.maxRadius") this.anchor.maxRadius = apply(this.anchor.maxRadius);
+		else if (path == "notifications.navigation.anchor") this.anchor.notification = apply(this.anchor.notification);
+		else if (!path.startsWith("notifications")) console.log(`[websocket] Ignoring: ${path}`);
+	}
+	calculate() {
+		this.cleanDisplayUnits();
+		this.calculateTides();
+		if (this.boatConfig) this.boatConfig.heading = this.computeOwnHeading();
+		this.calculateScopes();
+	}
+	cleanDisplayUnits() {
+		const override = (envelope, from, to) => {
+			const du = envelope?.meta?.displayUnits;
+			if (du?.category === from) du.category = to;
+		};
+		override(this.belowSurface, "distance", "depth");
+		override(this.belowKeel, "distance", "depth");
+		override(this.tide?.heightLow, "distance", "depth");
+		override(this.tide?.heightHigh, "distance", "depth");
+		override(this.tide?.heightNow, "distance", "depth");
+		override(this.anchor?.maxRadius, "distance", "length");
+	}
+	calculateTides() {
+		if (!this.tide || !this.tide.timeLow || !this.tide.heightLow || !this.tide.timeHigh || !this.tide.heightHigh) return;
+		this.currentTide = GeoMath.estimateTideHeightSmooth(this.tide.timeLow.value, this.tide.heightLow.value, this.tide.timeHigh.value, this.tide.heightHigh.value);
+		this.tidalRise = this.tide.heightHigh.value - this.currentTide;
+		this.tidalFall = this.currentTide - this.tide.heightLow.value;
+	}
+	calculateScopes() {
+		this.scope7 = this.calculateScope(7);
+		this.scope5 = this.calculateScope(5);
+		this.scope4 = this.calculateScope(4);
+		this.scope3 = this.calculateScope(3);
+	}
+	calculateScope(scope) {
+		if (!this.belowSurface || !this.boatConfig) return 0;
+		let maxHeight = this.belowSurface.value;
+		maxHeight += this.boatConfig.anchorRollerHeight;
+		maxHeight += this.tidalRise;
+		return maxHeight * scope;
+	}
+	computeOwnHeading() {
+		if (this.heading) return GeoMath.rad2deg(this.heading.value);
+		if (this.anchor.position && this.anchor.position.value && this.currentCoordinates) return Math.round(GeoMath.calculateBearing(this.currentCoordinates.value.latitude, this.currentCoordinates.value.longitude, this.anchor.position.value.latitude, this.anchor.position.value.longitude));
+		if (this.twa) return GeoMath.rad2deg(this.twa.value);
+		return 0;
+	}
+};
+//#endregion
+//#region ui/js/hud/FleetLayer.js
+var import_simplify = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
+	(function() {
+		"use strict";
+		function getSqDist(p1, p2) {
+			var dx = p1.x - p2.x, dy = p1.y - p2.y;
+			return dx * dx + dy * dy;
+		}
+		function getSqSegDist(p, p1, p2) {
+			var x = p1.x, y = p1.y, dx = p2.x - x, dy = p2.y - y;
+			if (dx !== 0 || dy !== 0) {
+				var t = ((p.x - x) * dx + (p.y - y) * dy) / (dx * dx + dy * dy);
+				if (t > 1) {
+					x = p2.x;
+					y = p2.y;
+				} else if (t > 0) {
+					x += dx * t;
+					y += dy * t;
+				}
+			}
+			dx = p.x - x;
+			dy = p.y - y;
+			return dx * dx + dy * dy;
+		}
+		function simplifyRadialDist(points, sqTolerance) {
+			var prevPoint = points[0], newPoints = [prevPoint], point;
+			for (var i = 1, len = points.length; i < len; i++) {
+				point = points[i];
+				if (getSqDist(point, prevPoint) > sqTolerance) {
+					newPoints.push(point);
+					prevPoint = point;
+				}
+			}
+			if (prevPoint !== point) newPoints.push(point);
+			return newPoints;
+		}
+		function simplifyDPStep(points, first, last, sqTolerance, simplified) {
+			var maxSqDist = sqTolerance, index;
+			for (var i = first + 1; i < last; i++) {
+				var sqDist = getSqSegDist(points[i], points[first], points[last]);
+				if (sqDist > maxSqDist) {
+					index = i;
+					maxSqDist = sqDist;
+				}
+			}
+			if (maxSqDist > sqTolerance) {
+				if (index - first > 1) simplifyDPStep(points, first, index, sqTolerance, simplified);
+				simplified.push(points[index]);
+				if (last - index > 1) simplifyDPStep(points, index, last, sqTolerance, simplified);
+			}
+		}
+		function simplifyDouglasPeucker(points, sqTolerance) {
+			var last = points.length - 1;
+			var simplified = [points[0]];
+			simplifyDPStep(points, 0, last, sqTolerance, simplified);
+			simplified.push(points[last]);
+			return simplified;
+		}
+		function simplify(points, tolerance, highestQuality) {
+			if (points.length <= 2) return points;
+			var sqTolerance = tolerance !== void 0 ? tolerance * tolerance : 1;
+			points = highestQuality ? points : simplifyRadialDist(points, sqTolerance);
+			points = simplifyDouglasPeucker(points, sqTolerance);
+			return points;
+		}
+		if (typeof define === "function" && define.amd) define(function() {
+			return simplify;
+		});
+		else if (typeof module !== "undefined") {
+			module.exports = simplify;
+			module.exports.default = simplify;
+		} else if (typeof self !== "undefined") self.simplify = simplify;
+		else window.simplify = simplify;
+	})();
+})))());
+var POLL_INTERVAL_MS$1 = 5e3;
+var DEFAULT_FILTER_RADIUS = 500;
+var SIMPLIFY_TOLERANCE_SELF = 2e-6;
+var SIMPLIFY_TOLERANCE_OTHERS = 1e-5;
+var SIMPLIFY_THRESHOLD_SELF = 1e4;
+var SIMPLIFY_THRESHOLD_OTHERS = 1e3;
+var GPS_ANTENNA_ICON = L.icon({
+	iconUrl: "icons/antenna.svg",
+	iconSize: [25, 25],
+	iconAnchor: [13, 25]
+});
+var FleetLayer = class {
+	constructor({ app, map, ownMmsi, filterRadius }) {
+		this.app = app;
+		this.map = map;
+		this.ownMmsi = ownMmsi;
+		this.vessels = {};
+		this.vesselTracks = {};
+		this.trackPointCounts = {};
+		this.ownVessel = void 0;
+		this.ownAntenna = void 0;
+		this.ownBoatConfig = void 0;
+		this.fleetTimer = null;
+		this._pollInFlight = false;
+		this.filterRadius = filterRadius ?? DEFAULT_FILTER_RADIUS;
+		this.setOwnVessel(this.app.state.getPosition(), this.app.state.boatConfig);
+		this.loadInitialData();
+	}
+	loadInitialData() {
+		this.app.signalK.fetchTracks(this.filterRadius).then((tracks) => {
+			this.app.statusBar.clear("tracks-plugin");
+			this.loadHistoricalTracks(tracks, this.app.state.getPosition(), this.filterRadius);
+		}).catch((err) => {
+			const detail = err.statusText || err.message || "unknown error";
+			this.app.statusBar.set("tracks-plugin", `Tracks plugin not available: ${detail}`, "warning");
+		});
+		this.fleetTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS$1);
+		this.poll();
+	}
+	poll() {
+		if (this._pollInFlight) return;
+		this._pollInFlight = true;
+		this.app.signalK.fetchAllVessels().then((vessels) => {
+			this.app.statusBar.clear("fleet-poll");
+			this.syncOtherVessels(vessels, {
+				ownLatLng: this.app.state.getPosition(),
+				filterRadius: this.filterRadius,
+				twa: this.app.state.twa
+			});
+		}).catch((error) => {
+			const detail = error.statusText || error.message || "unknown error";
+			const msg = `Fleet update failed: ${error.status ? `${error.status} ` : ""}${detail}`;
+			this.app.statusBar.set("fleet-poll", msg, "warning");
+			console.error(msg, error);
+		}).finally(() => {
+			this._pollInFlight = false;
+		});
+	}
+	update(state) {
+		this.updateOwnPosition(state.getPosition(), state.boatConfig.heading);
+		const pos = state.getPosition();
+		this.addPointToTrack(this.ownMmsi, pos.lat, pos.lng);
+	}
+	setOwnVessel(coords, boatConfig) {
+		this.ownBoatConfig = boatConfig;
+		this.ownVessel = new L.BoatMarker(coords, {
+			beam: boatConfig.beam,
+			loa: boatConfig.loa,
+			gpsOffset: boatConfig.bowOffset,
+			heading: boatConfig.heading,
+			icon: boatConfig.icon
+		}).addTo(this.map);
+		this.ownAntenna = L.marker(coords, { icon: GPS_ANTENNA_ICON }).addTo(this.map);
+	}
+	updateOwnPosition(coords, heading) {
+		this.ownVessel.setLatLng(coords);
+		this.ownVessel.setHeading(heading);
+		this.ownAntenna.setLatLng(coords);
+	}
+	loadHistoricalTracks(tracks, ownLatLng, filterRadius) {
+		const mmsiRegex = /urn:mrn:imo:mmsi:(\d+)$/;
+		for (let uri in tracks) {
+			const match = uri.match(mmsiRegex);
+			if (!match) continue;
+			const mmsi = match[1];
+			const history = tracks[uri].coordinates?.[0];
+			if (!history || !history.length) continue;
+			const points = [];
+			let i = 0;
+			for (let position of history) {
+				const lat = position[1];
+				const lon = position[0];
+				if (GeoMath.calculateDistance(ownLatLng.lat, ownLatLng.lng, lat, lon) < filterRadius) {
+					points.push([
+						lat,
+						lon,
+						i
+					]);
+					i++;
+				}
+			}
+			if (!points.length) continue;
+			this.vesselTracks[mmsi] = this.createTrack(points, points.length, mmsi);
+			this.trackPointCounts[mmsi] = this.vesselTracks[mmsi].getLatLngs().length;
+		}
+	}
+	addPointToTrack(mmsi, lat, lng) {
+		const track = this.vesselTracks[mmsi];
+		if (!track) return;
+		const last = track.getLatLngs().at(-1);
+		if (last && last.lat === lat && last.lng === lng) return;
+		track.addLatLng([
+			lat,
+			lng,
+			track.options.max
+		]);
+		track.options.max++;
+		this.trackPointCounts[mmsi] = (this.trackPointCounts[mmsi] || 0) + 1;
+		if (this.trackPointCounts[mmsi] >= this.getSimplifyThreshold(mmsi)) this.simplifyTrack(mmsi);
+	}
+	simplifyTrack(mmsi) {
+		const track = this.vesselTracks[mmsi];
+		if (!track) return;
+		const simplified = simplifyHotlinePoints(track.getLatLngs(), this.getSimplifyTolerance(mmsi));
+		track.setLatLngs(simplified);
+		this.trackPointCounts[mmsi] = simplified.length;
+	}
+	syncOtherVessels(vessels, { ownLatLng, filterRadius, twa }) {
+		const detected = [];
+		for (let key in vessels) {
+			const vessel = vessels[key];
+			if (vessel.mmsi == this.ownMmsi) continue;
+			if (!("navigation" in vessel) || !("position" in vessel.navigation)) continue;
+			const position = vessel.navigation.position.value;
+			const distance = GeoMath.calculateDistance(position.latitude, position.longitude, ownLatLng.lat, ownLatLng.lng);
+			if (distance > filterRadius) continue;
+			detected.push(vessel.mmsi);
+			const heading = this.deriveVesselHeading(vessel, twa);
+			const distanceRounded = Math.round(distance);
+			if (vessel.mmsi in this.vessels) this.updateExistingVessel(vessel, position, heading, distanceRounded);
+			else this.addNewVessel(vessel, position, heading, distanceRounded);
+		}
+		const detectedSet = new Set(detected.map(String));
+		for (let mmsi in this.vessels) if (!detectedSet.has(mmsi)) {
+			const marker = this.vessels[mmsi];
+			if (marker.gpsAntennaMarker) this.map.removeLayer(marker.gpsAntennaMarker);
+			this.map.removeLayer(marker);
+			delete this.vessels[mmsi];
+			if (this.vesselTracks[mmsi]) {
+				this.map.removeLayer(this.vesselTracks[mmsi]);
+				delete this.vesselTracks[mmsi];
+				delete this.trackPointCounts[mmsi];
+			}
+		}
+	}
+	deriveVesselHeading(vessel, twa) {
+		const sogVal = SignalKHelper.value(vessel, "navigation.speedOverGround");
+		const headingTrue = SignalKHelper.value(vessel, "navigation.headingTrue");
+		if (headingTrue !== void 0) return GeoMath.rad2deg(headingTrue);
+		const cog = SignalKHelper.value(vessel, "navigation.courseOverGroundTrue");
+		if (cog !== void 0 && sogVal > .5) return GeoMath.rad2deg(cog);
+		if (twa) return GeoMath.rad2deg(twa.value);
+		return 0;
+	}
+	updateExistingVessel(vessel, position, heading, distance) {
+		const marker = this.vessels[vessel.mmsi];
+		marker.setLatLng([position.latitude, position.longitude]);
+		marker.setHeading(heading);
+		marker.setPopupContent(`${vessel.name} at ${distance} meters`);
+		marker.gpsAntennaMarker.setLatLng([position.latitude, position.longitude]);
+		this.addPointToTrack(vessel.mmsi, position.latitude, position.longitude);
+	}
+	addNewVessel(vessel, position, heading, distance) {
+		const config = BoatConfig.extract(vessel);
+		const marker = new L.BoatMarker([position.latitude, position.longitude], {
+			beam: config.beam,
+			loa: config.loa,
+			gpsOffset: config.bowOffset,
+			heading,
+			icon: config.icon
+		});
+		marker.addTo(this.map).bindPopup(`${vessel.name} at ${distance} meters`);
+		marker.gpsAntennaMarker = L.marker([position.latitude, position.longitude], { icon: GPS_ANTENNA_ICON }).addTo(this.map);
+		this.vessels[vessel.mmsi] = marker;
+		if (!(vessel.mmsi in this.vesselTracks)) {
+			this.vesselTracks[vessel.mmsi] = this.createTrack([[
+				position.latitude,
+				position.longitude,
+				0
+			]], 1, vessel.mmsi);
+			this.trackPointCounts[vessel.mmsi] = 1;
+		}
+	}
+	createTrack(points, max, mmsi) {
+		const simplified = simplifyHotlinePoints(points, this.getSimplifyTolerance(mmsi));
+		return L.hotline(simplified, {
+			color: "red",
+			weight: 1,
+			min: 0,
+			max,
+			palette: {
+				0: "red",
+				.5: "yellow",
+				1: "green"
+			},
+			outlineWidth: 0,
+			text: ""
+		}).addTo(this.map);
+	}
+	getSimplifyTolerance(mmsi) {
+		if (mmsi === this.ownMmsi) return SIMPLIFY_TOLERANCE_SELF;
+		else return SIMPLIFY_TOLERANCE_OTHERS;
+	}
+	getSimplifyThreshold(mmsi) {
+		if (mmsi === this.ownMmsi) return SIMPLIFY_THRESHOLD_SELF;
+		else return SIMPLIFY_THRESHOLD_OTHERS;
+	}
+};
+function simplifyHotlinePoints(points, tolerance) {
+	if (points.length < 3) return points.map(toTuple);
+	return (0, import_simplify.default)(points.map((p) => {
+		const tuple = toTuple(p);
+		return {
+			x: tuple[0],
+			y: tuple[1],
+			alt: tuple[2]
+		};
+	}), tolerance, true).map((p) => [
+		p.x,
+		p.y,
+		p.alt
+	]);
+}
+function toTuple(p) {
+	return Array.isArray(p) ? p : [
+		p.lat,
+		p.lng,
+		p.alt
+	];
+}
+//#endregion
+//#region ui/js/hud/StatusBar.js
+var LEVEL_COLORS = {
+	status: "black",
+	warning: "#d97706",
+	error: "red"
+};
+var StatusBar = L.Control.extend({
+	options: { position: "bottomright" },
+	onAdd: function() {
+		const container = L.DomUtil.create("div", "statusBar leaflet-bar");
+		L.DomEvent.disableClickPropagation(container);
+		container.id = "statusBarUI";
+		container.style.display = "none";
+		this._container = container;
+		this._items = /* @__PURE__ */ new Map();
+		return container;
+	},
+	set: function(id, text, level = "error") {
+		if (!text) {
+			this.clear(id);
+			return;
+		}
+		this._items.set(id, {
+			text,
+			level,
+			t: Date.now()
+		});
+		this._render();
+	},
+	clear: function(id) {
+		if (this._items.delete(id)) this._render();
+	},
+	update: function(state) {
+		this.set("gps", !state.currentCoordinates ? "Waiting for GPS position..." : null);
+		this.set("position-stale", SignalKHelper.isStale(state.currentCoordinates) ? "Current Position data is stale." : null);
+		this.set("heading-stale", SignalKHelper.isStale(state.heading) ? "Heading data is stale." : null);
+		this.set("below-keel-stale", SignalKHelper.isStale(state.belowKeel) ? "Depth Below Keel data is stale." : null);
+		this.set("below-surface-stale", SignalKHelper.isStale(state.belowSurface) ? "Depth Below Surface data is stale." : null);
+		this.set("twa-stale", SignalKHelper.isStale(state.twa) ? "True Wind Angle data is stale." : null);
+		this.set("aws-stale", SignalKHelper.isStale(state.aws) ? "Apparent Wind Speed data is stale." : null);
+	},
+	_render: function() {
+		if (!this._container) return;
+		if (!this._items.size) {
+			this._container.style.display = "none";
+			return;
+		}
+		let latest = null;
+		for (const item of this._items.values()) if (!latest || item.t > latest.t) latest = item;
+		this._container.textContent = latest.text;
+		this._container.style.color = LEVEL_COLORS[latest.level] || "black";
+		this._container.style.display = "";
+	}
+});
+//#endregion
+//#region ui/js/hud/HomeButtonControl.js
+var HomeButtonControl = L.Control.extend({
+	options: {
+		position: "topright",
+		onHome: null
+	},
+	onAdd: function(map) {
+		const container = L.DomUtil.create("div", "leaflet-bar leaflet-control");
+		const homeButton = L.DomUtil.create("a", "leaflet-control-home", container);
+		homeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" stroke="currentColor" stroke-width="0.75" class="bi bi-house" viewBox="0 0 16 16">
+  <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/>
+</svg>`;
+		homeButton.href = "#";
+		homeButton.title = "Center on Boat";
+		homeButton.setAttribute("role", "button");
+		L.DomEvent.disableClickPropagation(container);
+		const onHome = this.options.onHome;
+		L.DomEvent.on(homeButton, "click", function(e) {
+			L.DomEvent.stopPropagation(e);
+			L.DomEvent.preventDefault(e);
+			if (onHome) onHome(map);
+		});
+		return container;
+	}
+});
 //#endregion
 //#region node_modules/@babel/runtime/helpers/esm/extends.js
 function _extends() {
@@ -2745,7 +3743,7 @@ function _extends() {
 }
 //#endregion
 //#region node_modules/mathjs/lib/esm/core/config.js
-var DEFAULT_CONFIG = {
+var DEFAULT_CONFIG$1 = {
 	relTol: 1e-12,
 	absTol: 1e-15,
 	matrix: "Matrix",
@@ -3269,9 +4267,9 @@ var NUMBER_OPTIONS = [
 //#region node_modules/mathjs/lib/esm/entry/configReadonly.js
 var config$1 = function config(options) {
 	if (options) throw new Error("The global config is readonly. \nPlease create a mathjs instance if you want to change the default configuration. \nExample:\n\n  import { create, all } from 'mathjs';\n  const mathjs = create(all);\n  mathjs.config({ number: 'BigNumber' });\n");
-	return Object.freeze(DEFAULT_CONFIG);
+	return Object.freeze(DEFAULT_CONFIG$1);
 };
-_extends(config$1, DEFAULT_CONFIG, {
+_extends(config$1, DEFAULT_CONFIG$1, {
 	MATRIX_OPTIONS,
 	NUMBER_OPTIONS
 });
@@ -14486,7 +15484,7 @@ var createRationalize = /* @__PURE__ */ factory(name$100, [
 *  Copyright (c) 2025 Michael Mclaughlin <M8ch88l@gmail.com>
 *  MIT Licence
 */
-var EXP_LIMIT = 9e15, MAX_DIGITS = 1e9, NUMERALS = "0123456789abcdef", LN10$1 = "2.3025850929940456840179914546843642076011014886287729760333279009675726096773524802359972050895982983419677840422862486334095254650828067566662873690987816894829072083255546808437998948262331985283935053089653777326288461633662222876982198867465436674744042432743651550489343149393914796194044002221051017141748003688084012647080685567743216228355220114804663715659121373450747856947683463616792101806445070648000277502684916746550586856935673420670581136429224554405758925724208241314695689016758940256776311356919292033376587141660230105703089634572075440370847469940168269282808481184289314848524948644871927809676271275775397027668605952496716674183485704422507197965004714951050492214776567636938662976979522110718264549734772662425709429322582798502585509785265383207606726317164309505995087807523710333101197857547331541421808427543863591778117054309827482385045648019095610299291824318237525357709750539565187697510374970888692180205189339507238539205144634197265287286965110862571492198849978748873771345686209167058", PI = "3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989380952572010654858632789", DEFAULTS$1 = {
+var EXP_LIMIT = 9e15, MAX_DIGITS = 1e9, NUMERALS = "0123456789abcdef", LN10$1 = "2.3025850929940456840179914546843642076011014886287729760333279009675726096773524802359972050895982983419677840422862486334095254650828067566662873690987816894829072083255546808437998948262331985283935053089653777326288461633662222876982198867465436674744042432743651550489343149393914796194044002221051017141748003688084012647080685567743216228355220114804663715659121373450747856947683463616792101806445070648000277502684916746550586856935673420670581136429224554405758925724208241314695689016758940256776311356919292033376587141660230105703089634572075440370847469940168269282808481184289314848524948644871927809676271275775397027668605952496716674183485704422507197965004714951050492214776567636938662976979522110718264549734772662425709429322582798502585509785265383207606726317164309505995087807523710333101197857547331541421808427543863591778117054309827482385045648019095610299291824318237525357709750539565187697510374970888692180205189339507238539205144634197265287286965110862571492198849978748873771345686209167058", PI = "3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989380952572010654858632789", DEFAULTS = {
 	precision: 20,
 	rounding: 4,
 	modulo: 1,
@@ -16121,11 +17119,11 @@ function config(obj) {
 		9
 	];
 	for (i = 0; i < ps.length; i += 3) {
-		if (p = ps[i], useDefaults) this[p] = DEFAULTS$1[p];
+		if (p = ps[i], useDefaults) this[p] = DEFAULTS[p];
 		if ((v = obj[p]) !== void 0) if (mathfloor(v) === v && v >= ps[i + 1] && v <= ps[i + 2]) this[p] = v;
 		else throw Error(invalidArgument + p + ": " + v);
 	}
-	if (p = "crypto", useDefaults) this[p] = DEFAULTS$1[p];
+	if (p = "crypto", useDefaults) this[p] = DEFAULTS[p];
 	if ((v = obj[p]) !== void 0) if (v === true || v === false || v === 0 || v === 1) if (v) if (typeof crypto != "undefined" && crypto && (crypto.getRandomValues || crypto.randomBytes)) this[p] = true;
 	else throw Error(cryptoUnavailable);
 	else this[p] = false;
@@ -16427,7 +17425,7 @@ function trunc(x) {
 }
 P$1[Symbol.for("nodejs.util.inspect.custom")] = P$1.toString;
 P$1[Symbol.toStringTag] = "Decimal";
-var Decimal = P$1.constructor = clone$2(DEFAULTS$1);
+var Decimal = P$1.constructor = clone$2(DEFAULTS);
 LN10$1 = new Decimal(LN10$1);
 PI = new Decimal(PI);
 //#endregion
@@ -28749,7 +29747,7 @@ var Parser = createParserClass({
 	evaluate,
 	parse
 });
-var simplify$1 = createSimplify({
+var simplify = createSimplify({
 	AccessorNode,
 	ArrayNode,
 	ConstantNode,
@@ -28778,7 +29776,7 @@ var derivative = createDerivative({
 	isZero,
 	numeric,
 	parse,
-	simplify: simplify$1,
+	simplify,
 	typed
 });
 var help = createHelp({
@@ -28810,7 +29808,7 @@ var rationalize = createRationalize({
 	multiply,
 	parse,
 	pow,
-	simplify: simplify$1,
+	simplify,
 	simplifyConstant,
 	simplifyCore,
 	subtract,
@@ -28983,7 +29981,7 @@ _extends(math, {
 	compile,
 	evaluate,
 	mode,
-	simplify: simplify$1,
+	simplify,
 	derivative,
 	help,
 	parser,
@@ -29086,85 +30084,203 @@ _extends(classes, {
 });
 Chain.createProxy(math);
 //#endregion
-//#region ui/js/SignalKHelper.js
-var import_client = /* @__PURE__ */ __toESM(require_client());
-var SIGNALK_DEFAULT_FRESHNESS_SEC = 60;
-var SignalKHelper = class SignalKHelper {
-	constructor({ baseUrl = "", pluginName = null } = {}) {
-		this.baseUrl = baseUrl;
-		this.pluginName = pluginName;
-	}
-	request(path) {
-		const controller = new AbortController();
-		const timer = setTimeout(() => controller.abort("Request timed out"), 5e3);
-		return fetch(`${this.baseUrl}/signalk/v1/api/${path}`, { signal: controller.signal }).finally(() => clearTimeout(timer)).then(SignalKHelper._toJsonOrReject);
-	}
-	raiseAnchor() {
-		return this.pluginPost("raiseAnchor");
-	}
-	dropAnchor(position, radius) {
-		return this.pluginPost("dropAnchor", {
-			position,
-			radius
-		});
-	}
-	setRadius(radius) {
-		return this.pluginPost("setRadius", { radius });
-	}
-	pluginPost(action, data) {
-		return fetch(`${this.baseUrl}/plugins/${this.pluginName}/${action}`, {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(data ?? {})
-		}).then((response) => {
-			if (response.status === 401) location.href = "/admin/#/login";
-			return SignalKHelper._toJsonOrReject(response);
-		});
-	}
-	static _toJsonOrReject(response) {
-		if (!response.ok) return Promise.reject({
-			status: response.status,
-			statusText: response.statusText
-		});
-		return response.json();
-	}
-	fetchSelf() {
-		return this.request("vessels/self");
-	}
-	fetchAllVessels() {
-		return this.request("vessels");
-	}
-	fetchTracks(radius) {
-		return this.request(`tracks?radius=${radius}`);
-	}
-	fetchConfig() {
-		return fetch(`${this.baseUrl}/plugins/${this.pluginName}/ui-config`).then(SignalKHelper._toJsonOrReject);
-	}
-	static extract(tree, path = "") {
-		if (!tree) return null;
-		if (!path) return tree;
-		let node = tree;
-		for (const key of path.split(".")) {
-			if (node == null || typeof node !== "object") return null;
-			node = node[key];
+//#region ui/js/DisplayUnit.js
+var DEFAULT_CONFIG = {
+	version: "1.0.0",
+	name: "Nautical (Metric)",
+	description: "Nautical speed/distance (knots, nautical miles) with metric units",
+	categories: {
+		distance: {
+			baseUnit: "m",
+			targetUnit: "naut-mile",
+			displayFormat: "0.0",
+			formula: "value * 0.0005399568034557236",
+			inverseFormula: "value / 0.0005399568034557236",
+			symbol: "nmi"
+		},
+		speed: {
+			baseUnit: "m/s",
+			targetUnit: "kn",
+			displayFormat: "0.0",
+			formula: "value * 1.94384",
+			inverseFormula: "value * 0.514444",
+			symbol: "kn"
+		},
+		temperature: {
+			baseUnit: "K",
+			targetUnit: "C",
+			displayFormat: "0.0",
+			formula: "value - 273.15",
+			inverseFormula: "value + 273.15",
+			symbol: "°C"
+		},
+		pressure: {
+			baseUnit: "Pa",
+			targetUnit: "mbar",
+			displayFormat: "0",
+			formula: "value * 0.01",
+			inverseFormula: "value * 100",
+			symbol: "mbar"
+		},
+		depth: {
+			baseUnit: "m",
+			targetUnit: "m",
+			displayFormat: "0.0"
+		},
+		volume: {
+			baseUnit: "m3",
+			targetUnit: "liter",
+			displayFormat: "0.0",
+			formula: "value * 1000",
+			inverseFormula: "value / 1000",
+			symbol: "liter"
+		},
+		angle: {
+			baseUnit: "rad",
+			targetUnit: "degree",
+			displayFormat: "0.0",
+			formula: "value * 57.29577951308231",
+			inverseFormula: "value / 57.29577951308231",
+			symbol: "°"
+		},
+		length: {
+			baseUnit: "m",
+			targetUnit: "m",
+			displayFormat: "0.0"
+		},
+		angularVelocity: {
+			baseUnit: "rad/s",
+			targetUnit: "deg/s",
+			displayFormat: "0.0",
+			formula: "value * 57.2958",
+			inverseFormula: "value * 0.0174533",
+			symbol: "°/s"
+		},
+		voltage: {
+			baseUnit: "V",
+			targetUnit: "V",
+			displayFormat: "0.00",
+			formula: "value * 1",
+			inverseFormula: "value * 1",
+			symbol: "V"
+		},
+		current: {
+			baseUnit: "A",
+			targetUnit: "A",
+			displayFormat: "0.00",
+			formula: "value * 1",
+			inverseFormula: "value * 1",
+			symbol: "A"
+		},
+		power: {
+			baseUnit: "W",
+			targetUnit: "W",
+			displayFormat: "0.00"
+		},
+		percentage: {
+			baseUnit: "ratio",
+			targetUnit: "percent",
+			displayFormat: "0",
+			formula: "value * 100",
+			inverseFormula: "value * 0.01",
+			symbol: "%"
+		},
+		frequency: {
+			baseUnit: "Hz",
+			targetUnit: "rpm",
+			displayFormat: "0.0",
+			formula: "value * 60",
+			inverseFormula: "value * 0.0166667",
+			symbol: "rpm"
+		},
+		time: {
+			baseUnit: "s",
+			targetUnit: "hour",
+			displayFormat: "0.0",
+			formula: "value * 0.0002777777777777778",
+			inverseFormula: "value / 0.0002777777777777778",
+			symbol: "hour"
+		},
+		dateTime: {
+			baseUnit: "RFC 3339 (UTC)",
+			targetUnit: "short-date",
+			displayFormat: "short-date"
+		},
+		charge: {
+			baseUnit: "C",
+			targetUnit: "Ah",
+			displayFormat: "0.0",
+			formula: "value * 0.0002777777777777778",
+			inverseFormula: "value / 0.0002777777777777778",
+			symbol: "Ah"
+		},
+		volumeRate: {
+			baseUnit: "m3/s",
+			targetUnit: "L/h",
+			displayFormat: "0.0",
+			formula: "value * 3600000",
+			inverseFormula: "value * 0.000000277778",
+			symbol: "L/h"
+		},
+		energy: {
+			baseUnit: "J",
+			targetUnit: "J",
+			displayFormat: "0.0",
+			formula: "value * 1",
+			inverseFormula: "value / 1",
+			symbol: "joule"
+		},
+		mass: {
+			baseUnit: "kg",
+			targetUnit: "kg",
+			displayFormat: "0.0"
+		},
+		area: {
+			baseUnit: "m2",
+			targetUnit: "m2",
+			displayFormat: "0.0",
+			formula: "value",
+			inverseFormula: "value",
+			symbol: "m2"
+		},
+		angleDegrees: {
+			baseUnit: "deg",
+			targetUnit: "deg",
+			displayFormat: "0.0"
+		},
+		boolean: {
+			baseUnit: "bool",
+			targetUnit: "bool",
+			displayFormat: "boolean",
+			formula: "value",
+			inverseFormula: "value",
+			symbol: ""
 		}
-		return node ?? null;
 	}
-	static value(tree, path = "", fallback = void 0) {
-		const node = this.extract(tree, path);
-		return node && node.value !== void 0 ? node.value : fallback;
+};
+var DisplayUnit = class DisplayUnit {
+	static config = DEFAULT_CONFIG;
+	static loadActive(baseUrl = "") {
+		return fetch(`${baseUrl}/signalk/v1/unitpreferences/active`).then((response) => response.ok ? response.json() : null).then((profile) => {
+			if (profile && profile.categories) DisplayUnit.config = profile;
+		}).catch(() => {});
+	}
+	static _categoryConfig(delta) {
+		const category = delta?.meta?.displayUnits?.category;
+		if (!category) return null;
+		return DisplayUnit.config?.categories?.[category] ?? null;
 	}
 	static convertToDisplay(delta, value = false) {
-		if (value === false) value = delta.value;
-		let symbol = delta.meta?.units ?? "";
+		if (value === false) value = delta?.value;
+		const cfg = DisplayUnit._categoryConfig(delta);
+		let symbol = "";
 		let format = null;
-		const displayUnits = delta.meta?.displayUnits;
-		if (displayUnits) {
-			if (displayUnits.formula && typeof value === "number") value = evaluate(displayUnits.formula, { value });
-			if (displayUnits.symbol) symbol = displayUnits.symbol;
-			if (displayUnits.displayFormat) format = displayUnits.displayFormat;
+		if (cfg) {
+			if (cfg.formula && typeof value === "number") value = evaluate(cfg.formula, { value });
+			if (cfg.symbol) symbol = cfg.symbol;
+			else if (cfg.targetUnit) symbol = cfg.targetUnit;
+			format = cfg.displayFormat ?? null;
 		}
-		if (symbol == "foot") symbol = "ft";
 		return {
 			value,
 			symbol,
@@ -29172,15 +30288,14 @@ var SignalKHelper = class SignalKHelper {
 		};
 	}
 	static convertFromDisplay(delta, value) {
-		const displayUnits = delta.meta?.displayUnits;
-		if (displayUnits?.inverseFormula && typeof value === "number") value = evaluate(displayUnits.inverseFormula, { value });
+		const cfg = DisplayUnit._categoryConfig(delta);
+		if (cfg?.inverseFormula && typeof value === "number") value = evaluate(cfg.inverseFormula, { value });
 		return value;
 	}
 	static formatDisplay(delta, decimals = false, value = false) {
 		if (!delta) return "";
 		if (value === false && (delta.value === void 0 || delta.value === null)) return "";
 		const { value: converted, symbol, format } = this.convertToDisplay(delta, value);
-		if (symbol == "ft") decimals = 0;
 		let text;
 		if (format && typeof converted === "number") {
 			if (decimals === false) decimals = (format.split(".")[1] || "").length;
@@ -29188,925 +30303,8 @@ var SignalKHelper = class SignalKHelper {
 		} else text = String(converted);
 		return symbol ? `${text} ${symbol}` : text;
 	}
-	static freshValue(tree, path = "", { maxAge = SIGNALK_DEFAULT_FRESHNESS_SEC, fallback = void 0 } = {}) {
-		const node = this.extract(tree, path);
-		if (!node || node.value === void 0) return fallback;
-		if (!this.isFresh(node, maxAge)) {
-			const ageSec = node.timestamp ? Math.round((Date.now() - new Date(node.timestamp).getTime()) / 1e3) : "unknown";
-			const msg = `Stale SignalK value: ${path || "(root)"} — Age ${ageSec}s, Max ${maxAge}s`;
-			console.warn(msg);
-			console.trace();
-			return fallback;
-		}
-		return node.value;
-	}
-	static isFresh(delta, maxAge = SIGNALK_DEFAULT_FRESHNESS_SEC) {
-		if (!delta || !delta.timestamp) return false;
-		return (Date.now() - new Date(delta.timestamp).getTime()) / 1e3 <= maxAge;
-	}
-	static isStale(delta, maxAge = SIGNALK_DEFAULT_FRESHNESS_SEC) {
-		return !this.isFresh(delta, maxAge);
-	}
 };
-//#endregion
-//#region ui/js/ShipIcons.js
-var RANGES = [
-	{
-		start: 20,
-		end: 29,
-		icon: "wing-in-ground.png"
-	},
-	{
-		start: 30,
-		end: 30,
-		icon: "fishing.png"
-	},
-	{
-		start: 31,
-		end: 32,
-		icon: "towing.png"
-	},
-	{
-		start: 33,
-		end: 33,
-		icon: "dredging.png"
-	},
-	{
-		start: 34,
-		end: 34,
-		icon: "diving.png"
-	},
-	{
-		start: 35,
-		end: 35,
-		icon: "military.png"
-	},
-	{
-		start: 37,
-		end: 37,
-		icon: "pleasure.png"
-	},
-	{
-		start: 40,
-		end: 49,
-		icon: "high-speed-craft.png"
-	},
-	{
-		start: 50,
-		end: 50,
-		icon: "pilot.png"
-	},
-	{
-		start: 51,
-		end: 51,
-		icon: "sar.png"
-	},
-	{
-		start: 52,
-		end: 52,
-		icon: "tug.png"
-	},
-	{
-		start: 53,
-		end: 53,
-		icon: "port-tender.png"
-	},
-	{
-		start: 54,
-		end: 54,
-		icon: "anti-pollution.png"
-	},
-	{
-		start: 55,
-		end: 55,
-		icon: "police.png"
-	},
-	{
-		start: 58,
-		end: 58,
-		icon: "medical.png"
-	},
-	{
-		start: 59,
-		end: 59,
-		icon: "noncombatant.png"
-	},
-	{
-		start: 60,
-		end: 69,
-		icon: "passenger.png"
-	},
-	{
-		start: 70,
-		end: 79,
-		icon: "cargo.png"
-	},
-	{
-		start: 80,
-		end: 89,
-		icon: "tanker.png"
-	},
-	{
-		start: 90,
-		end: 99,
-		icon: "other.png"
-	}
-];
-var ShipIcons = class {
-	static iconFor(aisShipType, aspectRatio) {
-		aisShipType = parseInt(aisShipType, 10);
-		if (aisShipType === 36) return aspectRatio >= 2.5 ? "icons/ships/png/sailboat.png" : "icons/ships/png/catamaran.png";
-		const range = RANGES.find((r) => aisShipType >= r.start && aisShipType <= r.end);
-		return range ? `icons/ships/png/${range.icon}` : "icons/ships/png/default.png";
-	}
-};
-//#endregion
-//#region ui/js/BoatConfig.js
-var DEFAULTS = {
-	name: "Unknown",
-	loa: 14,
-	beam: 4,
-	anchorRollerHeight: 0,
-	gpsBowXDistance: 0,
-	gpsBowYDistance: 0,
-	aisShipType: 36,
-	mmsi: "",
-	heading: 0
-};
-var BoatConfig = class BoatConfig {
-	constructor({ loa, beam, anchorRollerHeight, gpsBowXDistance, gpsBowYDistance, aisShipType, mmsi, heading }) {
-		this.loa = loa;
-		this.beam = beam;
-		this.anchorRollerHeight = anchorRollerHeight;
-		this.gpsBowXDistance = gpsBowXDistance;
-		this.gpsBowYDistance = gpsBowYDistance;
-		this.aisShipType = aisShipType;
-		this.mmsi = mmsi;
-		this.heading = heading;
-	}
-	static extract(data) {
-		let config = {};
-		config.name = data.name ?? DEFAULTS.name;
-		config.mmsi = data.mmsi ?? DEFAULTS.mmsi;
-		config.loa = SignalKHelper.value(data, "design.length")?.overall ?? DEFAULTS.loa;
-		config.beam = SignalKHelper.value(data, "design.beam") ?? DEFAULTS.beam;
-		config.anchorRollerHeight = SignalKHelper.value(data, "design.bowAnchorRollerHeight") ?? DEFAULTS.anchorRollerHeight;
-		if (data.sensors?.gps) {
-			config.gpsBowXDistance = SignalKHelper.value(data, "sensors.gps.fromCenter") ?? DEFAULTS.gpsBowXDistance;
-			config.gpsBowYDistance = SignalKHelper.value(data, "sensors.gps.fromBow") ?? DEFAULTS.gpsBowYDistance;
-		} else if (data.sensors?.ais) {
-			config.gpsBowXDistance = SignalKHelper.value(data, "sensors.ais.fromCenter") ?? DEFAULTS.gpsBowXDistance;
-			config.gpsBowYDistance = SignalKHelper.value(data, "sensors.ais.fromBow") ?? config.loa / 2;
-		} else {
-			config.gpsBowXDistance = DEFAULTS.gpsBowXDistance;
-			config.gpsBowYDistance = DEFAULTS.gpsBowYDistance;
-		}
-		config.aisShipType = SignalKHelper.value(data, "design.aisShipType")?.id ?? DEFAULTS.aisShipType;
-		return new BoatConfig(config);
-	}
-	get bowOffset() {
-		return {
-			x: this.beam / 2 + this.gpsBowXDistance,
-			y: this.gpsBowYDistance
-		};
-	}
-	get gpsOffset() {
-		return {
-			x: this.gpsBowXDistance,
-			y: this.gpsBowYDistance
-		};
-	}
-	get loaToBeam() {
-		return this.loa / this.beam;
-	}
-	get icon() {
-		return ShipIcons.iconFor(this.aisShipType, this.loaToBeam);
-	}
-};
-//#endregion
-//#region ui/js/GeoMath.js
-var GeoMath = class GeoMath {
-	static deg2rad(deg) {
-		return deg * (Math.PI / 180);
-	}
-	static rad2deg(radians) {
-		return radians * 180 / Math.PI;
-	}
-	static normalizeAngle(angle) {
-		return (angle % 360 + 360) % 360;
-	}
-	/**
-	* Returns the length of the vector (x, y) from the origin.
-	* @param {number} x – x-coordinate
-	* @param {number} y – y-coordinate
-	* @returns {number} distance from (0,0) to (x,y)
-	*/
-	static calculateVectorDistance(x, y) {
-		return Math.sqrt(x * x + y * y);
-	}
-	static calculateDistance(lat1, lon1, lat2, lon2) {
-		let R = 6371e3;
-		let dLat = GeoMath.deg2rad(lat2 - lat1);
-		let dLon = GeoMath.deg2rad(lon2 - lon1);
-		let a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(GeoMath.deg2rad(lat1)) * Math.cos(GeoMath.deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-		return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-	}
-	static calculateBearing(lat1, lon1, lat2, lon2) {
-		var θa = GeoMath.deg2rad(lat1);
-		var θb = GeoMath.deg2rad(lat2);
-		var ΔL = GeoMath.deg2rad(lon2 - lon1);
-		var X = Math.cos(θb) * Math.sin(ΔL);
-		var Y = Math.cos(θa) * Math.sin(θb) - Math.sin(θa) * Math.cos(θb) * Math.cos(ΔL);
-		var β = Math.atan2(X, Y);
-		var bearing = GeoMath.rad2deg(β);
-		bearing = (bearing + 360) % 360;
-		return bearing;
-	}
-	/**
-	* Calculates the destination point given starting latitude and longitude,
-	* bearing, and distance using the haversine formula.
-	*
-	* @param {number} lat1 - Starting latitude in degrees.
-	* @param {number} lon1 - Starting longitude in degrees.
-	* @param {number} bearing - Bearing in degrees (clockwise from north).
-	* @param {number} distance - Distance to travel from the starting point in meters.
-	* @returns {{ latitude: number, longitude: number }} - The destination latitude and longitude.
-	*/
-	static calculateDestinationPoint(lat1, lon1, bearing, distance) {
-		const R = 6371e3;
-		const φ1 = lat1 * Math.PI / 180;
-		const λ1 = lon1 * Math.PI / 180;
-		const θ = bearing * Math.PI / 180;
-		const δ = distance / R;
-		const sinφ1 = Math.sin(φ1);
-		const cosφ1 = Math.cos(φ1);
-		const sinδ = Math.sin(δ);
-		const cosδ = Math.cos(δ);
-		const sinθ = Math.sin(θ);
-		const cosθ = Math.cos(θ);
-		const sinφ2 = sinφ1 * cosδ + cosφ1 * sinδ * cosθ;
-		const φ2 = Math.asin(sinφ2);
-		const y = sinθ * sinδ * cosφ1;
-		const x = cosδ - sinφ1 * sinφ2;
-		const λ2 = λ1 + Math.atan2(y, x);
-		return {
-			latitude: φ2 * 180 / Math.PI,
-			longitude: (λ2 * 180 / Math.PI + 540) % 360 - 180
-		};
-	}
-	static calculateBowCoordinates(current, heading, xOffset, yOffset) {
-		let bc = GeoMath.calculateDestinationPoint(current.lat, current.lng, heading, yOffset);
-		if (xOffset != 0) bc = GeoMath.calculateDestinationPoint(bc.latitude, bc.longitude, heading - 90, xOffset);
-		return L.latLng(bc.latitude, bc.longitude);
-	}
-	/**
-	* Estimate current tide height with sinusoidal easing
-	*
-	* @param {Date|string|number} lowTime      — time of low tide
-	* @param {number}            lowHeight    — height at low tide
-	* @param {Date|string|number} highTime     — time of high tide
-	* @param {number}            highHeight   — height at high tide
-	* @param {Date|string|number} [currentTime=new Date()] — time to estimate
-	* @returns {number} smoothly interpolated tide height
-	*/
-	static estimateTideHeightSmooth(lowTime, lowHeight, highTime, highHeight, currentTime = /* @__PURE__ */ new Date()) {
-		const tLow = (lowTime instanceof Date ? lowTime : new Date(lowTime)).getTime();
-		const tHigh = (highTime instanceof Date ? highTime : new Date(highTime)).getTime();
-		const tCurrent = (currentTime instanceof Date ? currentTime : new Date(currentTime)).getTime();
-		let t0, h0, t1, h1;
-		if (tLow < tHigh) if (tCurrent <= tLow) {
-			t0 = tLow - (tHigh - tLow);
-			h0 = highHeight;
-			t1 = tLow;
-			h1 = lowHeight;
-		} else if (tCurrent >= tHigh) {
-			t0 = tHigh;
-			h0 = highHeight;
-			t1 = tHigh + (tHigh - tLow);
-			h1 = lowHeight;
-		} else {
-			t0 = tLow;
-			h0 = lowHeight;
-			t1 = tHigh;
-			h1 = highHeight;
-		}
-		else if (tCurrent <= tHigh) {
-			t0 = tHigh - (tLow - tHigh);
-			h0 = lowHeight;
-			t1 = tHigh;
-			h1 = highHeight;
-		} else if (tCurrent >= tLow) {
-			t0 = tLow;
-			h0 = lowHeight;
-			t1 = tLow + (tLow - tHigh);
-			h1 = highHeight;
-		} else {
-			t0 = tHigh;
-			h0 = highHeight;
-			t1 = tLow;
-			h1 = lowHeight;
-		}
-		const frac = (tCurrent - t0) / (t1 - t0);
-		const sineFrac = (1 - Math.cos(Math.PI * frac)) / 2;
-		return h0 + (h1 - h0) * sineFrac;
-	}
-};
-//#endregion
-//#region ui/js/AppState.js
-var DEFAULT_FRESHNESS_SEC = 300;
-var DELTA_FAST_SPEED = 250;
-var DELTA_SLOW_SPEED = 1e3;
-var AppState = class {
-	constructor() {
-		this.anchor = {};
-		this.tidalRise = 0;
-		this.tidalFall = 0;
-		this.scope7 = 0;
-		this.scope5 = 0;
-		this.scope4 = 0;
-		this.scope3 = 0;
-	}
-	websocketSubscribe(client) {
-		client.subscribe({
-			context: "vessels.self",
-			subscribe: [
-				{
-					path: "navigation.position",
-					period: DELTA_FAST_SPEED,
-					format: "full",
-					policy: "fixed",
-					sendMeta: "all"
-				},
-				{
-					path: "navigation.headingTrue",
-					period: DELTA_FAST_SPEED,
-					format: "full",
-					policy: "fixed",
-					sendMeta: "all"
-				},
-				{
-					path: "environment.depth.belowKeel",
-					period: DELTA_SLOW_SPEED,
-					format: "full",
-					policy: "fixed",
-					sendMeta: "all"
-				},
-				{
-					path: "environment.depth.belowSurface",
-					period: DELTA_SLOW_SPEED,
-					format: "full",
-					policy: "fixed",
-					sendMeta: "all"
-				},
-				{
-					path: "environment.wind.directionTrue",
-					period: DELTA_SLOW_SPEED,
-					format: "full",
-					policy: "fixed",
-					sendMeta: "all"
-				},
-				{
-					path: "environment.wind.speedApparent",
-					period: DELTA_SLOW_SPEED,
-					format: "full",
-					policy: "fixed",
-					sendMeta: "all"
-				},
-				{
-					path: "environment.tide",
-					minPeriod: 60 * 1e3,
-					format: "full",
-					policy: "instant",
-					sendMeta: "all"
-				},
-				{
-					path: "navigation.anchor.position",
-					minPeriod: DELTA_FAST_SPEED,
-					format: "full",
-					policy: "instant",
-					sendMeta: "all"
-				},
-				{
-					path: "navigation.anchor.state",
-					minPeriod: DELTA_FAST_SPEED,
-					format: "full",
-					policy: "instant",
-					sendMeta: "all"
-				},
-				{
-					path: "navigation.anchor.maxRadius",
-					minPeriod: DELTA_FAST_SPEED,
-					format: "full",
-					policy: "instant",
-					sendMeta: "all"
-				},
-				{
-					path: "notifications.navigation.anchor",
-					minPeriod: DELTA_FAST_SPEED,
-					format: "full",
-					policy: "instant",
-					sendMeta: "all"
-				}
-			]
-		});
-	}
-	getPosition() {
-		if (this.currentCoordinates) return L.latLng(this.currentCoordinates.value.latitude, this.currentCoordinates.value.longitude);
-		else return L.latLng(0, 0);
-	}
-	getAnchorPosition() {
-		if (this.anchor.position && this.anchor.position.value) return L.latLng(this.anchor.position.value.latitude, this.anchor.position.value.longitude);
-		else return L.latLng(0, 0);
-	}
-	extract(tree, path, fresh = true, maxAge = DEFAULT_FRESHNESS_SEC) {
-		let data = SignalKHelper.extract(tree, path);
-		if (!data) return null;
-		if (fresh && !SignalKHelper.isFresh(data, maxAge)) {
-			const ageSec = data.timestamp ? Math.round((Date.now() - new Date(data.timestamp).getTime()) / 1e3) : "unknown";
-			const msg = `Stale SignalK value: ${path || "(root)"} — Age ${ageSec}s, Max ${maxAge}s`;
-			SignalKHelper.errorHandler?.(msg);
-			console.warn(msg);
-			console.trace();
-			return null;
-		}
-		return data;
-	}
-	extractAll(data) {
-		this.boatConfig = BoatConfig.extract(data);
-		this.currentCoordinates = this.extract(data, "navigation.position");
-		this.heading = this.extract(data, "navigation.headingTrue") ?? this.heading;
-		this.belowKeel = this.extract(data, "environment.depth.belowKeel") ?? this.belowKeel;
-		this.belowSurface = this.extract(data, "environment.depth.belowSurface") ?? this.belowSurface;
-		this.twa = this.extract(data, "environment.wind.directionTrue") ?? this.twa;
-		this.aws = this.extract(data, "environment.wind.speedApparent") ?? this.aws;
-		this.tide = this.extract(data, "environment.tide", false) ?? this.tide;
-		if (!this.anchor) this.anchor = {};
-		this.anchor.position = this.extract(data, "navigation.anchor.position", false) ?? this.anchor.position;
-		this.anchor.state = this.extract(data, "navigation.anchor.state", false) ?? this.anchor.state;
-		this.anchor.maxRadius = this.extract(data, "navigation.anchor.maxRadius", false) ?? this.anchor.maxRadius;
-		this.anchor.notification = this.extract(data, "notifications.navigation.anchor", false) ?? this.anchor.notification;
-	}
-	handleDelta(timestamp, delta) {
-		const path = delta.path;
-		if (delta.meta) console.log(delta);
-		const apply = (current) => {
-			if (current) {
-				current.value = delta.value;
-				current.timestamp = timestamp;
-				if (delta.meta) current.meta = delta.meta;
-				return current;
-			}
-			return {
-				value: delta.value,
-				timestamp
-			};
-		};
-		if (path == "navigation.position") this.currentCoordinates = apply(this.currentCoordinates);
-		else if (path == "navigation.headingTrue") this.heading = apply(this.heading);
-		else if (path == "environment.depth.belowKeel") this.belowKeel = apply(this.belowKeel);
-		else if (path == "environment.depth.belowSurface") this.belowSurface = apply(this.belowSurface);
-		else if (path == "environment.wind.directionTrue") this.twa = apply(this.twa);
-		else if (path == "environment.wind.speedApparent") this.aws = apply(this.aws);
-		else if (path == "environment.tide.heightHigh") (this.tide ??= {}).heightHigh = apply(this.tide.heightHigh);
-		else if (path == "environment.tide.heightLow") (this.tide ??= {}).heightLow = apply(this.tide.heightLow);
-		else if (path == "environment.tide.heightNow") (this.tide ??= {}).heightNow = apply(this.tide.heightNow);
-		else if (path == "environment.tide.stationName") (this.tide ??= {}).stationName = apply(this.tide.stationName);
-		else if (path == "environment.tide.timeHigh") (this.tide ??= {}).timeHigh = apply(this.tide.timeHigh);
-		else if (path == "environment.tide.timeLow") (this.tide ??= {}).timeLow = apply(this.tide.timeLow);
-		else if (path == "navigation.anchor.position") this.anchor.position = apply(this.anchor.position);
-		else if (path == "navigation.anchor.state") this.anchor.state = apply(this.anchor.state);
-		else if (path == "navigation.anchor.maxRadius") this.anchor.maxRadius = apply(this.anchor.maxRadius);
-		else if (path == "notifications.navigation.anchor") this.anchor.notification = apply(this.anchor.notification);
-		else if (!path.startsWith("notifications")) console.log(`[websocket] Ignoring: ${path}`);
-	}
-	calculate() {
-		this.calculateTides();
-		if (this.boatConfig) this.boatConfig.heading = this.computeOwnHeading();
-		this.calculateScopes();
-	}
-	calculateTides() {
-		if (!this.tide || !this.tide.timeLow || !this.tide.heightLow || !this.tide.timeHigh || !this.tide.heightHigh) return;
-		this.currentTide = GeoMath.estimateTideHeightSmooth(this.tide.timeLow.value, this.tide.heightLow.value, this.tide.timeHigh.value, this.tide.heightHigh.value);
-		this.tidalRise = this.tide.heightHigh.value - this.currentTide;
-		this.tidalFall = this.currentTide - this.tide.heightLow.value;
-	}
-	calculateScopes() {
-		this.scope7 = this.calculateScope(7);
-		this.scope5 = this.calculateScope(5);
-		this.scope4 = this.calculateScope(4);
-		this.scope3 = this.calculateScope(3);
-	}
-	calculateScope(scope) {
-		if (!this.belowSurface || !this.boatConfig) return 0;
-		let maxHeight = this.belowSurface.value;
-		maxHeight += this.boatConfig.anchorRollerHeight;
-		maxHeight += this.tidalRise;
-		return maxHeight * scope;
-	}
-	computeOwnHeading() {
-		if (this.heading) return GeoMath.rad2deg(this.heading.value);
-		if (this.anchor.position && this.anchor.position.value && this.currentCoordinates) return Math.round(GeoMath.calculateBearing(this.currentCoordinates.value.latitude, this.currentCoordinates.value.longitude, this.anchor.position.value.latitude, this.anchor.position.value.longitude));
-		if (this.twa) return GeoMath.rad2deg(this.twa.value);
-		return 0;
-	}
-};
-//#endregion
-//#region ui/js/hud/FleetLayer.js
-var import_simplify = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
-	(function() {
-		"use strict";
-		function getSqDist(p1, p2) {
-			var dx = p1.x - p2.x, dy = p1.y - p2.y;
-			return dx * dx + dy * dy;
-		}
-		function getSqSegDist(p, p1, p2) {
-			var x = p1.x, y = p1.y, dx = p2.x - x, dy = p2.y - y;
-			if (dx !== 0 || dy !== 0) {
-				var t = ((p.x - x) * dx + (p.y - y) * dy) / (dx * dx + dy * dy);
-				if (t > 1) {
-					x = p2.x;
-					y = p2.y;
-				} else if (t > 0) {
-					x += dx * t;
-					y += dy * t;
-				}
-			}
-			dx = p.x - x;
-			dy = p.y - y;
-			return dx * dx + dy * dy;
-		}
-		function simplifyRadialDist(points, sqTolerance) {
-			var prevPoint = points[0], newPoints = [prevPoint], point;
-			for (var i = 1, len = points.length; i < len; i++) {
-				point = points[i];
-				if (getSqDist(point, prevPoint) > sqTolerance) {
-					newPoints.push(point);
-					prevPoint = point;
-				}
-			}
-			if (prevPoint !== point) newPoints.push(point);
-			return newPoints;
-		}
-		function simplifyDPStep(points, first, last, sqTolerance, simplified) {
-			var maxSqDist = sqTolerance, index;
-			for (var i = first + 1; i < last; i++) {
-				var sqDist = getSqSegDist(points[i], points[first], points[last]);
-				if (sqDist > maxSqDist) {
-					index = i;
-					maxSqDist = sqDist;
-				}
-			}
-			if (maxSqDist > sqTolerance) {
-				if (index - first > 1) simplifyDPStep(points, first, index, sqTolerance, simplified);
-				simplified.push(points[index]);
-				if (last - index > 1) simplifyDPStep(points, index, last, sqTolerance, simplified);
-			}
-		}
-		function simplifyDouglasPeucker(points, sqTolerance) {
-			var last = points.length - 1;
-			var simplified = [points[0]];
-			simplifyDPStep(points, 0, last, sqTolerance, simplified);
-			simplified.push(points[last]);
-			return simplified;
-		}
-		function simplify(points, tolerance, highestQuality) {
-			if (points.length <= 2) return points;
-			var sqTolerance = tolerance !== void 0 ? tolerance * tolerance : 1;
-			points = highestQuality ? points : simplifyRadialDist(points, sqTolerance);
-			points = simplifyDouglasPeucker(points, sqTolerance);
-			return points;
-		}
-		if (typeof define === "function" && define.amd) define(function() {
-			return simplify;
-		});
-		else if (typeof module !== "undefined") {
-			module.exports = simplify;
-			module.exports.default = simplify;
-		} else if (typeof self !== "undefined") self.simplify = simplify;
-		else window.simplify = simplify;
-	})();
-})))());
-var POLL_INTERVAL_MS$1 = 5e3;
-var DEFAULT_FILTER_RADIUS = 500;
-var SIMPLIFY_TOLERANCE_SELF = 2e-6;
-var SIMPLIFY_TOLERANCE_OTHERS = 1e-5;
-var SIMPLIFY_THRESHOLD_SELF = 1e4;
-var SIMPLIFY_THRESHOLD_OTHERS = 1e3;
-var GPS_ANTENNA_ICON = L.icon({
-	iconUrl: "icons/antenna.svg",
-	iconSize: [25, 25],
-	iconAnchor: [13, 25]
-});
-var FleetLayer = class {
-	constructor({ app, map, ownMmsi, filterRadius }) {
-		this.app = app;
-		this.map = map;
-		this.ownMmsi = ownMmsi;
-		this.vessels = {};
-		this.vesselTracks = {};
-		this.trackPointCounts = {};
-		this.ownVessel = void 0;
-		this.ownAntenna = void 0;
-		this.ownBoatConfig = void 0;
-		this.fleetTimer = null;
-		this._pollInFlight = false;
-		this.filterRadius = filterRadius ?? DEFAULT_FILTER_RADIUS;
-		this.setOwnVessel(this.app.state.getPosition(), this.app.state.boatConfig);
-		this.loadInitialData();
-	}
-	loadInitialData() {
-		this.app.signalK.fetchTracks(this.filterRadius).then((tracks) => {
-			this.app.statusBar.clear("tracks-plugin");
-			this.loadHistoricalTracks(tracks, this.app.state.getPosition(), this.filterRadius);
-		}).catch((err) => {
-			const detail = err.statusText || err.message || "unknown error";
-			this.app.statusBar.set("tracks-plugin", `Tracks plugin not available: ${detail}`, "warning");
-		});
-		this.fleetTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS$1);
-		this.poll();
-	}
-	poll() {
-		if (this._pollInFlight) return;
-		this._pollInFlight = true;
-		this.app.signalK.fetchAllVessels().then((vessels) => {
-			this.app.statusBar.clear("fleet-poll");
-			this.syncOtherVessels(vessels, {
-				ownLatLng: this.app.state.getPosition(),
-				filterRadius: this.filterRadius,
-				twa: this.app.state.twa
-			});
-		}).catch((error) => {
-			const detail = error.statusText || error.message || "unknown error";
-			const msg = `Fleet update failed: ${error.status ? `${error.status} ` : ""}${detail}`;
-			this.app.statusBar.set("fleet-poll", msg, "warning");
-			console.error(msg, error);
-		}).finally(() => {
-			this._pollInFlight = false;
-		});
-	}
-	update(state) {
-		this.updateOwnPosition(state.getPosition(), state.boatConfig.heading);
-		const pos = state.getPosition();
-		this.addPointToTrack(this.ownMmsi, pos.lat, pos.lng);
-	}
-	setOwnVessel(coords, boatConfig) {
-		this.ownBoatConfig = boatConfig;
-		this.ownVessel = new L.BoatMarker(coords, {
-			beam: boatConfig.beam,
-			loa: boatConfig.loa,
-			gpsOffset: boatConfig.bowOffset,
-			heading: boatConfig.heading,
-			icon: boatConfig.icon
-		}).addTo(this.map);
-		this.ownAntenna = L.marker(coords, { icon: GPS_ANTENNA_ICON }).addTo(this.map);
-	}
-	updateOwnPosition(coords, heading) {
-		this.ownVessel.setLatLng(coords);
-		this.ownVessel.setHeading(heading);
-		this.ownAntenna.setLatLng(coords);
-	}
-	loadHistoricalTracks(tracks, ownLatLng, filterRadius) {
-		const mmsiRegex = /urn:mrn:imo:mmsi:(\d+)$/;
-		for (let uri in tracks) {
-			const match = uri.match(mmsiRegex);
-			if (!match) continue;
-			const mmsi = match[1];
-			const history = tracks[uri].coordinates?.[0];
-			if (!history || !history.length) continue;
-			const points = [];
-			let i = 0;
-			for (let position of history) {
-				const lat = position[1];
-				const lon = position[0];
-				if (GeoMath.calculateDistance(ownLatLng.lat, ownLatLng.lng, lat, lon) < filterRadius) {
-					points.push([
-						lat,
-						lon,
-						i
-					]);
-					i++;
-				}
-			}
-			if (!points.length) continue;
-			this.vesselTracks[mmsi] = this.createTrack(points, points.length, mmsi);
-			this.trackPointCounts[mmsi] = this.vesselTracks[mmsi].getLatLngs().length;
-		}
-	}
-	addPointToTrack(mmsi, lat, lng) {
-		const track = this.vesselTracks[mmsi];
-		if (!track) return;
-		const last = track.getLatLngs().at(-1);
-		if (last && last.lat === lat && last.lng === lng) return;
-		track.addLatLng([
-			lat,
-			lng,
-			track.options.max
-		]);
-		track.options.max++;
-		this.trackPointCounts[mmsi] = (this.trackPointCounts[mmsi] || 0) + 1;
-		if (this.trackPointCounts[mmsi] >= this.getSimplifyThreshold(mmsi)) this.simplifyTrack(mmsi);
-	}
-	simplifyTrack(mmsi) {
-		const track = this.vesselTracks[mmsi];
-		if (!track) return;
-		const simplified = simplifyHotlinePoints(track.getLatLngs(), this.getSimplifyTolerance(mmsi));
-		track.setLatLngs(simplified);
-		this.trackPointCounts[mmsi] = simplified.length;
-	}
-	syncOtherVessels(vessels, { ownLatLng, filterRadius, twa }) {
-		const detected = [];
-		for (let key in vessels) {
-			const vessel = vessels[key];
-			if (vessel.mmsi == this.ownMmsi) continue;
-			if (!("navigation" in vessel) || !("position" in vessel.navigation)) continue;
-			const position = vessel.navigation.position.value;
-			const distance = GeoMath.calculateDistance(position.latitude, position.longitude, ownLatLng.lat, ownLatLng.lng);
-			if (distance > filterRadius) continue;
-			detected.push(vessel.mmsi);
-			const heading = this.deriveVesselHeading(vessel, twa);
-			const distanceRounded = Math.round(distance);
-			if (vessel.mmsi in this.vessels) this.updateExistingVessel(vessel, position, heading, distanceRounded);
-			else this.addNewVessel(vessel, position, heading, distanceRounded);
-		}
-		const detectedSet = new Set(detected.map(String));
-		for (let mmsi in this.vessels) if (!detectedSet.has(mmsi)) {
-			const marker = this.vessels[mmsi];
-			if (marker.gpsAntennaMarker) this.map.removeLayer(marker.gpsAntennaMarker);
-			this.map.removeLayer(marker);
-			delete this.vessels[mmsi];
-			if (this.vesselTracks[mmsi]) {
-				this.map.removeLayer(this.vesselTracks[mmsi]);
-				delete this.vesselTracks[mmsi];
-				delete this.trackPointCounts[mmsi];
-			}
-		}
-	}
-	deriveVesselHeading(vessel, twa) {
-		const sogVal = SignalKHelper.value(vessel, "navigation.speedOverGround");
-		const headingTrue = SignalKHelper.value(vessel, "navigation.headingTrue");
-		if (headingTrue !== void 0) return GeoMath.rad2deg(headingTrue);
-		const cog = SignalKHelper.value(vessel, "navigation.courseOverGroundTrue");
-		if (cog !== void 0 && sogVal > .5) return GeoMath.rad2deg(cog);
-		if (twa) return GeoMath.rad2deg(twa.value);
-		return 0;
-	}
-	updateExistingVessel(vessel, position, heading, distance) {
-		const marker = this.vessels[vessel.mmsi];
-		marker.setLatLng([position.latitude, position.longitude]);
-		marker.setHeading(heading);
-		marker.setPopupContent(`${vessel.name} at ${distance} meters`);
-		marker.gpsAntennaMarker.setLatLng([position.latitude, position.longitude]);
-		this.addPointToTrack(vessel.mmsi, position.latitude, position.longitude);
-	}
-	addNewVessel(vessel, position, heading, distance) {
-		const config = BoatConfig.extract(vessel);
-		const marker = new L.BoatMarker([position.latitude, position.longitude], {
-			beam: config.beam,
-			loa: config.loa,
-			gpsOffset: config.bowOffset,
-			heading,
-			icon: config.icon
-		});
-		marker.addTo(this.map).bindPopup(`${vessel.name} at ${distance} meters`);
-		marker.gpsAntennaMarker = L.marker([position.latitude, position.longitude], { icon: GPS_ANTENNA_ICON }).addTo(this.map);
-		this.vessels[vessel.mmsi] = marker;
-		if (!(vessel.mmsi in this.vesselTracks)) {
-			this.vesselTracks[vessel.mmsi] = this.createTrack([[
-				position.latitude,
-				position.longitude,
-				0
-			]], 1, vessel.mmsi);
-			this.trackPointCounts[vessel.mmsi] = 1;
-		}
-	}
-	createTrack(points, max, mmsi) {
-		const simplified = simplifyHotlinePoints(points, this.getSimplifyTolerance(mmsi));
-		return L.hotline(simplified, {
-			color: "red",
-			weight: 1,
-			min: 0,
-			max,
-			palette: {
-				0: "red",
-				.5: "yellow",
-				1: "green"
-			},
-			outlineWidth: 0,
-			text: ""
-		}).addTo(this.map);
-	}
-	getSimplifyTolerance(mmsi) {
-		if (mmsi === this.ownMmsi) return SIMPLIFY_TOLERANCE_SELF;
-		else return SIMPLIFY_TOLERANCE_OTHERS;
-	}
-	getSimplifyThreshold(mmsi) {
-		if (mmsi === this.ownMmsi) return SIMPLIFY_THRESHOLD_SELF;
-		else return SIMPLIFY_THRESHOLD_OTHERS;
-	}
-};
-function simplifyHotlinePoints(points, tolerance) {
-	if (points.length < 3) return points.map(toTuple);
-	return (0, import_simplify.default)(points.map((p) => {
-		const tuple = toTuple(p);
-		return {
-			x: tuple[0],
-			y: tuple[1],
-			alt: tuple[2]
-		};
-	}), tolerance, true).map((p) => [
-		p.x,
-		p.y,
-		p.alt
-	]);
-}
-function toTuple(p) {
-	return Array.isArray(p) ? p : [
-		p.lat,
-		p.lng,
-		p.alt
-	];
-}
-//#endregion
-//#region ui/js/hud/StatusBar.js
-var LEVEL_COLORS = {
-	status: "black",
-	warning: "#d97706",
-	error: "red"
-};
-var StatusBar = L.Control.extend({
-	options: { position: "bottomright" },
-	onAdd: function() {
-		const container = L.DomUtil.create("div", "statusBar leaflet-bar");
-		L.DomEvent.disableClickPropagation(container);
-		container.id = "statusBarUI";
-		container.style.display = "none";
-		this._container = container;
-		this._items = /* @__PURE__ */ new Map();
-		return container;
-	},
-	set: function(id, text, level = "error") {
-		if (!text) {
-			this.clear(id);
-			return;
-		}
-		this._items.set(id, {
-			text,
-			level,
-			t: Date.now()
-		});
-		this._render();
-	},
-	clear: function(id) {
-		if (this._items.delete(id)) this._render();
-	},
-	update: function(state) {
-		this.set("gps", !state.currentCoordinates ? "Waiting for GPS position..." : null);
-		this.set("position-stale", SignalKHelper.isStale(state.currentCoordinates) ? "Current Position data is stale." : null);
-		this.set("heading-stale", SignalKHelper.isStale(state.heading) ? "Heading data is stale." : null);
-		this.set("below-keel-stale", SignalKHelper.isStale(state.belowKeel) ? "Depth Below Keel data is stale." : null);
-		this.set("below-surface-stale", SignalKHelper.isStale(state.belowSurface) ? "Depth Below Surface data is stale." : null);
-		this.set("twa-stale", SignalKHelper.isStale(state.twa) ? "True Wind Angle data is stale." : null);
-		this.set("aws-stale", SignalKHelper.isStale(state.aws) ? "Apparent Wind Speed data is stale." : null);
-	},
-	_render: function() {
-		if (!this._container) return;
-		if (!this._items.size) {
-			this._container.style.display = "none";
-			return;
-		}
-		let latest = null;
-		for (const item of this._items.values()) if (!latest || item.t > latest.t) latest = item;
-		this._container.textContent = latest.text;
-		this._container.style.color = LEVEL_COLORS[latest.level] || "black";
-		this._container.style.display = "";
-	}
-});
-//#endregion
-//#region ui/js/hud/HomeButtonControl.js
-var HomeButtonControl = L.Control.extend({
-	options: {
-		position: "topright",
-		onHome: null
-	},
-	onAdd: function(map) {
-		const container = L.DomUtil.create("div", "leaflet-bar leaflet-control");
-		const homeButton = L.DomUtil.create("a", "leaflet-control-home", container);
-		homeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" stroke="currentColor" stroke-width="0.75" class="bi bi-house" viewBox="0 0 16 16">
-  <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/>
-</svg>`;
-		homeButton.href = "#";
-		homeButton.title = "Center on Boat";
-		homeButton.setAttribute("role", "button");
-		L.DomEvent.disableClickPropagation(container);
-		const onHome = this.options.onHome;
-		L.DomEvent.on(homeButton, "click", function(e) {
-			L.DomEvent.stopPropagation(e);
-			L.DomEvent.preventDefault(e);
-			if (onHome) onHome(map);
-		});
-		return container;
-	}
-});
+DisplayUnit.loadActive();
 //#endregion
 //#region ui/js/hud/InfoPanel.js
 function formatClockTime(value) {
@@ -30173,7 +30371,7 @@ var InfoPanel = L.Control.extend({
 	},
 	setCurrentTide: function(currentTide) {
 		if (currentTide) {
-			this._currentTide.textContent = SignalKHelper.formatDisplay(currentTide);
+			this._currentTide.textContent = DisplayUnit.formatDisplay(currentTide);
 			this._currentTideRow.style.display = "";
 		} else this._currentTideRow.style.display = "none";
 	},
@@ -30196,7 +30394,7 @@ var InfoPanel = L.Control.extend({
 		} else this._tideLowTimeRow.style.display = "none";
 	},
 	setDepthValue: function(depth) {
-		if (depth) this._depthValue.textContent = SignalKHelper.formatDisplay(depth);
+		if (depth) this._depthValue.textContent = DisplayUnit.formatDisplay(depth);
 		else this._depthValue.textContent = "~";
 	},
 	setStatus: function(notification) {
@@ -30407,7 +30605,7 @@ var WindPanel = L.Control.extend({
 			}
 			return;
 		}
-		const awsText = SignalKHelper.formatDisplay(aws, 0);
+		const awsText = DisplayUnit.formatDisplay(aws, 0);
 		if (awsText !== this._lastAwsText) {
 			this._aws.innerHTML = awsText;
 			this._lastAwsText = awsText;
@@ -30529,9 +30727,9 @@ var ScopePanel = L.Control.extend({
 	update: function(state) {
 		if (state.belowSurface && state.belowKeel) {
 			const maxHeight = state.belowSurface.value + state.boatConfig.anchorRollerHeight + state.tidalRise;
-			this._refs.scopeTotal.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, maxHeight);
-			this._refs.scopeDepth.innerHTML = SignalKHelper.formatDisplay(state.belowSurface);
-			this._refs.belowKeel.innerHTML = SignalKHelper.formatDisplay(state.belowKeel);
+			this._refs.scopeTotal.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, maxHeight);
+			this._refs.scopeDepth.innerHTML = DisplayUnit.formatDisplay(state.belowSurface);
+			this._refs.belowKeel.innerHTML = DisplayUnit.formatDisplay(state.belowKeel);
 		} else {
 			this._refs.scopeTotal.innerHTML = "~";
 			this._refs.scopeDepth.innerHTML = "~";
@@ -30539,23 +30737,23 @@ var ScopePanel = L.Control.extend({
 		}
 		if (state.tide && state.belowKeel) {
 			const minimumDepth = state.belowKeel.value - state.tidalFall;
-			this._refs.minimumDepth.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, minimumDepth);
+			this._refs.minimumDepth.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, minimumDepth);
 			if (minimumDepth > 1) this._refs.minimumDepthRow.style.color = "green";
 			else if (minimumDepth > 0) this._refs.minimumDepthRow.style.color = "orange";
 			else this._refs.minimumDepthRow.style.color = "red";
 		} else this._refs.minimumDepth.innerHTML = "~";
 		if (state.tide) {
-			this._refs.tidalRise.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.tidalRise);
-			this._refs.tidalFall.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.tidalFall);
+			this._refs.tidalRise.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.tidalRise);
+			this._refs.tidalFall.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.tidalFall);
 		} else {
 			this._refs.tidalRise.innerHTML = "~";
 			this._refs.tidalFall.innerHTML = "~";
 		}
-		this._refs.scope7to1.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.scope7);
-		this._refs.scope5to1.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.scope5);
-		this._refs.scope4to1.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.scope4);
-		this._refs.scope3to1.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.scope3);
-		this._refs.bowHeight.innerHTML = SignalKHelper.formatDisplay(state.belowSurface, false, state.boatConfig.anchorRollerHeight);
+		this._refs.scope7to1.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.scope7);
+		this._refs.scope5to1.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.scope5);
+		this._refs.scope4to1.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.scope4);
+		this._refs.scope3to1.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.scope3);
+		this._refs.bowHeight.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.boatConfig.anchorRollerHeight);
 	},
 	show: function() {
 		if (this._container) this._container.style.display = "";
@@ -30699,7 +30897,7 @@ var AnchorOverlay = class {
 		let distance = GeoMath.calculateDistance(bow.lat, bow.lng, this.anchorPosition.lat, this.anchorPosition.lng);
 		distance = Math.round(distance * 10) / 10;
 		let distanceLabel = `${distance}m`;
-		if (this.state.anchor?.maxRadius) distanceLabel = SignalKHelper.formatDisplay(this.state.anchor.maxRadius, false, distance);
+		if (this.state.anchor?.maxRadius) distanceLabel = DisplayUnit.formatDisplay(this.state.anchor.maxRadius, false, distance);
 		const bearing = Math.round(GeoMath.calculateBearing(bow.lat, bow.lng, this.anchorPosition.lat, this.anchorPosition.lng));
 		const bearingLabel = `${bearing}°`;
 		this._updateAnchorRotation(bearing + 180);
@@ -30816,7 +31014,7 @@ var AnchorController = class {
 		});
 	}
 	setRadius(newRadius, convert = false) {
-		if (convert && this._appState.anchor?.maxRadius) newRadius = SignalKHelper.convertFromDisplay(this._appState.anchor.maxRadius, newRadius);
+		if (convert && this._appState.anchor?.maxRadius) newRadius = DisplayUnit.convertFromDisplay(this._appState.anchor.maxRadius, newRadius);
 		this.maxRadius = newRadius;
 		if (!this._appState.anchor.maxRadius) this._appState.anchor.maxRadius = { value: newRadius };
 		else this._appState.anchor.maxRadius.value = newRadius;
@@ -31000,7 +31198,7 @@ var ControlToolbar = class {
 		this._radius = radius;
 	}
 	update(appState) {
-		if (appState.anchor?.maxRadius) this._radiusEl.innerHTML = SignalKHelper.formatDisplay(appState.anchor.maxRadius, false, this._radius);
+		if (appState.anchor?.maxRadius) this._radiusEl.innerHTML = DisplayUnit.formatDisplay(appState.anchor.maxRadius, 0, this._radius);
 		else this._radiusEl.innerHTML = this._radius;
 	}
 };

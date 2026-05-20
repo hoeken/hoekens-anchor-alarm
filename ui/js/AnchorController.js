@@ -12,7 +12,7 @@
 //     ignored entirely while a user request is in flight.
 
 import { GeoMath } from "./GeoMath.js";
-import { SignalKHelper } from "./SignalKHelper.js";
+import { DisplayUnit } from "./DisplayUnit.js";
 
 export const AnchorState = Object.freeze({
   UP: "UP",
@@ -112,7 +112,7 @@ export class AnchorController {
   setRadius(newRadius, convert = false) {
 
     if (convert && this._appState.anchor?.maxRadius)
-      newRadius = SignalKHelper.convertFromDisplay(this._appState.anchor.maxRadius, newRadius);
+      newRadius = DisplayUnit.convertFromDisplay(this._appState.anchor.maxRadius, newRadius);
 
     this.maxRadius = newRadius;
     if (!this._appState.anchor.maxRadius)

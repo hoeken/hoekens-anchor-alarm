@@ -234,10 +234,28 @@ export class AppState {
   }
 
   calculate() {
+    this.cleanDisplayUnits();
     this.calculateTides();
     if (this.boatConfig)
       this.boatConfig.heading = this.computeOwnHeading();
     this.calculateScopes();
+  }
+
+  // SignalK's units-preferences plugin is sometimes buggy for me.
+  // this is a workaround since we know these parameters should
+  // always have these categories
+  cleanDisplayUnits() {
+    const override = (envelope, from, to) => {
+      const du = envelope?.meta?.displayUnits;
+      if (du?.category === from)
+        du.category = to;
+    };
+    override(this.belowSurface, "distance", "depth");
+    override(this.belowKeel, "distance", "depth");
+    override(this.tide?.heightLow, "distance", "depth");
+    override(this.tide?.heightHigh, "distance", "depth");
+    override(this.tide?.heightNow, "distance", "depth");
+    override(this.anchor?.maxRadius, "distance", "length");
   }
 
   calculateTides() {

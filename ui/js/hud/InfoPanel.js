@@ -3,7 +3,7 @@
 // touching the document directly. Element IDs are preserved for CSS hooks
 // in style.css; do not rename without updating the stylesheet.
 
-import { SignalKHelper } from "../SignalKHelper";
+import { DisplayUnit } from "../DisplayUnit.js";
 
 function formatClockTime(value) {
   const d = new Date(value);
@@ -79,7 +79,7 @@ export const InfoPanel = L.Control.extend({
 
   setCurrentTide: function (currentTide) {
     if (currentTide) {
-      this._currentTide.textContent = SignalKHelper.formatDisplay(currentTide);
+      this._currentTide.textContent = DisplayUnit.formatDisplay(currentTide);
       this._currentTideRow.style.display = "";
     } else {
       this._currentTideRow.style.display = "none";
@@ -116,7 +116,7 @@ export const InfoPanel = L.Control.extend({
 
   setDepthValue: function (depth) {
     if (depth)
-      this._depthValue.textContent = SignalKHelper.formatDisplay(depth);
+      this._depthValue.textContent = DisplayUnit.formatDisplay(depth);
     else
       this._depthValue.textContent = "~";
   },

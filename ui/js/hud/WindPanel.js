@@ -4,7 +4,7 @@
 // in style.css; do not rename without updating the stylesheet.
 
 import { GeoMath } from "../GeoMath.js";
-import { SignalKHelper } from "../SignalKHelper.js";
+import { DisplayUnit } from "../DisplayUnit.js";
 import { getWindBarb } from "../WindBarb.js";
 
 export const WindPanel = L.Control.extend({
@@ -41,7 +41,7 @@ export const WindPanel = L.Control.extend({
       return;
     }
 
-    const awsText = SignalKHelper.formatDisplay(aws, 0);
+    const awsText = DisplayUnit.formatDisplay(aws, 0);
     if (awsText !== this._lastAwsText) {
       this._aws.innerHTML = awsText;
       this._lastAwsText = awsText;

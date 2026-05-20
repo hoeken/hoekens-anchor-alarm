@@ -5,7 +5,7 @@
 // alarm color is recomputed internally on any state or position change.
 
 import { GeoMath } from "../GeoMath.js";
-import { SignalKHelper } from "../SignalKHelper.js";
+import { DisplayUnit } from "../DisplayUnit.js";
 
 // DivIcon (not L.icon) so we can rotate the inner <img> via CSS transform
 // without clobbering the translate3d that Leaflet sets on the marker element.
@@ -181,7 +181,7 @@ export class AnchorOverlay {
 
     let distanceLabel = `${distance}m`;
     if (this.state.anchor?.maxRadius)
-      distanceLabel = SignalKHelper.formatDisplay(this.state.anchor.maxRadius, false, distance);
+      distanceLabel = DisplayUnit.formatDisplay(this.state.anchor.maxRadius, false, distance);
 
     const bearing = Math.round(
       GeoMath.calculateBearing(
