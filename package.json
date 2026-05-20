@@ -10,7 +10,7 @@
     "lint:fix": "eslint --fix .",
     "format": "eslint --fix . && prettier --write .",
     "format:check": "eslint . && prettier --check .",
-    "prepare": "husky",
+    "prepare": "node -e \"process.env.CI || require('husky')()\"",
     "build:ui": "vite build",
     "prepublishOnly": "npm run build:ui"
   },
