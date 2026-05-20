@@ -1,0 +1,238 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Hoeken's Anchor Alarm API",
+    "version": "2.0.0",
+    "description": "HTTP API for dropping, adjusting, and raising the anchor managed by the Hoeken's Anchor Alarm plugin.",
+    "license": {
+      "name": "Apache-2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0"
+    }
+  },
+  "servers": [
+    {
+      "url": "/plugins/hoekens-anchor-alarm"
+    }
+  ],
+  "tags": [
+    {
+      "name": "anchor",
+      "description": "Anchor control operations"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "Position": {
+        "type": "object",
+        "required": ["latitude", "longitude"],
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "minimum": -90,
+            "maximum": 90,
+            "description": "Latitude in decimal degrees (WGS84)."
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "minimum": -180,
+            "maximum": 180,
+            "description": "Longitude in decimal degrees (WGS84)."
+          }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "required": ["statusCode", "state"],
+        "properties": {
+          "statusCode": {
+            "type": "integer",
+            "example": 200
+          },
+          "state": {
+            "type": "string",
+            "enum": ["COMPLETED"]
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["statusCode", "state", "message"],
+        "properties": {
+          "statusCode": {
+            "type": "integer",
+            "example": 403
+          },
+          "state": {
+            "type": "string",
+            "enum": ["FAILED"]
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "responses": {
+      "AnchorError": {
+        "description": "Request rejected due to an anchor validation or state error.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "statusCode": 403,
+              "state": "FAILED",
+              "message": "position with latitude and longitude required"
+            }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "Unexpected internal error.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "statusCode": 500,
+              "state": "FAILED",
+              "message": "internal error"
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/dropAnchor": {
+      "post": {
+        "tags": ["anchor"],
+        "summary": "Drop the anchor at a given position",
+        "description": "Records the supplied position as the anchor location and (optionally) sets the alarm radius. Starts the anchor watch.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["position"],
+                "properties": {
+                  "position": {
+                    "$ref": "#/components/schemas/Position"
+                  },
+                  "radius": {
+                    "type": "number",
+                    "format": "double",
+                    "minimum": 0,
+                    "description": "Anchor alarm radius in meters. If omitted, the previously configured radius is retained."
+                  }
+                }
+              },
+              "example": {
+                "position": {
+                  "latitude": 37.8199,
+                  "longitude": -122.4783
+                },
+                "radius": 30
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Anchor dropped successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/AnchorError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/setRadius": {
+      "post": {
+        "tags": ["anchor"],
+        "summary": "Set the anchor alarm radius",
+        "description": "Updates the alarm radius for the currently dropped anchor. Requires that an anchor has been dropped and that a GPS position is available.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["radius"],
+                "properties": {
+                  "radius": {
+                    "type": "number",
+                    "format": "double",
+                    "minimum": 0,
+                    "description": "Anchor alarm radius in meters."
+                  }
+                }
+              },
+              "example": {
+                "radius": 45
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Radius updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/AnchorError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/raiseAnchor": {
+      "post": {
+        "tags": ["anchor"],
+        "summary": "Raise the anchor",
+        "description": "Clears the anchor position and radius and stops the anchor watch.",
+        "responses": {
+          "200": {
+            "description": "Anchor raised successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/AnchorError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    }
+  }
+}

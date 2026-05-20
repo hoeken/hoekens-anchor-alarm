@@ -14,8 +14,11 @@
  */
 
 const { AnchorError } = require("./anchor-service");
+const openapi = require("./openApi.json");
 
 function register(app, plugin, router) {
+  plugin.getOpenApi = () => openapi;
+
   function fail(res, err) {
     if (err instanceof AnchorError) {
       app.debug(err.message);
