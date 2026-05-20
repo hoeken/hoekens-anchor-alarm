@@ -4,7 +4,7 @@
   "description": "Web app based anchor alarm with scope calculator, scribble tracks, engine override, and physically accurate icons.",
   "main": "src/index.js",
   "scripts": {
-    "test": "$NODE $npm_package_main",
+    "test": "echo \"no tests — Signal K plugin CI validates lifecycle and schema\" && exit 0",
     "release": "git tag -d v$npm_package_version; git tag v$npm_package_version && git push --tags && git push && npm publish",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
@@ -31,6 +31,9 @@
     "email": "hoeken@gmail.com"
   },
   "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20.19"
+  },
   "dependencies": {
     "@signalk/client": "^2.4.0",
     "@signalk/tracks-plugin": "^2.0.2",
