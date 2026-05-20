@@ -30525,8 +30525,9 @@ var StaleReloader = class {
 };
 //#endregion
 //#region ui/js/hud/AnchorOverlay.js
-var ANCHOR_ICON = L.icon({
-	iconUrl: "icons/anchor.png",
+var ANCHOR_ICON = L.divIcon({
+	className: "",
+	html: "<img src=\"icons/anchor.png\" width=\"24\" height=\"24\" style=\"transform-origin: 12px 4px;\" />",
 	iconSize: [24, 24],
 	iconAnchor: [12, 4]
 });
@@ -30637,7 +30638,9 @@ var AnchorOverlay = class {
 		distance = Math.round(distance * 10) / 10;
 		let distanceLabel = `${distance}m`;
 		if (this.state.anchor?.maxRadius) distanceLabel = SignalKHelper.formatDisplay(this.state.anchor.maxRadius, false, distance);
-		const bearingLabel = `${Math.round(GeoMath.calculateBearing(bow.lat, bow.lng, this.anchorPosition.lat, this.anchorPosition.lng))}°`;
+		const bearing = Math.round(GeoMath.calculateBearing(bow.lat, bow.lng, this.anchorPosition.lat, this.anchorPosition.lng));
+		const bearingLabel = `${bearing}°`;
+		this._updateAnchorRotation(bearing + 180);
 		if (distanceLabel === this._cachedDistanceLabel && bearingLabel === this._cachedBearingLabel && flip === this._cachedFlip) return;
 		this.anchorLine.setText("");
 		this.anchorLine.setText(distanceLabel, {
@@ -30665,6 +30668,12 @@ var AnchorOverlay = class {
 		if (color === this._cachedColor) return;
 		this.radiusCircle.setStyle({ color });
 		this._cachedColor = color;
+	}
+	_updateAnchorRotation(deg) {
+		if (!this.anchorMarker) return;
+		const el = this.anchorMarker.getElement();
+		const img = el && el.querySelector("img");
+		if (img) img.style.transform = `rotate(${deg}deg)`;
 	}
 	_removeAnchorMarker() {
 		if (this.anchorMarker) {

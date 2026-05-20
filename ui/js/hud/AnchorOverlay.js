@@ -7,8 +7,11 @@
 import { GeoMath } from "../GeoMath.js";
 import { SignalKHelper } from "../SignalKHelper.js";
 
-const ANCHOR_ICON = L.icon({
-  iconUrl: "icons/anchor.png",
+// DivIcon (not L.icon) so we can rotate the inner <img> via CSS transform
+// without clobbering the translate3d that Leaflet sets on the marker element.
+const ANCHOR_ICON = L.divIcon({
+  className: "",
+  html: '<img src="icons/anchor.png" width="24" height="24" style="transform-origin: 12px 4px;" />',
   iconSize: [24, 24],
   iconAnchor: [12, 4],
 });
@@ -190,6 +193,10 @@ export class AnchorOverlay {
     );
     const bearingLabel = `${bearing}°`;
 
+    // Rotate so the anchor's ring (top of icon, at iconAnchor [12,4]) faces
+    // back toward the bow; the flukes trail away from the rode.
+    this._updateAnchorRotation(bearing + 180);
+
     // Skip textpath rebuilds when the rendered label hasn't changed. Leaflet
     // re-runs _textRedraw on every _updatePath, so the labels still follow
     // the moving line without an explicit setText here.
@@ -238,6 +245,15 @@ export class AnchorOverlay {
       return;
     this.radiusCircle.setStyle({ color });
     this._cachedColor = color;
+  }
+
+  _updateAnchorRotation(deg) {
+    if (!this.anchorMarker)
+      return;
+    const el = this.anchorMarker.getElement();
+    const img = el && el.querySelector("img");
+    if (img)
+      img.style.transform = `rotate(${deg}deg)`;
   }
 
   _removeAnchorMarker() {
