@@ -47,6 +47,10 @@ const requiredPaths = [
     description: "Required - you need a GPS position of some sort to watch.",
   },
   {
+    path: "navigation.headingTrue",
+    description: "Optional - used for map-accurate heading. Provided by plugin derived-data",
+  },
+  {
     path: "design.beam",
     description:
       "Optional - used to display size-accurate icon. Edit Server -> Settings",
@@ -65,6 +69,21 @@ const requiredPaths = [
     path: "environment.depth.belowSurface",
     description:
       "Optional - used for scope calculations. Provided by plugin derived-data",
+  },
+  {
+    path: "environment.depth.belowKeel",
+    description:
+      "Optional - used for minimum depth calculations. Provided by plugin derived-data or N2K",
+  },
+  {
+    path: "environment.wind.directionTrue",
+    description:
+      "Optional - used for wind barb display",
+  },
+  {
+    path: "environment.wind.speedApparent",
+    description:
+      "Optional - used for wind barb display",
   },
   {
     path: "environment.tide",
