@@ -2,6 +2,10 @@
 
 - make tide ui configurable (boolean on/off, default true (on))
 - make wind ui configurable (boolean on/off, default true (on))
+- test with various sources disabled:
+  - tides
+  - derivative-data
+  - etc
 
 # v2.2
 
