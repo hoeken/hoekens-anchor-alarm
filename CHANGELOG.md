@@ -1,3 +1,49 @@
+# v2.1
+
+## New features
+
+- **WebSocket** is now the default SignalK connection mode (POLLING still available) — lower latency, less HTTP chatter
+- **Tides** added to the HUD info panel
+- **Anchor icon** now rotates with the chain so it visibly points the right way
+- **Display units** now pulled from SignalK's user preferences (`/signalk/v1/unitpreferences/active`) via a new `DisplayUnit` class that handles conversion and formatting
+- **OpenAPI** definitions added for the plugin's HTTP endpoints
+- New plugin config options exposed in the schema:
+  - `filterRadius` — distance for AIS target filtering (integer, meters, default 500)
+  - `connectionType` — `POLLING` or `WEBSOCKET` (default `WEBSOCKET`)
+- New `/ui-config` HTTP endpoint so the client can read those settings
+- Post-login redirect for unauthenticated users back to plugin
+
+## Reliability & UX
+
+- HUD info / scope panels now hide entirely when their data isn't available, instead of rendering with dashes
+- Stale-data check only flags values that are actually present — missing data no longer registers as stale
+- Status bar can now set and clear statuses instead of being one-shot, so transient errors clear themselves once resolved
+- Raise/drop over WebSocket is more responsive and no longer races with the SignalK ack
+- Changing the anchor radius updates the UI immediately rather than waiting for the round-trip
+- Track points are simplified before rendering so long histories stay fast
+- Non-logged-in users can view the app again (read-only)
+- More freshness and missing-data checks throughout the UI
+
+## Bug fixes
+
+- Fixed race conditions between raise/drop and the SignalK ack
+- Fixed missing MMSI parameter handling for other vessels
+- Fixed other-vessel heading not updating
+- Cleaned up preload error message and a stray debug-logging typo
+
+## Under the hood
+
+- Client JS now bundled with **Vite**
+- Server-side `index.js` moved into `src/` and split into focused modules:
+  - `anchor-service` — anchor domain operations (drop / raise / set-radius)
+  - watchdog and utility helpers separated out
+  - `updateAnchorAlarm` / `updateAnchorStatus` reworked with new internals
+- Client-side refactor continued: introduced an `AppState` object, finished extracting `FleetLayer` from `AnchorAlarm`, moved all HUD panels and overlays into `ui/js/hud/`, one file per class
+- Renamed `SignalkClient` → `SignalkHelper`
+- `mathjs` adopted for unit conversion
+- Added a SignalK plugin CI workflow
+- Switched JS formatting from Prettier to ESLint (Prettier still used for non-JS)
+
 # v2.0
 
 ## New features

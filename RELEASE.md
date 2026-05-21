@@ -1,10 +1,11 @@
 # Releasing
 
-1. Make sure `master` is clean and pulled, lint passes:
+1. Make sure `master` is clean and pulled, ui is rebuilt, lint passes:
 
    ```sh
    git status
    git pull
+   npm run build:ui
    npm run lint
    npm run format:check
    ```
