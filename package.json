@@ -12,8 +12,12 @@
     "format:check": "eslint . && prettier --check .",
     "postinstall": "node -e \"try{if(!process.env.CI&&require('fs').existsSync('.git'))require('husky')()}catch(e){}\"",
     "build:ui": "vite build",
-    "prepublishOnly": "npm run build:ui"
+    "prepack": "npm run build:ui"
   },
+  "files": [
+    "src",
+    "public"
+  ],
   "lint-staged": {
     "*.js": "eslint --fix",
     "*.{json,css,html}": "prettier --write"

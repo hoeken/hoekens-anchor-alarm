@@ -134,3 +134,6 @@ dist
 
 # Claude Code
 .claude
+
+# Vite build output
+/public/
