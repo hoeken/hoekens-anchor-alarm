@@ -26,7 +26,7 @@ export const ScopePanel = L.Control.extend({
             <th>Tidal&nbsp;Rise</th>
             <td>+ <span id='tidalRise'>~</span></td>
           </tr>
-          <tr>
+          <tr id="scopeTotalRow">
             <th>Total</th>
             <td>= <span id='scopeTotal'>~</span></td>
           </tr>
@@ -74,6 +74,7 @@ export const ScopePanel = L.Control.extend({
       bowHeight: container.querySelector("#bowHeight"),
       tidalRise: container.querySelector("#tidalRise"),
       tidalRiseRow: container.querySelector("#tidalRiseRow"),
+      scopeTotalRow: container.querySelector("#scopeTotalRow"),
       scopeTotal: container.querySelector("#scopeTotal"),
       scope7to1: container.querySelector("#scope7to1"),
       scope5to1: container.querySelector("#scope5to1"),
@@ -99,16 +100,19 @@ export const ScopePanel = L.Control.extend({
     //if we have none of the required parameters, dont even show.
     if (!state.belowSurface && (!state.tide || !state.belowKeel))
       this._container.style.display = "none";
-    else
-      this._container.style.display = "";
+    // only hide it, because this is conditional.
+    // else
+    //   this._container.style.display = "";
 
     //scope depth calculation - only belowSurface is actually required
     if (state.belowSurface) {
       let maxHeight = state.belowSurface.value;
+      let showTotal = false;
 
       //do we also have tide?
       if (state.tide) {
         maxHeight += state.tidalRise;
+        showTotal = true;
         this._refs.tidalRise.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.tidalRise);
         this._refs.tidalRiseRow.style.display = "";
       } else {
@@ -117,6 +121,8 @@ export const ScopePanel = L.Control.extend({
 
       //what bout anchor rollder height?
       if (state.boatConfig.anchorRollerHeight) {
+        maxHeight += state.boatConfig.anchorRollerHeight;
+        showTotal = true;
         this._refs.bowHeight.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.boatConfig.anchorRollerHeight);
         this._refs.bowHeightRow.style.display = "";
       }
@@ -124,7 +130,13 @@ export const ScopePanel = L.Control.extend({
         this._refs.bowHeightRow.style.display = "none";
 
       this._refs.scopeDepth.innerHTML = DisplayUnit.formatDisplay(state.belowSurface);
-      this._refs.scopeTotal.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, maxHeight);
+
+      if (showTotal) {
+        this._refs.scopeTotal.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, maxHeight);
+        this._refs.scopeTotalRow.style.display = "";
+      }
+      else
+        this._refs.scopeTotalRow.style.display = "none";
 
       this._refs.scope7to1.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.scope7);
       this._refs.scope5to1.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.scope5);

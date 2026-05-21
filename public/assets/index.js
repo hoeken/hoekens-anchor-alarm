@@ -30643,7 +30643,8 @@ var WindPanel = L.Control.extend({
 		}
 	},
 	update: function(state) {
-		this.setSpeed(state.aws, state.twa);
+		if (!state.aws && !state.twa) this._hide();
+		else this.setSpeed(state.aws, state.twa);
 	},
 	clearSpeed: function() {
 		if (this._lastAwsText !== "~") {
@@ -30674,7 +30675,7 @@ var ScopePanel = L.Control.extend({
             <th>Tidal&nbsp;Rise</th>
             <td>+ <span id='tidalRise'>~</span></td>
           </tr>
-          <tr>
+          <tr id="scopeTotalRow">
             <th>Total</th>
             <td>= <span id='scopeTotal'>~</span></td>
           </tr>
@@ -30722,6 +30723,7 @@ var ScopePanel = L.Control.extend({
 			bowHeight: container.querySelector("#bowHeight"),
 			tidalRise: container.querySelector("#tidalRise"),
 			tidalRiseRow: container.querySelector("#tidalRiseRow"),
+			scopeTotalRow: container.querySelector("#scopeTotalRow"),
 			scopeTotal: container.querySelector("#scopeTotal"),
 			scope7to1: container.querySelector("#scope7to1"),
 			scope5to1: container.querySelector("#scope5to1"),
@@ -30741,20 +30743,26 @@ var ScopePanel = L.Control.extend({
 	},
 	update: function(state) {
 		if (!state.belowSurface && (!state.tide || !state.belowKeel)) this._container.style.display = "none";
-		else this._container.style.display = "";
 		if (state.belowSurface) {
 			let maxHeight = state.belowSurface.value;
+			let showTotal = false;
 			if (state.tide) {
 				maxHeight += state.tidalRise;
+				showTotal = true;
 				this._refs.tidalRise.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.tidalRise);
 				this._refs.tidalRiseRow.style.display = "";
 			} else this._refs.tidalRiseRow.style.display = "none";
 			if (state.boatConfig.anchorRollerHeight) {
+				maxHeight += state.boatConfig.anchorRollerHeight;
+				showTotal = true;
 				this._refs.bowHeight.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.boatConfig.anchorRollerHeight);
 				this._refs.bowHeightRow.style.display = "";
 			} else this._refs.bowHeightRow.style.display = "none";
 			this._refs.scopeDepth.innerHTML = DisplayUnit.formatDisplay(state.belowSurface);
-			this._refs.scopeTotal.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, maxHeight);
+			if (showTotal) {
+				this._refs.scopeTotal.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, maxHeight);
+				this._refs.scopeTotalRow.style.display = "";
+			} else this._refs.scopeTotalRow.style.display = "none";
 			this._refs.scope7to1.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.scope7);
 			this._refs.scope5to1.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.scope5);
 			this._refs.scope4to1.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.scope4);

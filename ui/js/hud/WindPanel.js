@@ -80,8 +80,11 @@ export const WindPanel = L.Control.extend({
   },
 
   update: function (state) {
-    this.setSpeed(state.aws, state.twa);
-    // this.setAngle(state.twa);
+    //if we don't have the right data, hide ourself.
+    if (!state.aws && !state.twa)
+      this._hide();
+    else
+      this.setSpeed(state.aws, state.twa);
   },
 
   clearSpeed: function () {
