@@ -72,6 +72,7 @@ function register(app, plugin, router) {
     res.json({
       fleetFilterRadius: config.fleetFilterRadius,
       connectionType: config.connectionType,
+      defaultBasemap: config.defaultBasemap,
     });
   });
 }
