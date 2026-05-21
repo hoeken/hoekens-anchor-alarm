@@ -60,29 +60,29 @@ export const StatusBar = L.Control.extend({
     );
     this.set(
       "heading-stale",
-      SignalKHelper.isStale(state.heading) ? "Heading data is stale." : null,
+      state.heading && SignalKHelper.isStale(state.heading) ? "Heading data is stale." : null,
     );
     this.set(
       "below-keel-stale",
-      SignalKHelper.isStale(state.belowKeel)
+      state.belowKeel && SignalKHelper.isStale(state.belowKeel)
         ? "Depth Below Keel data is stale."
         : null,
     );
     this.set(
       "below-surface-stale",
-      SignalKHelper.isStale(state.belowSurface)
+      state.belowSurface && SignalKHelper.isStale(state.belowSurface)
         ? "Depth Below Surface data is stale."
         : null,
     );
     this.set(
       "twa-stale",
-      SignalKHelper.isStale(state.twa)
+      state.twa && SignalKHelper.isStale(state.twa)
         ? "True Wind Angle data is stale."
         : null,
     );
     this.set(
       "aws-stale",
-      SignalKHelper.isStale(state.aws)
+      state.aws && SignalKHelper.isStale(state.aws)
         ? "Apparent Wind Speed data is stale."
         : null,
     );

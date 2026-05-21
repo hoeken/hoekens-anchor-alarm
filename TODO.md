@@ -1,8 +1,3 @@
-# v2.1
-
-- make tide ui configurable (boolean on/off, default true (on))
-- make wind ui configurable (boolean on/off, default true (on))
-
 # v2.2
 
 ## Watch Zones
@@ -26,9 +21,11 @@
   - ui config is already stored as AnchorAlarm.config
   - attempt to load from cookies or other local storage
   - if not, load from server
-  - if not, use defaults in app
+  - if not, fall back to defaults in AnchorAlarm.config
 - add local config editing
+  - map overlay button + dialog
   - simple button that toggles edit ui
+  - generate config json, save to AnchorAlarm.config
   - save to cookies / local storage
   - save to app or nah?
 

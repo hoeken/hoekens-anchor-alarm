@@ -3688,11 +3688,11 @@ var StatusBar = L.Control.extend({
 	update: function(state) {
 		this.set("gps", !state.currentCoordinates ? "Waiting for GPS position..." : null);
 		this.set("position-stale", SignalKHelper.isStale(state.currentCoordinates) ? "Current Position data is stale." : null);
-		this.set("heading-stale", SignalKHelper.isStale(state.heading) ? "Heading data is stale." : null);
-		this.set("below-keel-stale", SignalKHelper.isStale(state.belowKeel) ? "Depth Below Keel data is stale." : null);
-		this.set("below-surface-stale", SignalKHelper.isStale(state.belowSurface) ? "Depth Below Surface data is stale." : null);
-		this.set("twa-stale", SignalKHelper.isStale(state.twa) ? "True Wind Angle data is stale." : null);
-		this.set("aws-stale", SignalKHelper.isStale(state.aws) ? "Apparent Wind Speed data is stale." : null);
+		this.set("heading-stale", state.heading && SignalKHelper.isStale(state.heading) ? "Heading data is stale." : null);
+		this.set("below-keel-stale", state.belowKeel && SignalKHelper.isStale(state.belowKeel) ? "Depth Below Keel data is stale." : null);
+		this.set("below-surface-stale", state.belowSurface && SignalKHelper.isStale(state.belowSurface) ? "Depth Below Surface data is stale." : null);
+		this.set("twa-stale", state.twa && SignalKHelper.isStale(state.twa) ? "True Wind Angle data is stale." : null);
+		this.set("aws-stale", state.aws && SignalKHelper.isStale(state.aws) ? "Apparent Wind Speed data is stale." : null);
 	},
 	_render: function() {
 		if (!this._container) return;
