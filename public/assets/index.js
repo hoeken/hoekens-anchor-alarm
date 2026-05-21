@@ -31239,7 +31239,8 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 		this.state = new AppState();
 		this.config = {
 			connectionType: "WEBSOCKET",
-			fleetFilterRadius: 500
+			fleetFilterRadius: 500,
+			defaultBasemap: "Satellite"
 		};
 		this.map = void 0;
 		this.fleetLayer = void 0;
@@ -31337,6 +31338,7 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 		}).catch((error) => {
 			console.error("Failed to load config, using defaults", error);
 		}).finally(() => {
+			(this.baseMaps[this.config.defaultBasemap] || this.satelliteLayer).addTo(this.map);
 			if (this.config.connectionType === "WEBSOCKET") {
 				console.log("Using Websockets");
 				this.setupWebsockets();
@@ -31349,7 +31351,6 @@ var INITIAL_LOAD_RETRY_MS = 5e3;
 	}
 	buildMap() {
 		this.map.setView(this.state.getPosition(), 5);
-		this.satelliteLayer.addTo(this.map);
 		L.control.zoom({ position: "topright" }).addTo(this.map);
 		this.homeButton = new HomeButtonControl({ onHome: (map) => {
 			this.anchorController.estimateAnchorPosition();
