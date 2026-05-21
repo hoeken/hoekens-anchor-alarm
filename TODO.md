@@ -9,6 +9,8 @@
 
 # v2.2
 
+## Watch Zones
+
 - refactor out anchor watch zone shapes
   - circle
   - polygon
@@ -21,6 +23,18 @@
   - detecting inside/outside condition
   - passing zone configuration to AnchorController
 - we also need a way to use the same class in the UI and in backend to avoid duplication of code
+
+## UI Config
+
+- loading
+  - ui config is already stored as AnchorAlarm.config
+  - attempt to load from cookies or other local storage
+  - if not, load from server
+  - if not, use defaults in app
+- add local config editing
+  - simple button that toggles edit ui
+  - save to cookies / local storage
+  - save to app or nah?
 
 # LONG TERM
 

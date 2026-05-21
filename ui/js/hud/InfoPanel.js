@@ -64,6 +64,10 @@ export const InfoPanel = L.Control.extend({
       this.arrangeTideTimes(state.tide.timeHigh, state.tide.timeLow);
       this.setHighTime(state.tide.timeHigh);
       this.setLowTime(state.tide.timeLow);
+    } else {
+      this._currentTideRow.style.display = "none";
+      this._tideHighTimeRow.style.display = "none";
+      this._tideLowTimeRow.style.display = "none";
     }
 
     if (state.belowSurface)
