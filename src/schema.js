@@ -125,6 +125,14 @@ function buildSchema(app) {
         default: "WEBSOCKET",
         enum: ["REST_POLLING", "WEBSOCKET"],
       },
+      defaultBasemap: {
+        type: "string",
+        title: "Default Basemap",
+        description:
+          "Which map layer to show on load. Both remain switchable at runtime via the layer control.",
+        default: "Satellite",
+        enum: ["OpenStreetMap", "Satellite"],
+      },
       fleetFilterRadius: {
         type: "integer",
         title: "Fleet Filter Radius (m)",

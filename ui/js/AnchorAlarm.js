@@ -28,6 +28,7 @@ class AnchorAlarm {
     this.config = {
       connectionType: "WEBSOCKET",
       fleetFilterRadius: 500,
+      defaultBasemap: "Satellite",
     };
 
     this.map = undefined;
@@ -173,6 +174,10 @@ class AnchorAlarm {
         console.error("Failed to load config, using defaults", error);
       })
       .finally(() => {
+        const layer =
+          this.baseMaps[this.config.defaultBasemap] || this.satelliteLayer;
+        layer.addTo(this.map);
+
         if (this.config.connectionType === "WEBSOCKET") {
           console.log("Using Websockets");
           this.setupWebsockets();
@@ -191,8 +196,6 @@ class AnchorAlarm {
   // Splitting it this way lets the status bar exist before any data fetch.
   buildMap() {
     this.map.setView(this.state.getPosition(), 5);
-
-    this.satelliteLayer.addTo(this.map);
 
     L.control.zoom({ position: "topright" }).addTo(this.map);
 
