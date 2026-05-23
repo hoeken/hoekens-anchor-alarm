@@ -1,10 +1,9 @@
 // ControlToolbar owns the top control bar (raise/drop anchor buttons and the
 // +/- radius stepper). It builds its own DOM under the supplied parent and
-// exposes onDrop/onRaise/onSetRadius callbacks plus setState(anchorState) and
-// setRadius(r) update methods. Element IDs are preserved for CSS hooks in
+// exposes onDrop/onRaise/onSetRadius callbacks. Per-tick state comes from
+// AppState via update(appState). Element IDs are preserved for CSS hooks in
 // style.css; do not rename without updating it.
 
-import { AnchorState } from "../AnchorController.js";
 import { DisplayUnit } from "../DisplayUnit.js";
 
 export class ControlToolbar {
@@ -15,7 +14,7 @@ export class ControlToolbar {
     this._onSetRadius = onSetRadius;
 
     this._radius = 0;
-    this._state = null;
+    this._isAnchored = false;
 
     this._container = document.createElement("div");
     this._container.id = "controlToolbar";
@@ -41,7 +40,7 @@ export class ControlToolbar {
     this._container
       .querySelector("#raiseAnchor")
       .addEventListener("click", () => {
-        if (this._state !== AnchorState.ANCHORED)
+        if (!this._isAnchored)
           return;
         if (!confirm("Do you really want to disable your anchor alarm?"))
           return;
@@ -111,23 +110,15 @@ export class ControlToolbar {
     );
   }
 
-  // Swap which button group is visible. "Down" states show the raise button;
-  // "up" states show the drop button. Use 'block' (not '') because the CSS
-  // default for these divs is display:none.
-  setState(anchorState) {
-    this._state = anchorState;
-    const isDown =
-      anchorState === AnchorState.ANCHORED ||
-      anchorState === AnchorState.DROPPING;
-    this._anchorDown.style.display = isDown ? "block" : "none";
-    this._anchorUp.style.display = isDown ? "none" : "block";
-  }
-
-  setRadius(radius) {
-    this._radius = radius;
-  }
-
+  // Swap which button group is visible based on AppState. "Anchored" shows the
+  // raise button; "raised" shows the drop button. Use 'block' (not '')
+  // because the CSS default for these divs is display:none.
   update(appState) {
+    this._isAnchored = appState.isAnchored();
+    this._anchorDown.style.display = this._isAnchored ? "block" : "none";
+    this._anchorUp.style.display = this._isAnchored ? "none" : "block";
+
+    this._radius = appState.anchor?.maxRadius?.value ?? 0;
     if (appState.anchor?.maxRadius)
       this._radiusEl.innerHTML = DisplayUnit.formatDisplay(appState.anchor.maxRadius, 0, this._radius);
     else

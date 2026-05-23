@@ -97,12 +97,18 @@ export const ScopePanel = L.Control.extend({
   // plus the green/orange/red warning on the minimum-depth row.
   update: function (state) {
 
+    // ScopePanel only shows while raised — it's the InfoPanel's counterpart
+    // in the bottom-right slot.
+    if (state.isAnchored()) {
+      this.hide();
+      return;
+    }
+
     //if we have none of the required parameters, dont even show.
     if (!state.belowSurface && (!state.tide || !state.belowKeel))
-      this._container.style.display = "none";
-    // only hide it, because this is conditional.
-    // else
-    //   this._container.style.display = "";
+      this.hide();
+    else
+      this.show();
 
     //scope depth calculation - only belowSurface is actually required
     if (state.belowSurface) {

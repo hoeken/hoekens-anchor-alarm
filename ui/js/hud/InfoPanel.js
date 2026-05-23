@@ -59,6 +59,14 @@ export const InfoPanel = L.Control.extend({
 
   update: function (state) {
 
+    // InfoPanel only makes sense while anchored. ScopePanel is its raised
+    // counterpart — the two are mutually exclusive in the bottom-right slot.
+    if (!state.isAnchored()) {
+      this.hide();
+      return;
+    }
+    this.show();
+
     if (state.tide) {
       this.setCurrentTide(state.tide.heightNow);
       this.arrangeTideTimes(state.tide.timeHigh, state.tide.timeLow);

@@ -34,8 +34,6 @@ export class AnchorOverlay {
     this.heading = 0;
     this.gpsOffsets = { x: 0, y: 0 };
 
-    this.dragHandler = null;
-
     this.radiusCircle = L.circle(this.anchorPosition, this.radius, {
       color: "green",
     }).addTo(map);
@@ -104,8 +102,6 @@ export class AnchorOverlay {
       this.radiusCircle.setLatLng(this.anchorPosition);
       this._refreshLine();
       this._refreshColor();
-      if (this.dragHandler)
-        this.dragHandler(this.anchorPosition);
     });
 
     this.radiusCircle.setLatLng(position);
@@ -116,8 +112,11 @@ export class AnchorOverlay {
   }
 
   setRadius(r) {
-    this.radius = r;
-    this.radiusCircle.setRadius(r);
+    // Defend against 0/NaN — a zero-radius circle gives degenerate bounds
+    // that crash fitBounds via NaN-valued projection math. Matches the
+    // fallback drop() uses internally.
+    this.radius = r > 0 ? r : 20;
+    this.radiusCircle.setRadius(this.radius);
     this._refreshColor();
     return this;
   }
@@ -131,11 +130,6 @@ export class AnchorOverlay {
     return this;
   }
 
-  onCrosshairDrag(cb) {
-    this.dragHandler = cb;
-    return this;
-  }
-
   getCrosshairPosition() {
     return this.crosshairMarker ? this.crosshairMarker.getLatLng() : null;
   }
@@ -144,9 +138,9 @@ export class AnchorOverlay {
     return this.radiusCircle.getBounds();
   }
 
-  // Single entry point driven from AnchorAlarm.updateMap once phase 5 lands.
-  // Reads everything from appState: dropped/raised from isAnchored(), anchor
-  // position/radius from anchor.position/maxRadius, and boat geometry from
+  // Single entry point driven from AnchorAlarm.updateMap. Reads everything
+  // from appState: dropped/raised from isAnchored(), anchor position/radius
+  // from anchor.position/maxRadius, and boat geometry from
   // currentCoordinates/boatConfig. On a raised transition, the crosshair
   // starts at the previously-dropped anchor position for a smooth UX.
   update(appState) {
@@ -156,19 +150,24 @@ export class AnchorOverlay {
       appState.boatConfig.gpsOffset,
     );
 
+    // Sync the radius circle unconditionally — it exists in both raised and
+    // dropped modes, and a stale (zero) radius gives degenerate bounds that
+    // crash fitBounds via NaN-valued projection math.
+    const r = appState.anchor?.maxRadius?.value;
+    if (r != null)
+      this.setRadius(r);
+
     if (appState.isAnchored()) {
       const pos = appState.getAnchorPosition();
-      const radius = appState.anchor.maxRadius?.value ?? this.radius;
       if (!this.dropped) {
-        this.drop(pos, radius);
+        this.drop(pos, this.radius);
       } else {
-        // Already dropped — keep marker/radius in sync with appState in case
-        // the server (or another client) moved them.
+        // Already dropped — keep position in sync with appState in case the
+        // server (or another client) moved the anchor.
         this.anchorPosition = pos;
         this.radiusCircle.setLatLng(pos);
         if (this.anchorMarker)
           this.anchorMarker.setLatLng(pos);
-        this.setRadius(parseInt(radius, 10) || 20);
         this._refreshLine();
       }
     } else if (this.dropped || !this.crosshairMarker) {
@@ -178,16 +177,6 @@ export class AnchorOverlay {
     }
 
     return this;
-  }
-
-  // Temporary boat-only update used by AnchorAlarm.updateMap until phase 5
-  // switches the call site to update(appState). Will be removed then.
-  updateBoat(state) {
-    this.setBoatPosition(
-      state.getPosition(),
-      state.boatConfig.heading,
-      state.boatConfig.gpsOffset,
-    );
   }
 
   // For the estimate flow: place the crosshair at a guessed anchor position.

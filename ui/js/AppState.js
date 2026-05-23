@@ -24,7 +24,7 @@ export class AppState {
     this.scope5 = 0;
     this.scope4 = 0;
     this.scope3 = 0;
-    this._anchorSuppressUntil = 0;
+    this._anchorSuppressUntil = { position: 0, maxRadius: 0, state: 0 };
   }
 
   websocketSubscribe(client) {
@@ -179,15 +179,21 @@ export class AppState {
 
     if (!this.anchor)
       this.anchor = {};
-    if (!this._anchorUpdatesSuppressed()) {
+    if (!this._anchorSuppressed("position"))
       this.anchor.position =
         this.extract(data, "navigation.anchor.position", false) ??
         this.anchor.position;
+    if (!this._anchorSuppressed("state"))
       this.anchor.state =
         this.extract(data, "navigation.anchor.state", false) ?? this.anchor.state;
-      this.anchor.maxRadius =
-        this.extract(data, "navigation.anchor.maxRadius", false) ??
-        this.anchor.maxRadius;
+    // maxRadius is treated as a UI preference: the server clears it on raise,
+    // but the toolbar/overlay want to keep the last set value so the next
+    // drop has a sensible default. We accept new non-null values from the
+    // server (e.g. another client changed it) but ignore nulls.
+    if (!this._anchorSuppressed("maxRadius")) {
+      const newMaxRadius = this.extract(data, "navigation.anchor.maxRadius", false);
+      if (newMaxRadius?.value != null)
+        this.anchor.maxRadius = newMaxRadius;
     }
     this.anchor.notification =
       this.extract(data, "notifications.navigation.anchor", false) ??
@@ -240,15 +246,17 @@ export class AppState {
     else if (path == "environment.tide.timeLow")
       (this.tide ??= {}).timeLow = apply(this.tide.timeLow);
     else if (path == "navigation.anchor.position") {
-      if (!this._anchorUpdatesSuppressed())
+      if (!this._anchorSuppressed("position"))
         this.anchor.position = apply(this.anchor.position);
     }
     else if (path == "navigation.anchor.state") {
-      if (!this._anchorUpdatesSuppressed())
+      if (!this._anchorSuppressed("state"))
         this.anchor.state = apply(this.anchor.state);
     }
     else if (path == "navigation.anchor.maxRadius") {
-      if (!this._anchorUpdatesSuppressed())
+      // maxRadius is preserved across raise (see extractAll comment) — ignore
+      // server nulls so the next drop still has a sensible default.
+      if (delta.value != null && !this._anchorSuppressed("maxRadius"))
         this.anchor.maxRadius = apply(this.anchor.maxRadius);
     }
     else if (path == "notifications.navigation.anchor")
@@ -257,15 +265,17 @@ export class AppState {
       console.log(`[websocket] Ignoring: ${path}`);
   }
 
-  // Client-initiated optimistic write into the anchor envelopes. Bumps the
-  // suppression timestamp so any in-flight server response or delta for the
-  // anchor paths is ignored until POST_ACTION_SETTLE_MS has elapsed. Only the
-  // keys present in `updates` are touched; pass `null` to clear a field.
+  // Client-initiated optimistic write into the anchor envelopes. Per-key
+  // suppression is bumped only for the paths we actually touch — that keeps
+  // estimateAnchorPosition (which only writes maxRadius) from blocking
+  // incoming position/state deltas from another client. Only the keys present
+  // in `updates` are touched; pass `null` to clear a field.
   applyClientAnchorState(updates = {}) {
     const timestamp = new Date().toISOString();
-    this._anchorSuppressUntil = Date.now() + POST_ACTION_SETTLE_MS;
+    const expireAt = Date.now() + POST_ACTION_SETTLE_MS;
 
     const set = (key, value) => {
+      this._anchorSuppressUntil[key] = expireAt;
       if (this.anchor[key]) {
         this.anchor[key].value = value;
         this.anchor[key].timestamp = timestamp;
@@ -299,11 +309,11 @@ export class AppState {
     this.anchor.position = snapshot.position;
     this.anchor.maxRadius = snapshot.maxRadius;
     this.anchor.state = snapshot.state;
-    this._anchorSuppressUntil = 0;
+    this._anchorSuppressUntil = { position: 0, maxRadius: 0, state: 0 };
   }
 
-  _anchorUpdatesSuppressed() {
-    return Date.now() < this._anchorSuppressUntil;
+  _anchorSuppressed(key) {
+    return Date.now() < this._anchorSuppressUntil[key];
   }
 
   calculate() {

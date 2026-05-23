@@ -236,26 +236,21 @@ class AnchorAlarm {
       state: this.state,
       map: this.map,
       radius: 0,
-    }).setBoatPosition(
-      this.state.getPosition(),
-      this.state.boatConfig.heading,
-      this.state.boatConfig.gpsOffset,
-    );
+    });
 
     this.anchorController = new AnchorController({
       appState: this.state,
       overlay: this.anchorOverlay,
-      toolbar: this.toolbar,
       signalK: this.signalK,
-      infoPanel: this.infoPanel,
-      scopePanel: this.scopePanel,
       statusBar: this.statusBar,
+      onChange: () => this.updateMap(),
     });
 
-    this.anchorOverlay.onCrosshairDrag((pos) =>
-      this.anchorController.updateCrosshairPosition(pos),
-    );
-
+    // Materialize the overlay against AppState before the estimate flow runs.
+    // If the server already has an anchor down, this paints the marker
+    // immediately; otherwise it creates the crosshair so setCrosshairPosition
+    // inside estimateAnchorPosition has something to move.
+    this.anchorOverlay.update(this.state);
     this.anchorController.estimateAnchorPosition();
   }
 
@@ -265,8 +260,7 @@ class AnchorAlarm {
     this.infoPanel.update(this.state);
     this.statusBar.update(this.state);
     this.scopePanel.update(this.state);
-    this.anchorController.reconcile();
-    this.anchorOverlay.updateBoat(this.state);
+    this.anchorOverlay.update(this.state);
     this.fleetLayer.update(this.state);
   }
 
