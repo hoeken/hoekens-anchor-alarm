@@ -188,12 +188,17 @@ export class AppState {
         this.extract(data, "navigation.anchor.state", false) ?? this.anchor.state;
     // maxRadius is treated as a UI preference: the server clears it on raise,
     // but the toolbar/overlay want to keep the last set value so the next
-    // drop has a sensible default. We accept new non-null values from the
-    // server (e.g. another client changed it) but ignore nulls.
+    // drop has a sensible default. We always adopt the envelope (so display
+    // units survive even when the server's value is null on first load with
+    // the anchor up) and just carry forward the prior value when the server
+    // sends null.
     if (!this._anchorSuppressed("maxRadius")) {
       const newMaxRadius = this.extract(data, "navigation.anchor.maxRadius", false);
-      if (newMaxRadius?.value != null)
+      if (newMaxRadius) {
+        if (newMaxRadius.value == null && this.anchor.maxRadius?.value != null)
+          newMaxRadius.value = this.anchor.maxRadius.value;
         this.anchor.maxRadius = newMaxRadius;
+      }
     }
     this.anchor.notification =
       this.extract(data, "notifications.navigation.anchor", false) ??
