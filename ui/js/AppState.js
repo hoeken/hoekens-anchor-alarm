@@ -9,6 +9,12 @@ const DEFAULT_FRESHNESS_SEC = 300;
 const DELTA_FAST_SPEED = 250;
 const DELTA_SLOW_SPEED = 1000;
 
+// Window after a client-initiated anchor change during which incoming server
+// updates for anchor.position/state/maxRadius are ignored. Covers in-flight
+// polls whose response was computed before the server processed our request,
+// and the brief gap before the matching websocket delta arrives.
+export const POST_ACTION_SETTLE_MS = 3000;
+
 export class AppState {
   constructor() {
     this.anchor = {};
@@ -18,6 +24,7 @@ export class AppState {
     this.scope5 = 0;
     this.scope4 = 0;
     this.scope3 = 0;
+    this._anchorSuppressUntil = 0;
   }
 
   websocketSubscribe(client) {
@@ -127,6 +134,15 @@ export class AppState {
       return L.latLng(0, 0);
   }
 
+  // True when either the position is set or the server-side anchor.state is
+  // "on". OR'd to err toward "alarm is active" if the two ever diverge.
+  isAnchored() {
+    return (
+      !!this.anchor.position?.value ||
+      this.anchor.state?.value === "on"
+    );
+  }
+
   extract(tree, path, fresh = true, maxAge = DEFAULT_FRESHNESS_SEC) {
     let data = SignalKHelper.extract(tree, path);
 
@@ -163,14 +179,16 @@ export class AppState {
 
     if (!this.anchor)
       this.anchor = {};
-    this.anchor.position =
-      this.extract(data, "navigation.anchor.position", false) ??
-      this.anchor.position;
-    this.anchor.state =
-      this.extract(data, "navigation.anchor.state", false) ?? this.anchor.state;
-    this.anchor.maxRadius =
-      this.extract(data, "navigation.anchor.maxRadius", false) ??
-      this.anchor.maxRadius;
+    if (!this._anchorUpdatesSuppressed()) {
+      this.anchor.position =
+        this.extract(data, "navigation.anchor.position", false) ??
+        this.anchor.position;
+      this.anchor.state =
+        this.extract(data, "navigation.anchor.state", false) ?? this.anchor.state;
+      this.anchor.maxRadius =
+        this.extract(data, "navigation.anchor.maxRadius", false) ??
+        this.anchor.maxRadius;
+    }
     this.anchor.notification =
       this.extract(data, "notifications.navigation.anchor", false) ??
       this.anchor.notification;
@@ -221,16 +239,71 @@ export class AppState {
       (this.tide ??= {}).timeHigh = apply(this.tide.timeHigh);
     else if (path == "environment.tide.timeLow")
       (this.tide ??= {}).timeLow = apply(this.tide.timeLow);
-    else if (path == "navigation.anchor.position")
-      this.anchor.position = apply(this.anchor.position);
-    else if (path == "navigation.anchor.state")
-      this.anchor.state = apply(this.anchor.state);
-    else if (path == "navigation.anchor.maxRadius")
-      this.anchor.maxRadius = apply(this.anchor.maxRadius);
+    else if (path == "navigation.anchor.position") {
+      if (!this._anchorUpdatesSuppressed())
+        this.anchor.position = apply(this.anchor.position);
+    }
+    else if (path == "navigation.anchor.state") {
+      if (!this._anchorUpdatesSuppressed())
+        this.anchor.state = apply(this.anchor.state);
+    }
+    else if (path == "navigation.anchor.maxRadius") {
+      if (!this._anchorUpdatesSuppressed())
+        this.anchor.maxRadius = apply(this.anchor.maxRadius);
+    }
     else if (path == "notifications.navigation.anchor")
       this.anchor.notification = apply(this.anchor.notification);
     else if (!path.startsWith("notifications"))
       console.log(`[websocket] Ignoring: ${path}`);
+  }
+
+  // Client-initiated optimistic write into the anchor envelopes. Bumps the
+  // suppression timestamp so any in-flight server response or delta for the
+  // anchor paths is ignored until POST_ACTION_SETTLE_MS has elapsed. Only the
+  // keys present in `updates` are touched; pass `null` to clear a field.
+  applyClientAnchorState(updates = {}) {
+    const timestamp = new Date().toISOString();
+    this._anchorSuppressUntil = Date.now() + POST_ACTION_SETTLE_MS;
+
+    const set = (key, value) => {
+      if (this.anchor[key]) {
+        this.anchor[key].value = value;
+        this.anchor[key].timestamp = timestamp;
+      } else {
+        this.anchor[key] = { value, timestamp };
+      }
+    };
+
+    if ("position" in updates)
+      set("position", updates.position);
+    if ("maxRadius" in updates)
+      set("maxRadius", updates.maxRadius);
+    if ("state" in updates)
+      set("state", updates.state);
+  }
+
+  // Capture the current anchor envelopes so a failed client action can roll
+  // back. Deep-cloned so subsequent in-place mutations (applyClientAnchorState,
+  // cleanDisplayUnits) don't corrupt the snapshot.
+  snapshotAnchorState() {
+    return structuredClone({
+      position: this.anchor.position ?? null,
+      maxRadius: this.anchor.maxRadius ?? null,
+      state: this.anchor.state ?? null,
+    });
+  }
+
+  // Restore from a snapshot and release the suppression window so the next
+  // server update can land immediately.
+  restoreAnchorState(snapshot) {
+    this.anchor.position = snapshot.position;
+    this.anchor.maxRadius = snapshot.maxRadius;
+    this.anchor.state = snapshot.state;
+    this._anchorSuppressUntil = 0;
+  }
+
+  _anchorUpdatesSuppressed() {
+    return Date.now() < this._anchorSuppressUntil;
   }
 
   calculate() {

@@ -2,18 +2,29 @@
 
 ## Watch Zones
 
-- refactor out anchor watch zone shapes
-  - circle
-  - polygon
-  - sector
-  - ???
-- when anchor up, UI shows a zone shape dropdown
+- refactor 1: simplify and homogenize anchor controller / overlay code
+  - remove the the AnchorController.reconcile() code
+  - we should always default to the state from the server (appState)
+  - when local changes are made, update our local appState config
+  - ignore anchor config updates from the server for POST_ACTION_SETTLE_MS seconds
+    - this should be moved to AppState
+    - anchor.position
+    - anchor.maxRadius
+    - anchor.state
+  - add update(appState) function to AnchorOverlay to homogenize api
+
+- refactor2: anchor watch zone shapes
+  - circle (anchor position + radius) 
+  - polygon (to be implemented)
+  - sector (to be implemented)
+- when anchor up, UI shows the zone shape dropdown selector + zone shape controls (if any)
+- when anchor down, UI shows the zone shape controls (if any)
 - each zone shape class controls:
   - drawing zone on the map
-  - zone edit ui
+  - zone shape controls
   - detecting inside/outside condition
   - passing zone configuration to AnchorController
-- we also need a way to use the same class in the UI and in backend to avoid duplication of code
+- we also need a way to use the same class in the UI and in the backend to avoid duplication of code
 
 ## UI Config
 
