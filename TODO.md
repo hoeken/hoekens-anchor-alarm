@@ -2,21 +2,32 @@
 
 ## Watch Zones
 
-- refactor 1: simplify and homogenize anchor controller / overlay code
-  - remove the the AnchorController.reconcile() code
-  - we should always default to the state from the server (appState)
-  - when local changes are made, update our local appState config
-  - ignore anchor config updates from the server for POST_ACTION_SETTLE_MS seconds
-    - this should be moved to AppState
-    - anchor.position
-    - anchor.maxRadius
-    - anchor.state
-  - add update(appState) function to AnchorOverlay to homogenize api
+currently, there is only a single style of anchor watch available:  a circle with a center at anchor.position and radius of maxRadius.  i want to eventually expand that to allow for different types of anchor watch zone such as a sector, or a polygon.
 
-- refactor2: anchor watch zone shapes
+in order to do that, we need to refactor the existing behavior out into a new class.
+
+- anchor watch zone shapes
   - circle (anchor position + radius) 
-  - polygon (to be implemented)
-  - sector (to be implemented)
+  - polygon (to be implemented at a later date)
+  - sector (to be implemented at a later date)
+- AnchorWatchZone should have a getConfig that returns something like this:
+  {
+    type: "circle"
+    radius: 50
+  }
+  or
+  {
+    type: "sector",
+    radius: 60,
+    start: 90,
+    end: 270
+  }
+  or
+  {
+    type: "polygon",
+    points: [...]
+  }
+- config should not contain the anchor position, that is stored in its own path in signalk.
 - when anchor up, UI shows the zone shape dropdown selector + zone shape controls (if any)
 - when anchor down, UI shows the zone shape controls (if any)
 - each zone shape class controls:
