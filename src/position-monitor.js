@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-const Utils = require("./utils");
+import { Utils } from "./utils.js";
+import { watchZoneFromConfig } from "../shared/watch-zones/index.js";
 
-function attach(app, plugin) {
+export function attach(app, plugin) {
   plugin.startWatchingPosition = function () {
     if (plugin.onStop.length > 0)
       return;
@@ -82,9 +83,12 @@ function attach(app, plugin) {
 
   plugin.checkPosition = function (vesselPosition) {
     const configuration = plugin.configuration;
-    const maxRadius = configuration.radius;
     const anchorPosition = configuration.position;
+    const zone = watchZoneFromConfig(configuration.zone);
 
+    // currentRadius keeps its v2.1 semantics — straight-line distance from
+    // anchor to GPS. Even with non-circle zones it's a useful display value
+    // and downstream SignalK consumers (logging, telemetry) still rely on it.
     const currentRadius = Utils.calc_distance(
       vesselPosition.latitude,
       vesselPosition.longitude,
@@ -96,7 +100,7 @@ function attach(app, plugin) {
       vesselPosition: vesselPosition,
       anchorPosition: anchorPosition,
       currentRadius: currentRadius,
-      maxRadius: maxRadius,
+      zone: zone,
       isSet: false,
     });
 
@@ -104,8 +108,8 @@ function attach(app, plugin) {
     let do_update = false;
     let message = "Watching";
 
-    //compare our radius
-    if (maxRadius != null && currentRadius > maxRadius) {
+    const outside = !zone.contains(vesselPosition, anchorPosition);
+    if (outside) {
       //okay, we're dragging.
       new_state = configuration.state;
       message = `Anchor Dragging (${Math.round(currentRadius)}m)`;
@@ -145,5 +149,3 @@ function attach(app, plugin) {
     }
   };
 }
-
-module.exports = { attach };

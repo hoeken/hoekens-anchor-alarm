@@ -16,4 +16,11 @@ export default defineConfig({
       },
     },
   },
+  server: {
+    fs: {
+      // Allow serving files from the project root so the dev server can load
+      // modules under ../shared/ (relative to ui/).
+      allow: [".."],
+    },
+  },
 });

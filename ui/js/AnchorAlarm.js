@@ -120,7 +120,7 @@ class AnchorAlarm {
       getMapContainer: () => this.map && this.map.getContainer(),
       onRaise: () => this.anchorController.requestRaise(),
       onDrop: () => this.anchorController.requestDrop(),
-      onSetRadius: (newRadius, convert) => this.anchorController.setRadius(newRadius, convert),
+      onSetZone: (zoneConfig) => this.anchorController.setZone(zoneConfig),
     });
 
     this.loadInitialData();
@@ -233,7 +233,6 @@ class AnchorAlarm {
     this.anchorOverlay = new AnchorOverlay({
       state: this.state,
       map: this.map,
-      radius: 0,
     });
 
     this.anchorController = new AnchorController({

@@ -13,10 +13,13 @@
  * limitations under the License.
  */
 
-const { AnchorError } = require("./anchor-service");
+import { createRequire } from "module";
+import { AnchorError } from "./anchor-service.js";
+
+const require = createRequire(import.meta.url);
 const openapi = require("./openApi.json");
 
-function register(app, plugin, router) {
+export function register(app, plugin, router) {
   plugin.getOpenApi = () => openapi;
 
   function fail(res, err) {
@@ -41,8 +44,18 @@ function register(app, plugin, router) {
     try {
       plugin.anchor.drop({
         position: req.body.position,
+        zone: req.body.zone,
         radius: req.body.radius,
       });
+      res.json({ statusCode: 200, state: "COMPLETED" });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  router.post("/setZone", (req, res) => {
+    try {
+      plugin.anchor.setZone(req.body.zone);
       res.json({ statusCode: 200, state: "COMPLETED" });
     } catch (err) {
       fail(res, err);
@@ -76,5 +89,3 @@ function register(app, plugin, router) {
     });
   });
 }
-
-module.exports = { register };

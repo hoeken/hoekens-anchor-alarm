@@ -13,29 +13,56 @@
  * limitations under the License.
  */
 
-class AnchorError extends Error {
+import { watchZoneFromConfig } from "../shared/watch-zones/index.js";
+
+export class AnchorError extends Error {
   constructor(message) {
     super(message);
     this.name = "AnchorError";
   }
 }
 
-class ValidationError extends AnchorError {
+export class ValidationError extends AnchorError {
   constructor(message) {
     super(message);
     this.name = "ValidationError";
   }
 }
 
-class StateError extends AnchorError {
+export class StateError extends AnchorError {
   constructor(message) {
     super(message);
     this.name = "StateError";
   }
 }
 
-function attach(app, plugin) {
-  function drop({ position, radius }) {
+// Build a WatchZone from one of: a full zone config object, a legacy radius
+// number, or the existing configuration on the plugin. Throws ValidationError
+// when none of the inputs yield a usable zone.
+function resolveZone({ zone, radius, plugin }) {
+  if (zone != null) {
+    if (typeof zone !== "object")
+      throw new ValidationError("zone must be an object");
+    try {
+      return watchZoneFromConfig(zone);
+    } catch (err) {
+      throw new ValidationError(err.message);
+    }
+  }
+  if (radius != null) {
+    const parsed = parseFloat(radius);
+    if (isNaN(parsed))
+      throw new ValidationError("radius must be numeric");
+    return watchZoneFromConfig({ type: "circle", radius: parsed });
+  }
+  if (plugin.configuration.zone) {
+    return watchZoneFromConfig(plugin.configuration.zone);
+  }
+  throw new ValidationError("zone or radius required");
+}
+
+export function attach(app, plugin) {
+  function drop({ position, zone, radius }) {
     if (
       !position ||
       position.latitude == null ||
@@ -52,10 +79,7 @@ function attach(app, plugin) {
       throw new ValidationError("position latitude and longitude must be numeric");
     }
 
-    const parsedRadius = radius == null ? null : parseFloat(radius);
-    if (parsedRadius != null && isNaN(parsedRadius)) {
-      throw new ValidationError("radius must be numeric");
-    }
+    const resolvedZone = resolveZone({ zone, radius, plugin });
 
     app.debug(
       "drop anchor at: " +
@@ -67,25 +91,21 @@ function attach(app, plugin) {
     plugin.updateAnchorState({
       anchorPosition: parsedPosition,
       currentRadius: 0,
-      maxRadius: parsedRadius,
+      zone: resolvedZone,
       isSet: true,
     });
 
     plugin.configuration.position = parsedPosition;
-    plugin.configuration.radius = parsedRadius;
+    plugin.configuration.zone = resolvedZone.getConfig();
     plugin.configuration.on = true;
 
     plugin.startWatchingPosition();
     plugin.savePluginOptions();
   }
 
-  function setRadius(radius) {
-    if (radius == null) {
-      throw new ValidationError("radius required");
-    }
-    const parsedRadius = parseFloat(radius);
-    if (isNaN(parsedRadius)) {
-      throw new ValidationError("radius must be numeric");
+  function setZone(zone) {
+    if (zone == null) {
+      throw new ValidationError("zone required");
     }
 
     if (!plugin.configuration.position) {
@@ -97,17 +117,31 @@ function attach(app, plugin) {
       throw new StateError("no GPS position available");
     }
 
-    app.debug("set anchor radius: " + parsedRadius);
+    const resolvedZone = resolveZone({ zone, plugin });
+
+    app.debug("set anchor zone: " + JSON.stringify(resolvedZone.getConfig()));
 
     plugin.updateAnchorState({
       vesselPosition: vesselPosition,
       anchorPosition: plugin.configuration.position,
-      maxRadius: parsedRadius,
+      zone: resolvedZone,
       isSet: false,
     });
 
-    plugin.configuration.radius = parsedRadius;
+    plugin.configuration.zone = resolvedZone.getConfig();
     plugin.savePluginOptions();
+  }
+
+  // Legacy shim: treats `radius` as a circle zone and routes through setZone.
+  function setRadius(radius) {
+    if (radius == null) {
+      throw new ValidationError("radius required");
+    }
+    const parsed = parseFloat(radius);
+    if (isNaN(parsed)) {
+      throw new ValidationError("radius must be numeric");
+    }
+    setZone({ type: "circle", radius: parsed });
   }
 
   function raise() {
@@ -116,14 +150,12 @@ function attach(app, plugin) {
     plugin.updateAnchorState({ isSet: false });
 
     delete plugin.configuration.position;
-    delete plugin.configuration.radius;
+    delete plugin.configuration.zone;
     plugin.configuration.on = false;
 
     plugin.stopWatchingPosition();
     plugin.savePluginOptions();
   }
 
-  plugin.anchor = { drop, setRadius, raise };
+  plugin.anchor = { drop, setZone, setRadius, raise };
 }
-
-module.exports = { attach, AnchorError, ValidationError, StateError };

@@ -1,11 +1,13 @@
+import { deg2rad, rad2deg, haversineDistance } from "../../shared/geo/distance.js";
+
 export class GeoMath {
   static deg2rad(deg) {
-    return deg * (Math.PI / 180);
+    return deg2rad(deg);
   }
 
   // Convert radians to degrees
   static rad2deg(radians) {
-    return (radians * 180) / Math.PI;
+    return rad2deg(radians);
   }
 
   static normalizeAngle(angle) {
@@ -23,18 +25,7 @@ export class GeoMath {
   }
 
   static calculateDistance(lat1, lon1, lat2, lon2) {
-    let R = 6371000; // Radius of the earth in m
-    let dLat = GeoMath.deg2rad(lat2 - lat1);
-    let dLon = GeoMath.deg2rad(lon2 - lon1);
-    let a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(GeoMath.deg2rad(lat1)) *
-      Math.cos(GeoMath.deg2rad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-    let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    let d = R * c; // Distance in m
-    return d;
+    return haversineDistance(lat1, lon1, lat2, lon2);
   }
 
   static calculateBearing(lat1, lon1, lat2, lon2) {

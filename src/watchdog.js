@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-class Watchdog {
+export class Watchdog {
   constructor(timeout, onTimeout) {
     this.timeout = timeout;
     this.onTimeout = onTimeout;
@@ -38,5 +38,3 @@ class Watchdog {
     }
   }
 }
-
-module.exports = Watchdog;

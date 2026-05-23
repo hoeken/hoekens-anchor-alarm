@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-class SignalKBus {
+export class SignalKBus {
   constructor(app, pluginId) {
     this.app = app;
     this.pluginId = pluginId;
@@ -56,5 +56,3 @@ class SignalKBus {
     this.sendMetas();
   }
 }
-
-module.exports = SignalKBus;

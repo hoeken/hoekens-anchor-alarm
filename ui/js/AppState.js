@@ -3,6 +3,7 @@
 import { SignalKHelper } from "./SignalKHelper.js";
 import { BoatConfig } from "./BoatConfig.js";
 import { GeoMath } from "./GeoMath.js";
+import { watchZoneFromConfig } from "../../shared/watch-zones/index.js";
 
 const DEFAULT_FRESHNESS_SEC = 300;
 
@@ -24,7 +25,7 @@ export class AppState {
     this.scope5 = 0;
     this.scope4 = 0;
     this.scope3 = 0;
-    this._anchorSuppressUntil = { position: 0, maxRadius: 0, state: 0 };
+    this._anchorSuppressUntil = { position: 0, maxRadius: 0, state: 0, watchZone: 0 };
   }
 
   websocketSubscribe(client) {
@@ -97,6 +98,13 @@ export class AppState {
           },
           {
             path: "navigation.anchor.maxRadius",
+            minPeriod: DELTA_FAST_SPEED,
+            format: "full",
+            policy: "instant",
+            sendMeta: "all",
+          },
+          {
+            path: "navigation.anchor.watchZone",
             minPeriod: DELTA_FAST_SPEED,
             format: "full",
             policy: "instant",
@@ -200,6 +208,17 @@ export class AppState {
         this.anchor.maxRadius = newMaxRadius;
       }
     }
+    // watchZone follows the same UI-preference rule as maxRadius: keep the
+    // last-known shape across raise so the next drop reuses it. Server nulls
+    // (on raise) are ignored; we keep the prior envelope.
+    if (!this._anchorSuppressed("watchZone")) {
+      const newWatchZone = this.extract(data, "navigation.anchor.watchZone", false);
+      if (newWatchZone) {
+        if (newWatchZone.value == null && this.anchor.watchZone?.value != null)
+          newWatchZone.value = this.anchor.watchZone.value;
+        this.anchor.watchZone = newWatchZone;
+      }
+    }
     this.anchor.notification =
       this.extract(data, "notifications.navigation.anchor", false) ??
       this.anchor.notification;
@@ -264,6 +283,11 @@ export class AppState {
       if (delta.value != null && !this._anchorSuppressed("maxRadius"))
         this.anchor.maxRadius = apply(this.anchor.maxRadius);
     }
+    else if (path == "navigation.anchor.watchZone") {
+      // Same preserve-across-raise rule as maxRadius.
+      if (delta.value != null && !this._anchorSuppressed("watchZone"))
+        this.anchor.watchZone = apply(this.anchor.watchZone);
+    }
     else if (path == "notifications.navigation.anchor")
       this.anchor.notification = apply(this.anchor.notification);
     else if (!path.startsWith("notifications"))
@@ -295,6 +319,8 @@ export class AppState {
       set("maxRadius", updates.maxRadius);
     if ("state" in updates)
       set("state", updates.state);
+    if ("watchZone" in updates)
+      set("watchZone", updates.watchZone);
   }
 
   // Capture the current anchor envelopes so a failed client action can roll
@@ -305,6 +331,7 @@ export class AppState {
       position: this.anchor.position ?? null,
       maxRadius: this.anchor.maxRadius ?? null,
       state: this.anchor.state ?? null,
+      watchZone: this.anchor.watchZone ?? null,
     });
   }
 
@@ -314,7 +341,22 @@ export class AppState {
     this.anchor.position = snapshot.position;
     this.anchor.maxRadius = snapshot.maxRadius;
     this.anchor.state = snapshot.state;
-    this._anchorSuppressUntil = { position: 0, maxRadius: 0, state: 0 };
+    this.anchor.watchZone = snapshot.watchZone;
+    this._anchorSuppressUntil = { position: 0, maxRadius: 0, state: 0, watchZone: 0 };
+  }
+
+  // Build a WatchZone instance from current state. Used by the overlay/controls
+  // factory and by AnchorController when posting drop/setZone. Falls back to a
+  // default circle when the server hasn't published a zone yet (e.g., first
+  // load with anchor up) so the UI always has a shape to draw.
+  getWatchZone() {
+    const config = this.anchor.watchZone?.value;
+    if (config && typeof config === "object")
+      return watchZoneFromConfig(config);
+    const radius = this.anchor.maxRadius?.value;
+    if (Number.isFinite(radius) && radius > 0)
+      return watchZoneFromConfig({ type: "circle", radius });
+    return watchZoneFromConfig({ type: "circle" });
   }
 
   _anchorSuppressed(key) {

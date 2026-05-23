@@ -2,7 +2,8 @@
   "name": "hoekens-anchor-alarm",
   "version": "2.1.0",
   "description": "Web app based anchor alarm with scope calculator, scribble tracks, engine override, and physically accurate icons.",
-  "main": "src/index.js",
+  "main": "src/index.cjs",
+  "type": "module",
   "scripts": {
     "test": "echo \"no tests — Signal K plugin CI validates lifecycle and schema\" && exit 0",
     "release": "git tag -d v$npm_package_version; git tag v$npm_package_version && git push --tags && git push && npm publish",
@@ -16,6 +17,7 @@
   },
   "files": [
     "src",
+    "shared",
     "public"
   ],
   "lint-staged": {

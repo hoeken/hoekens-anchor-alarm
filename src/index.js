@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-const Watchdog = require("./watchdog");
-const Schema = require("./schema");
-const SignalKBus = require("./signalk-bus");
-const AnchorState = require("./anchor-state");
-const PositionMonitor = require("./position-monitor");
-const AnchorService = require("./anchor-service");
-const HttpRoutes = require("./http-routes");
+import { Watchdog } from "./watchdog.js";
+import { metas, buildSchema, applyDefaults, migrateConfig } from "./schema.js";
+import { SignalKBus } from "./signalk-bus.js";
+import { attach as attachAnchorState } from "./anchor-state.js";
+import { attach as attachPositionMonitor } from "./position-monitor.js";
+import { attach as attachAnchorService } from "./anchor-service.js";
+import { register as registerHttpRoutes } from "./http-routes.js";
 
-module.exports = function (app) {
+export default function (app) {
   const plugin = {};
 
   // ============================================================
@@ -47,16 +47,16 @@ module.exports = function (app) {
   // ============================================================
 
   plugin.schema = function () {
-    return Schema.buildSchema(app);
+    return buildSchema(app);
   };
 
   // ============================================================
   // MODULE WIRING
   // ============================================================
 
-  AnchorState.attach(app, plugin);
-  PositionMonitor.attach(app, plugin);
-  AnchorService.attach(app, plugin);
+  attachAnchorState(app, plugin);
+  attachPositionMonitor(app, plugin);
+  attachAnchorService(app, plugin);
 
   // ============================================================
   // PUT / ACTION HANDLERS (legacy — HTTP routes are canonical)
@@ -91,7 +91,7 @@ module.exports = function (app) {
   // ============================================================
 
   plugin.registerWithRouter = function (router) {
-    HttpRoutes.register(app, plugin, router);
+    registerHttpRoutes(app, plugin, router);
   };
 
   // ============================================================
@@ -116,10 +116,19 @@ module.exports = function (app) {
     plugin.alarm_state = "normal";
     plugin.updateAnchorAlarm(plugin.alarm_state, "Started", ["visual"]);
 
-    for (const [key, value] of Object.entries(Schema.metas))
+    for (const [key, value] of Object.entries(metas))
       plugin.bus.queueMeta(key, value);
 
-    plugin.configuration = Schema.applyDefaults(app, props || {});
+    plugin.configuration = props || {};
+    // One-shot v2.1 -> v2.2 upgrade: legacy `radius` becomes a `zone` config.
+    // Persist immediately so the next restart sees the migrated shape.
+    const migrated = migrateConfig(plugin.configuration);
+    plugin.configuration = applyDefaults(app, plugin.configuration);
+    if (migrated) {
+      app.debug("migrated legacy radius config to zone shape");
+      plugin.savePluginOptions();
+    }
+
     try {
       //save our anchor roller height to the tree so we can access it from the web side
       if (typeof plugin.configuration["bowAnchorRollerHeight"] != "undefined")
@@ -145,12 +154,12 @@ module.exports = function (app) {
       //should we be watching?
       const isOn = plugin.configuration["on"];
       const position = plugin.configuration["position"];
-      const radius = plugin.configuration["radius"];
+      const zone = plugin.configuration["zone"];
       if (
         typeof isOn != "undefined" &&
         isOn &&
         typeof position != "undefined" &&
-        typeof radius != "undefined"
+        typeof zone != "undefined"
       ) {
         plugin.startWatchingPosition();
       }
@@ -195,4 +204,4 @@ module.exports = function (app) {
   };
 
   return plugin;
-};
+}

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-function attach(app, plugin) {
+export function attach(app, plugin) {
   plugin.updateAnchorAlarm = function (state, message, method) {
     if (!message)
       message = state.charAt(0).toUpperCase() + state.slice(1);
@@ -51,31 +51,39 @@ function attach(app, plugin) {
         );
       }
 
-      if (params.maxRadius != null) {
-        const maxRadius = parseFloat(params.maxRadius);
-        plugin.bus.queueDelta("navigation.anchor.maxRadius", maxRadius);
-        const zones = [
-          {
-            state: "normal",
-            lower: 0,
-            upper: maxRadius,
-          },
-          {
-            state: plugin.configuration.state,
-            lower: maxRadius,
-          },
-        ];
-        plugin.bus.queueDelta("navigation.anchor.meta", { zones: zones });
+      if (params.zone) {
+        plugin.bus.queueDelta("navigation.anchor.watchZone", params.zone.getConfig());
+        // Keep maxRadius (and the legacy zones meta array) populated for
+        // circle shapes so external consumers like Freeboard keep working.
+        // Non-circle shapes clear maxRadius — the watchZone path is the
+        // canonical source of truth.
+        const circleRadius = params.zone.getCircleRadius();
+        if (circleRadius != null) {
+          plugin.bus.queueDelta("navigation.anchor.maxRadius", circleRadius);
+          const zones = [
+            {
+              state: "normal",
+              lower: 0,
+              upper: circleRadius,
+            },
+            {
+              state: plugin.configuration.state,
+              lower: circleRadius,
+            },
+          ];
+          plugin.bus.queueDelta("navigation.anchor.meta", { zones: zones });
+        } else {
+          plugin.bus.queueDelta("navigation.anchor.maxRadius", null);
+        }
       }
     } else {
       plugin.bus.queueDelta("navigation.anchor.position", null);
       plugin.bus.queueDelta("navigation.anchor.state", "off");
       plugin.bus.queueDelta("navigation.anchor.currentRadius", null);
       plugin.bus.queueDelta("navigation.anchor.maxRadius", null);
+      plugin.bus.queueDelta("navigation.anchor.watchZone", null);
     }
 
     plugin.bus.sendUpdates();
   };
 }
-
-module.exports = { attach };

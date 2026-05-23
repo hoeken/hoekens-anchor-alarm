@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-const metas = {
+export const metas = {
   "design.bowAnchorRollerHeight": {
     units: "m",
     displayUnits: {
@@ -39,9 +39,12 @@ const metas = {
     description: "Anchor position, probably an estimate at best",
   },
   "navigation.anchor.state": { "description": "Anchor alarm state: 'on' or 'off'" },
+  "navigation.anchor.watchZone": {
+    description: "Anchor watch zone configuration (shape + parameters). Anchor position is stored separately on navigation.anchor.position.",
+  },
 };
 
-const requiredPaths = [
+export const requiredPaths = [
   {
     path: "navigation.position",
     description: "Required - you need a GPS position of some sort to watch.",
@@ -107,11 +110,10 @@ const requiredPaths = [
   },
 ];
 
-function buildSchema(app) {
+export function buildSchema(app) {
   const schemaData = {
     title: "Hoeken's Anchor Alarm",
     type: "object",
-    required: ["radius"],
     properties: {
       pathChecks: {
         title: "Path Checks",
@@ -178,11 +180,24 @@ function buildSchema(app) {
         description: "Used for saving state in case of SignalK restart.",
         default: false,
       },
-      radius: {
-        type: "number",
-        title: "Alarm Radius (m)",
-        description: "Used for saving state in case of SignalK restart.",
-        default: 60,
+      zone: {
+        type: "object",
+        title: "Anchor Watch Zone",
+        description: "Shape + parameters of the anchor watch zone. Used for saving state in case of SignalK restart.",
+        default: { type: "circle", radius: 60 },
+        properties: {
+          type: {
+            title: "Shape",
+            type: "string",
+            enum: ["circle"],
+            default: "circle",
+          },
+          radius: {
+            title: "Radius (m)",
+            type: "number",
+            default: 60,
+          },
+        },
       },
       position: {
         type: "object",
@@ -221,14 +236,34 @@ function buildSchema(app) {
 // the user hasn't explicitly saved. SignalK does not materialize schema
 // defaults into the saved options blob, so downstream code (and the
 // /ui-config endpoint) would otherwise see undefined for unset properties.
-function applyDefaults(app, config) {
+export function applyDefaults(app, config) {
   const schema = buildSchema(app);
   for (const [key, prop] of Object.entries(schema.properties)) {
     if (config[key] === undefined && prop.default !== undefined) {
-      config[key] = prop.default;
+      // Clone object/array defaults so mutating the live config doesn't
+      // poison the schema for the next call.
+      config[key] = typeof prop.default === "object" && prop.default !== null
+        ? structuredClone(prop.default)
+        : prop.default;
     }
   }
   return config;
 }
 
-module.exports = { metas, requiredPaths, buildSchema, applyDefaults };
+// One-shot upgrade from the v2.1 shape (top-level `radius` field) to the v2.2
+// shape (`zone` object). Returns true when the config was actually mutated so
+// callers can persist the result. Idempotent: a config that already has `zone`
+// is left untouched.
+export function migrateConfig(config) {
+  if (config.zone && config.zone.type)
+    return false;
+  const radius = Number(config.radius);
+  if (Number.isFinite(radius) && radius > 0) {
+    config.zone = { type: "circle", radius };
+    delete config.radius;
+    return true;
+  }
+  // No legacy radius and no zone yet — applyDefaults will populate the default
+  // zone. Nothing to persist as a migration result.
+  return false;
+}

@@ -1,4 +1,4 @@
-// AnchorController turns user actions (drop / raise / set radius / estimate)
+// AnchorController turns user actions (drop / raise / set zone / estimate)
 // into optimistic writes against AppState plus a backing POST to SignalK. All
 // visible state lives in AppState; AnchorAlarm.updateMap fans that out to the
 // overlay and HUD panels. After each optimistic write we call onChange() so
@@ -6,7 +6,6 @@
 // POST failure we restore from the pre-write snapshot.
 
 import { GeoMath } from "./GeoMath.js";
-import { DisplayUnit } from "./DisplayUnit.js";
 
 export class AnchorController {
   constructor({ appState, overlay, signalK, statusBar, onChange }) {
@@ -28,18 +27,19 @@ export class AnchorController {
     if (!pos)
       return;
 
-    const radius = this._appState.anchor.maxRadius?.value ?? 0;
+    const zoneConfig = this._currentZoneConfig();
     const snapshot = this._appState.snapshotAnchorState();
     this._pending = true;
     this._appState.applyClientAnchorState({
       position: { latitude: pos.lat, longitude: pos.lng },
-      maxRadius: radius,
+      maxRadius: zoneConfig.type === "circle" ? zoneConfig.radius : null,
+      watchZone: zoneConfig,
       state: "on",
     });
     this._onChange();
 
     this._signalK
-      .dropAnchor({ latitude: pos.lat, longitude: pos.lng }, radius)
+      .dropAnchor({ latitude: pos.lat, longitude: pos.lng }, zoneConfig)
       .then(() => {
         this._statusBar.clear("anchor-drop");
       })
@@ -60,9 +60,9 @@ export class AnchorController {
 
     const snapshot = this._appState.snapshotAnchorState();
     this._pending = true;
-    // Intentionally not clearing maxRadius — preserved for UI continuity so
-    // the toolbar and overlay keep the last set value and the next drop has
-    // a sensible default. AppState also filters server nulls for this path.
+    // Intentionally not clearing maxRadius / watchZone — preserved for UI
+    // continuity so the toolbar and overlay keep the last set values and the
+    // next drop has sensible defaults. AppState also filters server nulls.
     this._appState.applyClientAnchorState({
       position: null,
       state: "off",
@@ -85,33 +85,51 @@ export class AnchorController {
       });
   }
 
-  // Radius changes don't take _pending themselves: the +/- buttons should feel
-  // responsive even if a previous setRadius is still posting, and the
+  // Zone changes don't take _pending themselves: the +/- buttons should feel
+  // responsive even if a previous setZone is still posting, and the
   // suppression window keeps stale server responses from clobbering us. They
   // do bail while a drop/raise is in flight to avoid a tangled rollback.
-  setRadius(newRadius, convert = false) {
+  setZone(zoneConfig) {
     if (this._pending)
       return;
+    if (!zoneConfig || typeof zoneConfig !== "object" || !zoneConfig.type)
+      return;
 
-    if (convert && this._appState.anchor?.maxRadius)
-      newRadius = DisplayUnit.convertFromDisplay(this._appState.anchor.maxRadius, newRadius);
-
-    this._appState.applyClientAnchorState({ maxRadius: newRadius });
+    const updates = { watchZone: zoneConfig };
+    // Sync maxRadius for circle zones so the legacy display path keeps
+    // formatting correctly. Clear it for non-circle shapes where the value
+    // is meaningless.
+    if (zoneConfig.type === "circle")
+      updates.maxRadius = zoneConfig.radius;
+    else
+      updates.maxRadius = null;
+    this._appState.applyClientAnchorState(updates);
     this._onChange();
 
     if (!this._appState.isAnchored())
       return;
 
     this._signalK
-      .setRadius(newRadius)
-      .then(() => this._statusBar.clear("anchor-radius"))
+      .setZone(zoneConfig)
+      .then(() => this._statusBar.clear("anchor-zone"))
       .catch((err) => {
         const detail = err?.statusText || err?.message || "unknown error";
-        this._statusBar.set("anchor-radius", `Failed to set radius: ${detail}`, "error");
+        this._statusBar.set("anchor-zone", `Failed to set zone: ${detail}`, "error");
       });
   }
 
   // === Helpers ====================================================================
+
+  // Pull the current zone config from AppState. Falls back to a default circle
+  // built from the legacy maxRadius envelope so estimateAnchorPosition and the
+  // first drop both work before any zone has been published.
+  _currentZoneConfig() {
+    const config = this._appState.anchor?.watchZone?.value;
+    if (config && typeof config === "object" && config.type)
+      return config;
+    const radius = this._appState.anchor?.maxRadius?.value ?? 0;
+    return { type: "circle", radius };
+  }
 
   estimateAnchorPosition() {
     if (!this._appState.currentCoordinates)
@@ -125,7 +143,10 @@ export class AnchorController {
       this._appState.boatConfig.gpsBowXDistance,
       this._appState.boatConfig.gpsBowYDistance,
     );
-    this._appState.applyClientAnchorState({ maxRadius: radius });
+    this._appState.applyClientAnchorState({
+      maxRadius: radius,
+      watchZone: { type: "circle", radius },
+    });
 
     const bow = GeoMath.calculateBowCoordinates(
       this._appState.getPosition(),

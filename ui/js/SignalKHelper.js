@@ -28,8 +28,12 @@ export class SignalKHelper {
     return this.pluginPost("raiseAnchor");
   }
 
-  dropAnchor(position, radius) {
-    return this.pluginPost("dropAnchor", { position, radius });
+  dropAnchor(position, zone) {
+    return this.pluginPost("dropAnchor", { position, zone });
+  }
+
+  setZone(zone) {
+    return this.pluginPost("setZone", { zone });
   }
 
   setRadius(radius) {
