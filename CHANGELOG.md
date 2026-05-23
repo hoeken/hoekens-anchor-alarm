@@ -1,3 +1,13 @@
+# v2.1.1
+
+## New features
+
+- **Configurable default basemap** — new `defaultBasemap` plugin option ("OpenStreetMap" or "Satellite", default "Satellite") exposed via `/ui-config`, so installs on slow or metered connections can default to OSM without editing the built client (thanks @Peter-Petrik, #13)
+
+## Bug fixes
+
+- Fixed WindPanel calling a non-existent `_hide()` method; added proper `show()` / `hide()` methods so the panel actually hides when wind data isn't available (fixes #14)
+
 # v2.1
 
 ## New features

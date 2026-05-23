@@ -30643,7 +30643,7 @@ var WindPanel = L.Control.extend({
 		}
 	},
 	update: function(state) {
-		if (!state.aws && !state.twa) this._hide();
+		if (!state.aws && !state.twa) this.hide();
 		else this.setSpeed(state.aws, state.twa);
 	},
 	clearSpeed: function() {
@@ -30651,6 +30651,12 @@ var WindPanel = L.Control.extend({
 			this._aws.innerHTML = "~";
 			this._lastAwsText = "~";
 		}
+	},
+	show: function() {
+		if (this._container) this._container.style.display = "";
+	},
+	hide: function() {
+		if (this._container) this._container.style.display = "none";
 	}
 });
 //#endregion
