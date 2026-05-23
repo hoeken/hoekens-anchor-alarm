@@ -148,6 +148,8 @@ class AnchorAlarm {
         console.log(this.state);
 
         this.buildMap();
+        this.anchorController.estimateAnchorPosition();
+
         this.updateMap();
         this.map.fitBounds(this.anchorOverlay.getBounds());
       })
@@ -228,10 +230,6 @@ class AnchorAlarm {
       filterRadius: this.config.fleetFilterRadius,
     });
 
-    this.buildAnchorWidgets();
-  }
-
-  buildAnchorWidgets() {
     this.anchorOverlay = new AnchorOverlay({
       state: this.state,
       map: this.map,
@@ -245,13 +243,6 @@ class AnchorAlarm {
       statusBar: this.statusBar,
       onChange: () => this.updateMap(),
     });
-
-    // Materialize the overlay against AppState before the estimate flow runs.
-    // If the server already has an anchor down, this paints the marker
-    // immediately; otherwise it creates the crosshair so setCrosshairPosition
-    // inside estimateAnchorPosition has something to move.
-    this.anchorOverlay.update(this.state);
-    this.anchorController.estimateAnchorPosition();
   }
 
   updateMap() {
