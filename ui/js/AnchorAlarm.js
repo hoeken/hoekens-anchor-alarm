@@ -266,7 +266,7 @@ class AnchorAlarm {
     this.statusBar.update(this.state);
     this.scopePanel.update(this.state);
     this.anchorController.reconcile();
-    this.anchorOverlay.update(this.state);
+    this.anchorOverlay.updateBoat(this.state);
     this.fleetLayer.update(this.state);
   }
 

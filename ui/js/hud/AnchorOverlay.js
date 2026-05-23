@@ -144,12 +144,63 @@ export class AnchorOverlay {
     return this.radiusCircle.getBounds();
   }
 
-  update(state) {
+  // Single entry point driven from AnchorAlarm.updateMap once phase 5 lands.
+  // Reads everything from appState: dropped/raised from isAnchored(), anchor
+  // position/radius from anchor.position/maxRadius, and boat geometry from
+  // currentCoordinates/boatConfig. On a raised transition, the crosshair
+  // starts at the previously-dropped anchor position for a smooth UX.
+  update(appState) {
+    this.setBoatPosition(
+      appState.getPosition(),
+      appState.boatConfig.heading,
+      appState.boatConfig.gpsOffset,
+    );
+
+    if (appState.isAnchored()) {
+      const pos = appState.getAnchorPosition();
+      const radius = appState.anchor.maxRadius?.value ?? this.radius;
+      if (!this.dropped) {
+        this.drop(pos, radius);
+      } else {
+        // Already dropped — keep marker/radius in sync with appState in case
+        // the server (or another client) moved them.
+        this.anchorPosition = pos;
+        this.radiusCircle.setLatLng(pos);
+        if (this.anchorMarker)
+          this.anchorMarker.setLatLng(pos);
+        this.setRadius(parseInt(radius, 10) || 20);
+        this._refreshLine();
+      }
+    } else if (this.dropped || !this.crosshairMarker) {
+      // Transitioning out of dropped (carry over previous anchor position
+      // for crosshair smoothness) or first-time materialization.
+      this.raise(this.anchorPosition);
+    }
+
+    return this;
+  }
+
+  // Temporary boat-only update used by AnchorAlarm.updateMap until phase 5
+  // switches the call site to update(appState). Will be removed then.
+  updateBoat(state) {
     this.setBoatPosition(
       state.getPosition(),
       state.boatConfig.heading,
       state.boatConfig.gpsOffset,
     );
+  }
+
+  // For the estimate flow: place the crosshair at a guessed anchor position.
+  // Safe to call before the crosshair marker exists; the next update tick
+  // will materialize it at this.anchorPosition.
+  setCrosshairPosition(latlng) {
+    this.anchorPosition = latlng;
+    this.radiusCircle.setLatLng(latlng);
+    if (this.crosshairMarker)
+      this.crosshairMarker.setLatLng(latlng);
+    this._refreshLine();
+    this._refreshColor();
+    return this;
   }
 
   _refreshLine() {
