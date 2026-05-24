@@ -1,7 +1,11 @@
 # v2.2
 
+## UI
+
+- remove maxRadius from everywhere except where its an internal variable (circle/sector shapes)
+- ControlToolbar is too complicated - it shouldnt have any shape specific anything.
+
 - Regression on plugin side sending updates for current anchor status.
-  - the isSet parameter seems to not be working.
   - state is not getting updated / sent as 'off' when alarm is engines disabled.
 
 ## UI Config

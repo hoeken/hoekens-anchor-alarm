@@ -11,10 +11,10 @@ const DELTA_FAST_SPEED = 250;
 const DELTA_SLOW_SPEED = 1000;
 
 // Window after a client-initiated anchor change during which incoming server
-// updates for anchor.position/state/maxRadius are ignored. Covers in-flight
+// updates for anchor.position/state/zone are ignored. Covers in-flight
 // polls whose response was computed before the server processed our request,
 // and the brief gap before the matching websocket delta arrives.
-export const POST_ACTION_SETTLE_MS = 3000;
+export const POST_ACTION_SETTLE_MS = 1000;
 
 export class AppState {
   constructor() {
@@ -25,7 +25,7 @@ export class AppState {
     this.scope5 = 0;
     this.scope4 = 0;
     this.scope3 = 0;
-    this._anchorSuppressUntil = { position: 0, maxRadius: 0, state: 0, watchZone: 0 };
+    this._anchorSuppressUntil = { position: 0, state: 0, watchZone: 0 };
   }
 
   websocketSubscribe(client) {
@@ -97,13 +97,6 @@ export class AppState {
             sendMeta: "all",
           },
           {
-            path: "navigation.anchor.maxRadius",
-            minPeriod: DELTA_FAST_SPEED,
-            format: "full",
-            policy: "instant",
-            sendMeta: "all",
-          },
-          {
             path: "navigation.anchor.watchZone",
             minPeriod: DELTA_FAST_SPEED,
             format: "full",
@@ -142,13 +135,8 @@ export class AppState {
       return L.latLng(0, 0);
   }
 
-  // True when either the position is set or the server-side anchor.state is
-  // "on". OR'd to err toward "alarm is active" if the two ever diverge.
   isAnchored() {
-    return (
-      !!this.anchor.position?.value ||
-      this.anchor.state?.value === "on"
-    );
+    return this.anchor?.state?.value === "on";
   }
 
   extract(tree, path, fresh = true, maxAge = DEFAULT_FRESHNESS_SEC) {
@@ -187,41 +175,36 @@ export class AppState {
 
     if (!this.anchor)
       this.anchor = {};
-    if (!this._anchorSuppressed("position"))
-      this.anchor.position =
-        this.extract(data, "navigation.anchor.position", false) ??
-        this.anchor.position;
+
     if (!this._anchorSuppressed("state")) {
       this.anchor.state = this.extract(data, "navigation.anchor.state", false) ?? this.anchor.state;
       console.log(this.anchor.state);
     } else {
       console.log("anchor state suppressed");
     }
-    // maxRadius is treated as a UI preference: the server clears it on raise,
+
+    // anchor.position is treated as a UI preference: the server clears it on raise,
     // but the toolbar/overlay want to keep the last set value so the next
-    // drop has a sensible default. We always adopt the envelope (so display
-    // units survive even when the server's value is null on first load with
-    // the anchor up) and just carry forward the prior value when the server
-    // sends null.
-    if (!this._anchorSuppressed("maxRadius")) {
-      const newMaxRadius = this.extract(data, "navigation.anchor.maxRadius", false);
-      if (newMaxRadius) {
-        if (newMaxRadius.value == null && this.anchor.maxRadius?.value != null)
-          newMaxRadius.value = this.anchor.maxRadius.value;
-        this.anchor.maxRadius = newMaxRadius;
-      }
+    // drop has a sensible default.
+    if (!this._anchorSuppressed("position")) {
+      let newAnchorPosition = this.extract(data, "navigation.anchor.position", false) ??
+        this.anchor.position;
+      if (newAnchorPosition.value == null && this.anchor.position?.value)
+        newAnchorPosition.value = this.anchor.position.value;
+      this.anchor.position = newAnchorPosition;
     }
-    // watchZone follows the same UI-preference rule as maxRadius: keep the
-    // last-known shape across raise so the next drop reuses it. Server nulls
-    // (on raise) are ignored; we keep the prior envelope.
+
+    // anchor.watchZone is treated as a UI preference: the server clears it on raise,
+    // but the toolbar/overlay want to keep the last set value so the next
+    // drop has a sensible default.
     if (!this._anchorSuppressed("watchZone")) {
-      const newWatchZone = this.extract(data, "navigation.anchor.watchZone", false);
-      if (newWatchZone) {
-        if (newWatchZone.value == null && this.anchor.watchZone?.value != null)
-          newWatchZone.value = this.anchor.watchZone.value;
-        this.anchor.watchZone = newWatchZone;
-      }
+      let newWatchZone = this.extract(data, "navigation.anchor.watchZone", false);
+      //keep our old one if we have it.
+      if (newWatchZone.value == null && this.anchor.watchZone?.value)
+        newWatchZone.value = this.anchor.watchZone.value;
+      this.anchor.watchZone = newWatchZone;
     }
+
     this.anchor.notification =
       this.extract(data, "notifications.navigation.anchor", false) ??
       this.anchor.notification;
@@ -272,10 +255,6 @@ export class AppState {
       (this.tide ??= {}).timeHigh = apply(this.tide.timeHigh);
     else if (path == "environment.tide.timeLow")
       (this.tide ??= {}).timeLow = apply(this.tide.timeLow);
-    else if (path == "navigation.anchor.position") {
-      if (!this._anchorSuppressed("position"))
-        this.anchor.position = apply(this.anchor.position);
-    }
     else if (path == "navigation.anchor.state") {
       console.log(delta);
       if (!this._anchorSuppressed("state")) {
@@ -284,14 +263,11 @@ export class AppState {
       } else
         console.log("anchor state suppressed");
     }
-    else if (path == "navigation.anchor.maxRadius") {
-      // maxRadius is preserved across raise (see extractAll comment) — ignore
-      // server nulls so the next drop still has a sensible default.
-      if (delta.value != null && !this._anchorSuppressed("maxRadius"))
-        this.anchor.maxRadius = apply(this.anchor.maxRadius);
+    else if (path == "navigation.anchor.position") {
+      if (delta.value != null && !this._anchorSuppressed("position"))
+        this.anchor.position = apply(this.anchor.position);
     }
     else if (path == "navigation.anchor.watchZone") {
-      // Same preserve-across-raise rule as maxRadius.
       if (delta.value != null && !this._anchorSuppressed("watchZone"))
         this.anchor.watchZone = apply(this.anchor.watchZone);
     }
@@ -303,7 +279,7 @@ export class AppState {
 
   // Client-initiated optimistic write into the anchor envelopes. Per-key
   // suppression is bumped only for the paths we actually touch — that keeps
-  // estimateAnchorPosition (which only writes maxRadius) from blocking
+  // estimateAnchorPosition from blocking
   // incoming position/state deltas from another client. Only the keys present
   // in `updates` are touched; pass `null` to clear a field.
   applyClientAnchorState(updates = {}) {
@@ -322,8 +298,6 @@ export class AppState {
 
     if ("position" in updates)
       set("position", updates.position);
-    if ("maxRadius" in updates)
-      set("maxRadius", updates.maxRadius);
     if ("state" in updates)
       set("state", updates.state);
     if ("watchZone" in updates)
@@ -336,7 +310,6 @@ export class AppState {
   snapshotAnchorState() {
     return structuredClone({
       position: this.anchor.position ?? null,
-      maxRadius: this.anchor.maxRadius ?? null,
       state: this.anchor.state ?? null,
       watchZone: this.anchor.watchZone ?? null,
     });
@@ -346,10 +319,9 @@ export class AppState {
   // server update can land immediately.
   restoreAnchorState(snapshot) {
     this.anchor.position = snapshot.position;
-    this.anchor.maxRadius = snapshot.maxRadius;
     this.anchor.state = snapshot.state;
     this.anchor.watchZone = snapshot.watchZone;
-    this._anchorSuppressUntil = { position: 0, maxRadius: 0, state: 0, watchZone: 0 };
+    this._anchorSuppressUntil = { position: 0, state: 0, watchZone: 0 };
   }
 
   // Build a WatchZone instance from current state. Used by the overlay/controls
@@ -360,10 +332,7 @@ export class AppState {
     const config = this.anchor.watchZone?.value;
     if (config && typeof config === "object")
       return watchZoneFromConfig(config);
-    const radius = this.anchor.maxRadius?.value;
-    if (Number.isFinite(radius) && radius > 0)
-      return watchZoneFromConfig({ type: "circle", radius });
-    return watchZoneFromConfig({ type: "circle" });
+    return watchZoneFromConfig({ type: "circle", radius: 60 });
   }
 
   _anchorSuppressed(key) {
@@ -394,7 +363,6 @@ export class AppState {
     override(this.tide?.heightLow, "distance", "depth");
     override(this.tide?.heightHigh, "distance", "depth");
     override(this.tide?.heightNow, "distance", "depth");
-    override(this.anchor?.maxRadius, "distance", "length");
   }
 
   calculateTides() {
