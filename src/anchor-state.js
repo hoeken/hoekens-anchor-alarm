@@ -31,18 +31,17 @@ export function attach(app, plugin) {
   };
 
   plugin.updateAnchorState = function (params) {
-    if (params.vesselPosition == null) {
-      params.vesselPosition = app.getSelfPath("navigation.position.value");
-    }
-
-    if (params.anchorPosition) {
-      const anchorPosition = {
-        latitude: parseFloat(params.anchorPosition.latitude),
-        longitude: parseFloat(params.anchorPosition.longitude),
-      };
-
-      plugin.bus.queueDelta("navigation.anchor.position", anchorPosition);
+    if (params.isSet) {
       plugin.bus.queueDelta("navigation.anchor.state", "on");
+
+      if (params.anchorPosition) {
+        const anchorPosition = {
+          latitude: parseFloat(params.anchorPosition.latitude),
+          longitude: parseFloat(params.anchorPosition.longitude),
+        };
+
+        plugin.bus.queueDelta("navigation.anchor.position", anchorPosition);
+      }
 
       if (params.currentRadius != null) {
         plugin.bus.queueDelta(
@@ -53,6 +52,7 @@ export function attach(app, plugin) {
 
       if (params.zone) {
         plugin.bus.queueDelta("navigation.anchor.watchZone", params.zone.getConfig());
+
         // Keep maxRadius (and the legacy zones meta array) populated for
         // circle shapes so external consumers like Freeboard keep working.
         // Non-circle shapes clear maxRadius — the watchZone path is the

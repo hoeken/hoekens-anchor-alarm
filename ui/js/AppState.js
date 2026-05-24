@@ -191,9 +191,12 @@ export class AppState {
       this.anchor.position =
         this.extract(data, "navigation.anchor.position", false) ??
         this.anchor.position;
-    if (!this._anchorSuppressed("state"))
-      this.anchor.state =
-        this.extract(data, "navigation.anchor.state", false) ?? this.anchor.state;
+    if (!this._anchorSuppressed("state")) {
+      this.anchor.state = this.extract(data, "navigation.anchor.state", false) ?? this.anchor.state;
+      console.log(this.anchor.state);
+    } else {
+      console.log("anchor state suppressed");
+    }
     // maxRadius is treated as a UI preference: the server clears it on raise,
     // but the toolbar/overlay want to keep the last set value so the next
     // drop has a sensible default. We always adopt the envelope (so display
@@ -274,8 +277,12 @@ export class AppState {
         this.anchor.position = apply(this.anchor.position);
     }
     else if (path == "navigation.anchor.state") {
-      if (!this._anchorSuppressed("state"))
+      console.log(delta);
+      if (!this._anchorSuppressed("state")) {
         this.anchor.state = apply(this.anchor.state);
+        console.log(this.anchor.state);
+      } else
+        console.log("anchor state suppressed");
     }
     else if (path == "navigation.anchor.maxRadius") {
       // maxRadius is preserved across raise (see extractAll comment) — ignore
@@ -360,6 +367,8 @@ export class AppState {
   }
 
   _anchorSuppressed(key) {
+    if (Date.now() < this._anchorSuppressUntil[key])
+      console.log(`suppressed: ${key}`);
     return Date.now() < this._anchorSuppressUntil[key];
   }
 

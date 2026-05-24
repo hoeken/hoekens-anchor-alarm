@@ -101,7 +101,6 @@ export function attach(app, plugin) {
       ...resolvedZone.getConfig(),
       position: parsedPosition,
     });
-    plugin.configuration.on = true;
 
     plugin.startWatchingPosition();
     plugin.savePluginOptions();
@@ -128,10 +127,8 @@ export function attach(app, plugin) {
     app.debug("set anchor zone: " + JSON.stringify(resolvedZone.getConfig()));
 
     plugin.updateAnchorState({
-      vesselPosition: vesselPosition,
-      anchorPosition: anchorPosition,
       zone: resolvedZone,
-      isSet: false,
+      isSet: true,
     });
 
     plugin.configuration.zone = JSON.stringify({
@@ -159,10 +156,9 @@ export function attach(app, plugin) {
     plugin.updateAnchorState({ isSet: false });
 
     delete plugin.configuration.zone;
-    plugin.configuration.on = false;
+    plugin.savePluginOptions();
 
     plugin.stopWatchingPosition();
-    plugin.savePluginOptions();
   }
 
   plugin.anchor = { drop, setZone, setRadius, raise };

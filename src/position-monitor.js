@@ -98,12 +98,10 @@ export function attach(app, plugin) {
       anchorPosition.longitude,
     );
 
+    //update our parameter that may change.
     plugin.updateAnchorState({
-      vesselPosition: vesselPosition,
-      anchorPosition: anchorPosition,
       currentRadius: currentRadius,
-      zone: zone,
-      isSet: false,
+      isSet: true,
     });
 
     let new_state = "normal";
