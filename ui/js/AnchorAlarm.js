@@ -3,7 +3,7 @@
 // HudPanels (Info/Scope/Wind/Home), and hands the anchor state machine to
 // AnchorController.
 
-import Client from "@signalk/client";
+import { Client } from "@signalk/client";
 import { SignalKHelper } from "./SignalKHelper.js";
 import { AppState } from "./AppState.js";
 import { FleetLayer } from "./hud/FleetLayer.js";
