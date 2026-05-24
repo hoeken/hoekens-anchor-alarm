@@ -183,7 +183,7 @@ export function buildSchema(app) {
       zone: {
         type: "string",
         title: "Anchor Watch Zone (JSON)",
-        description: "Watch zone shape + parameters + anchor position as a single JSON string. ⚠ Do not edit by hand — use the web UI. Blank when no anchor is dropped. Example: {\"type\":\"circle\",\"radius\":60,\"position\":{\"latitude\":0,\"longitude\":0}}.",
+        description: "Watch zone shape + parameters + anchor position as a single JSON string. ⚠️ Do not edit by hand — use the web UI. Blank when no anchor is dropped. Example: {\"type\":\"circle\",\"radius\":60,\"position\":{\"latitude\":0,\"longitude\":0}}.",
         default: "",
       },
     },
