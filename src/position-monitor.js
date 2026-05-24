@@ -15,6 +15,7 @@
 
 import { Utils } from "./utils.js";
 import { watchZoneFromConfig } from "../shared/watch-zones/index.js";
+import { readZoneConfig } from "./schema.js";
 
 export function attach(app, plugin) {
   plugin.startWatchingPosition = function () {
@@ -83,8 +84,9 @@ export function attach(app, plugin) {
 
   plugin.checkPosition = function (vesselPosition) {
     const configuration = plugin.configuration;
-    const anchorPosition = configuration.position;
-    const zone = watchZoneFromConfig(configuration.zone);
+    const zoneConfig = readZoneConfig(configuration);
+    const anchorPosition = zoneConfig?.position;
+    const zone = watchZoneFromConfig(zoneConfig);
 
     // currentRadius keeps its v2.1 semantics — straight-line distance from
     // anchor to GPS. Even with non-circle zones it's a useful display value

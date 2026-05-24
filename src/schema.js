@@ -181,38 +181,10 @@ export function buildSchema(app) {
         default: false,
       },
       zone: {
-        type: "object",
-        title: "Anchor Watch Zone",
-        description: "Shape + parameters of the anchor watch zone. Used for saving state in case of SignalK restart.",
-        default: { type: "circle", radius: 60 },
-        properties: {
-          type: {
-            title: "Shape",
-            type: "string",
-            enum: ["circle"],
-            default: "circle",
-          },
-          radius: {
-            title: "Radius (m)",
-            type: "number",
-            default: 60,
-          },
-        },
-      },
-      position: {
-        type: "object",
-        title: "Anchor Position",
-        description: "Used for saving state in case of SignalK restart.",
-        properties: {
-          latitude: {
-            title: "Latitude",
-            type: "number",
-          },
-          longitude: {
-            title: "Longitude",
-            type: "number",
-          },
-        },
+        type: "string",
+        title: "Anchor Watch Zone (JSON)",
+        description: "Watch zone shape + parameters + anchor position as a single JSON string. ⚠ Do not edit by hand — use the web UI. Blank when no anchor is dropped. Example: {\"type\":\"circle\",\"radius\":60,\"position\":{\"latitude\":0,\"longitude\":0}}.",
+        default: "",
       },
     },
   };
@@ -250,20 +222,62 @@ export function applyDefaults(app, config) {
   return config;
 }
 
-// One-shot upgrade from the v2.1 shape (top-level `radius` field) to the v2.2
-// shape (`zone` object). Returns true when the config was actually mutated so
-// callers can persist the result. Idempotent: a config that already has `zone`
-// is left untouched.
+// Upgrade older config shapes to the current v2.2 shape: a single `zone`
+// JSON string holding shape + parameters + anchor position. Returns true when
+// the config was actually mutated so callers can persist the result.
+// Idempotent.
 export function migrateConfig(config) {
-  if (config.zone && config.zone.type)
-    return false;
-  const radius = Number(config.radius);
-  if (Number.isFinite(radius) && radius > 0) {
-    config.zone = { type: "circle", radius };
-    delete config.radius;
-    return true;
+  let mutated = false;
+
+  // Mid-refactor leftover from an in-development build — stringify in place.
+  if (config.zone && typeof config.zone === "object" && config.zone.type) {
+    config.zone = JSON.stringify(config.zone);
+    mutated = true;
   }
-  // No legacy radius and no zone yet — applyDefaults will populate the default
-  // zone. Nothing to persist as a migration result.
-  return false;
+
+  // v2.1 legacy: top-level radius becomes a circle zone JSON string.
+  if (typeof config.zone !== "string" || config.zone.length === 0) {
+    const radius = Number(config.radius);
+    if (Number.isFinite(radius) && radius > 0) {
+      config.zone = JSON.stringify({ type: "circle", radius });
+      delete config.radius;
+      mutated = true;
+    }
+  }
+
+  // Earlier v2.2 shape kept anchor position in its own top-level field. Fold
+  // it into the zone JSON so the watch zone state lives in one place.
+  if (config.position && typeof config.position === "object") {
+    if (typeof config.zone === "string" && config.zone.length > 0) {
+      try {
+        const parsed = JSON.parse(config.zone);
+        if (parsed && parsed.position == null) {
+          parsed.position = {
+            latitude: parseFloat(config.position.latitude),
+            longitude: parseFloat(config.position.longitude),
+          };
+          config.zone = JSON.stringify(parsed);
+        }
+      } catch {
+        // malformed zone JSON — drop the orphan position rather than corrupt
+      }
+    }
+    delete config.position;
+    mutated = true;
+  }
+
+  return mutated;
+}
+
+// Parse the persisted zone JSON, returning null when the field is missing or
+// malformed. Callers that need a usable zone should fall back to
+// watchZoneFromConfig(null) which yields a default circle.
+export function readZoneConfig(config) {
+  if (typeof config.zone !== "string" || config.zone.length === 0)
+    return null;
+  try {
+    return JSON.parse(config.zone);
+  } catch {
+    return null;
+  }
 }

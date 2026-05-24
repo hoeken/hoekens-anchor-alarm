@@ -14,7 +14,7 @@
  */
 
 import { Watchdog } from "./watchdog.js";
-import { metas, buildSchema, applyDefaults, migrateConfig } from "./schema.js";
+import { metas, buildSchema, applyDefaults, migrateConfig, readZoneConfig } from "./schema.js";
 import { SignalKBus } from "./signalk-bus.js";
 import { attach as attachAnchorState } from "./anchor-state.js";
 import { attach as attachPositionMonitor } from "./position-monitor.js";
@@ -153,14 +153,8 @@ export default function (app) {
 
       //should we be watching?
       const isOn = plugin.configuration["on"];
-      const position = plugin.configuration["position"];
-      const zone = plugin.configuration["zone"];
-      if (
-        typeof isOn != "undefined" &&
-        isOn &&
-        typeof position != "undefined" &&
-        typeof zone != "undefined"
-      ) {
+      const zoneConfig = readZoneConfig(plugin.configuration);
+      if (isOn && zoneConfig?.position) {
         plugin.startWatchingPosition();
       }
 

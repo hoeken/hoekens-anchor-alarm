@@ -14,6 +14,7 @@
  */
 
 import { watchZoneFromConfig } from "../shared/watch-zones/index.js";
+import { readZoneConfig } from "./schema.js";
 
 export class AnchorError extends Error {
   constructor(message) {
@@ -55,8 +56,9 @@ function resolveZone({ zone, radius, plugin }) {
       throw new ValidationError("radius must be numeric");
     return watchZoneFromConfig({ type: "circle", radius: parsed });
   }
-  if (plugin.configuration.zone) {
-    return watchZoneFromConfig(plugin.configuration.zone);
+  const existing = readZoneConfig(plugin.configuration);
+  if (existing) {
+    return watchZoneFromConfig(existing);
   }
   throw new ValidationError("zone or radius required");
 }
@@ -95,8 +97,10 @@ export function attach(app, plugin) {
       isSet: true,
     });
 
-    plugin.configuration.position = parsedPosition;
-    plugin.configuration.zone = resolvedZone.getConfig();
+    plugin.configuration.zone = JSON.stringify({
+      ...resolvedZone.getConfig(),
+      position: parsedPosition,
+    });
     plugin.configuration.on = true;
 
     plugin.startWatchingPosition();
@@ -108,7 +112,9 @@ export function attach(app, plugin) {
       throw new ValidationError("zone required");
     }
 
-    if (!plugin.configuration.position) {
+    const existingZoneConfig = readZoneConfig(plugin.configuration);
+    const anchorPosition = existingZoneConfig?.position;
+    if (!anchorPosition) {
       throw new StateError("no anchor is currently dropped");
     }
 
@@ -123,12 +129,15 @@ export function attach(app, plugin) {
 
     plugin.updateAnchorState({
       vesselPosition: vesselPosition,
-      anchorPosition: plugin.configuration.position,
+      anchorPosition: anchorPosition,
       zone: resolvedZone,
       isSet: false,
     });
 
-    plugin.configuration.zone = resolvedZone.getConfig();
+    plugin.configuration.zone = JSON.stringify({
+      ...resolvedZone.getConfig(),
+      position: anchorPosition,
+    });
     plugin.savePluginOptions();
   }
 
@@ -149,7 +158,6 @@ export function attach(app, plugin) {
 
     plugin.updateAnchorState({ isSet: false });
 
-    delete plugin.configuration.position;
     delete plugin.configuration.zone;
     plugin.configuration.on = false;
 
