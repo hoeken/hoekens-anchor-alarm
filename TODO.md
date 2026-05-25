@@ -1,13 +1,5 @@
 # v2.2
 
-## UI - CircleZoneOverlay
-
-- add a draggable dot handle on the circle to modify the radius.
-  - Add an _onZoneEditStart and _onZoneEditChange callbacks that also thread through and have those wired up from the top level to set/clear our AppState.watchZone suppression timestamp.
-  - Internally update our zone with the new radius to redraw
-  - when finished dragging, call _onChange with our zone to update the backend
-  - Radius is in meters and should be rounded to a whole number.
-
 ## UI - SectorZone
 
 - similar design to circle zone:

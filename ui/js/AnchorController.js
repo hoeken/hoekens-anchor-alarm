@@ -88,6 +88,19 @@ export class AnchorController {
       });
   }
 
+  // Live-preview zone edit during a zone edit. Optimistic write only — no backend
+  // POST — and the per-tick call refreshes the watchZone suppression window
+  // (POST_ACTION_SETTLE_MS) so a slow drag isn't clobbered by an incoming
+  // server delta. setZone() is the commit path on drag-end.
+  previewZone(zoneConfig) {
+    if (this._pending)
+      return;
+    if (!zoneConfig || typeof zoneConfig !== "object" || !zoneConfig.type)
+      return;
+    this._appState.applyClientAnchorState({ watchZone: zoneConfig });
+    this._onChange();
+  }
+
   // Zone changes don't take _pending themselves: the +/- buttons should feel
   // responsive even if a previous setZone is still posting, and the
   // suppression window keeps stale server responses from clobbering us. They

@@ -201,6 +201,19 @@ body,
   /* thickness of the background */
 }
 
+.zoneHandle {
+  background: white;
+  border: 2px solid #333;
+  border-radius: 50%;
+  box-sizing: border-box;
+  cursor: grab;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
+}
+
+.zoneHandle:active {
+  cursor: grabbing;
+}
+
 .wind-barb {
   fill: black;
   stroke: black;

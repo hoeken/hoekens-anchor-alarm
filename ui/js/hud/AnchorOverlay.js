@@ -26,10 +26,11 @@ const CROSSHAIR_ICON = L.icon({
 });
 
 export class AnchorOverlay {
-  constructor({ state, map, onZoneChange }) {
+  constructor({ state, map, onZoneChange, onZoneInput }) {
     this.state = state;
     this.map = map;
     this._onZoneChange = onZoneChange;
+    this._onZoneInput = onZoneInput;
     this.dropped = false;
 
     this.anchorPosition = map.getCenter();
@@ -150,6 +151,7 @@ export class AnchorOverlay {
       map: this.map,
       anchorPosition: this.anchorPosition,
       onChange: this._onZoneChange,
+      onInput: this._onZoneInput,
     });
     this._zoneType = newType;
     this._cachedColor = null; // force a recolor on next refresh
