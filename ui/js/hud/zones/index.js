@@ -6,6 +6,8 @@ import { CircleZoneOverlay } from "./CircleZoneOverlay.js";
 import { CircleZoneControls } from "./CircleZoneControls.js";
 import { SectorZoneOverlay } from "./SectorZoneOverlay.js";
 import { SectorZoneControls } from "./SectorZoneControls.js";
+import { PolygonZoneOverlay } from "./PolygonZoneOverlay.js";
+import { PolygonZoneControls } from "./PolygonZoneControls.js";
 
 const REGISTRY = {
   circle: {
@@ -20,9 +22,12 @@ const REGISTRY = {
     controls: SectorZoneControls,
     enabled: true,
   },
-  // Polygon lands in a follow-up PR. Listed here (disabled) so the shape
-  // dropdown can advertise it as coming-soon.
-  polygon: { label: "Polygon", overlay: null, controls: null, enabled: false },
+  polygon: {
+    label: "Polygon",
+    overlay: PolygonZoneOverlay,
+    controls: PolygonZoneControls,
+    enabled: true,
+  },
 };
 
 export const SUPPORTED_ZONE_TYPES = Object.entries(REGISTRY)

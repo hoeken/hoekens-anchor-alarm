@@ -1,0 +1,313 @@
+// Leaflet layer for a polygon watch zone. Vertices are stored anchor-relative
+// as {bearing, distance}; the overlay renders them to lat/lng for L.polygon
+// and back when the user drags a vertex. Self-intersection is prevented by a
+// binary-search clamp along the drag vector (the vertex sticks at the
+// furthest position that still leaves the polygon simple).
+
+import { GeoMath } from "../../GeoMath.js";
+import {
+  PolygonZone,
+  MAX_VERTICES,
+  MIN_VERTICES,
+  verticesAreSimple,
+  projectVertex,
+} from "../../../../shared/watch-zones/PolygonZone.js";
+import { ZoneHandle } from "./ZoneHandle.js";
+
+const CLAMP_BISECTIONS = 8;
+
+function midpoint(a, b) {
+  return { x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2 };
+}
+
+// Inverse of projectVertex: turn a flat (x, y) in meters back to
+// {bearing, distance}. Used to convert lerped projected points back to the
+// storage form.
+function unproject(x, y) {
+  const distance = Math.sqrt(x * x + y * y);
+  const bearing = (Math.atan2(x, y) * 180 / Math.PI + 360) % 360;
+  return { bearing, distance };
+}
+
+export class PolygonZoneOverlay {
+  static get type() {
+    return "polygon";
+  }
+
+  constructor({ map, anchorPosition, zone, onChange, onInput }) {
+    this._map = map;
+    this._zone = zone;
+    this._anchorPosition = anchorPosition;
+    this._onChange = onChange;
+    this._onInput = onInput;
+    this._color = "blue";
+    // Index of the vertex currently being dragged (real or promoted ghost),
+    // or null when idle. Used to skip repositioning the active handle so
+    // Leaflet's drag doesn't get yanked.
+    this._draggingIndex = null;
+    // Snapshot of the committed vertices at the start of the current drag.
+    // The clamp walks back along the drag toward this state.
+    this._dragOriginVertices = null;
+
+    this._layer = L.polygon(this._renderLatLngs(), {
+      color: this._color,
+    }).addTo(map);
+
+    this._vertexHandles = [];
+    this._ghostHandles = [];
+    this._buildHandles();
+  }
+
+  // === Geometry helpers ============================================================
+
+  _vertexLatLng(v) {
+    const p = GeoMath.calculateDestinationPoint(
+      this._anchorPosition.lat,
+      this._anchorPosition.lng,
+      v.bearing,
+      v.distance,
+    );
+    return L.latLng(p.latitude, p.longitude);
+  }
+
+  _renderLatLngs() {
+    return this._zone.vertices.map((v) => this._vertexLatLng(v));
+  }
+
+  _vertexFromLatLng(latlng) {
+    return {
+      bearing: GeoMath.calculateBearing(
+        this._anchorPosition.lat,
+        this._anchorPosition.lng,
+        latlng.lat,
+        latlng.lng,
+      ),
+      distance: Math.max(
+        1,
+        GeoMath.calculateDistance(
+          this._anchorPosition.lat,
+          this._anchorPosition.lng,
+          latlng.lat,
+          latlng.lng,
+        ),
+      ),
+    };
+  }
+
+  // Midpoint of the edge between vertex i and vertex (i+1) % n, expressed
+  // as a {bearing, distance} pair. Used as the rest position for the ghost
+  // insertion handle on that edge.
+  _edgeMidpointVertex(i) {
+    const n = this._zone.vertices.length;
+    const a = projectVertex(this._zone.vertices[i]);
+    const b = projectVertex(this._zone.vertices[(i + 1) % n]);
+    const m = midpoint(a, b);
+    return unproject(m.x, m.y);
+  }
+
+  // === Handle lifecycle ============================================================
+
+  _buildHandles() {
+    this._destroyHandles();
+    const n = this._zone.vertices.length;
+    for (let i = 0; i < n; i++) {
+      const handle = new ZoneHandle({
+        map: this._map,
+        position: this._vertexLatLng(this._zone.vertices[i]),
+        onDragStart: () => this._onVertexDragStart(i),
+        onDrag: (latlng) => this._onVertexDrag(i, latlng),
+        onDragEnd: (latlng) => this._onVertexDragEnd(i, latlng),
+      });
+      handle.setStyle({ color: this._color });
+      this._vertexHandles.push(handle);
+    }
+    // Hide ghosts once we'd violate the max vertex cap by inserting one more.
+    if (n < MAX_VERTICES) {
+      for (let i = 0; i < n; i++) {
+        const ghost = new ZoneHandle({
+          map: this._map,
+          position: this._vertexLatLng(this._edgeMidpointVertex(i)),
+          ghost: true,
+          onClick: () => this._onGhostClick(i),
+        });
+        ghost.setStyle({ color: this._color });
+        this._ghostHandles.push(ghost);
+      }
+    }
+  }
+
+  _destroyHandles() {
+    for (const h of this._vertexHandles)
+      h.destroy();
+    for (const h of this._ghostHandles)
+      h.destroy();
+    this._vertexHandles = [];
+    this._ghostHandles = [];
+  }
+
+  _repositionIdleHandles() {
+    const n = this._zone.vertices.length;
+    for (let i = 0; i < n; i++) {
+      if (i === this._draggingIndex)
+        continue;
+      this._vertexHandles[i]?.setPosition(this._vertexLatLng(this._zone.vertices[i]));
+    }
+    if (this._ghostHandles.length === n) {
+      for (let i = 0; i < n; i++) {
+        this._ghostHandles[i].setPosition(this._vertexLatLng(this._edgeMidpointVertex(i)));
+      }
+    }
+  }
+
+  // === Vertex drag =================================================================
+
+  _onVertexDragStart(i) {
+    this._draggingIndex = i;
+    this._dragOriginVertices = this._zone.vertices.map((v) => ({ ...v }));
+  }
+
+  // Clamp proposed via binary search in projected (x, y) space, walking from
+  // the proposed point back toward the drag-origin position until kinks()
+  // reports a simple polygon. Returns the best valid vertex found, or the
+  // origin position when even the origin is invalid (should not happen).
+  _clampProposed(i, proposed) {
+    const origin = this._dragOriginVertices[i];
+    const candidate = this._withVertex(i, proposed);
+    if (verticesAreSimple(candidate))
+      return proposed;
+    const op = projectVertex(origin);
+    const pp = projectVertex(proposed);
+    let lo = 0;
+    let hi = 1;
+    let bestValid = origin;
+    for (let step = 0; step < CLAMP_BISECTIONS; step++) {
+      const mid = (lo + hi) / 2;
+      const x = op[0] + (pp[0] - op[0]) * mid;
+      const y = op[1] + (pp[1] - op[1]) * mid;
+      const trial = unproject(x, y);
+      if (verticesAreSimple(this._withVertex(i, trial))) {
+        bestValid = trial;
+        lo = mid;
+      } else {
+        hi = mid;
+      }
+    }
+    return bestValid;
+  }
+
+  _withVertex(i, vertex) {
+    const next = this._zone.vertices.map((v) => ({ ...v }));
+    next[i] = vertex;
+    return next;
+  }
+
+  _commitVertices(vertices, emit) {
+    this._zone = new PolygonZone({ vertices });
+    this._layer.setLatLngs(this._renderLatLngs());
+    if (emit === "input" && this._onInput)
+      this._onInput(this._zone.getConfig());
+    if (emit === "change" && this._onChange)
+      this._onChange(this._zone.getConfig());
+  }
+
+  _onVertexDrag(i, latlng) {
+    if (i == null || !this._dragOriginVertices)
+      return;
+    const proposed = this._vertexFromLatLng(latlng);
+    const clamped = this._clampProposed(i, proposed);
+    const next = this._withVertex(i, clamped);
+    this._commitVertices(next, "input");
+  }
+
+  _onVertexDragEnd(i, latlng) {
+    if (i == null || !this._dragOriginVertices)
+      return;
+    const proposed = this._vertexFromLatLng(latlng);
+    const clamped = this._clampProposed(i, proposed);
+    const next = this._withVertex(i, clamped);
+    this._draggingIndex = null;
+    this._dragOriginVertices = null;
+    this._commitVertices(next, "change");
+    this._repositionIdleHandles();
+  }
+
+  // === Ghost click (insert new vertex on edge i) ===================================
+
+  _onGhostClick(i) {
+    if (this._zone.vertices.length >= MAX_VERTICES)
+      return;
+    const newVertex = this._edgeMidpointVertex(i);
+    const next = this._zone.vertices.map((v) => ({ ...v }));
+    next.splice(i + 1, 0, newVertex);
+    this._commitVertices(next, "change");
+    this._buildHandles();
+  }
+
+  // === Lifecycle hooks called by AnchorOverlay =====================================
+
+  update({ zone, anchorPosition }) {
+    const zoneChanged = zone && zone !== this._zone;
+    const anchorChanged =
+      anchorPosition &&
+      (anchorPosition.lat !== this._anchorPosition?.lat ||
+        anchorPosition.lng !== this._anchorPosition?.lng);
+
+    if (zone)
+      this._zone = zone;
+    if (anchorPosition)
+      this._anchorPosition = anchorPosition;
+
+    // Anchor moving doesn't change vertex storage (it's anchor-relative);
+    // we only need to re-render. Same for a fresh zone from appState.
+    if (zoneChanged || anchorChanged) {
+      this._layer.setLatLngs(this._renderLatLngs());
+      // Vertex count may have changed (e.g. external setZone) — rebuild
+      // handles when so, otherwise just reposition the idle ones.
+      if (zoneChanged && this._vertexHandles.length !== this._zone.vertices.length)
+        this._buildHandles();
+      else
+        this._repositionIdleHandles();
+    }
+  }
+
+  setColor(color) {
+    if (color === this._color)
+      return;
+    this._color = color;
+    this._layer.setStyle({ color });
+    for (const h of this._vertexHandles)
+      h.setStyle({ color });
+    for (const h of this._ghostHandles)
+      h.setStyle({ color });
+  }
+
+  getBounds() {
+    return this._layer.getBounds();
+  }
+
+  contains(vesselLatLng) {
+    if (!vesselLatLng || !this._zone)
+      return true;
+    return this._zone.contains(
+      { latitude: vesselLatLng.lat, longitude: vesselLatLng.lng },
+      { latitude: this._anchorPosition.lat, longitude: this._anchorPosition.lng },
+    );
+  }
+
+  destroy() {
+    this._destroyHandles();
+    this._map.removeLayer(this._layer);
+  }
+}
+
+// Build a regular N-gon with vertex 0 due north. Used by PolygonZoneControls
+// on reset and by ControlToolbar when the user picks polygon from the
+// shape dropdown.
+export function regularPolygonVertices(sides, radius) {
+  const n = Math.max(MIN_VERTICES, Math.min(MAX_VERTICES, Math.round(sides)));
+  const r = Math.max(1, Number(radius) || 60);
+  const out = [];
+  for (let i = 0; i < n; i++)
+    out.push({ bearing: (i * 360) / n, distance: r });
+  return out;
+}

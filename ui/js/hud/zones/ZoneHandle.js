@@ -8,20 +8,36 @@ const HANDLE_ICON = L.divIcon({
   iconAnchor: [8, 8],
 });
 
+// Smaller, lighter handle used for "ghost" insertion points (edge midpoints on
+// the polygon overlay). Behaves identically — only the look differs.
+const GHOST_HANDLE_ICON = L.divIcon({
+  className: "zoneHandle zoneHandleGhost",
+  iconSize: [12, 12],
+  iconAnchor: [6, 6],
+});
+
 export class ZoneHandle {
-  constructor({ map, position, onDragStart, onDrag, onDragEnd }) {
+  constructor({ map, position, onDragStart, onDrag, onDragEnd, onClick, ghost = false }) {
     this._map = map;
+    // Ghost handles are click-only: dragging them mid-edit destabilizes the
+    // L.polygon Leaflet is rendering underneath. The owning overlay creates
+    // a real vertex on click instead.
+    const draggable = !ghost;
     this._marker = L.marker(position, {
-      icon: HANDLE_ICON,
-      draggable: true,
+      icon: ghost ? GHOST_HANDLE_ICON : HANDLE_ICON,
+      draggable,
     }).addTo(map);
 
-    if (onDragStart)
-      this._marker.on("dragstart", () => onDragStart());
-    if (onDrag)
-      this._marker.on("drag", () => onDrag(this._marker.getLatLng()));
-    if (onDragEnd)
-      this._marker.on("dragend", () => onDragEnd(this._marker.getLatLng()));
+    if (draggable) {
+      if (onDragStart)
+        this._marker.on("dragstart", () => onDragStart());
+      if (onDrag)
+        this._marker.on("drag", () => onDrag(this._marker.getLatLng()));
+      if (onDragEnd)
+        this._marker.on("dragend", () => onDragEnd(this._marker.getLatLng()));
+    }
+    if (onClick)
+      this._marker.on("click", () => onClick(this._marker.getLatLng()));
   }
 
   setPosition(latlng) {

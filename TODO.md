@@ -2,25 +2,14 @@
 
 ## UI - PolygonZone
 
-- New `PolygonZone` watch zone type
-  - config: `{ type: "polygon", vertices: [{lat,lng}, ...] }` — absolute lat/lng, min 3 max 24
-  - use turf.js for `booleanPointInPolygon`, `kinks`, `bbox`
-  - `getCircleRadius()` returns farthest vertex distance (legacy SignalK consumers)
-- Polygon translates with anchor: anchor drag shifts every vertex by Δlat/Δlng
-- Vertex handles
-  - one `ZoneHandle` per vertex; drag updates that vertex
-  - clamp during drag so polygon never self-intersects (mirror SectorZone._clampAngle)
-  - reject any commit whose `kinks()` is non-empty as a backstop
-- Ghost handles at edge midpoints
-  - on dragStart, insert a new vertex between the two neighbors and continue drag on it
-  - hidden when vertices.length === 24
-- No vertex delete gesture yet — revisit if needed
-- `PolygonZoneControls` toolbar
-  - sides dropdown (3..12, default 8) — local UI state, not in zone config
-  - reset button — rebuilds regular N-gon centered on anchor at a local default radius (60m for now; later from estimateAnchorPosition / mode switch)
-  - no radius stepper
+- make draggable ghost handles work.
+- delete vertex?
 
 ## UI - Misc
+
+- convert all the functions in ui/js/geomath.js to turf?
+- convert all the functions in shared/geo/distance.js to turf?
+- replace all calls with direct calls to turf.  no wrappers
 
 - ControlToolbar._defaultZoneConfig(type) -> call a static method on the appropriate zone and pass in appState
 

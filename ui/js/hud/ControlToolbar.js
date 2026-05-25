@@ -7,6 +7,7 @@
 // do not rename without updating it.
 
 import { createZoneControls, getZoneTypeOptions } from "./zones/index.js";
+import { regularPolygonVertices } from "./zones/PolygonZoneOverlay.js";
 
 export class ControlToolbar {
   constructor({ parent, getMapContainer, onDrop, onRaise, onSetZone }) {
@@ -142,6 +143,12 @@ export class ControlToolbar {
       const startAngle = (center - 60 + 360) % 360;
       const endAngle = (center + 60) % 360;
       return { type: "sector", radius, startAngle, endAngle };
+    }
+    if (type === "polygon") {
+      // Default to a regular 8-gon at 60m. PolygonZoneControls owns the
+      // editable side count + radius; this is just the initial shape on
+      // first switch into polygon mode.
+      return { type: "polygon", vertices: regularPolygonVertices(8, 60) };
     }
     return { type };
   }

@@ -186,6 +186,42 @@ body,
   min-width: 0;
 }
 
+#polygonControl {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 18px;
+}
+
+#polygonControl select {
+  pointer-events: auto;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 40px;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 5px;
+  border: 1px solid #888;
+  background-color: #f0f0f0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='black' d='M0 0l6 8 6-8z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px 8px;
+  color: black;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0 28px 0 8px;
+}
+
+#polygonControl button {
+  flex: 1 1 0;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
 .leaflet-control-home {
   display: flex !important;
   align-items: center;
@@ -220,6 +256,17 @@ body,
 
 .zoneHandle:active {
   cursor: grabbing;
+}
+
+.zoneHandleGhost {
+  background: rgba(255, 255, 255, 0.55);
+  border-width: 2px;
+  border-style: solid;
+  opacity: 0.7;
+}
+
+.zoneHandleGhost:hover {
+  opacity: 1;
 }
 
 .wind-barb {
