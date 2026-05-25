@@ -86,6 +86,22 @@ export const StatusBar = L.Control.extend({
         ? "Apparent Wind Speed data is stale."
         : null,
     );
+
+    let notice = state.anchor?.notification;
+    if (notice) {
+      if (notice.value.state != "normal" && notice.value.message != "Watching") {
+        let level = "status";
+        if (notice.value.state == "alert" || notice.value.state == "warn")
+          level = "warning";
+        else if (notice.value.state == "alarm" || notice.value.state == "emergency")
+          level = "error";
+        this.set("notice-status", notice.value.message, level);
+      }
+      else
+        this.set("notice-status");
+    }
+    else
+      this.set("notice-status");
   },
 
   _render: function () {

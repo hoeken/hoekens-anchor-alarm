@@ -86,7 +86,7 @@ export const InfoPanel = L.Control.extend({
       this.setDepthValue(state.belowTransducer);
     else
       this.setDepthValue(null);
-    this.setStatus(state.anchor.notification);
+    this.setStatus(state.anchor);
   },
 
   setCurrentTide: function (currentTide) {
@@ -133,12 +133,18 @@ export const InfoPanel = L.Control.extend({
       this._depthValue.textContent = "~";
   },
 
-  setStatus: function (notification) {
-    if (notification) {
-      this._pluginStatus.textContent = notification.value.message;
-      this._pluginStatus.className = "";
-      if (notification.value.message !== "Off" && notification.value.state) {
-        this._pluginStatus.classList.add(notification.value.state);
+  setStatus: function (anchor) {
+    this._pluginStatus.className = "";
+    if (anchor.state && anchor.notification) {
+      if (anchor.state.value === "off")
+        this._pluginStatus.textContent = "Off";
+      else if (anchor.state.value === "on") {
+        const notice = anchor.notification;
+        this._pluginStatus.classList.add(notice.value.state);
+        if (notice.value.message === "Watching")
+          this._pluginStatus.textContent = "Watching";
+        else
+          this._pluginStatus.textContent = notice.value.state.toUpperCase();
       }
     } else
       this._pluginStatus.textContent = "Unknown";
