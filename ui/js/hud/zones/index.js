@@ -30,12 +30,12 @@ export function getZoneTypeOptions() {
   }));
 }
 
-export function createZoneOverlay(zone, { map, anchorPosition }) {
+export function createZoneOverlay(zone, { map, anchorPosition, onChange }) {
   const type = zone.getType();
   const entry = REGISTRY[type];
   if (!entry || !entry.overlay)
     throw new Error(`No overlay registered for zone type: ${type}`);
-  return new entry.overlay({ map, anchorPosition, zone });
+  return new entry.overlay({ map, anchorPosition, zone, onChange });
 }
 
 export function createZoneControls(type, { parent, onChange }) {

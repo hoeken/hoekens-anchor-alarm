@@ -241,6 +241,7 @@ class AnchorAlarm {
     this.anchorOverlay = new AnchorOverlay({
       state: this.state,
       map: this.map,
+      onZoneChange: (zoneConfig) => this.anchorController.setZone(zoneConfig),
     });
 
     this.anchorController = new AnchorController({

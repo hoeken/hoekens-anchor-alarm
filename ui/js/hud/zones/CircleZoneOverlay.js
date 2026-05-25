@@ -13,10 +13,11 @@ export class CircleZoneOverlay {
     return "circle";
   }
 
-  constructor({ map, anchorPosition, zone }) {
+  constructor({ map, anchorPosition, zone, onChange }) {
     this._map = map;
     this._zone = zone;
     this._anchorPosition = anchorPosition;
+    this._onChange = onChange;
     this._color = "blue";
 
     this._layer = L.circle(anchorPosition, this._renderRadius(), {
