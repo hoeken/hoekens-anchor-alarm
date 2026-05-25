@@ -91,7 +91,7 @@ export const InfoPanel = L.Control.extend({
 
   setCurrentTide: function (currentTide) {
     if (currentTide) {
-      this._currentTide.textContent = DisplayUnit.formatDisplay(currentTide);
+      this._currentTide.textContent = DisplayUnit.formatDelta(currentTide);
       this._currentTideRow.style.display = "";
     } else {
       this._currentTideRow.style.display = "none";
@@ -128,7 +128,7 @@ export const InfoPanel = L.Control.extend({
 
   setDepthValue: function (depth) {
     if (depth)
-      this._depthValue.textContent = DisplayUnit.formatDisplay(depth);
+      this._depthValue.textContent = DisplayUnit.formatDelta(depth);
     else
       this._depthValue.textContent = "~";
   },

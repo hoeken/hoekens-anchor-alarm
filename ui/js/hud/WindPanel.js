@@ -41,7 +41,7 @@ export const WindPanel = L.Control.extend({
       return;
     }
 
-    const awsText = DisplayUnit.formatDisplay(aws, 0);
+    const awsText = DisplayUnit.formatDelta(aws, 0);
     if (awsText !== this._lastAwsText) {
       this._aws.innerHTML = awsText;
       this._lastAwsText = awsText;

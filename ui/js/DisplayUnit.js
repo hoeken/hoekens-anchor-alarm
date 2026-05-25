@@ -200,47 +200,65 @@ export class DisplayUnit {
       .catch(() => { });
   }
 
-  static _categoryConfig(delta) {
+  static deltaConfig(delta) {
     const category = delta?.meta?.displayUnits?.category;
     if (!category)
       return null;
     return DisplayUnit.config?.categories?.[category] ?? null;
   }
 
-  static convertToDisplay(delta, value = false) {
-    if (value === false)
-      value = delta?.value;
-    const cfg = DisplayUnit._categoryConfig(delta);
+  static categoryConfig(category) {
+    return DisplayUnit.config?.categories?.[category] ?? null;
+  }
+
+  static convertToDisplay(cfg, value) {
     let symbol = "";
     let format = null;
+    let converted = value;
     if (cfg) {
-      if (cfg.formula && typeof value === "number")
-        value = evaluate(cfg.formula, { value });
+      if (cfg.formula && typeof converted === "number")
+        converted = evaluate(cfg.formula, { value: converted });
       if (cfg.symbol)
         symbol = cfg.symbol;
       else if (cfg.targetUnit)
         symbol = cfg.targetUnit;
-      format = cfg.displayFormat ?? null;
+      format = cfg.displayFormat ?? "0.0";
     }
 
-    return { value, symbol, format };
+    return { converted, symbol, format };
   }
 
-  static convertFromDisplay(delta, value) {
-    const cfg = DisplayUnit._categoryConfig(delta);
+  static convertFromDisplay(cfg, value) {
     if (cfg?.inverseFormula && typeof value === "number")
       value = evaluate(cfg.inverseFormula, { value });
     return value;
   }
 
-  static formatDisplay(delta, decimals = false, value = false) {
-    if (!delta)
-      return "";
-    if (value === false && (delta.value === undefined || delta.value === null))
+  static formatDelta(delta, decimals = false) {
+    if (!delta || delta.value === undefined || delta.value === null)
       return "";
 
-    const { value: converted, symbol, format } = this.convertToDisplay(delta, value);
+    const cfg = DisplayUnit.deltaConfig(delta);
+    if (!cfg)
+      return "";
 
+    const { converted, symbol, format } = this.convertToDisplay(cfg, delta.value);
+    return this.formatFinal(converted, symbol, format, decimals);
+  }
+
+  static formatValue(value, category, decimals = false) {
+    if (value === undefined || value === null)
+      return "";
+
+    const cfg = DisplayUnit.categoryConfig(category);
+    if (!cfg)
+      return "";
+
+    const { converted, symbol, format } = this.convertToDisplay(cfg, value);
+    return this.formatFinal(converted, symbol, format, decimals);
+  }
+
+  static formatFinal(converted, symbol, format, decimals) {
     let text;
     if (format && typeof converted === "number") {
       if (decimals === false)

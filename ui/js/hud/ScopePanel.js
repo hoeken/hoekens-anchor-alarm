@@ -119,7 +119,7 @@ export const ScopePanel = L.Control.extend({
       if (state.tide) {
         maxHeight += state.tidalRise;
         showTotal = true;
-        this._refs.tidalRise.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.tidalRise);
+        this._refs.tidalRise.innerHTML = DisplayUnit.formatValue(state.tidalRise, "depth");
         this._refs.tidalRiseRow.style.display = "";
       } else {
         this._refs.tidalRiseRow.style.display = "none";
@@ -129,25 +129,25 @@ export const ScopePanel = L.Control.extend({
       if (state.boatConfig.anchorRollerHeight) {
         maxHeight += state.boatConfig.anchorRollerHeight;
         showTotal = true;
-        this._refs.bowHeight.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.boatConfig.anchorRollerHeight);
+        this._refs.bowHeight.innerHTML = DisplayUnit.formatValue(state.boatConfig.anchorRollerHeight, "depth");
         this._refs.bowHeightRow.style.display = "";
       }
       else
         this._refs.bowHeightRow.style.display = "none";
 
-      this._refs.scopeDepth.innerHTML = DisplayUnit.formatDisplay(state.belowSurface);
+      this._refs.scopeDepth.innerHTML = DisplayUnit.formatDelta(state.belowSurface);
 
       if (showTotal) {
-        this._refs.scopeTotal.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, maxHeight);
+        this._refs.scopeTotal.innerHTML = DisplayUnit.formatValue(maxHeight, "depth");
         this._refs.scopeTotalRow.style.display = "";
       }
       else
         this._refs.scopeTotalRow.style.display = "none";
 
-      this._refs.scope7to1.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.scope7);
-      this._refs.scope5to1.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.scope5);
-      this._refs.scope4to1.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.scope4);
-      this._refs.scope3to1.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.scope3);
+      this._refs.scope7to1.innerHTML = DisplayUnit.formatValue(state.scope7, "depth");
+      this._refs.scope5to1.innerHTML = DisplayUnit.formatValue(state.scope5, "depth");
+      this._refs.scope4to1.innerHTML = DisplayUnit.formatValue(state.scope4, "depth");
+      this._refs.scope3to1.innerHTML = DisplayUnit.formatValue(state.scope3, "depth");
 
       this._refs.scopeDepthTable.style.display = "";
     } else {
@@ -157,13 +157,13 @@ export const ScopePanel = L.Control.extend({
     //minimum depth calculation - tide and belowKeel are both required
     if (state.tide && state.belowKeel) {
 
-      this._refs.belowKeel.innerHTML = DisplayUnit.formatDisplay(state.belowKeel);
-      this._refs.tidalFall.innerHTML = DisplayUnit.formatDisplay(state.belowSurface, false, state.tidalFall);
+      this._refs.belowKeel.innerHTML = DisplayUnit.formatDelta(state.belowKeel);
+      this._refs.tidalFall.innerHTML = DisplayUnit.formatValue(state.tidalFall, "depth");
 
       let minimumDepth = state.belowKeel.value;
       if (state.tides)
         minimumDepth -= state.tidalFall;
-      this._refs.minimumDepth.innerHTML = DisplayUnit.formatDisplay(state.belowKeel, false, minimumDepth);
+      this._refs.minimumDepth.innerHTML = DisplayUnit.formatValue(minimumDepth, "depth");
 
       if (minimumDepth > 1) {
         this._refs.minimumDepthRow.style.color = "green";

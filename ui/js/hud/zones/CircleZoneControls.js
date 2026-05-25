@@ -16,7 +16,6 @@ export class CircleZoneControls {
   constructor({ parent, onChange }) {
     this._onChange = onChange;
     this._radius = 0;
-    this._maxRadiusEnvelope = null;
 
     this._container = document.createElement("div");
     this._container.id = "radiusControl";
@@ -56,19 +55,17 @@ export class CircleZoneControls {
 
   _emit(newRadius, convert) {
     let radius = newRadius;
-    if (convert && this._maxRadiusEnvelope)
-      radius = DisplayUnit.convertFromDisplay(this._maxRadiusEnvelope, newRadius);
+    if (convert) {
+      let cfg = DisplayUnit.categoryConfig("depth");
+      radius = DisplayUnit.convertFromDisplay(cfg, newRadius);
+    }
     if (this._onChange)
       this._onChange({ type: "circle", radius });
   }
 
   update(appState) {
-    this._radius = appState.anchor?.maxRadius?.value ?? 0;
-    this._maxRadiusEnvelope = appState.anchor?.maxRadius ?? null;
-    if (this._maxRadiusEnvelope)
-      this._radiusEl.innerHTML = DisplayUnit.formatDisplay(this._maxRadiusEnvelope, 0, this._radius);
-    else
-      this._radiusEl.innerHTML = this._radius;
+    this._radius = appState.anchor?.watchZone?.value?.radius ?? 0;
+    this._radiusEl.innerHTML = DisplayUnit.formatValue(this._radius, "depth");
   }
 
   destroy() {
