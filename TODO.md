@@ -2,11 +2,19 @@
 
 ## UI
 
-- load /plugins/hoekens-anchor-alarm -> and log the version to console.log
-
 - circlezone -> add draggable dot handle on the circle to set the radius
 
-## UI Config
+## UI - SectorZone
+
+- similar design to circle zone:
+  - type: sector
+  - circle centered on anchor position
+  - radius
+  - start and end angles that define the safe zone
+  - draggable dot handle for radius - should be between start/end handles
+  - draggable dot handle for start / end zones - also on radius of circle
+
+## UI - Config
 
 - loading
   - ui config is already stored as AnchorAlarm.config

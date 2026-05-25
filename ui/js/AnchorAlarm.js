@@ -123,6 +123,14 @@ class AnchorAlarm {
       onSetZone: (zoneConfig) => this.anchorController.setZone(zoneConfig),
     });
 
+    this.signalK
+      .fetchPluginInfo()
+      .then((info) => {
+        this.version = info.version;
+        console.log(`Hoeken's Anchor Alarm v${this.version}`);
+      })
+      .catch(() => {});
+
     this.loadInitialData();
   }
 
