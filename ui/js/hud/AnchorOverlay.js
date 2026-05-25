@@ -229,10 +229,7 @@ export class AnchorOverlay {
       this.anchorPosition.lng,
     );
     distance = Math.round(distance * 10) / 10;
-
-    let distanceLabel = `${distance}m`;
-    if (this.state.anchor?.maxRadius)
-      distanceLabel = DisplayUnit.formatValue(distance, "depth");
+    let distanceLabel = DisplayUnit.formatValue(distance, "depth");
 
     const bearing = Math.round(
       GeoMath.calculateBearing(

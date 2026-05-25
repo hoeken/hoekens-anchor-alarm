@@ -23,16 +23,19 @@ export class AnchorController {
   requestDrop() {
     if (this._appState.isAnchored() || this._pending)
       return;
+
     const pos = this._overlay.getCrosshairPosition();
     if (!pos)
       return;
 
     const zoneConfig = this._currentZoneConfig();
+    if (!zoneConfig)
+      return;
+
     const snapshot = this._appState.snapshotAnchorState();
     this._pending = true;
     this._appState.applyClientAnchorState({
       position: { latitude: pos.lat, longitude: pos.lng },
-      maxRadius: zoneConfig.type === "circle" ? zoneConfig.radius : null,
       watchZone: zoneConfig,
       state: "on",
     });
@@ -60,7 +63,7 @@ export class AnchorController {
 
     const snapshot = this._appState.snapshotAnchorState();
     this._pending = true;
-    // Intentionally not clearing maxRadius / watchZone — preserved for UI
+    // Intentionally not clearing watchZone — preserved for UI
     // continuity so the toolbar and overlay keep the last set values and the
     // next drop has sensible defaults. AppState also filters server nulls.
     this._appState.applyClientAnchorState({
@@ -96,13 +99,6 @@ export class AnchorController {
       return;
 
     const updates = { watchZone: zoneConfig };
-    // Sync maxRadius for circle zones so the legacy display path keeps
-    // formatting correctly. Clear it for non-circle shapes where the value
-    // is meaningless.
-    if (zoneConfig.type === "circle")
-      updates.maxRadius = zoneConfig.radius;
-    else
-      updates.maxRadius = null;
     this._appState.applyClientAnchorState(updates);
     this._onChange();
 
@@ -120,15 +116,12 @@ export class AnchorController {
 
   // === Helpers ====================================================================
 
-  // Pull the current zone config from AppState. Falls back to a default circle
-  // built from the legacy maxRadius envelope so estimateAnchorPosition and the
-  // first drop both work before any zone has been published.
+  // Pull the current zone config from AppState.
   _currentZoneConfig() {
     const config = this._appState.anchor?.watchZone?.value;
     if (config && typeof config === "object" && config.type)
       return config;
-    const radius = this._appState.anchor?.maxRadius?.value ?? 0;
-    return { type: "circle", radius };
+    return null;
   }
 
   estimateAnchorPosition() {
@@ -144,7 +137,6 @@ export class AnchorController {
       this._appState.boatConfig.gpsBowYDistance,
     );
     this._appState.applyClientAnchorState({
-      maxRadius: radius,
       watchZone: { type: "circle", radius },
     });
 

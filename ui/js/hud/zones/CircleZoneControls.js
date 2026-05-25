@@ -65,7 +65,7 @@ export class CircleZoneControls {
 
   update(appState) {
     this._radius = appState.anchor?.watchZone?.value?.radius ?? 0;
-    this._radiusEl.innerHTML = DisplayUnit.formatValue(this._radius, "depth");
+    this._radiusEl.innerHTML = DisplayUnit.formatValue(this._radius, "depth", 0);
   }
 
   destroy() {

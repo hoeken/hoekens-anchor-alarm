@@ -70,7 +70,7 @@ export class ControlToolbar {
     this._shapeSelect.addEventListener("change", (e) => {
       const newType = e.target.value;
       if (newType === "circle" && this._onSetZone)
-        this._onSetZone({ type: "circle", radius: this._currentRadius() || 60 });
+        this._onSetZone({ type: "circle" });
       // Other shapes will land in a follow-up PR — currently disabled in the
       // dropdown so this branch is unreachable.
     });
@@ -126,7 +126,7 @@ export class ControlToolbar {
     this._ensureZoneControls(type);
     if (this._shapeSelect.value !== type)
       this._shapeSelect.value = type;
-    this._lastRadius = appState.anchor?.maxRadius?.value ?? 0;
+    // this._lastRadius = appState.anchor?.maxRadius?.value ?? 0;
     this._zoneControls?.update(appState);
   }
 
