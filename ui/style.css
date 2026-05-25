@@ -97,6 +97,15 @@ body,
   text-align: right;
 }
 
+#currentTideDirection svg {
+  margin-left: 2px;
+}
+
+#currentTideDirection svg path {
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
 .scope {
   padding: 5px;
   width: 200px;
