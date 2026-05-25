@@ -77,37 +77,37 @@ export class AppState {
           },
           {
             path: "environment.tide",
-            minPeriod: 60 * 1000,
+            period: 60 * 1000,
             format: "full",
-            policy: "instant",
+            policy: "fixed",
             sendMeta: "all",
           },
           {
             path: "navigation.anchor.position",
-            minPeriod: DELTA_FAST_SPEED,
+            period: DELTA_FAST_SPEED,
             format: "full",
-            policy: "instant",
+            policy: "fixed",
             sendMeta: "all",
           },
           {
             path: "navigation.anchor.state",
-            minPeriod: DELTA_FAST_SPEED,
+            period: DELTA_FAST_SPEED,
             format: "full",
-            policy: "instant",
+            policy: "fixed",
             sendMeta: "all",
           },
           {
             path: "navigation.anchor.watchZone",
-            minPeriod: DELTA_FAST_SPEED,
+            period: DELTA_FAST_SPEED,
             format: "full",
-            policy: "instant",
+            policy: "fixed",
             sendMeta: "all",
           },
           {
             path: "notifications.navigation.anchor",
-            minPeriod: DELTA_FAST_SPEED,
+            period: DELTA_FAST_SPEED,
             format: "full",
-            policy: "instant",
+            policy: "fixed",
             sendMeta: "all",
           },
         ],
@@ -176,10 +176,8 @@ export class AppState {
     if (!this.anchor)
       this.anchor = {};
 
-    if (!this._anchorSuppressed("state")) {
+    if (!this._anchorSuppressed("state"))
       this.anchor.state = this.extract(data, "navigation.anchor.state", false) ?? this.anchor.state;
-      // console.log(this.anchor.state);
-    }
 
     // anchor.position is treated as a UI preference: the server clears it on raise,
     // but the toolbar/overlay want to keep the last set value so the next
@@ -210,10 +208,6 @@ export class AppState {
 
   handleDelta(timestamp, delta) {
     const path = delta.path;
-
-    // if (delta.meta) {
-    //   console.log(delta);
-    // }
 
     // Mutate the existing envelope so meta/$source/pgn/values populated by
     // extractAll survive delta updates. Only create a new envelope the first
@@ -254,10 +248,8 @@ export class AppState {
     else if (path == "environment.tide.timeLow")
       (this.tide ??= {}).timeLow = apply(this.tide.timeLow);
     else if (path == "navigation.anchor.state") {
-      if (!this._anchorSuppressed("state")) {
+      if (!this._anchorSuppressed("state"))
         this.anchor.state = apply(this.anchor.state);
-        // console.log(this.anchor.state);
-      }
     }
     else if (path == "navigation.anchor.position") {
       if (delta.value != null && !this._anchorSuppressed("position"))
@@ -332,8 +324,6 @@ export class AppState {
   }
 
   _anchorSuppressed(key) {
-    // if (Date.now() < this._anchorSuppressUntil[key])
-    //   console.log(`suppressed: ${key}`);
     return Date.now() < this._anchorSuppressUntil[key];
   }
 
