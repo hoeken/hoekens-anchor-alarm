@@ -1,11 +1,11 @@
 import { WatchZone } from "./WatchZone.js";
 import {
-  bearing,
-  deg2rad,
-  rad2deg,
-  haversineDistance,
-  EARTH_RADIUS_METERS,
-} from "../geo/distance.js";
+  bearing as turfBearing,
+  bearingToAzimuth,
+  distance,
+  destination,
+  point,
+} from "@turf/turf";
 
 const DEFAULT_RADIUS_METERS = 60;
 // North-centered, 120° wide. Used only when a config arrives with missing /
@@ -14,10 +14,6 @@ const DEFAULT_RADIUS_METERS = 60;
 const DEFAULT_START_ANGLE = 300;
 const DEFAULT_END_ANGLE = 60;
 
-function normalizeAngle(a) {
-  return ((a % 360) + 360) % 360;
-}
-
 export class SectorZone extends WatchZone {
   constructor(config = {}) {
     super(config);
@@ -25,8 +21,8 @@ export class SectorZone extends WatchZone {
     this.radius = Number.isFinite(r) && r > 0 ? r : DEFAULT_RADIUS_METERS;
     const s = Number(config.startAngle);
     const e = Number(config.endAngle);
-    this.startAngle = Number.isFinite(s) ? normalizeAngle(s) : DEFAULT_START_ANGLE;
-    this.endAngle = Number.isFinite(e) ? normalizeAngle(e) : DEFAULT_END_ANGLE;
+    this.startAngle = Number.isFinite(s) ? bearingToAzimuth(s) : DEFAULT_START_ANGLE;
+    this.endAngle = Number.isFinite(e) ? bearingToAzimuth(e) : DEFAULT_END_ANGLE;
   }
 
   getType() {
@@ -53,16 +49,12 @@ export class SectorZone extends WatchZone {
   contains(vesselPosition, anchorPosition) {
     if (!vesselPosition || !anchorPosition)
       return true;
-    const d = haversineDistance(
-      vesselPosition.latitude, vesselPosition.longitude,
-      anchorPosition.latitude, anchorPosition.longitude,
-    );
+    const anchorPt = point([anchorPosition.longitude, anchorPosition.latitude]);
+    const vesselPt = point([vesselPosition.longitude, vesselPosition.latitude]);
+    const d = distance(vesselPt, anchorPt, { units: "meters" });
     if (d > this.radius)
       return false;
-    const b = bearing(
-      anchorPosition.latitude, anchorPosition.longitude,
-      vesselPosition.latitude, vesselPosition.longitude,
-    );
+    const b = bearingToAzimuth(turfBearing(anchorPt, vesselPt));
     const arcWidth = (this.endAngle - this.startAngle + 360) % 360;
     const offset = (b - this.startAngle + 360) % 360;
     return offset <= arcWidth;
@@ -71,14 +63,12 @@ export class SectorZone extends WatchZone {
   getBoundingBox(anchorPosition) {
     // Loose circle bounding box. Tightening to the actual sector wedge is
     // possible but adds geometry for no visible payoff at fitBounds scale.
-    const dLat = rad2deg(this.radius / EARTH_RADIUS_METERS);
-    const cosLat = Math.cos(deg2rad(anchorPosition.latitude));
-    const dLon = rad2deg(this.radius / (EARTH_RADIUS_METERS * (cosLat || 1)));
-    return {
-      latMin: anchorPosition.latitude - dLat,
-      latMax: anchorPosition.latitude + dLat,
-      lonMin: anchorPosition.longitude - dLon,
-      lonMax: anchorPosition.longitude + dLon,
-    };
+    const center = point([anchorPosition.longitude, anchorPosition.latitude]);
+    const opts = { units: "meters" };
+    const n = destination(center, this.radius, 0, opts).geometry.coordinates;
+    const e = destination(center, this.radius, 90, opts).geometry.coordinates;
+    const s = destination(center, this.radius, 180, opts).geometry.coordinates;
+    const w = destination(center, this.radius, 270, opts).geometry.coordinates;
+    return { latMin: s[1], latMax: n[1], lonMin: w[0], lonMax: e[0] };
   }
 }

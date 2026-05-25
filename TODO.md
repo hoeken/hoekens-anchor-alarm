@@ -1,22 +1,19 @@
 # v2.2
 
-## UI - PolygonZone
-
-- delete vertex?
 
 ## UI - Misc
 
-- convert all the functions in ui/js/geomath.js to turf?
-- convert all the functions in shared/geo/distance.js to turf?
-- replace all calls with direct calls to turf.  no wrappers
-
 - ControlToolbar._defaultZoneConfig(type) -> call a static method on the appropriate zone and pass in appState
 
-- add totalChainLength to prefs -> design.totalChainLength
+- add totalChainLength to schema -> design.totalChainLength (default 100)
 - add color coding to scope table if length > totalChainLength
 - add bounds to estimatedAnchorPosition
   - max distance <= totalChainLength
   - circle radius = distance from bow + loa * 2
+
+## UI - PolygonZone
+
+- how to handle deleting vertices?
 
 # LONG TERM
 

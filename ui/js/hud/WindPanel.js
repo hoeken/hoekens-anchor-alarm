@@ -3,7 +3,7 @@
 // touching the document directly. Element IDs are preserved for CSS hooks
 // in style.css; do not rename without updating the stylesheet.
 
-import { GeoMath } from "../GeoMath.js";
+import { radiansToDegrees } from "@turf/turf";
 import { DisplayUnit } from "../DisplayUnit.js";
 import { getWindBarb } from "../WindBarb.js";
 
@@ -57,7 +57,7 @@ export const WindPanel = L.Control.extend({
     if (this._barbSvg) {
       let angle = 0;
       if (twa)
-        angle = Math.round(GeoMath.rad2deg(twa.value));
+        angle = Math.round(radiansToDegrees(twa.value));
       const transform = `rotate(${angle}deg)`;
       if (transform !== this._lastTransform) {
         this._barbSvg.style.transform = transform;
@@ -71,7 +71,7 @@ export const WindPanel = L.Control.extend({
     if (!twa || !this._barbSvg)
       return;
 
-    const angle = Math.round(GeoMath.rad2deg(twa.value));
+    const angle = Math.round(radiansToDegrees(twa.value));
     const transform = `rotate(${angle}deg)`;
     if (transform !== this._lastTransform) {
       this._barbSvg.style.transform = transform;

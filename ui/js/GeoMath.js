@@ -1,98 +1,21 @@
-import { deg2rad, rad2deg, haversineDistance, bearing } from "../../shared/geo/distance.js";
+import { destination, point } from "@turf/turf";
 
 export class GeoMath {
-  static deg2rad(deg) {
-    return deg2rad(deg);
-  }
-
-  // Convert radians to degrees
-  static rad2deg(radians) {
-    return rad2deg(radians);
-  }
-
-  static normalizeAngle(angle) {
-    return ((angle % 360) + 360) % 360;
-  }
-
-  /**
-   * Returns the length of the vector (x, y) from the origin.
-   * @param {number} x – x-coordinate
-   * @param {number} y – y-coordinate
-   * @returns {number} distance from (0,0) to (x,y)
-   */
-  static calculateVectorDistance(x, y) {
-    return Math.sqrt(x * x + y * y);
-  }
-
-  static calculateDistance(lat1, lon1, lat2, lon2) {
-    return haversineDistance(lat1, lon1, lat2, lon2);
-  }
-
-  static calculateBearing(lat1, lon1, lat2, lon2) {
-    return bearing(lat1, lon1, lat2, lon2);
-  }
-
-  /**
-   * Calculates the destination point given starting latitude and longitude,
-   * bearing, and distance using the haversine formula.
-   *
-   * @param {number} lat1 - Starting latitude in degrees.
-   * @param {number} lon1 - Starting longitude in degrees.
-   * @param {number} bearing - Bearing in degrees (clockwise from north).
-   * @param {number} distance - Distance to travel from the starting point in meters.
-   * @returns {{ latitude: number, longitude: number }} - The destination latitude and longitude.
-   */
-  static calculateDestinationPoint(lat1, lon1, bearing, distance) {
-    const R = 6371e3; // Earth's radius in meters
-
-    // Convert input values to radians
-    const φ1 = (lat1 * Math.PI) / 180;
-    const λ1 = (lon1 * Math.PI) / 180;
-    const θ = (bearing * Math.PI) / 180;
-    const δ = distance / R; // Angular distance in radians
-
-    // Calculate destination coordinates
-    const sinφ1 = Math.sin(φ1);
-    const cosφ1 = Math.cos(φ1);
-    const sinδ = Math.sin(δ);
-    const cosδ = Math.cos(δ);
-    const sinθ = Math.sin(θ);
-    const cosθ = Math.cos(θ);
-
-    const sinφ2 = sinφ1 * cosδ + cosφ1 * sinδ * cosθ;
-    const φ2 = Math.asin(sinφ2);
-
-    const y = sinθ * sinδ * cosφ1;
-    const x = cosδ - sinφ1 * sinφ2;
-    const λ2 = λ1 + Math.atan2(y, x);
-
-    // Convert radians back to degrees
-    const lat2 = (φ2 * 180) / Math.PI;
-    const lon2 = (((λ2 * 180) / Math.PI + 540) % 360) - 180; // Normalize to [-180, +180]
-
-    return { latitude: lat2, longitude: lon2 };
-  }
-
+  // Translates a GPS position to the boat's bow using the heading and the
+  // configured GPS→bow offsets (Y along heading, then X 90° to starboard).
+  // Returns an L.latLng so callers can hand it straight to Leaflet.
   static calculateBowCoordinates(current, heading, xOffset, yOffset) {
-    //first do our Y along our heading.
-    let bc = GeoMath.calculateDestinationPoint(
-      current.lat,
-      current.lng,
-      heading,
+    const opts = { units: "meters" };
+    let pt = destination(
+      point([current.lng, current.lat]),
       yOffset,
+      heading,
+      opts,
     );
-
-    //then do our X at 90 degrees.
     if (xOffset != 0)
-      bc = GeoMath.calculateDestinationPoint(
-        bc.latitude,
-        bc.longitude,
-        heading - 90,
-        xOffset,
-      );
-
-    //okay use the new bow coordinates
-    return L.latLng(bc.latitude, bc.longitude);
+      pt = destination(pt, xOffset, heading - 90, opts);
+    const [lon, lat] = pt.geometry.coordinates;
+    return L.latLng(lat, lon);
   }
 
   /**

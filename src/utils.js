@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-import { haversineDistance } from "../shared/geo/distance.js";
-
 export class Utils {
   static checkEngineState(app) {
     const propulsion = app.getSelfPath("propulsion");
@@ -41,10 +39,6 @@ export class Utils {
     }
 
     return false;
-  }
-
-  static calc_distance(lat1, lon1, lat2, lon2) {
-    return haversineDistance(lat1, lon1, lat2, lon2);
   }
 
   static isFresh(data, max_age = 300) {

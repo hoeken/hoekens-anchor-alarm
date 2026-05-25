@@ -2,6 +2,12 @@
 
 import { SignalKHelper } from "./SignalKHelper.js";
 import { BoatConfig } from "./BoatConfig.js";
+import {
+  bearing as turfBearing,
+  bearingToAzimuth,
+  point,
+  radiansToDegrees,
+} from "@turf/turf";
 import { GeoMath } from "./GeoMath.js";
 import { watchZoneFromConfig } from "../../shared/watch-zones/index.js";
 
@@ -395,7 +401,7 @@ export class AppState {
   // 0
   computeOwnHeading() {
     if (this.heading)
-      return GeoMath.rad2deg(this.heading.value);
+      return radiansToDegrees(this.heading.value);
 
     if (
       this.anchor.position &&
@@ -403,17 +409,23 @@ export class AppState {
       this.currentCoordinates
     ) {
       return Math.round(
-        GeoMath.calculateBearing(
-          this.currentCoordinates.value.latitude,
-          this.currentCoordinates.value.longitude,
-          this.anchor.position.value.latitude,
-          this.anchor.position.value.longitude,
+        bearingToAzimuth(
+          turfBearing(
+            point([
+              this.currentCoordinates.value.longitude,
+              this.currentCoordinates.value.latitude,
+            ]),
+            point([
+              this.anchor.position.value.longitude,
+              this.anchor.position.value.latitude,
+            ]),
+          ),
         ),
       );
     }
 
     if (this.twa)
-      return GeoMath.rad2deg(this.twa.value);
+      return radiansToDegrees(this.twa.value);
 
     return 0;
   }

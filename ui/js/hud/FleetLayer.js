@@ -5,7 +5,7 @@
 // own boat is never auto-removed (its mmsi key never appears in the AIS list).
 
 import simplify from "simplify-js";
-import { GeoMath } from "../GeoMath.js";
+import { distance, point, radiansToDegrees } from "@turf/turf";
 import { SignalKHelper } from "../SignalKHelper.js";
 import { BoatConfig } from "../BoatConfig.js";
 
@@ -141,13 +141,12 @@ export class FleetLayer {
       for (let position of history) {
         const lat = position[1];
         const lon = position[0];
-        const distance = GeoMath.calculateDistance(
-          ownLatLng.lat,
-          ownLatLng.lng,
-          lat,
-          lon,
+        const dist = distance(
+          point([ownLatLng.lng, ownLatLng.lat]),
+          point([lon, lat]),
+          { units: "meters" },
         );
-        if (distance < filterRadius) {
+        if (dist < filterRadius) {
           points.push([lat, lon, i]);
           i++;
         }
@@ -203,18 +202,17 @@ export class FleetLayer {
         continue;
 
       const position = vessel.navigation.position.value;
-      const distance = GeoMath.calculateDistance(
-        position.latitude,
-        position.longitude,
-        ownLatLng.lat,
-        ownLatLng.lng,
+      const dist = distance(
+        point([position.longitude, position.latitude]),
+        point([ownLatLng.lng, ownLatLng.lat]),
+        { units: "meters" },
       );
-      if (distance > filterRadius)
+      if (dist > filterRadius)
         continue;
 
       detected.push(vessel.mmsi);
       const heading = this.deriveVesselHeading(vessel, twa);
-      const distanceRounded = Math.round(distance);
+      const distanceRounded = Math.round(dist);
 
       if (vessel.mmsi in this.vessels) {
         this.updateExistingVessel(vessel, position, heading, distanceRounded);
@@ -248,14 +246,14 @@ export class FleetLayer {
 
     const headingTrue = SignalKHelper.value(vessel, "navigation.headingTrue");
     if (headingTrue !== undefined)
-      return GeoMath.rad2deg(headingTrue);
+      return radiansToDegrees(headingTrue);
 
     const cog = SignalKHelper.value(vessel, "navigation.courseOverGroundTrue");
     if (cog !== undefined && sogVal > 0.5)
-      return GeoMath.rad2deg(cog);
+      return radiansToDegrees(cog);
 
     if (twa)
-      return GeoMath.rad2deg(twa.value);
+      return radiansToDegrees(twa.value);
     return 0;
   }
 

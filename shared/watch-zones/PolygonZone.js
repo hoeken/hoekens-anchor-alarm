@@ -1,13 +1,11 @@
 import { WatchZone } from "./WatchZone.js";
 import {
-  bearing as initialBearing,
-  deg2rad,
-  rad2deg,
-  haversineDistance,
-  EARTH_RADIUS_METERS,
-} from "../geo/distance.js";
-import {
+  bearing as turfBearing,
+  bearingToAzimuth,
   booleanPointInPolygon,
+  degreesToRadians,
+  destination,
+  distance,
   kinks,
   point,
   polygon as turfPolygon,
@@ -16,15 +14,11 @@ import {
 export const MIN_VERTICES = 3;
 export const MAX_VERTICES = 24;
 
-function normalizeAngle(a) {
-  return ((a % 360) + 360) % 360;
-}
-
 // Flat-earth projection of a {bearing, distance} vertex to local x/y meters.
 // Used for turf's planar geometry checks (point-in-polygon, kinks). The
 // projection is anchor-centered so turf never needs to see lat/lng.
 function project(v) {
-  const θ = deg2rad(v.bearing);
+  const θ = degreesToRadians(v.bearing);
   return [Math.sin(θ) * v.distance, Math.cos(θ) * v.distance];
 }
 
@@ -37,7 +31,7 @@ function sanitizeVertices(raw) {
     const d = Number(v?.distance);
     if (!Number.isFinite(b) || !Number.isFinite(d) || d <= 0)
       continue;
-    out.push({ bearing: normalizeAngle(b), distance: d });
+    out.push({ bearing: bearingToAzimuth(b), distance: d });
     if (out.length >= MAX_VERTICES)
       break;
   }
@@ -80,18 +74,14 @@ export class PolygonZone extends WatchZone {
     // as open zone so the alarm doesn't fire on an unfinished shape.
     if (this.vertices.length < MIN_VERTICES)
       return true;
-    const b = initialBearing(
-      anchorPosition.latitude, anchorPosition.longitude,
-      vesselPosition.latitude, vesselPosition.longitude,
-    );
-    const d = haversineDistance(
-      anchorPosition.latitude, anchorPosition.longitude,
-      vesselPosition.latitude, vesselPosition.longitude,
-    );
-    const vesselPoint = project({ bearing: b, distance: d });
+    const anchorPt = point([anchorPosition.longitude, anchorPosition.latitude]);
+    const vesselPt = point([vesselPosition.longitude, vesselPosition.latitude]);
+    const b = bearingToAzimuth(turfBearing(anchorPt, vesselPt));
+    const d = distance(anchorPt, vesselPt, { units: "meters" });
+    const vesselXY = project({ bearing: b, distance: d });
     const ring = this.vertices.map(project);
     ring.push(ring[0]);
-    return booleanPointInPolygon(point(vesselPoint), turfPolygon([ring]));
+    return booleanPointInPolygon(point(vesselXY), turfPolygon([ring]));
   }
 
   getBoundingBox(anchorPosition) {
@@ -100,16 +90,11 @@ export class PolygonZone extends WatchZone {
       const lon = anchorPosition?.longitude ?? 0;
       return { latMin: lat, latMax: lat, lonMin: lon, lonMax: lon };
     }
-    // Flat-earth projection of each vertex back to lat/lng to find extremes.
-    // Same approximation used in SectorZone — fine at anchorage scale.
-    const cosLat = Math.cos(deg2rad(anchorPosition.latitude)) || 1;
+    const center = point([anchorPosition.longitude, anchorPosition.latitude]);
     let latMin = Infinity, latMax = -Infinity, lonMin = Infinity, lonMax = -Infinity;
     for (const v of this.vertices) {
-      const θ = deg2rad(v.bearing);
-      const dLat = rad2deg((v.distance * Math.cos(θ)) / EARTH_RADIUS_METERS);
-      const dLon = rad2deg((v.distance * Math.sin(θ)) / (EARTH_RADIUS_METERS * cosLat));
-      const lat = anchorPosition.latitude + dLat;
-      const lon = anchorPosition.longitude + dLon;
+      const [lon, lat] = destination(center, v.distance, v.bearing, { units: "meters" })
+        .geometry.coordinates;
       if (lat < latMin)
         latMin = lat;
       if (lat > latMax)

@@ -5,6 +5,7 @@
 // the UI reflects the new state without waiting for the next poll tick. On a
 // POST failure we restore from the pre-write snapshot.
 
+import { destination, point } from "@turf/turf";
 import { GeoMath } from "./GeoMath.js";
 
 export class AnchorController {
@@ -159,13 +160,14 @@ export class AnchorController {
       this._appState.boatConfig.gpsBowXDistance,
       this._appState.boatConfig.gpsBowYDistance,
     );
-    const guess = GeoMath.calculateDestinationPoint(
-      bow.lat,
-      bow.lng,
-      this._appState.boatConfig.heading,
+    const guess = destination(
+      point([bow.lng, bow.lat]),
       distance,
+      this._appState.boatConfig.heading,
+      { units: "meters" },
     );
-    this._overlay.setCrosshairPosition(L.latLng(guess.latitude, guess.longitude));
+    const [guessLon, guessLat] = guess.geometry.coordinates;
+    this._overlay.setCrosshairPosition(L.latLng(guessLat, guessLon));
     this._onChange();
   }
 
@@ -173,7 +175,7 @@ export class AnchorController {
   // 5-meter step and clamped to [0, 200].
   computeDefaultRadius(anchorDistanceGuess, xOffset, yOffset) {
     let r = anchorDistanceGuess;
-    r += GeoMath.calculateVectorDistance(xOffset, yOffset);
+    r += Math.hypot(xOffset, yOffset);
     r *= 1.5;
     r = Math.round(r / 5) * 5;
     r = Math.max(0, r);

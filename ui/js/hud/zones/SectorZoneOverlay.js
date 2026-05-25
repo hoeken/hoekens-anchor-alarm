@@ -5,7 +5,13 @@
 // pattern as CircleZoneOverlay so AnchorController.previewZone/setZone keep
 // working without per-shape branching.
 
-import { GeoMath } from "../../GeoMath.js";
+import {
+  bearing as turfBearing,
+  bearingToAzimuth,
+  destination,
+  distance,
+  point,
+} from "@turf/turf";
 import { SectorZone } from "../../../../shared/watch-zones/SectorZone.js";
 import { ZoneHandle } from "./ZoneHandle.js";
 
@@ -71,13 +77,14 @@ export class SectorZoneOverlay {
   }
 
   _pointAtBearing(bearingDeg, radius) {
-    const p = GeoMath.calculateDestinationPoint(
-      this._anchorPosition.lat,
-      this._anchorPosition.lng,
-      bearingDeg,
+    const p = destination(
+      point([this._anchorPosition.lng, this._anchorPosition.lat]),
       radius,
+      bearingDeg,
+      { units: "meters" },
     );
-    return L.latLng(p.latitude, p.longitude);
+    const [lon, lat] = p.geometry.coordinates;
+    return L.latLng(lat, lon);
   }
 
   _polygonPoints() {
@@ -106,22 +113,21 @@ export class SectorZoneOverlay {
     return Math.max(
       MIN_RENDER_RADIUS_M,
       Math.round(
-        GeoMath.calculateDistance(
-          this._anchorPosition.lat,
-          this._anchorPosition.lng,
-          latlng.lat,
-          latlng.lng,
+        distance(
+          point([this._anchorPosition.lng, this._anchorPosition.lat]),
+          point([latlng.lng, latlng.lat]),
+          { units: "meters" },
         ),
       ),
     );
   }
 
   _bearingFrom(latlng) {
-    return GeoMath.calculateBearing(
-      this._anchorPosition.lat,
-      this._anchorPosition.lng,
-      latlng.lat,
-      latlng.lng,
+    return bearingToAzimuth(
+      turfBearing(
+        point([this._anchorPosition.lng, this._anchorPosition.lat]),
+        point([latlng.lng, latlng.lat]),
+      ),
     );
   }
 

@@ -4,7 +4,7 @@
 // delegated to the shared WatchZone instance so the UI and the backend agree
 // on what "inside the zone" means.
 
-import { GeoMath } from "../../GeoMath.js";
+import { destination, distance, point } from "@turf/turf";
 import { CircleZone } from "../../../../shared/watch-zones/CircleZone.js";
 import { ZoneHandle } from "./ZoneHandle.js";
 
@@ -51,24 +51,24 @@ export class CircleZoneOverlay {
   // Where the handle sits when not being dragged: on the east perimeter at the
   // current radius.
   _restPosition() {
-    const p = GeoMath.calculateDestinationPoint(
-      this._anchorPosition.lat,
-      this._anchorPosition.lng,
-      HANDLE_BEARING_DEG,
+    const p = destination(
+      point([this._anchorPosition.lng, this._anchorPosition.lat]),
       this._renderRadius(),
+      HANDLE_BEARING_DEG,
+      { units: "meters" },
     );
-    return L.latLng(p.latitude, p.longitude);
+    const [lon, lat] = p.geometry.coordinates;
+    return L.latLng(lat, lon);
   }
 
   _radiusFrom(latlng) {
     return Math.max(
       MIN_RENDER_RADIUS_M,
       Math.round(
-        GeoMath.calculateDistance(
-          this._anchorPosition.lat,
-          this._anchorPosition.lng,
-          latlng.lat,
-          latlng.lng,
+        distance(
+          point([this._anchorPosition.lng, this._anchorPosition.lat]),
+          point([latlng.lng, latlng.lat]),
+          { units: "meters" },
         ),
       ),
     );

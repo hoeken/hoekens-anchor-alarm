@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { distance, point } from "@turf/turf";
 import { Watchdog } from "./watchdog.js";
 import { metas, buildSchema, applyDefaults, migrateConfig, readZoneConfig } from "./schema.js";
 import { watchZoneFromConfig } from "../shared/watch-zones/index.js";
@@ -304,11 +305,10 @@ export default function (app) {
     // currentRadius keeps its v2.1 semantics — straight-line distance from
     // anchor to GPS. Even with non-circle zones it's a useful display value
     // and downstream SignalK consumers (logging, telemetry) still rely on it.
-    const currentRadius = Utils.calc_distance(
-      vesselPosition.latitude,
-      vesselPosition.longitude,
-      anchorPosition.latitude,
-      anchorPosition.longitude,
+    const currentRadius = distance(
+      point([vesselPosition.longitude, vesselPosition.latitude]),
+      point([anchorPosition.longitude, anchorPosition.latitude]),
+      { units: "meters" },
     );
 
     //update our parameter that may change.

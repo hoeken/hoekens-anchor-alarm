@@ -4,7 +4,13 @@
 // binary-search clamp along the drag vector (the vertex sticks at the
 // furthest position that still leaves the polygon simple).
 
-import { GeoMath } from "../../GeoMath.js";
+import {
+  bearing as turfBearing,
+  bearingToAzimuth,
+  destination,
+  distance,
+  point,
+} from "@turf/turf";
 import {
   PolygonZone,
   MAX_VERTICES,
@@ -61,13 +67,14 @@ export class PolygonZoneOverlay {
   // === Geometry helpers ============================================================
 
   _vertexLatLng(v) {
-    const p = GeoMath.calculateDestinationPoint(
-      this._anchorPosition.lat,
-      this._anchorPosition.lng,
-      v.bearing,
+    const p = destination(
+      point([this._anchorPosition.lng, this._anchorPosition.lat]),
       v.distance,
+      v.bearing,
+      { units: "meters" },
     );
-    return L.latLng(p.latitude, p.longitude);
+    const [lon, lat] = p.geometry.coordinates;
+    return L.latLng(lat, lon);
   }
 
   _renderLatLngs() {
@@ -75,22 +82,11 @@ export class PolygonZoneOverlay {
   }
 
   _vertexFromLatLng(latlng) {
+    const anchorPt = point([this._anchorPosition.lng, this._anchorPosition.lat]);
+    const target = point([latlng.lng, latlng.lat]);
     return {
-      bearing: GeoMath.calculateBearing(
-        this._anchorPosition.lat,
-        this._anchorPosition.lng,
-        latlng.lat,
-        latlng.lng,
-      ),
-      distance: Math.max(
-        1,
-        GeoMath.calculateDistance(
-          this._anchorPosition.lat,
-          this._anchorPosition.lng,
-          latlng.lat,
-          latlng.lng,
-        ),
-      ),
+      bearing: bearingToAzimuth(turfBearing(anchorPt, target)),
+      distance: Math.max(1, distance(anchorPt, target, { units: "meters" })),
     };
   }
 

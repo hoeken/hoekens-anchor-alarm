@@ -1,5 +1,5 @@
 import { WatchZone } from "./WatchZone.js";
-import { deg2rad, rad2deg, haversineDistance, EARTH_RADIUS_METERS } from "../geo/distance.js";
+import { distance, destination, point } from "@turf/turf";
 
 const DEFAULT_RADIUS_METERS = 60;
 
@@ -25,24 +25,23 @@ export class CircleZone extends WatchZone {
   contains(vesselPosition, anchorPosition) {
     if (!vesselPosition || !anchorPosition)
       return true;
-    const d = haversineDistance(
-      vesselPosition.latitude, vesselPosition.longitude,
-      anchorPosition.latitude, anchorPosition.longitude,
+    const d = distance(
+      point([vesselPosition.longitude, vesselPosition.latitude]),
+      point([anchorPosition.longitude, anchorPosition.latitude]),
+      { units: "meters" },
     );
     return d <= this.radius;
   }
 
   getBoundingBox(anchorPosition) {
-    // Spherical-earth offsets: dLat is uniform, dLon scales by cos(latitude).
-    // Degenerate near the poles, but fine for any realistic anchorage.
-    const dLat = rad2deg(this.radius / EARTH_RADIUS_METERS);
-    const cosLat = Math.cos(deg2rad(anchorPosition.latitude));
-    const dLon = rad2deg(this.radius / (EARTH_RADIUS_METERS * (cosLat || 1)));
-    return {
-      latMin: anchorPosition.latitude - dLat,
-      latMax: anchorPosition.latitude + dLat,
-      lonMin: anchorPosition.longitude - dLon,
-      lonMax: anchorPosition.longitude + dLon,
-    };
+    // Cardinal-direction destinations at zone radius give exact lat/lon
+    // extents on the WGS84 sphere — turf.destination handles the math.
+    const center = point([anchorPosition.longitude, anchorPosition.latitude]);
+    const opts = { units: "meters" };
+    const n = destination(center, this.radius, 0, opts).geometry.coordinates;
+    const e = destination(center, this.radius, 90, opts).geometry.coordinates;
+    const s = destination(center, this.radius, 180, opts).geometry.coordinates;
+    const w = destination(center, this.radius, 270, opts).geometry.coordinates;
+    return { latMin: s[1], latMax: n[1], lonMin: w[0], lonMax: e[0] };
   }
 }
