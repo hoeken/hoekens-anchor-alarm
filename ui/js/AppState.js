@@ -185,7 +185,7 @@ export class AppState {
     if (!this._anchorSuppressed("position")) {
       let newAnchorPosition = this.extract(data, "navigation.anchor.position", false) ??
         this.anchor.position;
-      if (newAnchorPosition.value == null && this.anchor.position?.value)
+      if (newAnchorPosition && newAnchorPosition.value == null && this.anchor.position?.value)
         newAnchorPosition.value = this.anchor.position.value;
       this.anchor.position = newAnchorPosition;
     }
@@ -196,7 +196,7 @@ export class AppState {
     if (!this._anchorSuppressed("watchZone")) {
       let newWatchZone = this.extract(data, "navigation.anchor.watchZone", false);
       //keep our old one if we have it.
-      if (newWatchZone.value == null && this.anchor.watchZone?.value)
+      if (newWatchZone && newWatchZone.value == null && this.anchor.watchZone?.value)
         newWatchZone.value = this.anchor.watchZone.value;
       this.anchor.watchZone = newWatchZone;
     }

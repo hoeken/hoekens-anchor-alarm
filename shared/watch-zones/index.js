@@ -1,9 +1,11 @@
 import { CircleZone } from "./CircleZone.js";
+import { SectorZone } from "./SectorZone.js";
 
 export { WatchZone } from "./WatchZone.js";
 export { CircleZone } from "./CircleZone.js";
+export { SectorZone } from "./SectorZone.js";
 
-export const SUPPORTED_ZONE_TYPES = ["circle"];
+export const SUPPORTED_ZONE_TYPES = ["circle", "sector"];
 
 // Single dispatch point. Unknown/missing types fall back to a default circle
 // so a malformed config can't take the plugin offline.
@@ -14,6 +16,8 @@ export function watchZoneFromConfig(config) {
     case undefined:
     case null:
       return new CircleZone(config || {});
+    case "sector":
+      return new SectorZone(config || {});
     default:
       throw new Error(`Unknown watch zone type: ${type}`);
   }

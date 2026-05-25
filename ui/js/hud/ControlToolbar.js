@@ -18,6 +18,7 @@ export class ControlToolbar {
     this._isAnchored = false;
     this._zoneControls = null;
     this._zoneType = null;
+    this._appState = null;
 
     this._container = document.createElement("div");
     this._container.id = "controlToolbar";
@@ -68,11 +69,8 @@ export class ControlToolbar {
           this._onDrop();
       });
     this._shapeSelect.addEventListener("change", (e) => {
-      const newType = e.target.value;
-      if (newType === "circle" && this._onSetZone)
-        this._onSetZone({ type: "circle" });
-      // Other shapes will land in a follow-up PR — currently disabled in the
-      // dropdown so this branch is unreachable.
+      if (this._onSetZone)
+        this._onSetZone(this._defaultZoneConfig(e.target.value));
     });
 
     // macOS Chrome delivers trackpad pinch as a wheel event with ctrlKey=true.
@@ -110,6 +108,7 @@ export class ControlToolbar {
   // per-shape controls render in both states (so a user can adjust zone
   // either before dropping or while anchored).
   update(appState) {
+    this._appState = appState;
     this._isAnchored = appState.isAnchored();
     this._anchorDown.style.display = this._isAnchored ? "block" : "none";
     this._anchorUp.style.display = this._isAnchored ? "none" : "block";
@@ -123,6 +122,28 @@ export class ControlToolbar {
     if (this._shapeSelect.value !== type)
       this._shapeSelect.value = type;
     this._zoneControls?.update(appState);
+  }
+
+  // Build a default zone config when the user picks a new shape from the
+  // dropdown. Circle keeps v2.1's "reset to backend default" behavior;
+  // sector inherits the current radius (so switching circle → sector at 30m
+  // doesn't snap to 60m) and centers a 120° arc opposite the current heading
+  // — the boat points into the wind/current at anchor, so the safe swing
+  // arc lies astern.
+  _defaultZoneConfig(type) {
+    if (type === "circle")
+      return { type: "circle" };
+    if (type === "sector") {
+      const current = this._appState?.anchor?.watchZone?.value;
+      const currentRadius = Number(current?.radius);
+      const radius = Number.isFinite(currentRadius) && currentRadius > 0 ? currentRadius : 60;
+      const heading = this._appState?.boatConfig?.heading;
+      const center = ((Number.isFinite(heading) ? heading : 0) + 180) % 360;
+      const startAngle = (center - 60 + 360) % 360;
+      const endAngle = (center + 60) % 360;
+      return { type: "sector", radius, startAngle, endAngle };
+    }
+    return { type };
   }
 
   _ensureZoneControls(type) {

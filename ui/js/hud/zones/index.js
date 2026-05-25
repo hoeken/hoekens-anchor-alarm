@@ -1,9 +1,11 @@
 // Dispatch table for watch-zone UI. Each entry pairs a zone type with its
-// Leaflet overlay class and its DOM controls class. Adding a new shape (sector,
-// polygon, …) means writing those two classes and registering them here.
+// Leaflet overlay class and its DOM controls class. Adding a new shape
+// (polygon, …) means writing those two classes and registering them here.
 
 import { CircleZoneOverlay } from "./CircleZoneOverlay.js";
 import { CircleZoneControls } from "./CircleZoneControls.js";
+import { SectorZoneOverlay } from "./SectorZoneOverlay.js";
+import { SectorZoneControls } from "./SectorZoneControls.js";
 
 const REGISTRY = {
   circle: {
@@ -12,9 +14,14 @@ const REGISTRY = {
     controls: CircleZoneControls,
     enabled: true,
   },
-  // Sector and polygon land in a follow-up PR. Listed here (disabled) so the
-  // shape dropdown can advertise them as coming-soon.
-  sector: { label: "Sector", overlay: null, controls: null, enabled: false },
+  sector: {
+    label: "Sector",
+    overlay: SectorZoneOverlay,
+    controls: SectorZoneControls,
+    enabled: true,
+  },
+  // Polygon lands in a follow-up PR. Listed here (disabled) so the shape
+  // dropdown can advertise it as coming-soon.
   polygon: { label: "Polygon", overlay: null, controls: null, enabled: false },
 };
 

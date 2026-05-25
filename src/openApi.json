@@ -150,12 +150,27 @@
                     "properties": {
                       "type": {
                         "type": "string",
-                        "enum": ["circle"]
+                        "enum": ["circle", "sector"]
                       },
                       "radius": {
                         "type": "number",
                         "format": "double",
-                        "minimum": 0
+                        "minimum": 0,
+                        "description": "Alarm radius in meters. Used by both `circle` and `sector` shapes."
+                      },
+                      "startAngle": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 360,
+                        "description": "Sector only: clockwise bearing in degrees (0 = true north) of the start of the safe arc."
+                      },
+                      "endAngle": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 360,
+                        "description": "Sector only: clockwise bearing in degrees (0 = true north) of the end of the safe arc. When `endAngle < startAngle` the arc wraps across 0°/360°."
                       }
                     },
                     "description": "Watch zone configuration. If omitted, the previously configured zone is retained."
@@ -220,14 +235,28 @@
                     "properties": {
                       "type": {
                         "type": "string",
-                        "enum": ["circle"],
+                        "enum": ["circle", "sector"],
                         "description": "Watch zone shape."
                       },
                       "radius": {
                         "type": "number",
                         "format": "double",
                         "minimum": 0,
-                        "description": "Circle zone: alarm radius in meters."
+                        "description": "Alarm radius in meters. Used by both `circle` and `sector` shapes."
+                      },
+                      "startAngle": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 360,
+                        "description": "Sector only: clockwise bearing in degrees (0 = true north) of the start of the safe arc."
+                      },
+                      "endAngle": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 360,
+                        "description": "Sector only: clockwise bearing in degrees (0 = true north) of the end of the safe arc. When `endAngle < startAngle` the arc wraps across 0°/360°."
                       }
                     }
                   }

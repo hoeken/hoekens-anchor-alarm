@@ -1,4 +1,4 @@
-import { deg2rad, rad2deg, haversineDistance } from "../../shared/geo/distance.js";
+import { deg2rad, rad2deg, haversineDistance, bearing } from "../../shared/geo/distance.js";
 
 export class GeoMath {
   static deg2rad(deg) {
@@ -29,26 +29,7 @@ export class GeoMath {
   }
 
   static calculateBearing(lat1, lon1, lat2, lon2) {
-    // Convert latitude and longitude from degrees to radians
-    var θa = GeoMath.deg2rad(lat1);
-    var θb = GeoMath.deg2rad(lat2);
-    var ΔL = GeoMath.deg2rad(lon2 - lon1);
-
-    // Calculate X and Y using the provided formulas
-    var X = Math.cos(θb) * Math.sin(ΔL);
-    var Y =
-      Math.cos(θa) * Math.sin(θb) - Math.sin(θa) * Math.cos(θb) * Math.cos(ΔL);
-
-    // Calculate the initial bearing (β) in radians
-    var β = Math.atan2(X, Y);
-
-    // Convert the bearing from radians to degrees
-    var bearing = GeoMath.rad2deg(β);
-
-    // Normalize the bearing to be between 0° and 360°
-    bearing = (bearing + 360) % 360;
-
-    return bearing;
+    return bearing(lat1, lon1, lat2, lon2);
   }
 
   /**
