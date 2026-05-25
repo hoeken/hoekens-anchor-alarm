@@ -56,7 +56,7 @@ export default function (app) {
       plugin.bus.queueMeta(key, value);
 
     plugin.configuration = props || {};
-    // One-shot v2.1 -> v2.2 upgrade: legacy `radius` becomes a `zone` config.
+    // v2.1 -> v2.2 upgrade: legacy `radius` becomes a `zone` config.
     // Persist immediately so the next restart sees the migrated shape.
     const migrated = migrateConfig(plugin.configuration);
     plugin.configuration = applyDefaults(app, plugin.configuration);
@@ -128,7 +128,7 @@ export default function (app) {
   plugin.stop = function () {
     if (plugin.alarm_state != "normal") {
       plugin.alarm_state = "normal";
-      plugin.updateAnchorAlarm(plugin.alarm_state, "Stopped");
+      plugin.updateAnchorAlarm(plugin.alarm_state, "Stopped", ["visual"]);
     }
 
     plugin.updateAnchorState({
@@ -234,7 +234,7 @@ export default function (app) {
       return;
 
     plugin.alarm_state = "normal";
-    plugin.updateAnchorAlarm(plugin.alarm_state, "Watching");
+    plugin.updateAnchorAlarm(plugin.alarm_state, "Watching", ["visual"]);
 
     app.setPluginStatus("Watching");
 
@@ -282,7 +282,7 @@ export default function (app) {
 
   plugin.stopWatchingPosition = function () {
     plugin.alarm_state = "normal";
-    plugin.updateAnchorAlarm(plugin.alarm_state, "Off");
+    plugin.updateAnchorAlarm(plugin.alarm_state, "Off", ["visual"]);
 
     if (plugin.positionWatchdogTimer)
       plugin.positionWatchdogTimer.stop();
