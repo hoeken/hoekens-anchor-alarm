@@ -36,10 +36,6 @@ export class SignalKHelper {
     return this.pluginPost("setZone", { zone });
   }
 
-  setRadius(radius) {
-    return this.pluginPost("setRadius", { radius });
-  }
-
   pluginPost(action, data) {
     return fetch(`${this.baseUrl}/plugins/${this.pluginName}/${action}`, {
       method: "POST",

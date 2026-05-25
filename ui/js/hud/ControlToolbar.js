@@ -2,9 +2,9 @@
 // shape selector + per-shape controls). It builds its own DOM under the
 // supplied parent and exposes onDrop/onRaise/onSetZone callbacks. Per-tick
 // state comes from AppState via update(appState). The shape-specific UI
-// (radius stepper, future sector/polygon editors) is delegated to a zone
-// controls instance from ./zones/. Element IDs are preserved for CSS hooks
-// in style.css; do not rename without updating it.
+// is delegated to a zone controls instance from ./zones/.
+// Element IDs are preserved for CSS hooks in style.css;
+// do not rename without updating it.
 
 import { createZoneControls, getZoneTypeOptions } from "./zones/index.js";
 
@@ -105,13 +105,9 @@ export class ControlToolbar {
     );
   }
 
-  _currentRadius() {
-    return this._lastRadius ?? 0;
-  }
-
   // Swap which button group is visible based on AppState. "Anchored" shows the
   // raise button; "raised" shows the drop button + shape selector. The
-  // per-shape controls render in both states (so a user can adjust radius
+  // per-shape controls render in both states (so a user can adjust zone
   // either before dropping or while anchored).
   update(appState) {
     this._isAnchored = appState.isAnchored();
@@ -126,7 +122,6 @@ export class ControlToolbar {
     this._ensureZoneControls(type);
     if (this._shapeSelect.value !== type)
       this._shapeSelect.value = type;
-    // this._lastRadius = appState.anchor?.maxRadius?.value ?? 0;
     this._zoneControls?.update(appState);
   }
 

@@ -178,9 +178,7 @@ export class AppState {
 
     if (!this._anchorSuppressed("state")) {
       this.anchor.state = this.extract(data, "navigation.anchor.state", false) ?? this.anchor.state;
-      console.log(this.anchor.state);
-    } else {
-      console.log("anchor state suppressed");
+      // console.log(this.anchor.state);
     }
 
     // anchor.position is treated as a UI preference: the server clears it on raise,
@@ -213,9 +211,9 @@ export class AppState {
   handleDelta(timestamp, delta) {
     const path = delta.path;
 
-    if (delta.meta) {
-      console.log(delta);
-    }
+    // if (delta.meta) {
+    //   console.log(delta);
+    // }
 
     // Mutate the existing envelope so meta/$source/pgn/values populated by
     // extractAll survive delta updates. Only create a new envelope the first
@@ -256,12 +254,10 @@ export class AppState {
     else if (path == "environment.tide.timeLow")
       (this.tide ??= {}).timeLow = apply(this.tide.timeLow);
     else if (path == "navigation.anchor.state") {
-      console.log(delta);
       if (!this._anchorSuppressed("state")) {
         this.anchor.state = apply(this.anchor.state);
-        console.log(this.anchor.state);
-      } else
-        console.log("anchor state suppressed");
+        // console.log(this.anchor.state);
+      }
     }
     else if (path == "navigation.anchor.position") {
       if (delta.value != null && !this._anchorSuppressed("position"))
@@ -336,8 +332,8 @@ export class AppState {
   }
 
   _anchorSuppressed(key) {
-    if (Date.now() < this._anchorSuppressUntil[key])
-      console.log(`suppressed: ${key}`);
+    // if (Date.now() < this._anchorSuppressUntil[key])
+    //   console.log(`suppressed: ${key}`);
     return Date.now() < this._anchorSuppressUntil[key];
   }
 

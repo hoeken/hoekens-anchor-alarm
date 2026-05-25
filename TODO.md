@@ -2,8 +2,11 @@
 
 ## UI
 
+- load /plugins/hoekens-anchor-alarm -> and log the version to console.log
 - Regression on plugin side sending updates for current anchor status.
   - state is not getting updated / sent as 'off' when alarm is engines disabled.
+
+- circlezone -> add draggable dot handle on the circle to set the radius
 
 ## UI Config
 

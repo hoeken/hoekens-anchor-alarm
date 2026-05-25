@@ -111,7 +111,7 @@ export class AnchorOverlay {
       // for crosshair smoothness) or first-time materialization.
       this._raise(this.anchorPosition);
     } else {
-      // Still raised — zone shape or radius may have changed via the toolbar.
+      // Still raised — zone shape may have changed via the toolbar.
       this.zoneOverlay.update({ zone: this._zone, anchorPosition: this.anchorPosition });
     }
 
