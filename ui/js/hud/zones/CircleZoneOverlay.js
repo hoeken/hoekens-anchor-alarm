@@ -119,6 +119,7 @@ export class CircleZoneOverlay {
       return;
     this._color = color;
     this._layer.setStyle({ color });
+    this._handle.setStyle({ color });
   }
 
   getBounds() {

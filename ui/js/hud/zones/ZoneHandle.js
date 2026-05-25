@@ -28,6 +28,12 @@ export class ZoneHandle {
     this._marker.setLatLng(latlng);
   }
 
+  setStyle({ color }) {
+    const el = this._marker.getElement();
+    if (el)
+      el.style.borderColor = color;
+  }
+
   destroy() {
     this._map.removeLayer(this._marker);
   }
