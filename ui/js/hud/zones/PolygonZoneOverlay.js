@@ -128,7 +128,9 @@ export class PolygonZoneOverlay {
           map: this._map,
           position: this._vertexLatLng(this._edgeMidpointVertex(i)),
           ghost: true,
-          onClick: () => this._onGhostClick(i),
+          onDragStart: () => this._onGhostDragStart(i),
+          onDrag: (latlng) => this._onVertexDrag(this._draggingIndex, latlng),
+          onDragEnd: (latlng) => this._onVertexDragEnd(this._draggingIndex, latlng),
         });
         ghost.setStyle({ color: this._color });
         this._ghostHandles.push(ghost);
@@ -225,27 +227,50 @@ export class PolygonZoneOverlay {
     const proposed = this._vertexFromLatLng(latlng);
     const clamped = this._clampProposed(i, proposed);
     const next = this._withVertex(i, clamped);
+    const promotedFromGhost = this._vertexHandles.length !== next.length;
     this._draggingIndex = null;
     this._dragOriginVertices = null;
     this._commitVertices(next, "change");
-    this._repositionIdleHandles();
+    // Ghost-promoted drag: vertex count grew by one, so the ghost-styled
+    // marker needs to be replaced by a real handle + two fresh ghosts on
+    // the new edges. For a normal drag, count is unchanged and we can just
+    // snap the idle handles to their committed positions.
+    if (promotedFromGhost)
+      this._buildHandles();
+    else
+      this._repositionIdleHandles();
   }
 
-  // === Ghost click (insert new vertex on edge i) ===================================
+  // === Ghost drag (insert new vertex on edge i) ====================================
 
-  _onGhostClick(i) {
+  // Splice the new vertex in at i+1 (between vertices[i] and vertices[i+1])
+  // and rewire the in-flight drag to that new index. Leaflet still owns the
+  // ghost marker for the duration of the drag — onDragEnd will rebuild the
+  // handle set to swap the ghost styling for a real vertex handle.
+  _onGhostDragStart(i) {
     if (this._zone.vertices.length >= MAX_VERTICES)
       return;
     const newVertex = this._edgeMidpointVertex(i);
     const next = this._zone.vertices.map((v) => ({ ...v }));
-    next.splice(i + 1, 0, newVertex);
-    this._commitVertices(next, "change");
-    this._buildHandles();
+    const insertAt = i + 1;
+    next.splice(insertAt, 0, newVertex);
+    this._zone = new PolygonZone({ vertices: next });
+    this._layer.setLatLngs(this._renderLatLngs());
+    this._draggingIndex = insertAt;
+    this._dragOriginVertices = next.map((v) => ({ ...v }));
   }
 
   // === Lifecycle hooks called by AnchorOverlay =====================================
 
   update({ zone, anchorPosition }) {
+    // Mid-drag, our local state IS the authoritative state. The onInput we
+    // emit every drag frame round-trips through AppState → updateMap and
+    // lands back here as the incoming `zone` — applying it would trigger
+    // _buildHandles() (the vertex count grew when a ghost was promoted),
+    // which would destroy the marker Leaflet is currently dragging.
+    if (this._draggingIndex !== null)
+      return;
+
     const zoneChanged = zone && zone !== this._zone;
     const anchorChanged =
       anchorPosition &&

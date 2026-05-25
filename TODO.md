@@ -2,7 +2,6 @@
 
 ## UI - PolygonZone
 
-- make draggable ghost handles work.
 - delete vertex?
 
 ## UI - Misc
