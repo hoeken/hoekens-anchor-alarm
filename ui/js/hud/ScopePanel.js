@@ -33,19 +33,19 @@ export const ScopePanel = L.Control.extend({
           <tr>
             <th colspan="2">&nbsp;</th>
           </tr>
-          <tr>
+          <tr id="scope7to1Row">
             <th>7:1&nbsp;Scope</th>
             <td><span id='scope7to1'>~</span></td>
           </tr>
-          <tr>
+          <tr id="scope5to1Row">
             <th>5:1&nbsp;Scope</th>
             <td><span id='scope5to1'>~</span></td>
           </tr>
-          <tr>
+          <tr id="scope4to1Row">
             <th>4:1&nbsp;Scope</th>
             <td><span id='scope4to1'>~</span></td>
           </tr>
-          <tr>
+          <tr id="scope3to1Row">
             <th>3:1&nbsp;Scope</th>
             <td><span id='scope3to1'>~</span></td>
           </tr>
@@ -80,6 +80,10 @@ export const ScopePanel = L.Control.extend({
       scope5to1: container.querySelector("#scope5to1"),
       scope4to1: container.querySelector("#scope4to1"),
       scope3to1: container.querySelector("#scope3to1"),
+      scope7to1Row: container.querySelector("#scope7to1Row"),
+      scope5to1Row: container.querySelector("#scope5to1Row"),
+      scope4to1Row: container.querySelector("#scope4to1Row"),
+      scope3to1Row: container.querySelector("#scope3to1Row"),
       belowKeel: container.querySelector("#belowKeel"),
       tidalFall: container.querySelector("#tidalFall"),
       bowHeightRow: container.querySelector("#bowHeightRow"),
@@ -148,6 +152,16 @@ export const ScopePanel = L.Control.extend({
       this._refs.scope5to1.innerHTML = DisplayUnit.formatValue(state.scope5, "depth");
       this._refs.scope4to1.innerHTML = DisplayUnit.formatValue(state.scope4, "depth");
       this._refs.scope3to1.innerHTML = DisplayUnit.formatValue(state.scope3, "depth");
+
+      // Flag any scope whose rode length exceeds the chain we actually carry.
+      const chainLength = state.boatConfig?.totalAnchorChainLength;
+      const flagOverChain = (rowRef, length) => {
+        rowRef.style.color = chainLength && length > chainLength ? "red" : "";
+      };
+      flagOverChain(this._refs.scope7to1Row, state.scope7);
+      flagOverChain(this._refs.scope5to1Row, state.scope5);
+      flagOverChain(this._refs.scope4to1Row, state.scope4);
+      flagOverChain(this._refs.scope3to1Row, state.scope3);
 
       this._refs.scopeDepthTable.style.display = "";
     } else {

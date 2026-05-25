@@ -71,6 +71,10 @@ export default function (app) {
       if (typeof plugin.configuration["bowAnchorRollerHeight"] != "undefined")
         plugin.bus.queueDelta("design.bowAnchorRollerHeight", parseFloat(plugin.configuration["bowAnchorRollerHeight"]));
 
+      //save our total anchor chain length to the tree so we can access it from the web side
+      if (typeof plugin.configuration["totalAnchorChainLength"] != "undefined")
+        plugin.bus.queueDelta("design.totalAnchorChainLength", parseFloat(plugin.configuration["totalAnchorChainLength"]));
+
       //setup our watchdog timer
       const noPositionAlarmTime = plugin.configuration["noPositionAlarmTime"];
       if (typeof noPositionAlarmTime != "undefined") {

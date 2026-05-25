@@ -5,12 +5,6 @@
 
 - ControlToolbar._defaultZoneConfig(type) -> call a static method on the appropriate zone and pass in appState
 
-- add totalChainLength to schema -> design.totalChainLength (default 100)
-- add color coding to scope table if length > totalChainLength
-- add bounds to estimatedAnchorPosition
-  - max distance <= totalChainLength
-  - circle radius = distance from bow + loa * 2
-
 ## UI - PolygonZone
 
 - how to handle deleting vertices?

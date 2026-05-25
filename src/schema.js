@@ -21,6 +21,13 @@ export const metas = {
     },
     description: "Height of the bow anchor roller above the water",
   },
+  "design.totalAnchorChainLength": {
+    units: "m",
+    displayUnits: {
+      category: "length",
+    },
+    description: "Total length of the anchor chain/rode available",
+  },
   "navigation.anchor.currentRadius": {
     units: "m",
     displayUnits: {
@@ -173,6 +180,12 @@ export function buildSchema(app) {
         title:
           "Height of the bow anchor roller above the waterline (in meters).  Used for scope calculations.",
         default: 0,
+      },
+      totalAnchorChainLength: {
+        type: "number",
+        title:
+          "Total length of the anchor chain/rode (in meters).  Used to flag scopes longer than your available chain.",
+        default: 100,
       },
       zone: {
         type: "string",

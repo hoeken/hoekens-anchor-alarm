@@ -144,42 +144,37 @@ export class AnchorController {
     if (this._appState.isAnchored() || this._pending)
       return;
 
-    const distance = this._appState.calculateScope(5);
-    const radius = this.computeDefaultRadius(
-      distance,
-      this._appState.boatConfig.gpsBowXDistance,
-      this._appState.boatConfig.gpsBowYDistance,
+    const boatConfig = this._appState.boatConfig;
+    // Cap the estimate at the chain we actually carry — the anchor can't be
+    // further from the bow than our rode.
+    const distance = Math.min(
+      this._appState.calculateScope(5),
+      boatConfig.totalAnchorChainLength,
     );
+
+    let radius = distance + boatConfig.loa * 2;
+    radius = Math.round(radius / 5) * 5;
+    radius = Math.max(0, radius);
+    radius = Math.min(200, radius);
+
     this._appState.applyClientAnchorState({
       watchZone: { type: "circle", radius },
     });
 
     const bow = GeoMath.calculateBowCoordinates(
       this._appState.getPosition(),
-      this._appState.boatConfig.heading,
-      this._appState.boatConfig.gpsBowXDistance,
-      this._appState.boatConfig.gpsBowYDistance,
+      boatConfig.heading,
+      boatConfig.gpsBowXDistance,
+      boatConfig.gpsBowYDistance,
     );
     const guess = destination(
       point([bow.lng, bow.lat]),
       distance,
-      this._appState.boatConfig.heading,
+      boatConfig.heading,
       { units: "meters" },
     );
     const [guessLon, guessLat] = guess.geometry.coordinates;
     this._overlay.setCrosshairPosition(L.latLng(guessLat, guessLon));
     this._onChange();
-  }
-
-  // Default radius = 5:1 scope + GPS-to-bow vector, ×1.5 safety, rounded to a
-  // 5-meter step and clamped to [0, 200].
-  computeDefaultRadius(anchorDistanceGuess, xOffset, yOffset) {
-    let r = anchorDistanceGuess;
-    r += Math.hypot(xOffset, yOffset);
-    r *= 1.5;
-    r = Math.round(r / 5) * 5;
-    r = Math.max(0, r);
-    r = Math.min(200, r);
-    return r;
   }
 }
