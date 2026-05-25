@@ -14,7 +14,7 @@
  */
 
 import { createRequire } from "module";
-import { AnchorError } from "./anchor-service.js";
+import { AnchorError } from "./errors.js";
 
 const require = createRequire(import.meta.url);
 const openapi = require("./openApi.json");
@@ -42,7 +42,7 @@ export function register(app, plugin, router) {
 
   router.post("/dropAnchor", (req, res) => {
     try {
-      plugin.anchor.drop({
+      plugin.dropAnchor({
         position: req.body.position,
         zone: req.body.zone,
         radius: req.body.radius,
@@ -55,7 +55,7 @@ export function register(app, plugin, router) {
 
   router.post("/setZone", (req, res) => {
     try {
-      plugin.anchor.setZone(req.body.zone);
+      plugin.setZone(req.body.zone);
       res.json({ statusCode: 200, state: "COMPLETED" });
     } catch (err) {
       fail(res, err);
@@ -64,7 +64,7 @@ export function register(app, plugin, router) {
 
   router.post("/setRadius", (req, res) => {
     try {
-      plugin.anchor.setRadius(req.body.radius);
+      plugin.setRadius(req.body.radius);
       res.json({ statusCode: 200, state: "COMPLETED" });
     } catch (err) {
       fail(res, err);
@@ -73,7 +73,7 @@ export function register(app, plugin, router) {
 
   router.post("/raiseAnchor", (req, res) => {
     try {
-      plugin.anchor.raise();
+      plugin.raiseAnchor();
       res.json({ statusCode: 200, state: "COMPLETED" });
     } catch (err) {
       fail(res, err);

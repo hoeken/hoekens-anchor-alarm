@@ -229,12 +229,6 @@ export function applyDefaults(app, config) {
 export function migrateConfig(config) {
   let mutated = false;
 
-  // Mid-refactor leftover from an in-development build — stringify in place.
-  if (config.zone && typeof config.zone === "object" && config.zone.type) {
-    config.zone = JSON.stringify(config.zone);
-    mutated = true;
-  }
-
   // v2.1 legacy: top-level radius becomes a circle zone JSON string.
   if (typeof config.zone !== "string" || config.zone.length === 0) {
     const radius = Number(config.radius);
@@ -243,27 +237,6 @@ export function migrateConfig(config) {
       delete config.radius;
       mutated = true;
     }
-  }
-
-  // Earlier v2.2 shape kept anchor position in its own top-level field. Fold
-  // it into the zone JSON so the watch zone state lives in one place.
-  if (config.position && typeof config.position === "object") {
-    if (typeof config.zone === "string" && config.zone.length > 0) {
-      try {
-        const parsed = JSON.parse(config.zone);
-        if (parsed && parsed.position == null) {
-          parsed.position = {
-            latitude: parseFloat(config.position.latitude),
-            longitude: parseFloat(config.position.longitude),
-          };
-          config.zone = JSON.stringify(parsed);
-        }
-      } catch {
-        // malformed zone JSON — drop the orphan position rather than corrupt
-      }
-    }
-    delete config.position;
-    mutated = true;
   }
 
   return mutated;
