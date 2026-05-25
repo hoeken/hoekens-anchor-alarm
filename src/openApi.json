@@ -173,7 +173,10 @@
                   "latitude": 37.8199,
                   "longitude": -122.4783
                 },
-                "zone": { "type": "circle", "radius": 30 }
+                "zone": {
+                  "type": "circle",
+                  "radius": 30
+                }
               }
             }
           }
@@ -231,7 +234,10 @@
                 }
               },
               "example": {
-                "zone": { "type": "circle", "radius": 45 }
+                "zone": {
+                  "type": "circle",
+                  "radius": 45
+                }
               }
             }
           }
@@ -239,53 +245,6 @@
         "responses": {
           "200": {
             "description": "Zone updated successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "$ref": "#/components/responses/AnchorError"
-          },
-          "500": {
-            "$ref": "#/components/responses/InternalError"
-          }
-        }
-      }
-    },
-    "/setRadius": {
-      "post": {
-        "tags": ["anchor"],
-        "summary": "Set the anchor alarm radius (legacy shim)",
-        "description": "Legacy shim that updates the alarm radius by writing a circle-shaped zone. Prefer /setZone for non-circle shapes. Requires that an anchor has been dropped and that a GPS position is available.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["radius"],
-                "properties": {
-                  "radius": {
-                    "type": "number",
-                    "format": "double",
-                    "minimum": 0,
-                    "description": "Anchor alarm radius in meters."
-                  }
-                }
-              },
-              "example": {
-                "radius": 45
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Radius updated successfully.",
             "content": {
               "application/json": {
                 "schema": {

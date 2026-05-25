@@ -45,7 +45,6 @@ export function register(app, plugin, router) {
       plugin.dropAnchor({
         position: req.body.position,
         zone: req.body.zone,
-        radius: req.body.radius,
       });
       res.json({ statusCode: 200, state: "COMPLETED" });
     } catch (err) {
@@ -56,15 +55,6 @@ export function register(app, plugin, router) {
   router.post("/setZone", (req, res) => {
     try {
       plugin.setZone(req.body.zone);
-      res.json({ statusCode: 200, state: "COMPLETED" });
-    } catch (err) {
-      fail(res, err);
-    }
-  });
-
-  router.post("/setRadius", (req, res) => {
-    try {
-      plugin.setRadius(req.body.radius);
       res.json({ statusCode: 200, state: "COMPLETED" });
     } catch (err) {
       fail(res, err);

@@ -174,12 +174,6 @@ export function buildSchema(app) {
           "Height of the bow anchor roller above the waterline (in meters).  Used for scope calculations.",
         default: 0,
       },
-      on: {
-        type: "boolean",
-        title: "Alarm On",
-        description: "Used for saving state in case of SignalK restart.",
-        default: false,
-      },
       zone: {
         type: "string",
         title: "Anchor Watch Zone (JSON)",

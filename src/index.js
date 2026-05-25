@@ -101,7 +101,7 @@ export default function (app) {
         plugin.startWatchingPosition();
       }
 
-      //api for the web app
+      //OLD APIs - only here for backwards compatibility
       if (app.registerActionHandler) {
         app.registerActionHandler(
           "vessels.self",
@@ -256,28 +256,30 @@ export default function (app) {
         app.error(err);
         app.setProviderError(err);
       },
-      (delta) => {
-        let vesselPosition;
+      plugin.handlePositionUpdate,
+    );
+  };
 
-        if (delta.updates) {
-          delta.updates.forEach((update) => {
-            if (update.values) {
-              update.values.forEach((vp) => {
-                if (vp.path === "navigation.position") {
-                  vesselPosition = vp.value;
-                }
-              });
+  plugin.handlePositionUpdate = function (delta) {
+    let vesselPosition;
+
+    if (delta.updates) {
+      delta.updates.forEach((update) => {
+        if (update.values) {
+          update.values.forEach((vp) => {
+            if (vp.path === "navigation.position") {
+              vesselPosition = vp.value;
             }
           });
         }
+      });
+    }
 
-        if (vesselPosition) {
-          if (plugin.positionWatchdogTimer)
-            plugin.positionWatchdogTimer.reset();
-          plugin.checkPosition(vesselPosition);
-        }
-      },
-    );
+    if (vesselPosition) {
+      if (plugin.positionWatchdogTimer)
+        plugin.positionWatchdogTimer.reset();
+      plugin.checkPosition(vesselPosition);
+    }
   };
 
   plugin.stopWatchingPosition = function () {
@@ -361,13 +363,12 @@ export default function (app) {
   };
 
   // ============================================================
-  // ANCHOR SERVICE (drop / raise / setZone / setRadius)
+  // ANCHOR SERVICE
   // ============================================================
 
-  // Build a WatchZone from one of: a full zone config object, a legacy radius
-  // number, or the existing configuration on the plugin. Throws ValidationError
+  // Build a WatchZone from a full zone config object. Throws ValidationError
   // when none of the inputs yield a usable zone.
-  function resolveZone({ zone, radius }) {
+  plugin.resolveZone = function (zone) {
     if (zone != null) {
       if (typeof zone !== "object")
         throw new ValidationError("zone must be an object");
@@ -377,20 +378,16 @@ export default function (app) {
         throw new ValidationError(err.message);
       }
     }
-    if (radius != null) {
-      const parsed = parseFloat(radius);
-      if (isNaN(parsed))
-        throw new ValidationError("radius must be numeric");
-      return watchZoneFromConfig({ type: "circle", radius: parsed });
-    }
+
     const existing = readZoneConfig(plugin.configuration);
     if (existing) {
       return watchZoneFromConfig(existing);
     }
-    throw new ValidationError("zone or radius required");
-  }
 
-  plugin.dropAnchor = function ({ position, zone, radius }) {
+    throw new ValidationError("zone required");
+  };
+
+  plugin.dropAnchor = function ({ position, zone }) {
     if (
       !position ||
       position.latitude == null ||
@@ -407,7 +404,7 @@ export default function (app) {
       throw new ValidationError("position latitude and longitude must be numeric");
     }
 
-    const resolvedZone = resolveZone({ zone, radius });
+    const resolvedZone = plugin.resolveZone(zone);
 
     app.debug(
       "drop anchor at: " +
@@ -448,7 +445,7 @@ export default function (app) {
       throw new StateError("no GPS position available");
     }
 
-    const resolvedZone = resolveZone({ zone });
+    const resolvedZone = plugin.resolveZone(zone);
 
     app.debug("set anchor zone: " + JSON.stringify(resolvedZone.getConfig()));
 
@@ -496,7 +493,7 @@ export default function (app) {
       if (value == null) {
         plugin.raiseAnchor();
       } else {
-        plugin.dropAnchor({ position: value, radius: value.radius });
+        plugin.dropAnchor({ position: value, zone: { type: "circle", radius: value.radius } });
       }
       return { state: "SUCCESS" };
     } catch (err) {
