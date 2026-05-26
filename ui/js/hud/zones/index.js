@@ -56,3 +56,25 @@ export function createZoneControls(type, { parent, onChange }) {
     throw new Error(`No controls registered for zone type: ${type}`);
   return new entry.controls({ parent, onChange });
 }
+
+// Build a default zone config when the user picks a new shape. Radius is
+// resolved here once (current zone radius → estimated radius → 60m fallback)
+// and handed to the per-shape static so each shape only deals with what it
+// actually needs.
+export function createDefaultZoneConfig(type, appState) {
+  const entry = REGISTRY[type];
+  if (!entry || !entry.overlay?.defaultConfig)
+    return { type };
+
+  const currentRadius = Number(appState?.anchor?.watchZone?.value?.radius);
+  const estimatedRadius = Number(appState?.getAnchorEstimate?.()?.radius);
+  let radius;
+  if (Number.isFinite(currentRadius) && currentRadius > 0)
+    radius = currentRadius;
+  else if (Number.isFinite(estimatedRadius) && estimatedRadius > 0)
+    radius = estimatedRadius;
+  else
+    radius = 60;
+
+  return entry.overlay.defaultConfig({ appState, radius });
+}

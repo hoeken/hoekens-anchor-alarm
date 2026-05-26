@@ -271,11 +271,10 @@ export class AppState {
       console.log(`[websocket] Ignoring: ${path}`);
   }
 
-  // Client-initiated optimistic write into the anchor envelopes. Per-key
-  // suppression is bumped only for the paths we actually touch — that keeps
-  // estimateAnchorPosition from blocking
-  // incoming position/state deltas from another client. Only the keys present
-  // in `updates` are touched; pass `null` to clear a field.
+  // Client-initiated optimistic write into the anchor envelopes.
+  // Per-key suppression is bumped only for the paths we actually touch.
+  // That keeps us from blocking incoming position/state deltas from another client.
+  // Only the keys present in `updates` are touched; pass `null` to clear a field.
   applyClientAnchorState(updates = {}) {
     const timestamp = new Date().toISOString();
     const expireAt = Date.now() + POST_ACTION_SETTLE_MS;
@@ -392,6 +391,23 @@ export class AppState {
     maxHeight += this.boatConfig.anchorRollerHeight; // height of the bow roller
     maxHeight += this.tidalRise; // delta to high tide
     return maxHeight * scope;
+  }
+
+  getAnchorEstimate() {
+    const boatConfig = this.boatConfig;
+    // Cap the estimate at the chain we actually carry — the anchor can't be
+    // further from the bow than our rode.
+    const distance = Math.min(
+      this.calculateScope(5),
+      boatConfig.totalAnchorChainLength,
+    );
+
+    let radius = distance + boatConfig.loa * 2;
+    radius = Math.round(radius / 5) * 5;
+    radius = Math.max(0, radius);
+    radius = Math.min(200, radius);
+
+    return { distance, radius };
   }
 
   // Heading priority:

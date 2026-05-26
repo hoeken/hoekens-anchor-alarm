@@ -2,8 +2,7 @@
 //   - sides dropdown (3..12, default 8) — local UI state only; doesn't
 //     touch the zone until reset is pressed.
 //   - reset button — regenerates a regular N-gon with the local sides count
-//     at a local default radius (60m for now; later sourced from
-//     estimateAnchorPosition / mode-switch logic).
+//     at a local default radius
 
 import { regularPolygonVertices } from "./PolygonZoneOverlay.js";
 

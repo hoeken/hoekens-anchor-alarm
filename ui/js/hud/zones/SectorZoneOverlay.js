@@ -27,6 +27,16 @@ export class SectorZoneOverlay {
     return "sector";
   }
 
+  // Center a 120° arc opposite the current heading — the boat points into the
+  // wind/current at anchor, so the safe swing arc lies astern.
+  static defaultConfig({ appState, radius }) {
+    const heading = appState?.boatConfig?.heading;
+    const center = ((Number.isFinite(heading) ? heading : 0) + 180) % 360;
+    const startAngle = (center - 60 + 360) % 360;
+    const endAngle = (center + 60) % 360;
+    return { type: "sector", radius, startAngle, endAngle };
+  }
+
   constructor({ map, anchorPosition, zone, onChange, onInput }) {
     this._map = map;
     this._zone = zone;

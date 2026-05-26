@@ -40,6 +40,16 @@ export class PolygonZoneOverlay {
     return "polygon";
   }
 
+  // Default to a regular 8-gon at the supplied radius. PolygonZoneControls
+  // owns the editable side count + radius; this is just the initial shape on
+  // first switch into polygon mode.
+  static defaultConfig({ radius }) {
+    return {
+      type: "polygon",
+      vertices: regularPolygonVertices(8, radius),
+    };
+  }
+
   constructor({ map, anchorPosition, zone, onChange, onInput }) {
     this._map = map;
     this._zone = zone;

@@ -1,10 +1,5 @@
 # v2.2
 
-
-## UI - Misc
-
-- ControlToolbar._defaultZoneConfig(type) -> call a static method on the appropriate zone and pass in appState
-
 ## UI - PolygonZone
 
 - how to handle deleting vertices?

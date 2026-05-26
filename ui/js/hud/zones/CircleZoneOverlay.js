@@ -21,6 +21,10 @@ export class CircleZoneOverlay {
     return "circle";
   }
 
+  static defaultConfig({ radius }) {
+    return { type: "circle", radius };
+  }
+
   constructor({ map, anchorPosition, zone, onChange, onInput }) {
     this._map = map;
     this._zone = zone;

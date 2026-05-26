@@ -6,8 +6,11 @@
 // Element IDs are preserved for CSS hooks in style.css;
 // do not rename without updating it.
 
-import { createZoneControls, getZoneTypeOptions } from "./zones/index.js";
-import { regularPolygonVertices } from "./zones/PolygonZoneOverlay.js";
+import {
+  createDefaultZoneConfig,
+  createZoneControls,
+  getZoneTypeOptions,
+} from "./zones/index.js";
 
 export class ControlToolbar {
   constructor({ parent, getMapContainer, onDrop, onRaise, onSetZone }) {
@@ -71,7 +74,7 @@ export class ControlToolbar {
       });
     this._shapeSelect.addEventListener("change", (e) => {
       if (this._onSetZone)
-        this._onSetZone(this._defaultZoneConfig(e.target.value));
+        this._onSetZone(createDefaultZoneConfig(e.target.value, this._appState));
     });
 
     // macOS Chrome delivers trackpad pinch as a wheel event with ctrlKey=true.
@@ -123,34 +126,6 @@ export class ControlToolbar {
     if (this._shapeSelect.value !== type)
       this._shapeSelect.value = type;
     this._zoneControls?.update(appState);
-  }
-
-  // Build a default zone config when the user picks a new shape from the
-  // dropdown. Circle keeps v2.1's "reset to backend default" behavior;
-  // sector inherits the current radius (so switching circle → sector at 30m
-  // doesn't snap to 60m) and centers a 120° arc opposite the current heading
-  // — the boat points into the wind/current at anchor, so the safe swing
-  // arc lies astern.
-  _defaultZoneConfig(type) {
-    if (type === "circle")
-      return { type: "circle" };
-    if (type === "sector") {
-      const current = this._appState?.anchor?.watchZone?.value;
-      const currentRadius = Number(current?.radius);
-      const radius = Number.isFinite(currentRadius) && currentRadius > 0 ? currentRadius : 60;
-      const heading = this._appState?.boatConfig?.heading;
-      const center = ((Number.isFinite(heading) ? heading : 0) + 180) % 360;
-      const startAngle = (center - 60 + 360) % 360;
-      const endAngle = (center + 60) % 360;
-      return { type: "sector", radius, startAngle, endAngle };
-    }
-    if (type === "polygon") {
-      // Default to a regular 8-gon at 60m. PolygonZoneControls owns the
-      // editable side count + radius; this is just the initial shape on
-      // first switch into polygon mode.
-      return { type: "polygon", vertices: regularPolygonVertices(8, 60) };
-    }
-    return { type };
   }
 
   _ensureZoneControls(type) {

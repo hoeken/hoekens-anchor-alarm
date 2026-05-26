@@ -107,6 +107,7 @@ export class AnchorController {
   // suppression window keeps stale server responses from clobbering us. They
   // do bail while a drop/raise is in flight to avoid a tangled rollback.
   setZone(zoneConfig) {
+    console.log(zoneConfig);
     if (this._pending)
       return;
     if (!zoneConfig || typeof zoneConfig !== "object" || !zoneConfig.type)
@@ -145,17 +146,7 @@ export class AnchorController {
       return;
 
     const boatConfig = this._appState.boatConfig;
-    // Cap the estimate at the chain we actually carry — the anchor can't be
-    // further from the bow than our rode.
-    const distance = Math.min(
-      this._appState.calculateScope(5),
-      boatConfig.totalAnchorChainLength,
-    );
-
-    let radius = distance + boatConfig.loa * 2;
-    radius = Math.round(radius / 5) * 5;
-    radius = Math.max(0, radius);
-    radius = Math.min(200, radius);
+    const { distance, radius } = this._appState.getAnchorEstimate();
 
     this._appState.applyClientAnchorState({
       watchZone: { type: "circle", radius },
