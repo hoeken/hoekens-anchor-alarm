@@ -68,6 +68,13 @@ export class AppState {
             sendMeta: "all",
           },
           {
+            path: "environment.depth.belowTransducer",
+            period: DELTA_SLOW_SPEED,
+            format: "full",
+            policy: "fixed",
+            sendMeta: "all",
+          },
+          {
             path: "environment.wind.directionTrue",
             period: DELTA_SLOW_SPEED,
             format: "full",
@@ -175,6 +182,8 @@ export class AppState {
       this.extract(data, "environment.depth.belowKeel") ?? this.belowKeel;
     this.belowSurface =
       this.extract(data, "environment.depth.belowSurface") ?? this.belowSurface;
+    this.belowTransducer =
+      this.extract(data, "environment.depth.belowTransducer") ?? this.belowTransducer;
     this.twa = this.extract(data, "environment.wind.directionTrue") ?? this.twa;
     this.aws = this.extract(data, "environment.wind.speedApparent") ?? this.aws;
     this.tide = this.extract(data, "environment.tide", false) ?? this.tide;
@@ -237,6 +246,8 @@ export class AppState {
       this.belowKeel = apply(this.belowKeel);
     else if (path == "environment.depth.belowSurface")
       this.belowSurface = apply(this.belowSurface);
+    else if (path == "environment.depth.belowTransducer")
+      this.belowTransducer = apply(this.belowTransducer);
     else if (path == "environment.wind.directionTrue")
       this.twa = apply(this.twa);
     else if (path == "environment.wind.speedApparent")
@@ -351,6 +362,7 @@ export class AppState {
     };
     override(this.belowSurface, "distance", "depth");
     override(this.belowKeel, "distance", "depth");
+    override(this.belowTransducer, "distance", "depth");
     override(this.tide?.heightLow, "distance", "depth");
     override(this.tide?.heightHigh, "distance", "depth");
     override(this.tide?.heightNow, "distance", "depth");

@@ -51,9 +51,6 @@ export const ScopePanel = L.Control.extend({
           </tr>
         </table>
         <table id="minimumDepthTable">
-          <tr>
-            <th colspan="2">&nbsp;</th>
-          </tr>
           <tr id="belowKeelRow">
             <th>Below&nbsp;Keel</th>
             <td><span id='belowKeel'>~</span></td>

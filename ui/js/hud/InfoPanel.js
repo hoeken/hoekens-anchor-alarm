@@ -65,7 +65,7 @@ export const InfoPanel = L.Control.extend({
 
     // InfoPanel only makes sense while anchored. ScopePanel is its raised
     // counterpart — the two are mutually exclusive in the bottom-right slot.
-    if (!state.isAnchored()) {
+    if (!state.isAnchored() && state.belowSurface) {
       this.hide();
       return;
     }

@@ -129,7 +129,7 @@ class AnchorAlarm {
         this.version = info.version;
         console.log(`Hoeken's Anchor Alarm v${this.version}`);
       })
-      .catch(() => {});
+      .catch(() => { });
 
     this.loadInitialData();
   }

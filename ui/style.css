@@ -112,6 +112,9 @@ body,
   font-size: 11pt;
   line-height: 1.1;
   background-color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .normal {
