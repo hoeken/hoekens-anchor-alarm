@@ -229,7 +229,7 @@ class AnchorAlarm {
     this.map.addControl(this.scopePanel);
     this.map.addControl(this.windPanel);
 
-    L.control.scale({ position: "topleft" }).addTo(this.map);
+    L.control.scale({ position: "bottomleft" }).addTo(this.map);
 
     this.fleetLayer = new FleetLayer({
       app: this,
