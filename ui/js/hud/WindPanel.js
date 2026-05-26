@@ -81,7 +81,7 @@ export const WindPanel = L.Control.extend({
 
   update: function (state) {
     //if we don't have the right data, hide ourself.
-    if (!state.aws && !state.twa)
+    if (!state.aws || !state.twa)
       this.hide();
     else
       this.setSpeed(state.aws, state.twa);
