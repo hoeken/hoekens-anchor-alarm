@@ -1,8 +1,9 @@
 {
   "name": "hoekens-anchor-alarm",
-  "version": "2.1.1",
-  "description": "Web app based anchor alarm with scope calculator, scribble tracks, engine override, and physically accurate icons.",
-  "main": "src/index.js",
+  "version": "2.2.0",
+  "description": "Anchor alarm with various shapes, scope calculator, scribble tracks, engine override, and physically accurate icons.",
+  "main": "src/index.cjs",
+  "type": "module",
   "scripts": {
     "test": "echo \"no tests — Signal K plugin CI validates lifecycle and schema\" && exit 0",
     "release": "git tag -d v$npm_package_version; git tag v$npm_package_version && git push --tags && git push && npm publish",
@@ -12,8 +13,13 @@
     "format:check": "eslint . && prettier --check .",
     "postinstall": "node -e \"try{if(!process.env.CI&&require('fs').existsSync('.git'))require('husky')()}catch(e){}\"",
     "build:ui": "vite build",
-    "prepublishOnly": "npm run build:ui"
+    "prepack": "npm run build:ui"
   },
+  "files": [
+    "src",
+    "shared",
+    "public"
+  ],
   "lint-staged": {
     "*.js": "eslint --fix",
     "*.{json,css,html}": "prettier --write"
@@ -37,6 +43,7 @@
   "dependencies": {
     "@signalk/client": "^2.4.0",
     "@signalk/tracks-plugin": "^2.0.2",
+    "@turf/turf": "^7.3.5",
     "mathjs": "^15.2.0",
     "simplify-js": "^1.2.4"
   },

@@ -28,12 +28,12 @@ export class SignalKHelper {
     return this.pluginPost("raiseAnchor");
   }
 
-  dropAnchor(position, radius) {
-    return this.pluginPost("dropAnchor", { position, radius });
+  dropAnchor(position, zone) {
+    return this.pluginPost("dropAnchor", { position, zone });
   }
 
-  setRadius(radius) {
-    return this.pluginPost("setRadius", { radius });
+  setZone(zone) {
+    return this.pluginPost("setZone", { zone });
   }
 
   pluginPost(action, data) {
@@ -71,6 +71,10 @@ export class SignalKHelper {
   }
   fetchConfig() {
     return fetch(`${this.baseUrl}/plugins/${this.pluginName}/ui-config`)
+      .then(SignalKHelper._toJsonOrReject);
+  }
+  fetchPluginInfo() {
+    return fetch(`${this.baseUrl}/plugins/${this.pluginName}`)
       .then(SignalKHelper._toJsonOrReject);
   }
 

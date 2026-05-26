@@ -2,9 +2,7 @@ name: SignalK Plugin CI
 
 on:
   push:
-    branches: [master, v2.1]
   pull_request:
-    branches: [master, v2.1]
 
 jobs:
   test:

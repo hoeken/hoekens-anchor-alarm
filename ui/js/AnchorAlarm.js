@@ -3,7 +3,7 @@
 // HudPanels (Info/Scope/Wind/Home), and hands the anchor state machine to
 // AnchorController.
 
-import Client from "@signalk/client";
+import { Client } from "@signalk/client";
 import { SignalKHelper } from "./SignalKHelper.js";
 import { AppState } from "./AppState.js";
 import { FleetLayer } from "./hud/FleetLayer.js";
@@ -120,8 +120,16 @@ class AnchorAlarm {
       getMapContainer: () => this.map && this.map.getContainer(),
       onRaise: () => this.anchorController.requestRaise(),
       onDrop: () => this.anchorController.requestDrop(),
-      onSetRadius: (newRadius, convert) => this.anchorController.setRadius(newRadius, convert),
+      onSetZone: (zoneConfig) => this.anchorController.setZone(zoneConfig),
     });
+
+    this.signalK
+      .fetchPluginInfo()
+      .then((info) => {
+        this.version = info.version;
+        console.log(`Hoeken's Anchor Alarm v${this.version}`);
+      })
+      .catch(() => { });
 
     this.loadInitialData();
   }
@@ -148,6 +156,8 @@ class AnchorAlarm {
         console.log(this.state);
 
         this.buildMap();
+        this.anchorController.estimateAnchorPosition();
+
         this.updateMap();
         this.map.fitBounds(this.anchorOverlay.getBounds());
       })
@@ -228,35 +238,20 @@ class AnchorAlarm {
       filterRadius: this.config.fleetFilterRadius,
     });
 
-    this.buildAnchorWidgets();
-  }
-
-  buildAnchorWidgets() {
     this.anchorOverlay = new AnchorOverlay({
       state: this.state,
       map: this.map,
-      radius: 0,
-    }).setBoatPosition(
-      this.state.getPosition(),
-      this.state.boatConfig.heading,
-      this.state.boatConfig.gpsOffset,
-    );
+      onZoneChange: (zoneConfig) => this.anchorController.setZone(zoneConfig),
+      onZoneInput: (zoneConfig) => this.anchorController.previewZone(zoneConfig),
+    });
 
     this.anchorController = new AnchorController({
       appState: this.state,
       overlay: this.anchorOverlay,
-      toolbar: this.toolbar,
       signalK: this.signalK,
-      infoPanel: this.infoPanel,
-      scopePanel: this.scopePanel,
       statusBar: this.statusBar,
+      onChange: () => this.updateMap(),
     });
-
-    this.anchorOverlay.onCrosshairDrag((pos) =>
-      this.anchorController.updateCrosshairPosition(pos),
-    );
-
-    this.anchorController.estimateAnchorPosition();
   }
 
   updateMap() {
@@ -265,7 +260,6 @@ class AnchorAlarm {
     this.infoPanel.update(this.state);
     this.statusBar.update(this.state);
     this.scopePanel.update(this.state);
-    this.anchorController.reconcile();
     this.anchorOverlay.update(this.state);
     this.fleetLayer.update(this.state);
   }

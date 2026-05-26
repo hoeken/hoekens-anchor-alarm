@@ -13,15 +13,16 @@
  * limitations under the License.
  */
 
-const Watchdog = require("./watchdog");
-const Schema = require("./schema");
-const SignalKBus = require("./signalk-bus");
-const AnchorState = require("./anchor-state");
-const PositionMonitor = require("./position-monitor");
-const AnchorService = require("./anchor-service");
-const HttpRoutes = require("./http-routes");
+import { distance, point } from "@turf/turf";
+import { Watchdog } from "./watchdog.js";
+import { metas, buildSchema, applyDefaults, migrateConfig, readZoneConfig } from "./schema.js";
+import { watchZoneFromConfig } from "../shared/watch-zones/index.js";
+import { SignalKBus } from "./signalk-bus.js";
+import { Utils } from "./utils.js";
+import { register as registerHttpRoutes } from "./http-routes.js";
+import { ValidationError, StateError } from "./errors.js";
 
-module.exports = function (app) {
+export default function (app) {
   const plugin = {};
 
   // ============================================================
@@ -43,70 +44,6 @@ module.exports = function (app) {
   plugin.bus = new SignalKBus(app, plugin.id);
 
   // ============================================================
-  // CONFIGURATION SCHEMA
-  // ============================================================
-
-  plugin.schema = function () {
-    return Schema.buildSchema(app);
-  };
-
-  // ============================================================
-  // MODULE WIRING
-  // ============================================================
-
-  AnchorState.attach(app, plugin);
-  PositionMonitor.attach(app, plugin);
-  AnchorService.attach(app, plugin);
-
-  // ============================================================
-  // PUT / ACTION HANDLERS (legacy — HTTP routes are canonical)
-  // ============================================================
-
-  plugin.putPosition = function (context, path, value) {
-    try {
-      if (value == null) {
-        plugin.anchor.raise();
-      } else {
-        plugin.anchor.drop({ position: value, radius: value.radius });
-      }
-      return { state: "SUCCESS" };
-    } catch (err) {
-      app.error(err);
-      return { state: "FAILURE", message: err.message };
-    }
-  };
-
-  plugin.putRadius = function (context, path, value) {
-    try {
-      plugin.anchor.setRadius(value);
-      return { state: "SUCCESS" };
-    } catch (err) {
-      app.error(err);
-      return { state: "FAILURE", message: err.message };
-    }
-  };
-
-  // ============================================================
-  // HTTP API ROUTES
-  // ============================================================
-
-  plugin.registerWithRouter = function (router) {
-    HttpRoutes.register(app, plugin, router);
-  };
-
-  // ============================================================
-  // PERSISTENCE
-  // ============================================================
-
-  plugin.savePluginOptions = function () {
-    app.savePluginOptions(plugin.configuration, (err) => {
-      if (err) {
-        app.error(err);
-      }
-    });
-  };
-
-  // ============================================================
   // PLUGIN LIFECYCLE
   // ============================================================
 
@@ -116,14 +53,27 @@ module.exports = function (app) {
     plugin.alarm_state = "normal";
     plugin.updateAnchorAlarm(plugin.alarm_state, "Started", ["visual"]);
 
-    for (const [key, value] of Object.entries(Schema.metas))
+    for (const [key, value] of Object.entries(metas))
       plugin.bus.queueMeta(key, value);
 
-    plugin.configuration = Schema.applyDefaults(app, props || {});
+    plugin.configuration = props || {};
+    // v2.1 -> v2.2 upgrade: legacy `radius` becomes a `zone` config.
+    // Persist immediately so the next restart sees the migrated shape.
+    const migrated = migrateConfig(plugin.configuration);
+    plugin.configuration = applyDefaults(app, plugin.configuration);
+    if (migrated) {
+      app.debug("migrated legacy radius config to zone shape");
+      plugin.savePluginOptions();
+    }
+
     try {
       //save our anchor roller height to the tree so we can access it from the web side
       if (typeof plugin.configuration["bowAnchorRollerHeight"] != "undefined")
         plugin.bus.queueDelta("design.bowAnchorRollerHeight", parseFloat(plugin.configuration["bowAnchorRollerHeight"]));
+
+      //save our total anchor chain length to the tree so we can access it from the web side
+      if (typeof plugin.configuration["totalAnchorChainLength"] != "undefined")
+        plugin.bus.queueDelta("design.totalAnchorChainLength", parseFloat(plugin.configuration["totalAnchorChainLength"]));
 
       //setup our watchdog timer
       const noPositionAlarmTime = plugin.configuration["noPositionAlarmTime"];
@@ -143,19 +93,20 @@ module.exports = function (app) {
       }
 
       //should we be watching?
-      const isOn = plugin.configuration["on"];
-      const position = plugin.configuration["position"];
-      const radius = plugin.configuration["radius"];
-      if (
-        typeof isOn != "undefined" &&
-        isOn &&
-        typeof position != "undefined" &&
-        typeof radius != "undefined"
-      ) {
+      const zoneConfig = readZoneConfig(plugin.configuration);
+      const anchorPosition = zoneConfig?.position;
+      const zone = watchZoneFromConfig(zoneConfig);
+      if (anchorPosition && zone) {
+        plugin.updateAnchorState({
+          anchorPosition: anchorPosition,
+          zone: zone,
+          isSet: true,
+        });
+
         plugin.startWatchingPosition();
       }
 
-      //api for the web app
+      //OLD APIs - only here for backwards compatibility
       if (app.registerActionHandler) {
         app.registerActionHandler(
           "vessels.self",
@@ -182,7 +133,7 @@ module.exports = function (app) {
   plugin.stop = function () {
     if (plugin.alarm_state != "normal") {
       plugin.alarm_state = "normal";
-      plugin.updateAnchorAlarm(plugin.alarm_state, "Stopped");
+      plugin.updateAnchorAlarm(plugin.alarm_state, "Stopped", ["visual"]);
     }
 
     plugin.updateAnchorState({
@@ -194,5 +145,396 @@ module.exports = function (app) {
     app.setPluginStatus("Stopped");
   };
 
+  // ============================================================
+  // CONFIGURATION SCHEMA
+  // ============================================================
+
+  plugin.schema = function () {
+    return buildSchema(app);
+  };
+
+  // ============================================================
+  // ANCHOR STATE (SignalK delta emission)
+  // ============================================================
+
+  plugin.updateAnchorAlarm = function (state, message, method) {
+    if (!message)
+      message = state.charAt(0).toUpperCase() + state.slice(1);
+
+    if (!method)
+      method = ["visual", "sound"];
+
+    plugin.bus.queueDelta("notifications.navigation.anchor", {
+      state: state,
+      method: method,
+      message: message,
+    });
+
+    plugin.bus.sendUpdates();
+  };
+
+  plugin.updateAnchorState = function (params) {
+    if (params.isSet) {
+      plugin.bus.queueDelta("navigation.anchor.state", "on");
+
+      if (params.anchorPosition) {
+        const anchorPosition = {
+          latitude: parseFloat(params.anchorPosition.latitude),
+          longitude: parseFloat(params.anchorPosition.longitude),
+        };
+
+        plugin.bus.queueDelta("navigation.anchor.position", anchorPosition);
+      }
+
+      if (params.currentRadius != null) {
+        plugin.bus.queueDelta(
+          "navigation.anchor.currentRadius",
+          parseFloat(params.currentRadius),
+        );
+      }
+
+      if (params.zone) {
+        plugin.bus.queueDelta("navigation.anchor.watchZone", params.zone.getConfig());
+
+        // Keep maxRadius (and the legacy zones meta array) populated for
+        // circle shapes so external consumers like Freeboard keep working.
+        // Non-circle shapes clear maxRadius — the watchZone path is the
+        // canonical source of truth.
+        const circleRadius = params.zone.getCircleRadius();
+        if (circleRadius != null) {
+          plugin.bus.queueDelta("navigation.anchor.maxRadius", circleRadius);
+          const zones = [
+            {
+              state: "normal",
+              lower: 0,
+              upper: circleRadius,
+            },
+            {
+              state: plugin.configuration.state,
+              lower: circleRadius,
+            },
+          ];
+          plugin.bus.queueDelta("navigation.anchor.meta", { zones: zones });
+        } else {
+          plugin.bus.queueDelta("navigation.anchor.maxRadius", null);
+        }
+      }
+    } else {
+      plugin.bus.queueDelta("navigation.anchor.position", null);
+      plugin.bus.queueDelta("navigation.anchor.state", "off");
+      plugin.bus.queueDelta("navigation.anchor.currentRadius", null);
+      plugin.bus.queueDelta("navigation.anchor.maxRadius", null);
+      plugin.bus.queueDelta("navigation.anchor.watchZone", null);
+    }
+
+    plugin.bus.sendUpdates();
+  };
+
+  // ============================================================
+  // POSITION MONITORING
+  // ============================================================
+
+  plugin.startWatchingPosition = function () {
+    if (plugin.onStop.length > 0)
+      return;
+
+    plugin.alarm_state = "normal";
+    plugin.updateAnchorAlarm(plugin.alarm_state, "Watching", ["visual"]);
+
+    app.setPluginStatus("Watching");
+
+    if (plugin.positionWatchdogTimer)
+      plugin.positionWatchdogTimer.start();
+
+    app.subscriptionmanager.subscribe(
+      {
+        context: "vessels.self",
+        subscribe: [
+          {
+            path: "navigation.position",
+            period: plugin.subscriberPeriod,
+          },
+        ],
+      },
+      plugin.onStop,
+      (err) => {
+        app.error(err);
+        app.setProviderError(err);
+      },
+      plugin.handlePositionUpdate,
+    );
+  };
+
+  plugin.handlePositionUpdate = function (delta) {
+    let vesselPosition;
+
+    if (delta.updates) {
+      delta.updates.forEach((update) => {
+        if (update.values) {
+          update.values.forEach((vp) => {
+            if (vp.path === "navigation.position") {
+              vesselPosition = vp.value;
+            }
+          });
+        }
+      });
+    }
+
+    if (vesselPosition) {
+      if (plugin.positionWatchdogTimer)
+        plugin.positionWatchdogTimer.reset();
+      plugin.checkPosition(vesselPosition);
+    }
+  };
+
+  plugin.stopWatchingPosition = function () {
+    plugin.alarm_state = "normal";
+    plugin.updateAnchorAlarm(plugin.alarm_state, "Off", ["visual"]);
+
+    if (plugin.positionWatchdogTimer)
+      plugin.positionWatchdogTimer.stop();
+
+    app.setPluginStatus("Off");
+
+    plugin.onStop.forEach((f) => f());
+    plugin.onStop = [];
+  };
+
+  plugin.checkPosition = function (vesselPosition) {
+    const configuration = plugin.configuration;
+    const zoneConfig = readZoneConfig(configuration);
+    const anchorPosition = zoneConfig?.position;
+    const zone = watchZoneFromConfig(zoneConfig);
+
+    // currentRadius keeps its v2.1 semantics — straight-line distance from
+    // anchor to GPS. Even with non-circle zones it's a useful display value
+    // and downstream SignalK consumers (logging, telemetry) still rely on it.
+    const currentRadius = distance(
+      point([vesselPosition.longitude, vesselPosition.latitude]),
+      point([anchorPosition.longitude, anchorPosition.latitude]),
+      { units: "meters" },
+    );
+
+    //update our parameter that may change.
+    plugin.updateAnchorState({
+      currentRadius: currentRadius,
+      isSet: true,
+    });
+
+    let new_state = "normal";
+    let do_update = false;
+    let message = "Watching";
+
+    const outside = !zone.contains(vesselPosition, anchorPosition);
+    if (outside) {
+      //okay, we're dragging.
+      new_state = configuration.state;
+      message = `Anchor Dragging (${Math.round(currentRadius)}m)`;
+
+      //how often should we send it?
+      const interval = configuration["anchorAlarmInterval"];
+      if (typeof interval !== "undefined")
+        if (plugin.lastAlarmSent + interval * 1000 < Date.now())
+          do_update = true;
+
+      //wait, do we have engines on?
+      if (configuration.enableEngineCheck) {
+        if (Utils.checkEngineState(app)) {
+          app.debug("anchor alarm disabled due to engines on");
+          do_update = true;
+          new_state = "normal";
+          message = "Engines on, alarm disabled.";
+
+          plugin.raiseAnchor();
+
+          app.setPluginStatus(message);
+        }
+      }
+    }
+
+    if (new_state !== plugin.alarm_state || do_update) {
+      plugin.alarm_state = new_state;
+      app.debug("alarm state change: %s -> %s", plugin.alarm_state, message);
+      plugin.updateAnchorAlarm(plugin.alarm_state, message);
+
+      if (plugin.alarm_state == "normal")
+        app.setPluginStatus("Watching");
+      else {
+        plugin.lastAlarmSent = Date.now();
+        app.setPluginError("Dragging");
+      }
+    }
+  };
+
+  // ============================================================
+  // ANCHOR SERVICE
+  // ============================================================
+
+  // Build a WatchZone from a full zone config object. Throws ValidationError
+  // when none of the inputs yield a usable zone.
+  plugin.resolveZone = function (zone) {
+    if (zone != null) {
+      if (typeof zone !== "object")
+        throw new ValidationError("zone must be an object");
+      try {
+        return watchZoneFromConfig(zone);
+      } catch (err) {
+        throw new ValidationError(err.message);
+      }
+    }
+
+    const existing = readZoneConfig(plugin.configuration);
+    if (existing) {
+      return watchZoneFromConfig(existing);
+    }
+
+    throw new ValidationError("zone required");
+  };
+
+  plugin.dropAnchor = function ({ position, zone }) {
+    if (
+      !position ||
+      position.latitude == null ||
+      position.longitude == null
+    ) {
+      throw new ValidationError("position with latitude and longitude required");
+    }
+
+    const parsedPosition = {
+      latitude: parseFloat(position.latitude),
+      longitude: parseFloat(position.longitude),
+    };
+    if (isNaN(parsedPosition.latitude) || isNaN(parsedPosition.longitude)) {
+      throw new ValidationError("position latitude and longitude must be numeric");
+    }
+
+    const resolvedZone = plugin.resolveZone(zone);
+
+    app.debug(
+      "drop anchor at: " +
+      parsedPosition.latitude +
+      " " +
+      parsedPosition.longitude,
+    );
+
+    plugin.updateAnchorState({
+      anchorPosition: parsedPosition,
+      currentRadius: 0,
+      zone: resolvedZone,
+      isSet: true,
+    });
+
+    plugin.configuration.zone = JSON.stringify({
+      ...resolvedZone.getConfig(),
+      position: parsedPosition,
+    });
+
+    plugin.startWatchingPosition();
+    plugin.savePluginOptions();
+  };
+
+  plugin.setZone = function (zone) {
+    if (zone == null) {
+      throw new ValidationError("zone required");
+    }
+
+    const existingZoneConfig = readZoneConfig(plugin.configuration);
+    const anchorPosition = existingZoneConfig?.position;
+    if (!anchorPosition) {
+      throw new StateError("no anchor is currently dropped");
+    }
+
+    const vesselPosition = app.getSelfPath("navigation.position.value");
+    if (!vesselPosition) {
+      throw new StateError("no GPS position available");
+    }
+
+    const resolvedZone = plugin.resolveZone(zone);
+
+    app.debug("set anchor zone: " + JSON.stringify(resolvedZone.getConfig()));
+
+    plugin.updateAnchorState({
+      zone: resolvedZone,
+      isSet: true,
+    });
+
+    plugin.configuration.zone = JSON.stringify({
+      ...resolvedZone.getConfig(),
+      position: anchorPosition,
+    });
+    plugin.savePluginOptions();
+  };
+
+  // Legacy shim: treats `radius` as a circle zone and routes through setZone.
+  plugin.setRadius = function (radius) {
+    if (radius == null) {
+      throw new ValidationError("radius required");
+    }
+    const parsed = parseFloat(radius);
+    if (isNaN(parsed)) {
+      throw new ValidationError("radius must be numeric");
+    }
+    plugin.setZone({ type: "circle", radius: parsed });
+  };
+
+  plugin.raiseAnchor = function () {
+    app.debug("raise anchor");
+
+    plugin.updateAnchorState({ isSet: false });
+
+    delete plugin.configuration.zone;
+    plugin.savePluginOptions();
+
+    plugin.stopWatchingPosition();
+  };
+
+  // ============================================================
+  // PUT / ACTION HANDLERS (legacy — HTTP routes are canonical)
+  // ============================================================
+
+  plugin.putPosition = function (context, path, value) {
+    try {
+      if (value == null) {
+        plugin.raiseAnchor();
+      } else {
+        plugin.dropAnchor({ position: value, zone: { type: "circle", radius: value.radius } });
+      }
+      return { state: "SUCCESS" };
+    } catch (err) {
+      app.error(err);
+      return { state: "FAILURE", message: err.message };
+    }
+  };
+
+  plugin.putRadius = function (context, path, value) {
+    try {
+      plugin.setRadius(value);
+      return { state: "SUCCESS" };
+    } catch (err) {
+      app.error(err);
+      return { state: "FAILURE", message: err.message };
+    }
+  };
+
+  // ============================================================
+  // HTTP API ROUTES
+  // ============================================================
+
+  plugin.registerWithRouter = function (router) {
+    registerHttpRoutes(app, plugin, router);
+  };
+
+  // ============================================================
+  // PERSISTENCE
+  // ============================================================
+
+  plugin.savePluginOptions = function () {
+    app.savePluginOptions(plugin.configuration, (err) => {
+      if (err) {
+        app.error(err);
+      }
+    });
+  };
+
   return plugin;
-};
+}

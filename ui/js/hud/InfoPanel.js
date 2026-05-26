@@ -14,6 +14,9 @@ function formatClockTime(value) {
   return `${h}:${m.toString().padStart(2, "0")} ${ampm}`;
 }
 
+const TIDE_ARROW_UP = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="12" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5"/></svg>`;
+const TIDE_ARROW_DOWN = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="12" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/></svg>`;
+
 export const InfoPanel = L.Control.extend({
   options: { position: "bottomright" },
 
@@ -25,7 +28,7 @@ export const InfoPanel = L.Control.extend({
         <table>
           <tr id="currentTideRow">
             <th><a href="/signalk-tides">Current&nbsp;Tide:</a></th>
-            <td><span title="Current Tide" id='currentTide'>~</span></td>
+            <td><span title="Current Tide" id='currentTide'>~</span><span id='currentTideDirection'></span></td>
           </tr>
           <tr id="highTideRow">
             <th>High&nbsp;Tide:</th>
@@ -48,6 +51,7 @@ export const InfoPanel = L.Control.extend({
     this._container = container;
     this._depthValue = container.querySelector("#depthValue");
     this._currentTide = container.querySelector("#currentTide");
+    this._currentTideDirection = container.querySelector("#currentTideDirection");
     this._currentTideRow = container.querySelector("#currentTideRow");
     this._tideHighTime = container.querySelector("#highTide");
     this._tideHighTimeRow = container.querySelector("#highTideRow");
@@ -59,8 +63,16 @@ export const InfoPanel = L.Control.extend({
 
   update: function (state) {
 
+    // InfoPanel only makes sense while anchored. ScopePanel is its raised
+    // counterpart — the two are mutually exclusive in the bottom-right slot.
+    if (!state.isAnchored() && state.belowSurface) {
+      this.hide();
+      return;
+    }
+    this.show();
+
     if (state.tide) {
-      this.setCurrentTide(state.tide.heightNow);
+      this.setCurrentTide(state.tide.heightNow, this.computeTideRising(state.tide));
       this.arrangeTideTimes(state.tide.timeHigh, state.tide.timeLow);
       this.setHighTime(state.tide.timeHigh);
       this.setLowTime(state.tide.timeLow);
@@ -78,16 +90,28 @@ export const InfoPanel = L.Control.extend({
       this.setDepthValue(state.belowTransducer);
     else
       this.setDepthValue(null);
-    this.setStatus(state.anchor.notification);
+    this.setStatus(state.anchor);
   },
 
-  setCurrentTide: function (currentTide) {
+  setCurrentTide: function (currentTide, rising) {
     if (currentTide) {
-      this._currentTide.textContent = DisplayUnit.formatDisplay(currentTide);
+      this._currentTide.textContent = DisplayUnit.formatDelta(currentTide);
+      if (rising === true)
+        this._currentTideDirection.innerHTML = TIDE_ARROW_UP;
+      else if (rising === false)
+        this._currentTideDirection.innerHTML = TIDE_ARROW_DOWN;
+      else
+        this._currentTideDirection.innerHTML = "";
       this._currentTideRow.style.display = "";
     } else {
       this._currentTideRow.style.display = "none";
     }
+  },
+
+  computeTideRising: function (tide) {
+    if (!tide.timeHigh || !tide.timeLow)
+      return null;
+    return new Date(tide.timeHigh.value) < new Date(tide.timeLow.value);
   },
 
   arrangeTideTimes: function (highTime, lowTime) {
@@ -120,17 +144,23 @@ export const InfoPanel = L.Control.extend({
 
   setDepthValue: function (depth) {
     if (depth)
-      this._depthValue.textContent = DisplayUnit.formatDisplay(depth);
+      this._depthValue.textContent = DisplayUnit.formatDelta(depth);
     else
       this._depthValue.textContent = "~";
   },
 
-  setStatus: function (notification) {
-    if (notification) {
-      this._pluginStatus.textContent = notification.value.message;
-      this._pluginStatus.className = "";
-      if (notification.value.message !== "Off" && notification.value.state) {
-        this._pluginStatus.classList.add(notification.value.state);
+  setStatus: function (anchor) {
+    this._pluginStatus.className = "";
+    if (anchor.state && anchor.notification) {
+      if (anchor.state.value === "off")
+        this._pluginStatus.textContent = "Off";
+      else if (anchor.state.value === "on") {
+        const notice = anchor.notification;
+        this._pluginStatus.classList.add(notice.value.state);
+        if (notice.value.message === "Watching")
+          this._pluginStatus.textContent = "Watching";
+        else
+          this._pluginStatus.textContent = notice.value.state.toUpperCase();
       }
     } else
       this._pluginStatus.textContent = "Unknown";

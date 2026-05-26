@@ -1,6 +1,6 @@
-const js = require("@eslint/js");
-const globals = require("globals");
-const stylistic = require("@stylistic/eslint-plugin");
+import js from "@eslint/js";
+import globals from "globals";
+import stylistic from "@stylistic/eslint-plugin";
 
 const stylisticRules = {
   "@stylistic/indent": ["error", 2, { SwitchCase: 1 }],
@@ -24,7 +24,7 @@ const stylisticRules = {
   "@stylistic/nonblock-statement-body-position": ["error", "below"],
 };
 
-module.exports = [
+export default [
   {
     ignores: ["node_modules/**", "public/**", "ui/public/**"],
   },
@@ -34,7 +34,17 @@ module.exports = [
     rules: stylisticRules,
   },
   {
-    files: ["src/**/*.js", "eslint.config.js"],
+    files: ["src/**/*.js", "shared/**/*.js", "eslint.config.js", "vite.config.js"],
+    languageOptions: {
+      sourceType: "module",
+      globals: { ...globals.node },
+    },
+    rules: {
+      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+    },
+  },
+  {
+    files: ["src/**/*.cjs"],
     languageOptions: {
       sourceType: "commonjs",
       globals: { ...globals.node },

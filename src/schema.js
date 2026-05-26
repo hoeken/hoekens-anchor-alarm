@@ -13,13 +13,20 @@
  * limitations under the License.
  */
 
-const metas = {
+export const metas = {
   "design.bowAnchorRollerHeight": {
     units: "m",
     displayUnits: {
       category: "length",
     },
     description: "Height of the bow anchor roller above the water",
+  },
+  "design.totalAnchorChainLength": {
+    units: "m",
+    displayUnits: {
+      category: "length",
+    },
+    description: "Total length of the anchor chain/rode available",
   },
   "navigation.anchor.currentRadius": {
     units: "m",
@@ -39,9 +46,12 @@ const metas = {
     description: "Anchor position, probably an estimate at best",
   },
   "navigation.anchor.state": { "description": "Anchor alarm state: 'on' or 'off'" },
+  "navigation.anchor.watchZone": {
+    description: "Anchor watch zone configuration (shape + parameters). Anchor position is stored separately on navigation.anchor.position.",
+  },
 };
 
-const requiredPaths = [
+export const requiredPaths = [
   {
     path: "navigation.position",
     description: "Required - you need a GPS position of some sort to watch.",
@@ -107,11 +117,10 @@ const requiredPaths = [
   },
 ];
 
-function buildSchema(app) {
+export function buildSchema(app) {
   const schemaData = {
     title: "Hoeken's Anchor Alarm",
     type: "object",
-    required: ["radius"],
     properties: {
       pathChecks: {
         title: "Path Checks",
@@ -172,32 +181,17 @@ function buildSchema(app) {
           "Height of the bow anchor roller above the waterline (in meters).  Used for scope calculations.",
         default: 0,
       },
-      on: {
-        type: "boolean",
-        title: "Alarm On",
-        description: "Used for saving state in case of SignalK restart.",
-        default: false,
-      },
-      radius: {
+      totalAnchorChainLength: {
         type: "number",
-        title: "Alarm Radius (m)",
-        description: "Used for saving state in case of SignalK restart.",
-        default: 60,
+        title:
+          "Total length of the anchor chain/rode (in meters).  Used to flag scopes longer than your available chain.",
+        default: 100,
       },
-      position: {
-        type: "object",
-        title: "Anchor Position",
-        description: "Used for saving state in case of SignalK restart.",
-        properties: {
-          latitude: {
-            title: "Latitude",
-            type: "number",
-          },
-          longitude: {
-            title: "Longitude",
-            type: "number",
-          },
-        },
+      zone: {
+        type: "string",
+        title: "Anchor Watch Zone (JSON)",
+        description: "Watch zone shape + parameters + anchor position as a single JSON string. ⚠️ Do not edit by hand — use the web UI. Blank when no anchor is dropped. Example: {\"type\":\"circle\",\"radius\":60,\"position\":{\"latitude\":0,\"longitude\":0}}.",
+        default: "",
       },
     },
   };
@@ -221,14 +215,49 @@ function buildSchema(app) {
 // the user hasn't explicitly saved. SignalK does not materialize schema
 // defaults into the saved options blob, so downstream code (and the
 // /ui-config endpoint) would otherwise see undefined for unset properties.
-function applyDefaults(app, config) {
+export function applyDefaults(app, config) {
   const schema = buildSchema(app);
   for (const [key, prop] of Object.entries(schema.properties)) {
     if (config[key] === undefined && prop.default !== undefined) {
-      config[key] = prop.default;
+      // Clone object/array defaults so mutating the live config doesn't
+      // poison the schema for the next call.
+      config[key] = typeof prop.default === "object" && prop.default !== null
+        ? structuredClone(prop.default)
+        : prop.default;
     }
   }
   return config;
 }
 
-module.exports = { metas, requiredPaths, buildSchema, applyDefaults };
+// Upgrade older config shapes to the current v2.2 shape: a single `zone`
+// JSON string holding shape + parameters + anchor position. Returns true when
+// the config was actually mutated so callers can persist the result.
+// Idempotent.
+export function migrateConfig(config) {
+  let mutated = false;
+
+  // v2.1 legacy: top-level radius becomes a circle zone JSON string.
+  if (typeof config.zone !== "string" || config.zone.length === 0) {
+    const radius = Number(config.radius);
+    if (Number.isFinite(radius) && radius > 0) {
+      config.zone = JSON.stringify({ type: "circle", radius });
+      delete config.radius;
+      mutated = true;
+    }
+  }
+
+  return mutated;
+}
+
+// Parse the persisted zone JSON, returning null when the field is missing or
+// malformed. Callers that need a usable zone should fall back to
+// watchZoneFromConfig(null) which yields a default circle.
+export function readZoneConfig(config) {
+  if (typeof config.zone !== "string" || config.zone.length === 0)
+    return null;
+  try {
+    return JSON.parse(config.zone);
+  } catch {
+    return null;
+  }
+}

@@ -13,10 +13,13 @@
  * limitations under the License.
  */
 
-const { AnchorError } = require("./anchor-service");
+import { createRequire } from "module";
+import { AnchorError } from "./errors.js";
+
+const require = createRequire(import.meta.url);
 const openapi = require("./openApi.json");
 
-function register(app, plugin, router) {
+export function register(app, plugin, router) {
   plugin.getOpenApi = () => openapi;
 
   function fail(res, err) {
@@ -39,9 +42,9 @@ function register(app, plugin, router) {
 
   router.post("/dropAnchor", (req, res) => {
     try {
-      plugin.anchor.drop({
+      plugin.dropAnchor({
         position: req.body.position,
-        radius: req.body.radius,
+        zone: req.body.zone,
       });
       res.json({ statusCode: 200, state: "COMPLETED" });
     } catch (err) {
@@ -49,9 +52,9 @@ function register(app, plugin, router) {
     }
   });
 
-  router.post("/setRadius", (req, res) => {
+  router.post("/setZone", (req, res) => {
     try {
-      plugin.anchor.setRadius(req.body.radius);
+      plugin.setZone(req.body.zone);
       res.json({ statusCode: 200, state: "COMPLETED" });
     } catch (err) {
       fail(res, err);
@@ -60,7 +63,7 @@ function register(app, plugin, router) {
 
   router.post("/raiseAnchor", (req, res) => {
     try {
-      plugin.anchor.raise();
+      plugin.raiseAnchor();
       res.json({ statusCode: 200, state: "COMPLETED" });
     } catch (err) {
       fail(res, err);
@@ -76,5 +79,3 @@ function register(app, plugin, router) {
     });
   });
 }
-
-module.exports = { register };

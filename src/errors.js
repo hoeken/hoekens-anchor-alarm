@@ -13,28 +13,23 @@
  * limitations under the License.
  */
 
-export class Watchdog {
-  constructor(timeout, onTimeout) {
-    this.timeout = timeout;
-    this.onTimeout = onTimeout;
-    this.timer = null;
+export class AnchorError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "AnchorError";
   }
+}
 
-  start() {
-    this.stop();
-    this.timer = setTimeout(() => {
-      this.onTimeout();
-    }, this.timeout);
+export class ValidationError extends AnchorError {
+  constructor(message) {
+    super(message);
+    this.name = "ValidationError";
   }
+}
 
-  reset() {
-    this.start();
-  }
-
-  stop() {
-    if (this.timer !== null) {
-      clearTimeout(this.timer);
-      this.timer = null;
-    }
+export class StateError extends AnchorError {
+  constructor(message) {
+    super(message);
+    this.name = "StateError";
   }
 }

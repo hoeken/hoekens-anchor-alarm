@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-class Utils {
+export class Utils {
   static checkEngineState(app) {
     const propulsion = app.getSelfPath("propulsion");
 
@@ -41,25 +41,6 @@ class Utils {
     return false;
   }
 
-  static calc_distance(lat1, lon1, lat2, lon2) {
-    var R = 6371000; // Radius of the earth in m
-    var dLat = Utils.degsToRad(lat2 - lat1);
-    var dLon = Utils.degsToRad(lon2 - lon1);
-    var a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(Utils.degsToRad(lat1)) *
-      Math.cos(Utils.degsToRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    var d = R * c; // Distance in m
-    return d;
-  }
-
-  static degsToRad(degrees) {
-    return degrees * (Math.PI / 180.0);
-  }
-
   static isFresh(data, max_age = 300) {
     if (!data)
       return false;
@@ -68,5 +49,3 @@ class Utils {
     return ageInSecs <= max_age;
   }
 }
-
-module.exports = Utils;

@@ -1,21 +1,28 @@
 // ControlToolbar owns the top control bar (raise/drop anchor buttons and the
-// +/- radius stepper). It builds its own DOM under the supplied parent and
-// exposes onDrop/onRaise/onSetRadius callbacks plus setState(anchorState) and
-// setRadius(r) update methods. Element IDs are preserved for CSS hooks in
-// style.css; do not rename without updating it.
+// shape selector + per-shape controls). It builds its own DOM under the
+// supplied parent and exposes onDrop/onRaise/onSetZone callbacks. Per-tick
+// state comes from AppState via update(appState). The shape-specific UI
+// is delegated to a zone controls instance from ./zones/.
+// Element IDs are preserved for CSS hooks in style.css;
+// do not rename without updating it.
 
-import { AnchorState } from "../AnchorController.js";
-import { DisplayUnit } from "../DisplayUnit.js";
+import {
+  createDefaultZoneConfig,
+  createZoneControls,
+  getZoneTypeOptions,
+} from "./zones/index.js";
 
 export class ControlToolbar {
-  constructor({ parent, getMapContainer, onDrop, onRaise, onSetRadius }) {
+  constructor({ parent, getMapContainer, onDrop, onRaise, onSetZone }) {
     this._getMapContainer = getMapContainer;
     this._onDrop = onDrop;
     this._onRaise = onRaise;
-    this._onSetRadius = onSetRadius;
+    this._onSetZone = onSetZone;
 
-    this._radius = 0;
-    this._state = null;
+    this._isAnchored = false;
+    this._zoneControls = null;
+    this._zoneType = null;
+    this._appState = null;
 
     this._container = document.createElement("div");
     this._container.id = "controlToolbar";
@@ -26,22 +33,33 @@ export class ControlToolbar {
       <div id="anchorUp">
         <button id="dropAnchor">Drop Anchor</button>
       </div>
-      <div id="radiusControl">
-        <button id="decreaseRadius">-</button>
-        <button id="setRadius"><span id="radius">0</span></button>
-        <button id="increaseRadius">+</button>
+      <div id="zoneShapeSelect">
+        <select id="zoneShape"></select>
       </div>
+      <div id="zoneControlsHost"></div>
     `;
     parent.appendChild(this._container);
 
     this._anchorUp = this._container.querySelector("#anchorUp");
     this._anchorDown = this._container.querySelector("#anchorDown");
-    this._radiusEl = this._container.querySelector("#radius");
+    this._shapeSelectWrap = this._container.querySelector("#zoneShapeSelect");
+    this._shapeSelect = this._container.querySelector("#zoneShape");
+    this._zoneControlsHost = this._container.querySelector("#zoneControlsHost");
+
+    // Populate the shape dropdown. Coming-soon types are listed but disabled
+    // so the user can see what's planned without being able to select them.
+    for (const option of getZoneTypeOptions()) {
+      const opt = document.createElement("option");
+      opt.value = option.type;
+      opt.textContent = option.enabled ? option.label : `${option.label} (coming soon)`;
+      opt.disabled = !option.enabled;
+      this._shapeSelect.appendChild(opt);
+    }
 
     this._container
       .querySelector("#raiseAnchor")
       .addEventListener("click", () => {
-        if (this._state !== AnchorState.ANCHORED)
+        if (!this._isAnchored)
           return;
         if (!confirm("Do you really want to disable your anchor alarm?"))
           return;
@@ -54,32 +72,10 @@ export class ControlToolbar {
         if (this._onDrop)
           this._onDrop();
       });
-    this._container
-      .querySelector("#setRadius")
-      .addEventListener("click", () => {
-        const input = prompt("Enter Radius:", parseInt(this._radiusEl.innerHTML, 10));
-        if (input === null)
-          return;
-        const newRadius = parseInt(input, 10);
-        if (isNaN(newRadius) || newRadius <= 0)
-          return;
-        if (this._onSetRadius)
-          this._onSetRadius(newRadius, true);
-      });
-    this._container
-      .querySelector("#increaseRadius")
-      .addEventListener("click", () => {
-        if (this._onSetRadius)
-          this._onSetRadius(this._radius + 5, false);
-      });
-    this._container
-      .querySelector("#decreaseRadius")
-      .addEventListener("click", () => {
-        if (this._radius <= 5)
-          return;
-        if (this._onSetRadius)
-          this._onSetRadius(this._radius - 5, false);
-      });
+    this._shapeSelect.addEventListener("change", (e) => {
+      if (this._onSetZone)
+        this._onSetZone(createDefaultZoneConfig(e.target.value, this._appState));
+    });
 
     // macOS Chrome delivers trackpad pinch as a wheel event with ctrlKey=true.
     // Over this overlay the browser would zoom the page instead of the map,
@@ -111,26 +107,39 @@ export class ControlToolbar {
     );
   }
 
-  // Swap which button group is visible. "Down" states show the raise button;
-  // "up" states show the drop button. Use 'block' (not '') because the CSS
-  // default for these divs is display:none.
-  setState(anchorState) {
-    this._state = anchorState;
-    const isDown =
-      anchorState === AnchorState.ANCHORED ||
-      anchorState === AnchorState.DROPPING;
-    this._anchorDown.style.display = isDown ? "block" : "none";
-    this._anchorUp.style.display = isDown ? "none" : "block";
-  }
-
-  setRadius(radius) {
-    this._radius = radius;
-  }
-
+  // Swap which button group is visible based on AppState. "Anchored" shows the
+  // raise button; "raised" shows the drop button + shape selector. The
+  // per-shape controls render in both states (so a user can adjust zone
+  // either before dropping or while anchored).
   update(appState) {
-    if (appState.anchor?.maxRadius)
-      this._radiusEl.innerHTML = DisplayUnit.formatDisplay(appState.anchor.maxRadius, 0, this._radius);
-    else
-      this._radiusEl.innerHTML = this._radius;
+    this._appState = appState;
+    this._isAnchored = appState.isAnchored();
+    this._anchorDown.style.display = this._isAnchored ? "block" : "none";
+    this._anchorUp.style.display = this._isAnchored ? "none" : "block";
+    // Shape can only be changed while raised; while anchored the user can
+    // still tweak the parameters of the existing shape.
+    this._shapeSelectWrap.style.display = this._isAnchored ? "none" : "block";
+
+    const zone = appState.getWatchZone();
+    const type = zone.getType();
+    this._ensureZoneControls(type);
+    if (this._shapeSelect.value !== type)
+      this._shapeSelect.value = type;
+    this._zoneControls?.update(appState);
+  }
+
+  _ensureZoneControls(type) {
+    if (this._zoneControls && this._zoneType === type)
+      return;
+    if (this._zoneControls)
+      this._zoneControls.destroy();
+    this._zoneControls = createZoneControls(type, {
+      parent: this._zoneControlsHost,
+      onChange: (zoneConfig) => {
+        if (this._onSetZone)
+          this._onSetZone(zoneConfig);
+      },
+    });
+    this._zoneType = type;
   }
 }

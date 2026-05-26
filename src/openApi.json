@@ -144,11 +144,42 @@
                   "position": {
                     "$ref": "#/components/schemas/Position"
                   },
+                  "zone": {
+                    "type": "object",
+                    "required": ["type"],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": ["circle", "sector"]
+                      },
+                      "radius": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "description": "Alarm radius in meters. Used by both `circle` and `sector` shapes."
+                      },
+                      "startAngle": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 360,
+                        "description": "Sector only: clockwise bearing in degrees (0 = true north) of the start of the safe arc."
+                      },
+                      "endAngle": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 360,
+                        "description": "Sector only: clockwise bearing in degrees (0 = true north) of the end of the safe arc. When `endAngle < startAngle` the arc wraps across 0°/360°."
+                      }
+                    },
+                    "description": "Watch zone configuration. If omitted, the previously configured zone is retained."
+                  },
                   "radius": {
                     "type": "number",
                     "format": "double",
                     "minimum": 0,
-                    "description": "Anchor alarm radius in meters. If omitted, the previously configured radius is retained."
+                    "description": "Legacy: alarm radius in meters. If both `zone` and `radius` are provided, `zone` wins."
                   }
                 }
               },
@@ -157,7 +188,10 @@
                   "latitude": 37.8199,
                   "longitude": -122.4783
                 },
-                "radius": 30
+                "zone": {
+                  "type": "circle",
+                  "radius": 30
+                }
               }
             }
           }
@@ -182,36 +216,64 @@
         }
       }
     },
-    "/setRadius": {
+    "/setZone": {
       "post": {
         "tags": ["anchor"],
-        "summary": "Set the anchor alarm radius",
-        "description": "Updates the alarm radius for the currently dropped anchor. Requires that an anchor has been dropped and that a GPS position is available.",
+        "summary": "Set the anchor watch zone",
+        "description": "Updates the watch zone (shape + parameters) for the currently dropped anchor. The anchor position is unchanged. Requires that an anchor has been dropped and that a GPS position is available.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["radius"],
+                "required": ["zone"],
                 "properties": {
-                  "radius": {
-                    "type": "number",
-                    "format": "double",
-                    "minimum": 0,
-                    "description": "Anchor alarm radius in meters."
+                  "zone": {
+                    "type": "object",
+                    "required": ["type"],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": ["circle", "sector"],
+                        "description": "Watch zone shape."
+                      },
+                      "radius": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "description": "Alarm radius in meters. Used by both `circle` and `sector` shapes."
+                      },
+                      "startAngle": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 360,
+                        "description": "Sector only: clockwise bearing in degrees (0 = true north) of the start of the safe arc."
+                      },
+                      "endAngle": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 360,
+                        "description": "Sector only: clockwise bearing in degrees (0 = true north) of the end of the safe arc. When `endAngle < startAngle` the arc wraps across 0°/360°."
+                      }
+                    }
                   }
                 }
               },
               "example": {
-                "radius": 45
+                "zone": {
+                  "type": "circle",
+                  "radius": 45
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Radius updated successfully.",
+            "description": "Zone updated successfully.",
             "content": {
               "application/json": {
                 "schema": {

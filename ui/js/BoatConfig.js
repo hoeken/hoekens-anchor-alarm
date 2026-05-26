@@ -12,6 +12,7 @@ const DEFAULTS = {
   loa: 14,
   beam: 4,
   anchorRollerHeight: 0,
+  totalAnchorChainLength: 100,
   gpsBowXDistance: 0,
   gpsBowYDistance: 0,
   aisShipType: 36,
@@ -24,6 +25,7 @@ export class BoatConfig {
     loa,
     beam,
     anchorRollerHeight,
+    totalAnchorChainLength,
     gpsBowXDistance,
     gpsBowYDistance,
     aisShipType,
@@ -33,6 +35,7 @@ export class BoatConfig {
     this.loa = loa;
     this.beam = beam;
     this.anchorRollerHeight = anchorRollerHeight;
+    this.totalAnchorChainLength = totalAnchorChainLength;
     this.gpsBowXDistance = gpsBowXDistance;
     this.gpsBowYDistance = gpsBowYDistance;
     this.aisShipType = aisShipType;
@@ -52,6 +55,9 @@ export class BoatConfig {
     config.anchorRollerHeight =
       SignalKHelper.value(data, "design.bowAnchorRollerHeight") ??
       DEFAULTS.anchorRollerHeight;
+    config.totalAnchorChainLength =
+      SignalKHelper.value(data, "design.totalAnchorChainLength") ??
+      DEFAULTS.totalAnchorChainLength;
     if (data.sensors?.gps) {
       config.gpsBowXDistance =
         SignalKHelper.value(data, "sensors.gps.fromCenter") ??
