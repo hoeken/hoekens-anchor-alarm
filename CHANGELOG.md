@@ -1,3 +1,61 @@
+# v2.2
+
+## New features
+
+- **Watch zone shapes** — the anchor alarm is no longer just a circle. Switch between three shapes via the new toolbar dropdown:
+  - **Circle** — now resizable by dragging a handle on the rim
+  - **Sector** — radius plus a draggable start/end arc, defaults to a 120° arc opposite the boat's heading so the safe swing arc lies astern
+  - **Polygon** — free-form, N-sided shape with draggable vertices. Drag an edge midpoint to insert a new vertex (capped at 24), drag a vertex onto its neighbor to combine them (aka delete). Self-intersection is prevented automatically.
+- All zones are stored anchor-relative as `{bearing, distance}`, so the shape translates naturally with the anchor
+- **`totalAnchorChainLength`** plugin config (default 100m) — caps anchor-position estimates at available chain length and highlights ScopePanel rows in red when required rode exceeds it
+- **Tide direction arrow** added to the tide HUD entry so you can see at a glance whether the tide is rising or falling
+- **Info panel** now shows a one-word anchor status; the longer message moves to the StatusBar so the panel stays compact
+- **Non-essential alarms** (engine-on, etc.) are now visual-only — no more audio nuisance for things that don't warrant it
+- Plugin version is now loaded and available to the client
+
+## Reliability & UX
+
+- **AppState is now the single source of truth.** AnchorController's parallel state machine (UP/DROPPING/ANCHORED/RAISING) and reconcile loop are gone. Drop/raise/set-radius writes optimistically against AppState, fire onChange, and roll back on POST failure. The UI no longer fights itself between local intent and delta updates.
+- Brief client-side suppression window after a write keeps stale server deltas from flipping the UI back before the round-trip completes
+- Info / scope panels each handle their own show/hide based on `state.isAnchored()` instead of being driven by the controller
+- Info panel and scope panel handle missing values more gracefully
+- Polygon vertex edge-midpoint ghost handles reposition every drag frame instead of lagging behind
+
+## Bug fixes
+
+- Fixed regression where the engine-off alarm disable / anchor-raise flow stopped working
+- Fixed wind panel not hiding properly
+- Fixed `maxRadius` units disappearing from the UI
+- Fixed a constructor bug from the CommonJS → ESM transition
+- Fixed missing show/hide functions on some HUD elements (fixes #14)
+- Fixed a ghost-vertex drag bug in the polygon overlay
+- Icons preload again so they show up faster
+
+## Breaking / removed
+
+- **`configuration.radius` → `configuration.zone`** — the plugin now persists a single zone config string covering shape + geometry. A one-shot migration on first start converts existing radius values to a circle zone, so no manual action is required. `navigation.anchor.maxRadius` is still published for circle zones so Freeboard and other consumers should keep working.
+- `maxRadius` removed from `AppState` and the client codebase; the radius envelope is now derived from the active zone
+
+## Under the hood
+
+- New `shared/` module imported by both the Node plugin and the Vite-bundled UI:
+  - `WatchZone` / `CircleZone` shape abstraction
+  - shared haversine (deduplicated from `src/utils.js` and `ui/js/GeoMath.js`)
+- **`@turf/turf`** adopted for all distance / bearing / point-in-polygon math, replacing the home-grown `shared/geo/distance.js`
+- Plugin migrated from **CommonJS to ESM**. `src/index.cjs` is a tiny shim so signalk-server's `require()`-based plugin loader still works on Node 20.19+ `require(esm)`
+- Server-side `src/` was re-consolidated back into `index.js` (the v2.1 split into `anchor-service` / `position-monitor` / `anchor-state` proved to be over-modularization for the scope of this plugin)
+- New `POST /setZone` endpoint; `/setRadius` retained as a circle-only shim
+- New `navigation.anchor.watchZone` SignalK path publishes the full zone config
+- Client-side zone architecture:
+  - Pluggable zone overlay classes (`CircleZoneOverlay`, `SectorZoneOverlay`, `PolygonZoneOverlay`) and matching `*ZoneControls` toolbars
+  - `ZoneHandle` reusable drag handle that reflects the app's r/g/b color styles
+  - `onZoneChange` callback wired through overlays for live editing
+  - Default-config dispatch lives in the zones registry, not in `ControlToolbar`
+- `DisplayUnit` class overhauled for cleaner unit handling
+- `GeoMath.calculateBearing` delegates to a shared `bearing()` helper
+- Build/generated files removed from `/public` (no longer tracked in git)
+- CI now runs on all branches
+
 # v2.1
 
 ## New features
