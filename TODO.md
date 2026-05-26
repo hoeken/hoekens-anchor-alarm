@@ -1,9 +1,5 @@
 # v2.2
 
-## UI - PolygonZone
-
-- how to handle deleting vertices?
-
 # LONG TERM
 
 ## UI - Tide Box
@@ -15,6 +11,7 @@
 
 ## UI - Config
 
+- add default shape: circle, sector, polygon
 - loading
   - ui config is already stored as AnchorAlarm.config
   - attempt to load from cookies or other local storage

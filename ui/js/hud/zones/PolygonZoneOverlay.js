@@ -21,6 +21,9 @@ import {
 import { ZoneHandle } from "./ZoneHandle.js";
 
 const CLAMP_BISECTIONS = 8;
+// Pixel radius around an adjacent vertex within which a drag arms the
+// merge-to-delete gesture. Sized for fingertip targeting on touch.
+const MERGE_PX = 20;
 
 function midpoint(a, b) {
   return { x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2 };
@@ -64,6 +67,13 @@ export class PolygonZoneOverlay {
     // Snapshot of the committed vertices at the start of the current drag.
     // The clamp walks back along the drag toward this state.
     this._dragOriginVertices = null;
+    // ZoneHandle currently being dragged (real or ghost). Tracked separately
+    // from _draggingIndex because a promoted ghost still lives in
+    // _ghostHandles until drag end rebuilds the handle set.
+    this._draggingHandle = null;
+    // Adjacent vertex index the dragged vertex would merge into on release,
+    // or null when not armed. Set by _updateMergeArmed during drag.
+    this._mergeTargetIndex = null;
 
     this._layer = L.polygon(this._renderLatLngs(), {
       color: this._color,
@@ -153,12 +163,17 @@ export class PolygonZoneOverlay {
     this._ghostHandles = [];
   }
 
+  // Safe to call mid-drag: each loop is gated on the handle array length
+  // matching the current vertex count. During a ghost-promoted drag those
+  // counts are off-by-one, so we skip until drag end rebuilds the set.
   _repositionIdleHandles() {
     const n = this._zone.vertices.length;
-    for (let i = 0; i < n; i++) {
-      if (i === this._draggingIndex)
-        continue;
-      this._vertexHandles[i]?.setPosition(this._vertexLatLng(this._zone.vertices[i]));
+    if (this._vertexHandles.length === n) {
+      for (let i = 0; i < n; i++) {
+        if (i === this._draggingIndex)
+          continue;
+        this._vertexHandles[i].setPosition(this._vertexLatLng(this._zone.vertices[i]));
+      }
     }
     if (this._ghostHandles.length === n) {
       for (let i = 0; i < n; i++) {
@@ -172,6 +187,43 @@ export class PolygonZoneOverlay {
   _onVertexDragStart(i) {
     this._draggingIndex = i;
     this._dragOriginVertices = this._zone.vertices.map((v) => ({ ...v }));
+    this._draggingHandle = this._vertexHandles[i];
+  }
+
+  // Returns the adjacent vertex index within MERGE_PX of `latlng`, or null.
+  // Only adjacent vertices are considered — the self-intersection clamp
+  // already prevents the dragged vertex from reaching anywhere else. Bails
+  // when removing a vertex would drop us below the minimum.
+  _findMergeTarget(i, latlng) {
+    const n = this._zone.vertices.length;
+    if (n <= MIN_VERTICES)
+      return null;
+    const draggedPt = this._map.latLngToContainerPoint(latlng);
+    let bestIdx = null;
+    let bestDist = Infinity;
+    for (const delta of [-1, 1]) {
+      const j = (i + delta + n) % n;
+      const neighborPt = this._map.latLngToContainerPoint(
+        this._vertexLatLng(this._zone.vertices[j]),
+      );
+      const dx = draggedPt.x - neighborPt.x;
+      const dy = draggedPt.y - neighborPt.y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < MERGE_PX && d < bestDist) {
+        bestDist = d;
+        bestIdx = j;
+      }
+    }
+    return bestIdx;
+  }
+
+  _updateMergeArmed(i, latlng) {
+    const target = this._findMergeTarget(i, latlng);
+    const wasArmed = this._mergeTargetIndex !== null;
+    const armed = target !== null;
+    if (armed !== wasArmed)
+      this._draggingHandle?.setMergeArmed(armed);
+    this._mergeTargetIndex = target;
   }
 
   // Clamp proposed via binary search in projected (x, y) space, walking from
@@ -225,17 +277,33 @@ export class PolygonZoneOverlay {
     const clamped = this._clampProposed(i, proposed);
     const next = this._withVertex(i, clamped);
     this._commitVertices(next, "input");
+    this._repositionIdleHandles();
+    this._updateMergeArmed(i, latlng);
   }
 
   _onVertexDragEnd(i, latlng) {
     if (i == null || !this._dragOriginVertices)
       return;
+    // Drag-to-merge: splice the dragged vertex out and rebuild from scratch.
+    // Rebuild covers both the ghost-promoted case (need to swap ghost styling
+    // for a real handle elsewhere) and the normal case (edge midpoints shift).
+    if (this._mergeTargetIndex !== null) {
+      const next = this._zone.vertices.filter((_, idx) => idx !== i);
+      this._draggingIndex = null;
+      this._dragOriginVertices = null;
+      this._draggingHandle = null;
+      this._mergeTargetIndex = null;
+      this._commitVertices(next, "change");
+      this._buildHandles();
+      return;
+    }
     const proposed = this._vertexFromLatLng(latlng);
     const clamped = this._clampProposed(i, proposed);
     const next = this._withVertex(i, clamped);
     const promotedFromGhost = this._vertexHandles.length !== next.length;
     this._draggingIndex = null;
     this._dragOriginVertices = null;
+    this._draggingHandle = null;
     this._commitVertices(next, "change");
     // Ghost-promoted drag: vertex count grew by one, so the ghost-styled
     // marker needs to be replaced by a real handle + two fresh ghosts on
@@ -264,6 +332,7 @@ export class PolygonZoneOverlay {
     this._layer.setLatLngs(this._renderLatLngs());
     this._draggingIndex = insertAt;
     this._dragOriginVertices = next.map((v) => ({ ...v }));
+    this._draggingHandle = this._ghostHandles[i];
   }
 
   // === Lifecycle hooks called by AnchorOverlay =====================================

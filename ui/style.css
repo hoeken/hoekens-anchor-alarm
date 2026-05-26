@@ -269,6 +269,16 @@ body,
   opacity: 1;
 }
 
+/* Armed-for-delete state while a vertex is dragged onto an adjacent one.
+   !important overrides the inline border-color set by ZoneHandle.setStyle.
+   z-index lifts it above the target neighbor so the feedback stays visible. */
+.zoneHandleMergeArmed {
+  background: #000 !important;
+  border-color: #000 !important;
+  opacity: 1;
+  z-index: 1000 !important;
+}
+
 .wind-barb {
   fill: black;
   stroke: black;

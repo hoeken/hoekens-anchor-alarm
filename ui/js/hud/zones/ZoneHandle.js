@@ -42,6 +42,12 @@ export class ZoneHandle {
       el.style.borderColor = color;
   }
 
+  setMergeArmed(armed) {
+    const el = this._marker.getElement();
+    if (el)
+      el.classList.toggle("zoneHandleMergeArmed", armed);
+  }
+
   destroy() {
     this._map.removeLayer(this._marker);
   }
