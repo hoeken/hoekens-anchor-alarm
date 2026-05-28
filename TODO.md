@@ -1,5 +1,7 @@
 # v2.3
 
+- new plugin publish (screenshots, etc): https://github.com/SignalK/signalk-server/blob/master/docs/develop/plugins/publishing.md
+
 ## UI - Boxes
 
 - move the show/hide box logic into the updateMap() function

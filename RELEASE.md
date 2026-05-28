@@ -20,10 +20,10 @@
    git commit -am "release vX.Y.Z"
    ```
 
-4. Make sure you're logged in to npm (sessions expire periodically — if `npm publish` fails with a 401 or 404, this is usually why):
+4. Make sure you're logged in to npm, sessions expire periodically
 
    ```sh
-   npm whoami   # if this errors, run `npm login`
+   npm login
    ```
 
 5. Tag, push, publish:
