@@ -2,19 +2,6 @@
 
 - new plugin publish (screenshots, etc): https://github.com/SignalK/signalk-server/blob/master/docs/develop/plugins/publishing.md
 
-## UI - Boxes
-
-- add tide_box_enable to schema / backend / ui-config
-- add wind_box_enable to schema / backend / ui-config
-- add scope_box_enable to schema / backend / ui-config
-- move the show/hide box logic into the updateMap() function
-  - if enabled
-  - tide / wind / info show when anchored
-  - scope shows when anchor up
-  - each box handles its own show/hide internally if required data is available
-  - we will have access to the app config there + appState
-- box updates just deal with their own internal states
-
 ## UI - Config
 
 - add default shape: circle, sector, polygon
@@ -25,13 +12,13 @@
 - scope selector: 7, 5, 4, 3 (comma separated?  multiple select?)
 
 - loading
-  - ui config is already stored as AnchorAlarm.config
+  - default ui config is stored as AnchorAlarm.config
   - attempt to load from cookies or other local storage
-  - if not, load from server
-  - if not, fall back to defaults in AnchorAlarm.config
-- add local config editing
+  - if not found, load from server and save to cookies / local storage
+  - new values should overlay the default config object so that if we add options, users from older versions of the plugin will get those defaults loaded.
+- add local config editing dialog
   - map overlay button + dialog
-  - simple button that toggles edit ui
+  - simple button that toggles config ui
   - generate config json, save to AnchorAlarm.config
   - save to cookies / local storage
   - save to app or nah?

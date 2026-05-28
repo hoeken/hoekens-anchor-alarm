@@ -14,6 +14,7 @@ export const WindPanel = L.Control.extend({
     const container = L.DomUtil.create("div", "windBarbControl leaflet-bar");
     L.DomEvent.disableClickPropagation(container);
     container.id = "windBarbUI";
+    container.style.display = "none";
     container.innerHTML = `
       <div><b>Wind</b></div>
       <div id="windBarbContainer"></div>
@@ -83,8 +84,10 @@ export const WindPanel = L.Control.extend({
     //if we don't have the right data, hide ourself.
     if (!state.aws || !state.twa)
       this.hide();
-    else
+    else {
       this.setSpeed(state.aws, state.twa);
+      this.show();
+    }
   },
 
   clearSpeed: function () {

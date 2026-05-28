@@ -35,6 +35,7 @@ export const TidePanel = L.Control.extend({
     container.id = "tidesUI";
     container.title = "View tides";
     container.style.cursor = "pointer";
+    container.style.display = "none";
     L.DomEvent.on(container, "click", () => {
       window.location.href = TIDES_HREF;
     });

@@ -149,6 +149,27 @@ export function buildSchema(app) {
           "Radius around own vessel to display other vessels and historical tracks.",
         default: 500,
       },
+      enableTideBox: {
+        type: "boolean",
+        title: "Show Tide Box",
+        description:
+          "Show the tide chart panel while anchored (requires signalk-tides).",
+        default: true,
+      },
+      enableWindBox: {
+        type: "boolean",
+        title: "Show Wind Box",
+        description:
+          "Show the wind speed/direction panel while anchored.",
+        default: true,
+      },
+      enableScopeBox: {
+        type: "boolean",
+        title: "Show Scope Box",
+        description:
+          "Show the scope/depth calculator panel while the anchor is up.",
+        default: true,
+      },
       state: {
         title: "Alarm Severity",
         description: "Anchor alarm notification level",

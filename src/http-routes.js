@@ -76,6 +76,9 @@ export function register(app, plugin, router) {
       fleetFilterRadius: config.fleetFilterRadius,
       connectionType: config.connectionType,
       defaultBasemap: config.defaultBasemap,
+      enableTideBox: config.enableTideBox,
+      enableWindBox: config.enableWindBox,
+      enableScopeBox: config.enableScopeBox,
     });
   });
 }

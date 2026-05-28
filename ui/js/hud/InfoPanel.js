@@ -12,6 +12,7 @@ export const InfoPanel = L.Control.extend({
     const container = L.DomUtil.create("div", "info leaflet-bar");
     L.DomEvent.disableClickPropagation(container);
     container.id = "infoUI";
+    container.style.display = "none";
     container.innerHTML = `
         <table>
           <tr>
@@ -31,13 +32,6 @@ export const InfoPanel = L.Control.extend({
   },
 
   update: function (state) {
-
-    // InfoPanel only makes sense while anchored. ScopePanel is its raised
-    // counterpart — the two are mutually exclusive in the bottom-right slot.
-    if (!state.isAnchored() && state.belowSurface) {
-      this.hide();
-      return;
-    }
     this.show();
 
     if (state.belowSurface)
