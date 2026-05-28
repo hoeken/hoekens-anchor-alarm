@@ -10,6 +10,7 @@ import { FleetLayer } from "./hud/FleetLayer.js";
 import { StatusBar } from "./hud/StatusBar.js";
 import { HomeButtonControl } from "./hud/HomeButtonControl.js";
 import { InfoPanel } from "./hud/InfoPanel.js";
+import { TidePanel } from "./hud/TidePanel.js";
 import { WindPanel } from "./hud/WindPanel.js";
 import { ScopePanel } from "./hud/ScopePanel.js";
 import { StaleReloader } from "./StaleReloader.js";
@@ -36,6 +37,7 @@ class AnchorAlarm {
     this.anchorOverlay = undefined;
     this.anchorController = undefined;
     this.infoPanel = undefined;
+    this.tidePanel = undefined;
     this.scopePanel = undefined;
     this.windPanel = undefined;
     this.homeButton = undefined;
@@ -222,11 +224,14 @@ class AnchorAlarm {
       .addTo(this.map);
 
     this.infoPanel = new InfoPanel();
+    this.tidePanel = new TidePanel();
     this.scopePanel = new ScopePanel();
     this.windPanel = new WindPanel();
 
     this.map.addControl(this.infoPanel);
+    this.map.addControl(this.tidePanel);
     this.map.addControl(this.scopePanel);
+
     this.map.addControl(this.windPanel);
 
     L.control.scale({ position: "bottomleft" }).addTo(this.map);
@@ -258,6 +263,7 @@ class AnchorAlarm {
     this.toolbar.update(this.state);
     this.windPanel.update(this.state);
     this.infoPanel.update(this.state);
+    this.tidePanel.update(this.state);
     this.statusBar.update(this.state);
     this.scopePanel.update(this.state);
     this.anchorOverlay.update(this.state);

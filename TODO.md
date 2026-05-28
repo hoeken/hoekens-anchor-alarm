@@ -4,16 +4,16 @@
 
 ## UI - Boxes
 
+- add tide_box_enable to schema / backend / ui-config
+- add wind_box_enable to schema / backend / ui-config
+- add scope_box_enable to schema / backend / ui-config
 - move the show/hide box logic into the updateMap() function
-- we will have access to the app config there + appState
+  - if enabled
+  - tide / wind / info show when anchored
+  - scope shows when anchor up
+  - each box handles its own show/hide internally if required data is available
+  - we will have access to the app config there + appState
 - box updates just deal with their own internal states
-
-## UI - Tide Box
-
-- split the tide info out from the infobox
-- show a small graphical tide representation
-- on click -> tides plugin webapp
-- make display configurable in the UI.
 
 ## UI - Config
 
