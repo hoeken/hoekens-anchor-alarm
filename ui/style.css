@@ -350,9 +350,28 @@ body,
 
 #configVersion {
   margin-top: 8px;
-  text-align: right;
   font-size: 8pt;
   color: #999;
+}
+
+/* Map attribution pinned to the very bottom of the page, spanning full width
+   and sitting above the map (which fills #map_container). */
+#mapAttribution {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.7);
+  text-align: right;
+  font-size: 8pt;
+  line-height: 1.4;
+  color: #333;
+}
+
+#mapAttribution a {
+  color: #0078a8;
 }
 
 .leaflet-touch .leaflet-control-layers-toggle {
@@ -491,4 +510,11 @@ body,
   background-color: white;
   font-weight: bold;
   line-height: 1.2;
+}
+
+/* Lift bottom controls above the attribution strip. --attributionHeight is
+   measured and set in JS (AnchorAlarm.updateAttribution) since the strip's
+   height varies with content wrapping. */
+.leaflet-bottom {
+  bottom: var(--attributionHeight, 0px);
 }

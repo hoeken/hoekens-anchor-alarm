@@ -8,7 +8,7 @@ import { DisplayUnit } from "../DisplayUnit.js";
 import { getWindBarb } from "../WindBarb.js";
 
 export const WindPanel = L.Control.extend({
-  options: { position: "topleft" },
+  options: { position: "bottomleft" },
 
   onAdd: function () {
     const container = L.DomUtil.create("div", "windBarbControl leaflet-bar");

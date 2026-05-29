@@ -27,7 +27,7 @@ function formatHeight(envelope) {
 }
 
 export const TidePanel = L.Control.extend({
-  options: { position: "bottomright" },
+  options: { position: "bottomleft" },
 
   onAdd: function () {
     const container = L.DomUtil.create("div", "tides leaflet-bar");

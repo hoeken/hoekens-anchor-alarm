@@ -54,7 +54,7 @@ const FIELDS = [
 
 export const ConfigPanel = L.Control.extend({
   options: {
-    position: "topright",
+    position: "topleft",
     getConfig: null, // () => current config object
     getVersion: null, // () => plugin version string, shown at dialog bottom
     onChange: null, // (newConfig) => void | Promise, resolves when persisted
@@ -225,7 +225,7 @@ export const ConfigPanel = L.Control.extend({
     this._setStatus("", "");
     if (this._version) {
       const version = this.options.getVersion ? this.options.getVersion() : null;
-      this._version.textContent = version ? `v${version}` : "";
+      this._version.textContent = version ? `Hoeken's Anchor Alarm v${version}` : "";
     }
     if (this._backdrop)
       this._backdrop.style.display = "flex";

@@ -119,7 +119,10 @@ class AnchorAlarm {
 
     // Map shell and status bar first so failures during initial load (missing
     // GPS, server unreachable, etc.) have somewhere to surface.
-    this.map = L.map("map", { zoomControl: false }).setView([0, 0], 5);
+    this.map = L.map("map", {
+      zoomControl: false,
+      attributionControl: false, // Prevents the default bottom-right control
+    }).setView([0, 0], 5);
     this.statusBar = new StatusBar();
     this.map.addControl(this.statusBar);
 
@@ -260,7 +263,16 @@ class AnchorAlarm {
     this.map.addControl(this.homeButton);
 
     L.control.zoom({ position: "topright" }).addTo(this.map);
-    L.control.layers(this.baseMaps, {}, { position: "topright" }).addTo(this.map);
+    L.control.layers(this.baseMaps, {}, { position: "topleft" }).addTo(this.map);
+
+    // Map attribution lives in a full-width strip at the bottom of the page
+    // (#mapAttribution) instead of Leaflet's default corner control, which is
+    // disabled. Refresh it whenever the active base layer changes.
+    this.updateAttribution();
+    this.map.on("baselayerchange", () => this.updateAttribution());
+    window.addEventListener("resize", () => this.updateAttribution());
+
+    // L.control.scale({ position: "bottomleft" }).addTo(this.map);
 
     //
     // Panels - Bottom Right
@@ -291,8 +303,6 @@ class AnchorAlarm {
 
     this.map.addControl(this.windPanel);
 
-    L.control.scale({ position: "bottomleft" }).addTo(this.map);
-
     this.fleetLayer = new FleetLayer({
       app: this,
       map: this.map,
@@ -317,6 +327,30 @@ class AnchorAlarm {
     });
   }
 
+  // Gather attribution strings from the active layers and render them, with
+  // the standard Leaflet credit, into the bottom-of-page attribution strip.
+  updateAttribution() {
+    const el = document.getElementById("mapAttribution");
+    if (!el || !this.map)
+      return;
+    const parts = [];
+    this.map.eachLayer((layer) => {
+      const attr = layer.getAttribution && layer.getAttribution();
+      if (attr && parts.indexOf(attr) === -1)
+        parts.push(attr);
+    });
+    const prefix = `<a href="https://leafletjs.com" title="A JavaScript library for interactive maps">Leaflet</a>`;
+    el.innerHTML = [prefix, ...parts].join(" | ");
+
+    // Expose the strip's rendered height so bottom-anchored Leaflet controls
+    // (see .leaflet-bottom in style.css) can sit above it. The height varies
+    // with text wrapping, so measure after the content is set.
+    document.documentElement.style.setProperty(
+      "--attributionHeight",
+      `${el.offsetHeight}px`,
+    );
+  }
+
   updateMap() {
     const anchored = this.state.isAnchored();
 
@@ -331,19 +365,20 @@ class AnchorAlarm {
 
     if (anchored) {
       this.infoPanel.update(this.state);
-      if (this.config.enableTidePanel)
-        this.tidePanel.update(this.state);
-      else
-        this.tidePanel.hide();
       this.scopePanel.hide();
     } else {
       this.infoPanel.hide();
-      this.tidePanel.hide();
       if (this.config.enableScopePanel)
         this.scopePanel.update(this.state);
       else
         this.scopePanel.hide();
     }
+
+    //always show tide if enabled
+    if (this.config.enableTidePanel)
+      this.tidePanel.update(this.state);
+    else
+      this.tidePanel.hide();
 
     //always show wind if enabled
     if (this.config.enableWindPanel)
