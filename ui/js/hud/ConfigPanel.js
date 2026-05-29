@@ -56,6 +56,7 @@ export const ConfigPanel = L.Control.extend({
   options: {
     position: "topright",
     getConfig: null, // () => current config object
+    getVersion: null, // () => plugin version string, shown at dialog bottom
     onChange: null, // (newConfig) => void | Promise, resolves when persisted
   },
 
@@ -91,47 +92,39 @@ export const ConfigPanel = L.Control.extend({
   // inside the leaflet-bar, so it can render as a centered modal independent
   // of the little gear button.
   _buildDialog: function (parent) {
+    const hasReloadField = FIELDS.some((field) => field.reload);
+    const reloadNote = hasReloadField
+      ? `<div class="configReloadNote">* applies after reloading the page</div>`
+      : "";
+
     const backdrop = document.createElement("div");
     backdrop.id = "configDialogBackdrop";
     backdrop.style.display = "none";
+    backdrop.innerHTML = `
+      <div id="configDialog">
+        <div id="configDialogHeader">
+          <span>Settings</span>
+          <button type="button" id="configDialogClose" aria-label="Close">&times;</button>
+        </div>
+        <form id="configForm">
+          ${FIELDS.map((field) => this._rowHtml(field)).join("")}
+        </form>
+        ${reloadNote}
+        <div id="configStatus"></div>
+        <div id="configVersion"></div>
+      </div>`;
 
-    const dialog = document.createElement("div");
-    dialog.id = "configDialog";
-
-    const header = document.createElement("div");
-    header.id = "configDialogHeader";
-    header.innerHTML = `<span>Settings</span>`;
-    const closeButton = document.createElement("button");
-    closeButton.type = "button";
-    closeButton.id = "configDialogClose";
-    closeButton.setAttribute("aria-label", "Close");
-    closeButton.textContent = "×";
-    header.appendChild(closeButton);
-    dialog.appendChild(header);
-
-    const form = document.createElement("form");
-    form.id = "configForm";
-    let hasReloadField = false;
-    for (const field of FIELDS) {
-      form.appendChild(this._buildRow(field));
-      if (field.reload)
-        hasReloadField = true;
-    }
-    dialog.appendChild(form);
-
-    if (hasReloadField) {
-      const note = document.createElement("div");
-      note.className = "configReloadNote";
-      note.textContent = "* applies after reloading the page";
-      dialog.appendChild(note);
-    }
-
-    this._status = document.createElement("div");
-    this._status.id = "configStatus";
-    dialog.appendChild(this._status);
-
-    backdrop.appendChild(dialog);
     parent.appendChild(backdrop);
+
+    // Resolve the references the rest of the control relies on, and wire each
+    // input back to the save handler now that the markup exists.
+    this._status = backdrop.querySelector("#configStatus");
+    this._version = backdrop.querySelector("#configVersion");
+    for (const field of FIELDS) {
+      const input = backdrop.querySelector(`[data-config-key="${field.key}"]`);
+      this._inputs[field.key] = input;
+      input.addEventListener("change", () => this._onFieldChange());
+    }
 
     // Keep map interactions from firing while the dialog is open.
     L.DomEvent.disableClickPropagation(backdrop);
@@ -142,53 +135,38 @@ export const ConfigPanel = L.Control.extend({
       if (e.target === backdrop)
         this._hide();
     });
-    closeButton.addEventListener("click", () => this._hide());
-    form.addEventListener("submit", (e) => e.preventDefault());
+    backdrop
+      .querySelector("#configDialogClose")
+      .addEventListener("click", () => this._hide());
+    backdrop
+      .querySelector("#configForm")
+      .addEventListener("submit", (e) => e.preventDefault());
 
     this._backdrop = backdrop;
   },
 
-  _buildRow: function (field) {
-    const row = document.createElement("label");
-    row.className = "configRow";
+  // Returns the markup for one form row. Checkboxes read left-to-right (box
+  // then label); everything else stacks label above the control. Inputs carry
+  // a data-config-key so _buildDialog can find them after innerHTML.
+  _rowHtml: function (field) {
+    const labelText = field.reload ? `${field.label} *` : field.label;
+    const label = `<span class="configLabel">${labelText}</span>`;
+    let control;
 
-    const labelText = document.createElement("span");
-    labelText.className = "configLabel";
-    labelText.textContent = field.reload ? `${field.label} *` : field.label;
-
-    let input;
     if (field.type === "select") {
-      input = document.createElement("select");
-      for (const [value, text] of field.options) {
-        const opt = document.createElement("option");
-        opt.value = value;
-        opt.textContent = text;
-        input.appendChild(opt);
-      }
+      const options = field.options
+        .map(([value, text]) => `<option value="${value}">${text}</option>`)
+        .join("");
+      control = `<select class="configInput" data-config-key="${field.key}">${options}</select>`;
     } else if (field.type === "checkbox") {
-      input = document.createElement("input");
-      input.type = "checkbox";
-      row.classList.add("configRowCheckbox");
+      control = `<input type="checkbox" class="configInput" data-config-key="${field.key}">`;
     } else {
-      input = document.createElement("input");
-      input.type = "number";
-      input.min = "0";
+      control = `<input type="number" min="0" class="configInput" data-config-key="${field.key}">`;
     }
-    input.className = "configInput";
-    input.addEventListener("change", () => this._onFieldChange());
 
-    this._inputs[field.key] = input;
-
-    // Checkboxes read left-to-right (box then label); everything else stacks
-    // label above the control.
-    if (field.type === "checkbox") {
-      row.appendChild(input);
-      row.appendChild(labelText);
-    } else {
-      row.appendChild(labelText);
-      row.appendChild(input);
-    }
-    return row;
+    if (field.type === "checkbox")
+      return `<label class="configRow configRowCheckbox">${control}${label}</label>`;
+    return `<label class="configRow">${label}${control}</label>`;
   },
 
   _onFieldChange: function () {
@@ -232,6 +210,7 @@ export const ConfigPanel = L.Control.extend({
       return;
     this._status.textContent = text;
     this._status.className = className || "";
+    this._status.style.display = text ? "block" : "none";
   },
 
   _toggle: function () {
@@ -244,6 +223,10 @@ export const ConfigPanel = L.Control.extend({
   _show: function () {
     this._populate(this.options.getConfig ? this.options.getConfig() : null);
     this._setStatus("", "");
+    if (this._version) {
+      const version = this.options.getVersion ? this.options.getVersion() : null;
+      this._version.textContent = version ? `v${version}` : "";
+    }
     if (this._backdrop)
       this._backdrop.style.display = "flex";
   },

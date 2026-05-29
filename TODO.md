@@ -5,7 +5,6 @@
 - smaller font size on shape select
 - other ui tweaks to make things crispy
   - same border on panels + buttons?
-- add plugin version to bottom of config in small grey font
 
 # LONG TERM
 

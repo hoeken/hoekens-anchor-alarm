@@ -76,7 +76,6 @@ class AnchorAlarm {
   }
 
   handleDeltas(delta) {
-    // console.log(delta);
     if (delta.updates) {
       for (const update of delta.updates) {
         if (update.values) {
@@ -150,9 +149,10 @@ class AnchorAlarm {
       .fetchSelf()
       .then(async (data) => {
         this.statusBar.clear("initial-load");
+
         this.state.extractAll(data);
         this.state.calculate();
-        console.log(this.state);
+        console.log("App State:", this.state);
 
         if (!this.state.currentCoordinates) {
           this.statusBar.update(this.state);
@@ -161,7 +161,7 @@ class AnchorAlarm {
         }
 
         await this.loadConfig();
-        console.log(this.config);
+        console.log("UI Config:", this.config);
 
         this.setupConnection();
         this.buildMap();
@@ -245,6 +245,7 @@ class AnchorAlarm {
     if (this.state.loggedIn) {
       this.configPanel = new ConfigPanel({
         getConfig: () => this.config,
+        getVersion: () => this.version,
         onChange: (newConfig) => this.saveConfig(newConfig),
       });
       this.map.addControl(this.configPanel);

@@ -331,8 +331,8 @@ body,
 }
 
 #configStatus {
+  display: none;
   margin-top: 8px;
-  min-height: 1.2em;
   font-size: 10pt;
 }
 
@@ -342,6 +342,13 @@ body,
 
 #configStatus.configStatusError {
   color: red;
+}
+
+#configVersion {
+  margin-top: 8px;
+  text-align: right;
+  font-size: 8pt;
+  color: #999;
 }
 
 .leaflet-touch .leaflet-control-layers-toggle {
