@@ -288,29 +288,31 @@ class AnchorAlarm {
     this.anchorOverlay.update(this.state);
     this.fleetLayer.update(this.state);
 
-    // Tide/wind/info live in the bottom-right while anchored; the scope panel
+    // Tide/info live in the bottom-right while anchored; the scope panel
     // takes the same slot when the anchor is up. Config flags gate each
     // optional box; the panels themselves still hide on missing data.
+
     if (anchored) {
       this.infoPanel.update(this.state);
       if (this.config.enableTideBox)
         this.tidePanel.update(this.state);
       else
         this.tidePanel.hide();
-      if (this.config.enableWindBox)
-        this.windPanel.update(this.state);
-      else
-        this.windPanel.hide();
       this.scopePanel.hide();
     } else {
       this.infoPanel.hide();
       this.tidePanel.hide();
-      this.windPanel.hide();
       if (this.config.enableScopeBox)
         this.scopePanel.update(this.state);
       else
         this.scopePanel.hide();
     }
+
+    //always show wind if enabled
+    if (this.config.enableWindBox)
+      this.windPanel.update(this.state);
+    else
+      this.windPanel.hide();
   }
 
   // === Live polling ================================================================
