@@ -21,7 +21,6 @@ const FIELDS = [
       ["Satellite", "Satellite"],
       ["OpenStreetMap", "OpenStreetMap"],
     ],
-    reload: true,
   },
   {
     key: "defaultShape",

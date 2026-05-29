@@ -197,12 +197,14 @@ class AnchorAlarm {
   }
 
   // Persist UI settings edited via the ConfigPanel. We merge into the live
-  // config and re-render immediately so panel-visibility toggles take effect
-  // without a reload; settings that can't be applied live (basemap, shape,
-  // fleet radius, connection type) are flagged in the dialog and pick up on
-  // the next load. Returns the save promise so the dialog can report status.
+  // config and re-render immediately so panel-visibility toggles and the
+  // basemap take effect without a reload; settings that can't be applied live
+  // (shape, fleet radius, connection type) are flagged in the dialog and pick
+  // up on the next load. Returns the save promise so the dialog can report
+  // status.
   saveConfig(newConfig) {
     Object.assign(this.config, newConfig);
+    this.setBasemap(this.config.defaultBasemap);
     this.updateMap();
     this.statusBar.clear("config-save");
     return this.signalK.saveConfig(newConfig).catch((error) => {
@@ -235,9 +237,7 @@ class AnchorAlarm {
     this.map.setView(this.state.getPosition(), 5);
 
     //actual map layer
-    const layer =
-      this.baseMaps[this.config.defaultBasemap] || this.satelliteLayer;
-    layer.addTo(this.map);
+    this.setBasemap(this.config.defaultBasemap);
 
     //
     // Buttons - Top Right
@@ -325,6 +325,24 @@ class AnchorAlarm {
       defaultShape: this.config.defaultShape,
       onChange: () => this.updateMap(),
     });
+  }
+
+  // Swap the active base layer to the named basemap (falling back to satellite
+  // for an unknown name). No-op if it's already active; otherwise we remove any
+  // other base layer first so the two never stack. The layer-control radio
+  // tracks add/removeLayer on its own, but baselayerchange only fires on user
+  // clicks in that control — so we refresh the attribution strip by hand.
+  setBasemap(name) {
+    const layer = this.baseMaps[name] || this.satelliteLayer;
+    if (this.map.hasLayer(layer))
+      return;
+    for (const key in this.baseMaps) {
+      const other = this.baseMaps[key];
+      if (other !== layer && this.map.hasLayer(other))
+        this.map.removeLayer(other);
+    }
+    layer.addTo(this.map);
+    this.updateAttribution();
   }
 
   // Gather attribution strings from the active layers and render them, with
