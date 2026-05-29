@@ -142,6 +142,14 @@ export function buildSchema(app) {
         default: "Satellite",
         enum: ["OpenStreetMap", "Satellite"],
       },
+      defaultShape: {
+        type: "string",
+        title: "Default Watch Zone Shape",
+        description:
+          "Shape used when estimating a new anchor position before it is dropped.",
+        default: "circle",
+        enum: ["circle", "sector", "polygon"],
+      },
       fleetFilterRadius: {
         type: "integer",
         title: "Fleet Filter Radius (m)",

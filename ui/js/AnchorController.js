@@ -7,13 +7,15 @@
 
 import { destination, point } from "@turf/turf";
 import { GeoMath } from "./GeoMath.js";
+import { createDefaultZoneConfig } from "./hud/zones/index.js";
 
 export class AnchorController {
-  constructor({ appState, overlay, signalK, statusBar, onChange }) {
+  constructor({ appState, overlay, signalK, statusBar, defaultShape, onChange }) {
     this._appState = appState;
     this._overlay = overlay;
     this._signalK = signalK;
     this._statusBar = statusBar;
+    this._defaultShape = defaultShape || "circle";
     this._onChange = onChange;
 
     this._pending = false;
@@ -146,10 +148,10 @@ export class AnchorController {
       return;
 
     const boatConfig = this._appState.boatConfig;
-    const { distance, radius } = this._appState.getAnchorEstimate();
+    const { distance } = this._appState.getAnchorEstimate();
 
     this._appState.applyClientAnchorState({
-      watchZone: { type: "circle", radius },
+      watchZone: createDefaultZoneConfig(this._defaultShape, this._appState),
     });
 
     const bow = GeoMath.calculateBowCoordinates(

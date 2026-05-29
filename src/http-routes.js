@@ -76,6 +76,7 @@ export function register(app, plugin, router) {
       fleetFilterRadius: config.fleetFilterRadius,
       connectionType: config.connectionType,
       defaultBasemap: config.defaultBasemap,
+      defaultShape: config.defaultShape,
       enableTideBox: config.enableTideBox,
       enableWindBox: config.enableWindBox,
       enableScopeBox: config.enableScopeBox,

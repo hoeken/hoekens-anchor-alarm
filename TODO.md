@@ -1,22 +1,23 @@
 # v2.3
 
-- new plugin publish (screenshots, etc): https://github.com/SignalK/signalk-server/blob/master/docs/develop/plugins/publishing.md
+- new plugin publish (screenshots, suggested, etc): https://github.com/SignalK/signalk-server/blob/master/docs/develop/plugins/publishing.md
 
-- add default shape: circle, sector, polygon
+- reset button on polygon controller overlay should use estimateAnchorPosition radius
+- smaller font size on shape select
 
 ## UI - Config
 
 - add local config editing dialog - if logged in
   - map overlay button + dialog
+    - use bootstrap svg gear icon below
   - simple button that toggles config ui
-  - generate config json, save to AnchorAlarm.config
-  - save to app
-- add default shape: circle, sector, polygon
-- add enable_tide_box
-- add enable_wind_box
-- add enable_scope_box
-- info box automatically shows
-- scope selector: 7, 5, 4, 3 (comma separated?  multiple select?)
+  - ui should be a simple form for each item in ui-config
+  - on change of any field, it should save to the backend
+    - if logged in:
+      * generate config json
+      * POST to /ui-config
+      * overwrite each parameter in plugin.config
+      * save plugin config.
 
 # LONG TERM
 

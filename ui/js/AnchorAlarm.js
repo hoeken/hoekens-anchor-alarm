@@ -30,6 +30,7 @@ class AnchorAlarm {
       connectionType: "WEBSOCKET",
       fleetFilterRadius: 500,
       defaultBasemap: "Satellite",
+      defaultShape: "circle",
       enableTideBox: true,
       enableWindBox: true,
       enableScopeBox: true,
@@ -274,6 +275,7 @@ class AnchorAlarm {
       overlay: this.anchorOverlay,
       signalK: this.signalK,
       statusBar: this.statusBar,
+      defaultShape: this.config.defaultShape,
       onChange: () => this.updateMap(),
     });
   }
