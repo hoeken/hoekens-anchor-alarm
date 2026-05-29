@@ -16,7 +16,7 @@ export const ScopePanel = L.Control.extend({
     container.innerHTML = `
         <table id="scopeDepthTable">
           <tr>
-            <th>Water&nbsp;Depth</th>
+            <th>Surface&nbsp;Depth</th>
             <td><span id='scopeDepth'>~</span></td>
           </tr>
           <tr id="bowHeightRow">

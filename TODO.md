@@ -1,9 +1,10 @@
 # v2.3
 
-- new plugin publish (screenshots, suggested, etc): https://github.com/SignalK/signalk-server/blob/master/docs/develop/plugins/publishing.md
-
 - other ui tweaks to make things crispy
   - same border on panels + buttons?
+  - button background color not the same
+
+- new plugin publish (screenshots, suggested, etc): https://github.com/SignalK/signalk-server/blob/master/docs/develop/plugins/publishing.md
 
 # LONG TERM
 
