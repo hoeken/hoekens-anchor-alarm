@@ -38,7 +38,7 @@ body,
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 23px;
+  font-size: 22px;
 }
 
 #controlToolbar button {
@@ -52,6 +52,10 @@ body,
   background-color: #f0f0f0;
   color: black;
   font-size: inherit;
+}
+
+#zoneShapeSelect {
+  font-size: 20px;
 }
 
 .info {

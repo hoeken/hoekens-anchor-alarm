@@ -32,6 +32,7 @@ export class AppState {
     this.scope4 = 0;
     this.scope3 = 0;
     this._anchorSuppressUntil = { position: 0, state: 0, watchZone: 0 };
+    this._lastRadius = 0;
   }
 
   websocketSubscribe(client) {
@@ -426,12 +427,18 @@ export class AppState {
     const currentRadius = Number(this.anchor?.watchZone?.value?.radius);
     const estimatedRadius = Number(this.getAnchorEstimate()?.radius);
 
+    let radius = 60;
+
     if (Number.isFinite(currentRadius) && currentRadius > 0)
-      return currentRadius;
+      radius = currentRadius;
+    else if (Number.isFinite(this._lastRadius) && this._lastRadius > 0)
+      radius = this._lastRadius;
     else if (Number.isFinite(estimatedRadius) && estimatedRadius > 0)
-      return estimatedRadius;
-    else
-      return 60;
+      radius = estimatedRadius;
+
+    this._lastRadius = radius;
+
+    return radius;
   }
 
   // Heading priority:

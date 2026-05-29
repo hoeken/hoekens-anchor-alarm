@@ -2,7 +2,6 @@
 
 - new plugin publish (screenshots, suggested, etc): https://github.com/SignalK/signalk-server/blob/master/docs/develop/plugins/publishing.md
 
-- smaller font size on shape select
 - other ui tweaks to make things crispy
   - same border on panels + buttons?
 
