@@ -78,7 +78,13 @@ export const ConfigPanel = L.Control.extend({
     });
 
     this._inputs = {};
-    this._buildDialog(map.getContainer());
+    // Mount the dialog as a sibling of the map element (one level up, in
+    // #map_container) rather than inside it. The map element sets z-index: 1,
+    // which makes it its own stacking context — anything inside it (including
+    // a z-index: 1000 backdrop) is trapped below #controlToolbar (z-index: 99),
+    // which sits next to the map. Mounting alongside the map lets the backdrop
+    // out-stack the toolbar.
+    this._buildDialog(map.getContainer().parentNode || map.getContainer());
 
     return container;
   },
@@ -88,9 +94,10 @@ export const ConfigPanel = L.Control.extend({
       this._backdrop.parentNode.removeChild(this._backdrop);
   },
 
-  // The dialog lives as a sibling overlay inside the map container rather than
-  // inside the leaflet-bar, so it can render as a centered modal independent
-  // of the little gear button.
+  // The dialog lives as a sibling overlay next to the map (see onAdd) rather
+  // than inside the leaflet-bar, so it can render as a centered modal that
+  // covers the whole map and the #controlToolbar, independent of the little
+  // gear button.
   _buildDialog: function (parent) {
     const hasReloadField = FIELDS.some((field) => field.reload);
     const reloadNote = hasReloadField
