@@ -34,6 +34,7 @@ class AnchorAlarm {
       enableWindBox: true,
       enableScopeBox: true,
     };
+    this.state.loggedIn = false;
 
     this.map = undefined;
     this.fleetLayer = undefined;
@@ -144,9 +145,11 @@ class AnchorAlarm {
   loadInitialData() {
     this.signalK
       .fetchSelf()
-      .then((data) => {
+      .then(async (data) => {
         this.statusBar.clear("initial-load");
         this.state.extractAll(data);
+        this.state.calculate();
+        console.log(this.state);
 
         if (!this.state.currentCoordinates) {
           this.statusBar.update(this.state);
@@ -154,15 +157,13 @@ class AnchorAlarm {
           return;
         }
 
-        this.loadConfig();
+        await this.loadConfig();
+        console.log(this.config);
 
-        this.state.calculate();
-
-        console.log(this.state);
-
+        this.setupConnection();
         this.buildMap();
-        this.anchorController.estimateAnchorPosition();
 
+        this.anchorController.estimateAnchorPosition();
         this.updateMap();
         this.map.fitBounds(this.anchorOverlay.getBounds());
       })
@@ -179,38 +180,38 @@ class AnchorAlarm {
 
   // Config fetch is independent: a 401 (user not logged in) must not block
   // startup, so on failure we keep the defaults and start pollers anyway.
-  loadConfig() {
-    this.signalK
-      .fetchConfig()
-      .then((config) => {
-        this.config = config;
-      })
-      .catch((error) => {
-        console.error("Failed to load config, using defaults", error);
-      })
-      .finally(() => {
-        const layer =
-          this.baseMaps[this.config.defaultBasemap] || this.satelliteLayer;
-        layer.addTo(this.map);
+  async loadConfig() {
+    try {
+      this.config = await this.signalK.fetchConfig();
+      this.state.loggedIn = true;
+    } catch (error) {
+      console.error("Failed to load config, using defaults", error);
+      this.state.loggedIn = false;
+    }
+  }
 
-        if (this.config.connectionType === "WEBSOCKET") {
-          console.log("Using Websockets");
-          this.setupWebsockets();
-          this.updateTimer = setInterval(
-            () => this.update(),
-            UPDATE_INTERVAL_MS,
-          );
-        } else {
-          console.log("Using REST Polling");
-          this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
-        }
-      });
+  setupConnection() {
+    if (this.config.connectionType === "WEBSOCKET") {
+      console.log("Using Websockets");
+      this.setupWebsockets();
+      this.updateTimer = setInterval(
+        () => this.update(),
+        UPDATE_INTERVAL_MS,
+      );
+    } else {
+      console.log("Using REST Polling");
+      this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
+    }
   }
 
   // Decorates the map shell built in init() with the rest of the controls.
   // Splitting it this way lets the status bar exist before any data fetch.
   buildMap() {
     this.map.setView(this.state.getPosition(), 5);
+
+    const layer =
+      this.baseMaps[this.config.defaultBasemap] || this.satelliteLayer;
+    layer.addTo(this.map);
 
     L.control.zoom({ position: "topright" }).addTo(this.map);
 
@@ -227,9 +228,24 @@ class AnchorAlarm {
       .addTo(this.map);
 
     this.infoPanel = new InfoPanel();
+
     this.tidePanel = new TidePanel();
-    this.scopePanel = new ScopePanel();
+    if (this.config.enableTideBox)
+      this.tidePanel.show();
+    else
+      this.tidePanel.hide();
+
     this.windPanel = new WindPanel();
+    if (this.config.enableWindBox)
+      this.windPanel.show();
+    else
+      this.windPanel.hide();
+
+    this.scopePanel = new ScopePanel();
+    if (this.config.enableScopeBox)
+      this.scopePanel.show();
+    else
+      this.scopePanel.hide();
 
     this.map.addControl(this.infoPanel);
     this.map.addControl(this.tidePanel);
