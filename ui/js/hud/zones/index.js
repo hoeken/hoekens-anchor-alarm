@@ -66,15 +66,7 @@ export function createDefaultZoneConfig(type, appState) {
   if (!entry || !entry.overlay?.defaultConfig)
     return { type };
 
-  const currentRadius = Number(appState?.anchor?.watchZone?.value?.radius);
-  const estimatedRadius = Number(appState?.getAnchorEstimate?.()?.radius);
-  let radius;
-  if (Number.isFinite(currentRadius) && currentRadius > 0)
-    radius = currentRadius;
-  else if (Number.isFinite(estimatedRadius) && estimatedRadius > 0)
-    radius = estimatedRadius;
-  else
-    radius = 60;
+  const radius = appState.getDefaultRadius();
 
   return entry.overlay.defaultConfig({ appState, radius });
 }

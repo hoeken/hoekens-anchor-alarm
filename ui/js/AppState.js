@@ -422,6 +422,18 @@ export class AppState {
     return { distance, radius };
   }
 
+  getDefaultRadius() {
+    const currentRadius = Number(this.anchor?.watchZone?.value?.radius);
+    const estimatedRadius = Number(this.getAnchorEstimate()?.radius);
+
+    if (Number.isFinite(currentRadius) && currentRadius > 0)
+      return currentRadius;
+    else if (Number.isFinite(estimatedRadius) && estimatedRadius > 0)
+      return estimatedRadius;
+    else
+      return 60;
+  }
+
   // Heading priority:
   // SignalK headingTrue
   // bearing-to-anchor (if dropped)

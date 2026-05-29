@@ -109,7 +109,6 @@ export class AnchorController {
   // suppression window keeps stale server responses from clobbering us. They
   // do bail while a drop/raise is in flight to avoid a tangled rollback.
   setZone(zoneConfig) {
-    console.log(zoneConfig);
     if (this._pending)
       return;
     if (!zoneConfig || typeof zoneConfig !== "object" || !zoneConfig.type)

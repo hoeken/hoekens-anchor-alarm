@@ -52,9 +52,8 @@ export class PolygonZoneControls {
     });
   }
 
-  update() {
-    // No-op: sides + radius are local state, and the zone's geometry is
-    // edited via map handles, not the toolbar.
+  update(appState) {
+    this._radius = appState.getDefaultRadius();
   }
 
   destroy() {
