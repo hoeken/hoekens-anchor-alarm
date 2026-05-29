@@ -31,9 +31,9 @@ class AnchorAlarm {
       fleetFilterRadius: 500,
       defaultBasemap: "Satellite",
       defaultShape: "circle",
-      enableTideBox: true,
-      enableWindBox: true,
-      enableScopeBox: true,
+      enableTidePanel: true,
+      enableWindPanel: true,
+      enableScopePanel: true,
     };
     this.state.loggedIn = false;
 
@@ -231,19 +231,19 @@ class AnchorAlarm {
     this.infoPanel = new InfoPanel();
 
     this.tidePanel = new TidePanel();
-    if (this.config.enableTideBox)
+    if (this.config.enableTidePanel)
       this.tidePanel.show();
     else
       this.tidePanel.hide();
 
     this.windPanel = new WindPanel();
-    if (this.config.enableWindBox)
+    if (this.config.enableWindPanel)
       this.windPanel.show();
     else
       this.windPanel.hide();
 
     this.scopePanel = new ScopePanel();
-    if (this.config.enableScopeBox)
+    if (this.config.enableScopePanel)
       this.scopePanel.show();
     else
       this.scopePanel.hide();
@@ -294,7 +294,7 @@ class AnchorAlarm {
 
     if (anchored) {
       this.infoPanel.update(this.state);
-      if (this.config.enableTideBox)
+      if (this.config.enableTidePanel)
         this.tidePanel.update(this.state);
       else
         this.tidePanel.hide();
@@ -302,14 +302,14 @@ class AnchorAlarm {
     } else {
       this.infoPanel.hide();
       this.tidePanel.hide();
-      if (this.config.enableScopeBox)
+      if (this.config.enableScopePanel)
         this.scopePanel.update(this.state);
       else
         this.scopePanel.hide();
     }
 
     //always show wind if enabled
-    if (this.config.enableWindBox)
+    if (this.config.enableWindPanel)
       this.windPanel.update(this.state);
     else
       this.windPanel.hide();

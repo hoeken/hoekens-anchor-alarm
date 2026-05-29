@@ -157,21 +157,21 @@ export function buildSchema(app) {
           "Radius around own vessel to display other vessels and historical tracks.",
         default: 500,
       },
-      enableTideBox: {
+      enableTidePanel: {
         type: "boolean",
         title: "Show Tide Box",
         description:
           "Show the tide chart panel while anchored (requires signalk-tides).",
         default: true,
       },
-      enableWindBox: {
+      enableWindPanel: {
         type: "boolean",
         title: "Show Wind Box",
         description:
           "Show the wind speed/direction panel while anchored.",
         default: true,
       },
-      enableScopeBox: {
+      enableScopePanel: {
         type: "boolean",
         title: "Show Scope Box",
         description:

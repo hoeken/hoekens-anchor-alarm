@@ -77,9 +77,9 @@ export function register(app, plugin, router) {
       connectionType: config.connectionType,
       defaultBasemap: config.defaultBasemap,
       defaultShape: config.defaultShape,
-      enableTideBox: config.enableTideBox,
-      enableWindBox: config.enableWindBox,
-      enableScopeBox: config.enableScopeBox,
+      enableTidePanel: config.enableTidePanel,
+      enableWindPanel: config.enableWindPanel,
+      enableScopePanel: config.enableScopePanel,
     });
   });
 }
