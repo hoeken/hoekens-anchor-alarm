@@ -15,6 +15,7 @@
 
 import { createRequire } from "module";
 import { AnchorError } from "./errors.js";
+import { pickUiConfig, coerceUiConfig } from "./schema.js";
 
 const require = createRequire(import.meta.url);
 const openapi = require("./openApi.json");
@@ -71,15 +72,24 @@ export function register(app, plugin, router) {
   });
 
   router.get("/ui-config", (req, res) => {
-    const config = plugin.configuration || {};
-    res.json({
-      fleetFilterRadius: config.fleetFilterRadius,
-      connectionType: config.connectionType,
-      defaultBasemap: config.defaultBasemap,
-      defaultShape: config.defaultShape,
-      enableTidePanel: config.enableTidePanel,
-      enableWindPanel: config.enableWindPanel,
-      enableScopePanel: config.enableScopePanel,
-    });
+    res.json(pickUiConfig(plugin.configuration || {}));
+  });
+
+  // Persist UI-editable settings. Only whitelisted keys are accepted; each is
+  // coerced/validated against the plugin schema, written onto the live
+  // plugin.configuration, and saved. SignalK gates POSTs to plugin routes
+  // behind authentication, so reaching here implies the caller is logged in.
+  router.post("/ui-config", (req, res) => {
+    try {
+      const updates = coerceUiConfig(app, req.body || {});
+
+      plugin.configuration = plugin.configuration || {};
+      Object.assign(plugin.configuration, updates);
+      plugin.savePluginOptions();
+
+      res.json({ statusCode: 200, state: "COMPLETED", config: updates });
+    } catch (err) {
+      fail(res, err);
+    }
   });
 }

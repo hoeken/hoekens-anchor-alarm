@@ -2,22 +2,10 @@
 
 - new plugin publish (screenshots, suggested, etc): https://github.com/SignalK/signalk-server/blob/master/docs/develop/plugins/publishing.md
 
-- reset button on polygon controller overlay should use estimateAnchorPosition radius
 - smaller font size on shape select
-
-## UI - Config
-
-- add local config editing dialog - if logged in
-  - map overlay button + dialog
-    - use bootstrap svg gear icon below
-  - simple button that toggles config ui
-  - ui should be a simple form for each item in ui-config
-  - on change of any field, it should save to the backend
-    - if logged in:
-      * generate config json
-      * POST to /ui-config
-      * overwrite each parameter in plugin.config
-      * save plugin config.
+- other ui tweaks to make things crispy
+  - same border on panels + buttons?
+- add plugin version to bottom of config in small grey font
 
 # LONG TERM
 

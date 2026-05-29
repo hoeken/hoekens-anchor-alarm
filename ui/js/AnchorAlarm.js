@@ -17,6 +17,7 @@ import { StaleReloader } from "./StaleReloader.js";
 import { AnchorOverlay } from "./hud/AnchorOverlay.js";
 import { AnchorController } from "./AnchorController.js";
 import { ControlToolbar } from "./hud/ControlToolbar.js";
+import { ConfigPanel } from "./hud/ConfigPanel.js";
 
 const UPDATE_INTERVAL_MS = 500;
 const POLL_INTERVAL_MS = 1000;
@@ -46,6 +47,7 @@ class AnchorAlarm {
     this.scopePanel = undefined;
     this.windPanel = undefined;
     this.homeButton = undefined;
+    this.configPanel = undefined;
     this.toolbar = undefined;
     this.updateTimer = null;
     this.pollTimer = null;
@@ -191,6 +193,25 @@ class AnchorAlarm {
     }
   }
 
+  // Persist UI settings edited via the ConfigPanel. We merge into the live
+  // config and re-render immediately so panel-visibility toggles take effect
+  // without a reload; settings that can't be applied live (basemap, shape,
+  // fleet radius, connection type) are flagged in the dialog and pick up on
+  // the next load. Returns the save promise so the dialog can report status.
+  saveConfig(newConfig) {
+    Object.assign(this.config, newConfig);
+    this.updateMap();
+    this.statusBar.clear("config-save");
+    return this.signalK.saveConfig(newConfig).catch((error) => {
+      const detail = error.statusText || error.message || "unknown error";
+      const status = error.status ? `${error.status} ` : "";
+      const msg = `Failed to save config: ${status}${detail}`;
+      this.statusBar.set("config-save", msg, "error");
+      console.error(msg, error);
+      throw error;
+    });
+  }
+
   setupConnection() {
     if (this.config.connectionType === "WEBSOCKET") {
       console.log("Using Websockets");
@@ -210,11 +231,24 @@ class AnchorAlarm {
   buildMap() {
     this.map.setView(this.state.getPosition(), 5);
 
+    //actual map layer
     const layer =
       this.baseMaps[this.config.defaultBasemap] || this.satelliteLayer;
     layer.addTo(this.map);
 
-    L.control.zoom({ position: "topright" }).addTo(this.map);
+    //
+    // Buttons - Top Right
+    //
+
+    // Settings gear only makes sense when logged in — anonymous users can't
+    // persist config (the POST is auth-gated server-side).
+    if (this.state.loggedIn) {
+      this.configPanel = new ConfigPanel({
+        getConfig: () => this.config,
+        onChange: (newConfig) => this.saveConfig(newConfig),
+      });
+      this.map.addControl(this.configPanel);
+    }
 
     this.homeButton = new HomeButtonControl({
       onHome: (map) => {
@@ -224,10 +258,12 @@ class AnchorAlarm {
     });
     this.map.addControl(this.homeButton);
 
-    L.control
-      .layers(this.baseMaps, {}, { position: "topright" })
-      .addTo(this.map);
+    L.control.zoom({ position: "topright" }).addTo(this.map);
+    L.control.layers(this.baseMaps, {}, { position: "topright" }).addTo(this.map);
 
+    //
+    // Panels - Bottom Right
+    //
     this.infoPanel = new InfoPanel();
 
     this.tidePanel = new TidePanel();
