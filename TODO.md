@@ -1,6 +1,5 @@
 # v2.3
 
-
 - other ui tweaks to make things crispy
   - same border on panels + buttons?
   - button background color not the same

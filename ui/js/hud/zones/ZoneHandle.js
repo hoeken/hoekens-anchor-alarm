@@ -4,16 +4,16 @@
 
 const HANDLE_ICON = L.divIcon({
   className: "zoneHandle",
-  iconSize: [16, 16],
-  iconAnchor: [8, 8],
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
 });
 
 // Smaller, lighter handle used for "ghost" insertion points (edge midpoints on
 // the polygon overlay). Behaves identically — only the look differs.
 const GHOST_HANDLE_ICON = L.divIcon({
   className: "zoneHandle zoneHandleGhost",
-  iconSize: [12, 12],
-  iconAnchor: [6, 6],
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
 });
 
 export class ZoneHandle {
