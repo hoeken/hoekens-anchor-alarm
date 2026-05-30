@@ -27,6 +27,9 @@ export class ControlToolbar {
     this._container = document.createElement("div");
     this._container.id = "controlToolbar";
     this._container.innerHTML = `
+      <div id="loginPrompt">
+        <button id="loginButton">Login</button>
+      </div>
       <div id="anchorDown">
         <button id="raiseAnchor">Raise Anchor</button>
       </div>
@@ -40,6 +43,7 @@ export class ControlToolbar {
     `;
     parent.appendChild(this._container);
 
+    this._loginPrompt = this._container.querySelector("#loginPrompt");
     this._anchorUp = this._container.querySelector("#anchorUp");
     this._anchorDown = this._container.querySelector("#anchorDown");
     this._shapeSelectWrap = this._container.querySelector("#zoneShapeSelect");
@@ -56,6 +60,15 @@ export class ControlToolbar {
       this._shapeSelect.appendChild(opt);
     }
 
+    this._container
+      .querySelector("#loginButton")
+      .addEventListener("click", () => {
+        // redirect to our login page.
+        const here =
+          window.location.pathname + window.location.search + window.location.hash;
+        window.location.href =
+          "/admin/#/login?redirect=" + encodeURIComponent(here);
+      });
     this._container
       .querySelector("#raiseAnchor")
       .addEventListener("click", () => {
@@ -113,6 +126,21 @@ export class ControlToolbar {
   // either before dropping or while anchored).
   update(appState) {
     this._appState = appState;
+
+    // Anonymous users can't drop/raise the anchor or set a zone (those POSTs
+    // are auth-gated server-side), so show a login button in place of the
+    // whole control set and bail before touching it.
+    const loggedIn = appState.loggedIn;
+    this._loginPrompt.style.display = loggedIn ? "none" : "block";
+    if (!loggedIn) {
+      this._anchorDown.style.display = "none";
+      this._anchorUp.style.display = "none";
+      this._shapeSelectWrap.style.display = "none";
+      this._zoneControlsHost.style.display = "none";
+      return;
+    }
+    this._zoneControlsHost.style.display = "";
+
     this._isAnchored = appState.isAnchored();
     this._anchorDown.style.display = this._isAnchored ? "block" : "none";
     this._anchorUp.style.display = this._isAnchored ? "none" : "block";

@@ -12,10 +12,11 @@ export const ScopePanel = L.Control.extend({
     const container = L.DomUtil.create("div", "scope leaflet-bar");
     L.DomEvent.disableClickPropagation(container);
     container.id = "scopeUI";
+    container.style.display = "none";
     container.innerHTML = `
         <table id="scopeDepthTable">
           <tr>
-            <th>Water&nbsp;Depth</th>
+            <th>Surface&nbsp;Depth</th>
             <td><span id='scopeDepth'>~</span></td>
           </tr>
           <tr id="bowHeightRow">
@@ -97,13 +98,6 @@ export const ScopePanel = L.Control.extend({
   // Render a whole scope snapshot. Caller does the math; this is pure rendering
   // plus the green/orange/red warning on the minimum-depth row.
   update: function (state) {
-
-    // ScopePanel only shows while raised — it's the InfoPanel's counterpart
-    // in the bottom-right slot.
-    if (state.isAnchored()) {
-      this.hide();
-      return;
-    }
 
     //if we have none of the required parameters, dont even show.
     if (!state.belowSurface && (!state.tide || !state.belowKeel))

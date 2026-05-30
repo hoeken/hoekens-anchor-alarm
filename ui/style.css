@@ -38,7 +38,7 @@ body,
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 23px;
+  font-size: 22px;
 }
 
 #controlToolbar button {
@@ -48,15 +48,20 @@ body,
   -webkit-appearance: none;
   appearance: none;
   border-radius: 5px;
-  border: 1px solid #888;
-  background-color: #f0f0f0;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  background-clip: padding-box;
+  background-color: white;
   color: black;
   font-size: inherit;
 }
 
+#zoneShapeSelect {
+  font-size: 20px;
+}
+
 .info {
   padding: 5px;
-  width: 200px;
+  width: 150px;
   font-size: 11pt;
   line-height: 1.1;
   background-color: white;
@@ -133,16 +138,24 @@ body,
   color: red;
 }
 
+#loginPrompt,
 #anchorDown,
 #anchorUp,
 #zoneShapeSelect {
   display: none;
 }
 
+#loginPrompt button,
 #anchorDown button,
 #anchorUp button {
   width: 100%;
   box-sizing: border-box;
+}
+
+#loginPrompt button {
+  font-size: 18px;
+  width: 80px;
+  height: 30px;
 }
 
 #zoneShapeSelect select {
@@ -153,8 +166,9 @@ body,
   -webkit-appearance: none;
   appearance: none;
   border-radius: 5px;
-  border: 1px solid #888;
-  background-color: #f0f0f0;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  background-clip: padding-box;
+  background-color: white;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='black' d='M0 0l6 8 6-8z'/></svg>");
   background-repeat: no-repeat;
   background-position: right 10px center;
@@ -207,8 +221,9 @@ body,
   -webkit-appearance: none;
   appearance: none;
   border-radius: 5px;
-  border: 1px solid #888;
-  background-color: #f0f0f0;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  background-clip: padding-box;
+  background-color: white;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='black' d='M0 0l6 8 6-8z'/></svg>");
   background-repeat: no-repeat;
   background-position: right 10px center;
@@ -225,10 +240,149 @@ body,
   box-sizing: border-box;
 }
 
-.leaflet-control-home {
+.leaflet-control-home,
+.leaflet-control-config {
   display: flex !important;
   align-items: center;
   justify-content: center;
+}
+
+.leaflet-control-config svg path {
+  stroke: currentColor;
+  stroke-width: 1;
+}
+
+#configDialogBackdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+}
+
+#configDialog {
+  background-color: white;
+  border-radius: 6px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  width: 280px;
+  max-width: calc(100% - 40px);
+  max-height: calc(100% - 40px);
+  overflow-y: auto;
+  padding: 12px 16px 16px;
+  font-size: 11pt;
+  box-sizing: border-box;
+}
+
+#configDialogHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: bold;
+  font-size: 13pt;
+  margin-bottom: 10px;
+}
+
+#configDialogClose {
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  color: #555;
+  padding: 0 4px;
+}
+
+#configForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.configRow {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.configRow.configRowCheckbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.configLabel {
+  color: #333;
+}
+
+.configInput {
+  font-family: inherit;
+  font-size: inherit;
+  box-sizing: border-box;
+}
+
+.configRow:not(.configRowCheckbox) .configInput {
+  width: 100%;
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid #888;
+  background-color: #f7f7f7;
+  padding: 0 8px;
+}
+
+.configRowCheckbox .configInput {
+  width: 18px;
+  height: 18px;
+}
+
+.configReloadNote {
+  margin-top: 10px;
+  font-size: 9pt;
+  color: #777;
+}
+
+#configStatus {
+  display: none;
+  margin-top: 8px;
+  font-size: 10pt;
+}
+
+#configStatus.configStatusOk {
+  color: green;
+}
+
+#configStatus.configStatusError {
+  color: red;
+}
+
+#configVersion {
+  margin-top: 8px;
+  font-size: 8pt;
+  color: #999;
+}
+
+/* Map attribution pinned to the very bottom of the page, spanning full width
+   and sitting above the map (which fills #map_container). */
+#mapAttribution {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.7);
+  text-align: right;
+  font-size: 8pt;
+  line-height: 1.4;
+  color: #333;
+}
+
+#mapAttribution a {
+  color: #0078a8;
 }
 
 .leaflet-touch .leaflet-control-layers-toggle {
@@ -308,6 +462,57 @@ body,
   width: 70px;
 }
 
+.tides {
+  width: 160px;
+  height: 75px;
+  background-color: white;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.tides .tides-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  font-size: 11px;
+  font-family: inherit;
+}
+
+.tides .tides-line {
+  stroke: #0066cc;
+  stroke-width: 1.25;
+}
+
+.tides .tides-gradient-stop1 {
+  stop-color: #0066cc;
+  stop-opacity: 0.55;
+}
+
+.tides .tides-gradient-stop2 {
+  stop-color: #0066cc;
+  stop-opacity: 0.05;
+}
+
+.tides .tides-now {
+  stroke: #000;
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+
+.tides .tides-now-label {
+  fill: #000;
+  font-weight: bold;
+}
+
+.tides .tides-marker-dot {
+  fill: #003366;
+}
+
+.tides .tides-marker-height,
+.tides .tides-marker-time {
+  fill: #003366;
+}
+
 .statusBar {
   padding: 5px;
   max-width: 320px;
@@ -316,4 +521,11 @@ body,
   background-color: white;
   font-weight: bold;
   line-height: 1.2;
+}
+
+/* Lift bottom controls above the attribution strip. --attributionHeight is
+   measured and set in JS (AnchorAlarm.updateAttribution) since the strip's
+   height varies with content wrapping. */
+.leaflet-bottom {
+  bottom: var(--attributionHeight, 0px);
 }

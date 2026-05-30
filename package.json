@@ -1,6 +1,6 @@
 {
   "name": "hoekens-anchor-alarm",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Anchor alarm with various shapes, scope calculator, scribble tracks, engine override, and physically accurate icons.",
   "main": "src/index.cjs",
   "type": "module",
@@ -18,6 +18,7 @@
   "files": [
     "src",
     "shared",
+    "screenshots",
     "public"
   ],
   "lint-staged": {
@@ -26,11 +27,23 @@
   },
   "keywords": [
     "signalk-node-server-plugin",
-    "signalk-webapp"
+    "signalk-webapp",
+    "signalk-category-utility",
+    "signalk-category-notifications"
   ],
   "signalk": {
     "appIcon": "anchoralarm.png",
-    "displayName": "Hoeken's Anchor Alarm"
+    "displayName": "Hoeken's Anchor Alarm",
+    "screenshots": [
+      "./screenshots/circle.png",
+      "./screenshots/sector.png",
+      "./screenshots/polygon.png",
+      "./screenshots/satellite.png",
+      "./screenshots/config.png"
+    ],
+    "recommends": [
+      "signalk-tides"
+    ]
   },
   "author": {
     "name": "Zach Hoeken",
@@ -44,6 +57,7 @@
     "@signalk/client": "^2.4.0",
     "@signalk/tracks-plugin": "^2.0.2",
     "@turf/turf": "^7.3.5",
+    "d3": "^7.9.0",
     "mathjs": "^15.2.0",
     "simplify-js": "^1.2.4"
   },

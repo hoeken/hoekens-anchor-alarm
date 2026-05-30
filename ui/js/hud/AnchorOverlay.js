@@ -101,6 +101,11 @@ export class AnchorOverlay {
     this._zone = appState.getWatchZone();
     this._ensureZoneOverlay();
 
+    // Anonymous users see the zone but get no draggable edit handles (the
+    // setZone POST is auth-gated server-side anyway). Reapply every tick so a
+    // freshly-swapped overlay picks up the current login state.
+    this.zoneOverlay?.setHandlesVisible(appState.loggedIn);
+
     if (appState.isAnchored()) {
       const pos = appState.getAnchorPosition();
       if (!this.dropped) {

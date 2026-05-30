@@ -64,15 +64,37 @@
         "type": "object",
         "description": "UI-relevant plugin configuration. Properties are omitted when unset; the UI falls back to its own defaults.",
         "properties": {
+          "connectionType": {
+            "type": "string",
+            "enum": ["REST_POLLING", "WEBSOCKET"],
+            "description": "How the UI connects to SignalK for live data updates."
+          },
+          "defaultBasemap": {
+            "type": "string",
+            "enum": ["OpenStreetMap", "Satellite"],
+            "description": "Which map layer to show on load."
+          },
+          "defaultShape": {
+            "type": "string",
+            "enum": ["circle", "sector", "polygon"],
+            "description": "Default watch zone shape used when estimating a new anchor position."
+          },
           "fleetFilterRadius": {
             "type": "integer",
             "minimum": 0,
             "description": "Radius (meters) around own vessel for displaying other vessels and historical tracks."
           },
-          "connectionType": {
-            "type": "string",
-            "enum": ["POLLING", "WEBSOCKET"],
-            "description": "How the UI connects to SignalK for live data updates."
+          "enableTidePanel": {
+            "type": "boolean",
+            "description": "Show the tide chart panel while anchored."
+          },
+          "enableWindPanel": {
+            "type": "boolean",
+            "description": "Show the wind speed/direction panel."
+          },
+          "enableScopePanel": {
+            "type": "boolean",
+            "description": "Show the scope/depth calculator panel while the anchor is up."
           }
         }
       },
@@ -335,6 +357,43 @@
                 }
               }
             }
+          }
+        }
+      },
+      "post": {
+        "tags": ["config"],
+        "summary": "Update UI-relevant plugin configuration",
+        "description": "Persists UI-editable settings. Only whitelisted properties are accepted; each is validated, written onto the live plugin configuration, and saved. Requires authentication.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Config"
+              },
+              "example": {
+                "enableTidePanel": false,
+                "fleetFilterRadius": 750
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Configuration saved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/AnchorError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
           }
         }
       }

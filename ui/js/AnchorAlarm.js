@@ -10,12 +10,14 @@ import { FleetLayer } from "./hud/FleetLayer.js";
 import { StatusBar } from "./hud/StatusBar.js";
 import { HomeButtonControl } from "./hud/HomeButtonControl.js";
 import { InfoPanel } from "./hud/InfoPanel.js";
+import { TidePanel } from "./hud/TidePanel.js";
 import { WindPanel } from "./hud/WindPanel.js";
 import { ScopePanel } from "./hud/ScopePanel.js";
 import { StaleReloader } from "./StaleReloader.js";
 import { AnchorOverlay } from "./hud/AnchorOverlay.js";
 import { AnchorController } from "./AnchorController.js";
 import { ControlToolbar } from "./hud/ControlToolbar.js";
+import { ConfigPanel } from "./hud/ConfigPanel.js";
 
 const UPDATE_INTERVAL_MS = 500;
 const POLL_INTERVAL_MS = 1000;
@@ -29,16 +31,23 @@ class AnchorAlarm {
       connectionType: "WEBSOCKET",
       fleetFilterRadius: 500,
       defaultBasemap: "Satellite",
+      defaultShape: "circle",
+      enableTidePanel: true,
+      enableWindPanel: true,
+      enableScopePanel: true,
     };
+    this.state.loggedIn = false;
 
     this.map = undefined;
     this.fleetLayer = undefined;
     this.anchorOverlay = undefined;
     this.anchorController = undefined;
     this.infoPanel = undefined;
+    this.tidePanel = undefined;
     this.scopePanel = undefined;
     this.windPanel = undefined;
     this.homeButton = undefined;
+    this.configPanel = undefined;
     this.toolbar = undefined;
     this.updateTimer = null;
     this.pollTimer = null;
@@ -67,7 +76,6 @@ class AnchorAlarm {
   }
 
   handleDeltas(delta) {
-    // console.log(delta);
     if (delta.updates) {
       for (const update of delta.updates) {
         if (update.values) {
@@ -111,7 +119,10 @@ class AnchorAlarm {
 
     // Map shell and status bar first so failures during initial load (missing
     // GPS, server unreachable, etc.) have somewhere to surface.
-    this.map = L.map("map", { zoomControl: false }).setView([0, 0], 5);
+    this.map = L.map("map", {
+      zoomControl: false,
+      attributionControl: false, // Prevents the default bottom-right control
+    }).setView([0, 0], 5);
     this.statusBar = new StatusBar();
     this.map.addControl(this.statusBar);
 
@@ -139,9 +150,12 @@ class AnchorAlarm {
   loadInitialData() {
     this.signalK
       .fetchSelf()
-      .then((data) => {
+      .then(async (data) => {
         this.statusBar.clear("initial-load");
+
         this.state.extractAll(data);
+        this.state.calculate();
+        console.log("App State:", this.state);
 
         if (!this.state.currentCoordinates) {
           this.statusBar.update(this.state);
@@ -149,15 +163,13 @@ class AnchorAlarm {
           return;
         }
 
-        this.loadConfig();
+        await this.loadConfig();
+        console.log("UI Config:", this.config);
 
-        this.state.calculate();
-
-        console.log(this.state);
-
+        this.setupConnection();
         this.buildMap();
-        this.anchorController.estimateAnchorPosition();
 
+        this.anchorController.estimateAnchorPosition();
         this.updateMap();
         this.map.fitBounds(this.anchorOverlay.getBounds());
       })
@@ -174,32 +186,49 @@ class AnchorAlarm {
 
   // Config fetch is independent: a 401 (user not logged in) must not block
   // startup, so on failure we keep the defaults and start pollers anyway.
-  loadConfig() {
-    this.signalK
-      .fetchConfig()
-      .then((config) => {
-        this.config = config;
-      })
-      .catch((error) => {
-        console.error("Failed to load config, using defaults", error);
-      })
-      .finally(() => {
-        const layer =
-          this.baseMaps[this.config.defaultBasemap] || this.satelliteLayer;
-        layer.addTo(this.map);
+  async loadConfig() {
+    try {
+      this.config = await this.signalK.fetchConfig();
+      this.state.loggedIn = true;
+    } catch (error) {
+      console.error("Failed to load config, using defaults", error);
+      this.state.loggedIn = false;
+    }
+  }
 
-        if (this.config.connectionType === "WEBSOCKET") {
-          console.log("Using Websockets");
-          this.setupWebsockets();
-          this.updateTimer = setInterval(
-            () => this.update(),
-            UPDATE_INTERVAL_MS,
-          );
-        } else {
-          console.log("Using REST Polling");
-          this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
-        }
-      });
+  // Persist UI settings edited via the ConfigPanel. We merge into the live
+  // config and re-render immediately so panel-visibility toggles and the
+  // basemap take effect without a reload; settings that can't be applied live
+  // (shape, fleet radius, connection type) are flagged in the dialog and pick
+  // up on the next load. Returns the save promise so the dialog can report
+  // status.
+  saveConfig(newConfig) {
+    Object.assign(this.config, newConfig);
+    this.setBasemap(this.config.defaultBasemap);
+    this.updateMap();
+    this.statusBar.clear("config-save");
+    return this.signalK.saveConfig(newConfig).catch((error) => {
+      const detail = error.statusText || error.message || "unknown error";
+      const status = error.status ? `${error.status} ` : "";
+      const msg = `Failed to save config: ${status}${detail}`;
+      this.statusBar.set("config-save", msg, "error");
+      console.error(msg, error);
+      throw error;
+    });
+  }
+
+  setupConnection() {
+    if (this.config.connectionType === "WEBSOCKET") {
+      console.log("Using Websockets");
+      this.setupWebsockets();
+      this.updateTimer = setInterval(
+        () => this.update(),
+        UPDATE_INTERVAL_MS,
+      );
+    } else {
+      console.log("Using REST Polling");
+      this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
+    }
   }
 
   // Decorates the map shell built in init() with the rest of the controls.
@@ -207,7 +236,23 @@ class AnchorAlarm {
   buildMap() {
     this.map.setView(this.state.getPosition(), 5);
 
-    L.control.zoom({ position: "topright" }).addTo(this.map);
+    //actual map layer
+    this.setBasemap(this.config.defaultBasemap);
+
+    //
+    // Buttons - Top Right
+    //
+
+    // Settings gear only makes sense when logged in — anonymous users can't
+    // persist config (the POST is auth-gated server-side).
+    if (this.state.loggedIn) {
+      this.configPanel = new ConfigPanel({
+        getConfig: () => this.config,
+        getVersion: () => this.version,
+        onChange: (newConfig) => this.saveConfig(newConfig),
+      });
+      this.map.addControl(this.configPanel);
+    }
 
     this.homeButton = new HomeButtonControl({
       onHome: (map) => {
@@ -217,19 +262,46 @@ class AnchorAlarm {
     });
     this.map.addControl(this.homeButton);
 
-    L.control
-      .layers(this.baseMaps, {}, { position: "topright" })
-      .addTo(this.map);
+    L.control.zoom({ position: "topright" }).addTo(this.map);
+    L.control.layers(this.baseMaps, {}, { position: "topleft" }).addTo(this.map);
 
+    // Map attribution lives in a full-width strip at the bottom of the page
+    // (#mapAttribution) instead of Leaflet's default corner control, which is
+    // disabled. Refresh it whenever the active base layer changes.
+    this.updateAttribution();
+    this.map.on("baselayerchange", () => this.updateAttribution());
+    window.addEventListener("resize", () => this.updateAttribution());
+
+    // L.control.scale({ position: "bottomleft" }).addTo(this.map);
+
+    //
+    // Panels - Bottom Right
+    //
     this.infoPanel = new InfoPanel();
-    this.scopePanel = new ScopePanel();
+
+    this.tidePanel = new TidePanel();
+    if (this.config.enableTidePanel)
+      this.tidePanel.show();
+    else
+      this.tidePanel.hide();
+
     this.windPanel = new WindPanel();
+    if (this.config.enableWindPanel)
+      this.windPanel.show();
+    else
+      this.windPanel.hide();
+
+    this.scopePanel = new ScopePanel();
+    if (this.config.enableScopePanel)
+      this.scopePanel.show();
+    else
+      this.scopePanel.hide();
 
     this.map.addControl(this.infoPanel);
+    this.map.addControl(this.tidePanel);
     this.map.addControl(this.scopePanel);
-    this.map.addControl(this.windPanel);
 
-    L.control.scale({ position: "bottomleft" }).addTo(this.map);
+    this.map.addControl(this.windPanel);
 
     this.fleetLayer = new FleetLayer({
       app: this,
@@ -250,18 +322,87 @@ class AnchorAlarm {
       overlay: this.anchorOverlay,
       signalK: this.signalK,
       statusBar: this.statusBar,
+      defaultShape: this.config.defaultShape,
       onChange: () => this.updateMap(),
     });
   }
 
+  // Swap the active base layer to the named basemap (falling back to satellite
+  // for an unknown name). No-op if it's already active; otherwise we remove any
+  // other base layer first so the two never stack. The layer-control radio
+  // tracks add/removeLayer on its own, but baselayerchange only fires on user
+  // clicks in that control — so we refresh the attribution strip by hand.
+  setBasemap(name) {
+    const layer = this.baseMaps[name] || this.satelliteLayer;
+    if (this.map.hasLayer(layer))
+      return;
+    for (const key in this.baseMaps) {
+      const other = this.baseMaps[key];
+      if (other !== layer && this.map.hasLayer(other))
+        this.map.removeLayer(other);
+    }
+    layer.addTo(this.map);
+    this.updateAttribution();
+  }
+
+  // Gather attribution strings from the active layers and render them, with
+  // the standard Leaflet credit, into the bottom-of-page attribution strip.
+  updateAttribution() {
+    const el = document.getElementById("mapAttribution");
+    if (!el || !this.map)
+      return;
+    const parts = [];
+    this.map.eachLayer((layer) => {
+      const attr = layer.getAttribution && layer.getAttribution();
+      if (attr && parts.indexOf(attr) === -1)
+        parts.push(attr);
+    });
+    const prefix = `<a href="https://leafletjs.com" title="A JavaScript library for interactive maps">Leaflet</a>`;
+    el.innerHTML = [prefix, ...parts].join(" | ");
+
+    // Expose the strip's rendered height so bottom-anchored Leaflet controls
+    // (see .leaflet-bottom in style.css) can sit above it. The height varies
+    // with text wrapping, so measure after the content is set.
+    document.documentElement.style.setProperty(
+      "--attributionHeight",
+      `${el.offsetHeight}px`,
+    );
+  }
+
   updateMap() {
+    const anchored = this.state.isAnchored();
+
     this.toolbar.update(this.state);
-    this.windPanel.update(this.state);
-    this.infoPanel.update(this.state);
     this.statusBar.update(this.state);
-    this.scopePanel.update(this.state);
     this.anchorOverlay.update(this.state);
     this.fleetLayer.update(this.state);
+
+    // Tide/info live in the bottom-right while anchored; the scope panel
+    // takes the same slot when the anchor is up. Config flags gate each
+    // optional box; the panels themselves still hide on missing data.
+
+    if (anchored) {
+      this.infoPanel.update(this.state);
+      this.scopePanel.hide();
+    } else {
+      this.infoPanel.hide();
+      if (this.config.enableScopePanel)
+        this.scopePanel.update(this.state);
+      else
+        this.scopePanel.hide();
+    }
+
+    //always show tide if enabled
+    if (this.config.enableTidePanel)
+      this.tidePanel.update(this.state);
+    else
+      this.tidePanel.hide();
+
+    //always show wind if enabled
+    if (this.config.enableWindPanel)
+      this.windPanel.update(this.state);
+    else
+      this.windPanel.hide();
   }
 
   // === Live polling ================================================================

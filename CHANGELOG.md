@@ -1,3 +1,42 @@
+# v2.3
+
+## New features
+
+- **In-map settings dialog** — logged-in users can now edit UI settings without leaving for the plugin config page. A gear button on the map opens a modal form (panel toggles, basemap, default shape, fleet radius, connection type); each change saves immediately to the backend and re-renders, so panel show/hide takes effect live. Settings that can't apply on the fly are flagged "* applies after reloading."
+- **Tide panel** — a new compact HUD panel showing the current tide state plus the next two tides when anchored (split out from the info panel)
+- **Panel visibility config** — new `enableTidePanel` / `enableWindPanel` / `enableScopePanel` flags let you show or hide individual HUD panels; show/hide is centralized in `updateMap()`
+- **Default zone shape** — new plugin/UI config option to choose which watch-zone shape (circle / sector / polygon) new anchors start with
+- **Login button** — the control toolbar now shows a login button, and editing controls only appear once you're logged in
+- **Outside-zone guard** — dropping the anchor or setting a zone is now blocked when the boat is currently outside the proposed zone, with a clear error
+- Plugin version is now shown at the bottom of the settings dialog
+- Basemap changes from the UI config now apply dynamically without a reload
+
+## Reliability & UX
+
+- Reworked config loading so HUD panels no longer flash on/off as enabled/disabled settings resolve
+- Rearranged the UI for a more symmetrical, logical layout; map attribution now clears all four corners so the full edge is usable
+- Wind and tide panels now always show
+- StatusBar gained `logError()` for surfacing temporary, self-clearing errors
+- Zone handle icons are a bit bigger now so they're easier to grab
+- Anchor controller error-log timeout and wording tweaked
+- "Water Depth" relabeled to "Surface Depth" in the scope panel
+- Button borders and backgrounds tweaked to match the rest of Leaflet's controls
+
+## Bug fixes
+
+- Fixed the radius resetting when switching to a polygon (or other zone without a radius) and improved default-radius handling on polygon reset
+- Fixed a z-stacking bug with the config panel
+
+## Under the hood
+
+- New `POST /ui-config` endpoint validates/coerces submitted settings against the plugin schema, then writes and persists them
+- `schema.js` is now the single source of truth for UI config: it owns the `UI_CONFIG_KEYS` whitelist plus `pickUiConfig()` / `coerceUiConfig()` helpers, and `http-routes.js` GET/POST are thin wrappers over them
+- `ConfigPanel` rebuilt from imperative DOM construction to `innerHTML` template markup, with inputs wired by `data-config-key`
+- `SignalKHelper.saveConfig()` POSTs UI config changes to the backend
+- `openApi.json`: completed the Config schema (all fields, fixed a stale POLLING enum) and documented `POST /ui-config`
+- Renamed `enable*Box` config keys to `enable*Panel`
+- Added screenshots, recommended plugins, and categories to `package.json` for the SignalK app store
+
 # v2.2
 
 ## New features

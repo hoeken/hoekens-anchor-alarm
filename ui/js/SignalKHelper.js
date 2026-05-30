@@ -73,6 +73,9 @@ export class SignalKHelper {
     return fetch(`${this.baseUrl}/plugins/${this.pluginName}/ui-config`)
       .then(SignalKHelper._toJsonOrReject);
   }
+  saveConfig(config) {
+    return this.pluginPost("ui-config", config);
+  }
   fetchPluginInfo() {
     return fetch(`${this.baseUrl}/plugins/${this.pluginName}`)
       .then(SignalKHelper._toJsonOrReject);

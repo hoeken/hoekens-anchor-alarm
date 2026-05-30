@@ -4,21 +4,22 @@
 
 const HANDLE_ICON = L.divIcon({
   className: "zoneHandle",
-  iconSize: [16, 16],
-  iconAnchor: [8, 8],
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
 });
 
 // Smaller, lighter handle used for "ghost" insertion points (edge midpoints on
 // the polygon overlay). Behaves identically — only the look differs.
 const GHOST_HANDLE_ICON = L.divIcon({
   className: "zoneHandle zoneHandleGhost",
-  iconSize: [12, 12],
-  iconAnchor: [6, 6],
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
 });
 
 export class ZoneHandle {
   constructor({ map, position, onDragStart, onDrag, onDragEnd, ghost = false }) {
     this._map = map;
+    this._visible = true;
     this._marker = L.marker(position, {
       icon: ghost ? GHOST_HANDLE_ICON : HANDLE_ICON,
       draggable: true,
@@ -34,6 +35,19 @@ export class ZoneHandle {
 
   setPosition(latlng) {
     this._marker.setLatLng(latlng);
+  }
+
+  // Add/remove the marker from the map so anonymous (not-logged-in) users see
+  // the zone shape but get no draggable controls. Removing the layer also kills
+  // its drag interaction, not just its visibility.
+  setVisible(visible) {
+    if (visible === this._visible)
+      return;
+    this._visible = visible;
+    if (visible)
+      this._marker.addTo(this._map);
+    else
+      this._map.removeLayer(this._marker);
   }
 
   setStyle({ color }) {

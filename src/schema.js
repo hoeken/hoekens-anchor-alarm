@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+import { ValidationError } from "./errors.js";
+
 export const metas = {
   "design.bowAnchorRollerHeight": {
     units: "m",
@@ -142,12 +144,41 @@ export function buildSchema(app) {
         default: "Satellite",
         enum: ["OpenStreetMap", "Satellite"],
       },
+      defaultShape: {
+        type: "string",
+        title: "Default Watch Zone Shape",
+        description:
+          "Shape used when estimating a new anchor position before it is dropped.",
+        default: "circle",
+        enum: ["circle", "sector", "polygon"],
+      },
       fleetFilterRadius: {
         type: "integer",
         title: "Fleet Filter Radius (m)",
         description:
           "Radius around own vessel to display other vessels and historical tracks.",
         default: 500,
+      },
+      enableTidePanel: {
+        type: "boolean",
+        title: "Show Tide Box",
+        description:
+          "Show the tide chart panel while anchored (requires signalk-tides).",
+        default: true,
+      },
+      enableWindPanel: {
+        type: "boolean",
+        title: "Show Wind Box",
+        description:
+          "Show the wind speed/direction panel while anchored.",
+        default: true,
+      },
+      enableScopePanel: {
+        type: "boolean",
+        title: "Show Scope Box",
+        description:
+          "Show the scope/depth calculator panel while the anchor is up.",
+        default: true,
       },
       state: {
         title: "Alarm Severity",
@@ -209,6 +240,72 @@ export function buildSchema(app) {
   schemaData.properties.pathChecks.properties = pathChecks;
 
   return schemaData;
+}
+
+// Plugin config keys the web UI is allowed to read and write through
+// /ui-config. This is the whitelist of *which* keys are exposed; their types,
+// enums, and defaults all come from buildSchema above, so there's one source
+// of truth. Anchor state (`zone`) and alarm internals are deliberately
+// excluded — those are owned by the anchor service, not the settings form.
+export const UI_CONFIG_KEYS = [
+  "connectionType",
+  "defaultBasemap",
+  "defaultShape",
+  "fleetFilterRadius",
+  "enableTidePanel",
+  "enableWindPanel",
+  "enableScopePanel",
+];
+
+// Project the UI-relevant subset out of a full plugin config (the /ui-config
+// GET response shape).
+export function pickUiConfig(config = {}) {
+  const out = {};
+  for (const key of UI_CONFIG_KEYS)
+    out[key] = config[key];
+  return out;
+}
+
+// Coerce/validate one value against its JSON Schema property. Mirrors how
+// SignalK's admin form treats the same schema. Throws ValidationError (→ 403)
+// on anything that doesn't fit.
+function coerceToSchema(key, prop, value) {
+  if (!prop)
+    throw new ValidationError(`unknown config field: ${key}`);
+
+  if (Array.isArray(prop.enum) && !prop.enum.includes(value))
+    throw new ValidationError(`${key} must be one of: ${prop.enum.join(", ")}`);
+
+  switch (prop.type) {
+    case "string":
+      if (typeof value !== "string")
+        throw new ValidationError(`${key} must be a string`);
+      return value;
+    case "integer":
+    case "number": {
+      const n = Number(value);
+      if (!Number.isFinite(n))
+        throw new ValidationError(`${key} must be a number`);
+      return prop.type === "integer" ? Math.round(n) : n;
+    }
+    case "boolean":
+      return Boolean(value);
+    default:
+      throw new ValidationError(`unsupported schema type for ${key}`);
+  }
+}
+
+// Validate an incoming /ui-config POST body against the plugin schema,
+// returning the coerced updates — only whitelisted keys that were present.
+export function coerceUiConfig(app, body = {}) {
+  const props = buildSchema(app).properties;
+  const updates = {};
+  for (const key of UI_CONFIG_KEYS) {
+    if (body[key] === undefined)
+      continue;
+    updates[key] = coerceToSchema(key, props[key], body[key]);
+  }
+  return updates;
 }
 
 // Mutates config in place, filling in top-level schema defaults for any keys
