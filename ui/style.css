@@ -137,16 +137,23 @@ body,
   color: red;
 }
 
+#loginPrompt,
 #anchorDown,
 #anchorUp,
 #zoneShapeSelect {
   display: none;
 }
 
+#loginPrompt button,
 #anchorDown button,
 #anchorUp button {
   width: 100%;
   box-sizing: border-box;
+}
+
+#loginPrompt button {
+  font-size: 20px;
+  width: 100px;
 }
 
 #zoneShapeSelect select {

@@ -249,6 +249,14 @@ export class SectorZoneOverlay {
     this._endHandle.setStyle({ color });
   }
 
+  // Show/hide the radius/angle drag handles without touching the painted
+  // sector, so not-logged-in users can see the zone but can't edit it.
+  setHandlesVisible(visible) {
+    this._radiusHandle.setVisible(visible);
+    this._startHandle.setVisible(visible);
+    this._endHandle.setVisible(visible);
+  }
+
   getBounds() {
     return this._layer.getBounds();
   }

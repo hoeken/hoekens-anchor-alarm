@@ -19,6 +19,7 @@ const GHOST_HANDLE_ICON = L.divIcon({
 export class ZoneHandle {
   constructor({ map, position, onDragStart, onDrag, onDragEnd, ghost = false }) {
     this._map = map;
+    this._visible = true;
     this._marker = L.marker(position, {
       icon: ghost ? GHOST_HANDLE_ICON : HANDLE_ICON,
       draggable: true,
@@ -34,6 +35,19 @@ export class ZoneHandle {
 
   setPosition(latlng) {
     this._marker.setLatLng(latlng);
+  }
+
+  // Add/remove the marker from the map so anonymous (not-logged-in) users see
+  // the zone shape but get no draggable controls. Removing the layer also kills
+  // its drag interaction, not just its visibility.
+  setVisible(visible) {
+    if (visible === this._visible)
+      return;
+    this._visible = visible;
+    if (visible)
+      this._marker.addTo(this._map);
+    else
+      this._map.removeLayer(this._marker);
   }
 
   setStyle({ color }) {

@@ -126,6 +126,12 @@ export class CircleZoneOverlay {
     this._handle.setStyle({ color });
   }
 
+  // Show/hide the drag handle without touching the painted circle, so
+  // not-logged-in users can see the zone but can't edit it.
+  setHandlesVisible(visible) {
+    this._handle.setVisible(visible);
+  }
+
   getBounds() {
     return this._layer.getBounds();
   }

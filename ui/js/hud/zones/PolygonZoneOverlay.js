@@ -74,6 +74,9 @@ export class PolygonZoneOverlay {
     // Adjacent vertex index the dragged vertex would merge into on release,
     // or null when not armed. Set by _updateMergeArmed during drag.
     this._mergeTargetIndex = null;
+    // Whether the vertex/ghost handles are draggable. False for anonymous
+    // users; reapplied after every _buildHandles since that recreates them.
+    this._handlesVisible = true;
 
     this._layer = L.polygon(this._renderLatLngs(), {
       color: this._color,
@@ -152,6 +155,14 @@ export class PolygonZoneOverlay {
         this._ghostHandles.push(ghost);
       }
     }
+    this._applyHandleVisibility();
+  }
+
+  _applyHandleVisibility() {
+    for (const h of this._vertexHandles)
+      h.setVisible(this._handlesVisible);
+    for (const h of this._ghostHandles)
+      h.setVisible(this._handlesVisible);
   }
 
   _destroyHandles() {
@@ -379,6 +390,15 @@ export class PolygonZoneOverlay {
       h.setStyle({ color });
     for (const h of this._ghostHandles)
       h.setStyle({ color });
+  }
+
+  // Show/hide the vertex + ghost-insertion handles without touching the
+  // painted polygon, so not-logged-in users can see the zone but can't edit it.
+  setHandlesVisible(visible) {
+    if (visible === this._handlesVisible)
+      return;
+    this._handlesVisible = visible;
+    this._applyHandleVisibility();
   }
 
   getBounds() {
