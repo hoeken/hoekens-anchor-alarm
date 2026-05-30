@@ -1,9 +1,5 @@
 # v2.3
 
-- do not save zone if watchzone.contains() fails on current position
-  - dropAnchor()
-  - updateZone()
-  - show an error in the error box using StatusBar.logError
 
 - other ui tweaks to make things crispy
   - same border on panels + buttons?
