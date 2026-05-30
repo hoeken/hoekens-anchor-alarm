@@ -34,7 +34,7 @@ export const StatusBar = L.Control.extend({
 
   // Show a transient error message that clears itself after `timeout` seconds.
   // Stores the text in an internal variable that update() re-asserts each tick.
-  logError: function (error, timeout = 5) {
+  logError: function (error, timeout = 3) {
     this._logError = error ? String(error) : "";
 
     if (this._logErrorTimer) {

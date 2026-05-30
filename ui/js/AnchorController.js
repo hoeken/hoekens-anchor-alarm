@@ -51,7 +51,7 @@ export class AnchorController {
     // authoritatively.
     if (!this._currentPositionInZone(zoneConfig, anchorPos)) {
       this._appState.restoreAnchorState(snapshot);
-      this._statusBar.logError("Boat is outside the watch zone — move the anchor or grow the zone.");
+      this._statusBar.logError("Boat is outside the watch zone.");
       this._onChange();
       this._pending = false;
       return;
