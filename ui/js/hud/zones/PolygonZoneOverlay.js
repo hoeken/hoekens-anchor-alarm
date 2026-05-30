@@ -427,7 +427,13 @@ export function regularPolygonVertices(sides, radius) {
   const n = Math.max(MIN_VERTICES, Math.min(MAX_VERTICES, Math.round(sides)));
   const r = Math.max(1, Number(radius) || 60);
   const out = [];
-  for (let i = 0; i < n; i++)
-    out.push({ bearing: (i * 360) / n, distance: r });
+  let offset = 0;
+  if (sides % 2 == 0)
+    offset = (360 / n) / 2;
+  for (let i = 0; i < n; i++) {
+    let bearing = (i * 360) / n;
+    bearing += offset;
+    out.push({ bearing: bearing, distance: r });
+  }
   return out;
 }
