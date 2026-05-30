@@ -49,7 +49,7 @@ export class PolygonZoneOverlay {
   static defaultConfig({ radius }) {
     return {
       type: "polygon",
-      vertices: regularPolygonVertices(8, radius),
+      vertices: regularPolygonVertices(6, radius),
     };
   }
 
