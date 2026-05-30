@@ -18,6 +18,7 @@
   "files": [
     "src",
     "shared",
+    "screenshots",
     "public"
   ],
   "lint-staged": {
@@ -26,11 +27,23 @@
   },
   "keywords": [
     "signalk-node-server-plugin",
-    "signalk-webapp"
+    "signalk-webapp",
+    "signalk-category-utility",
+    "signalk-category-notifications"
   ],
   "signalk": {
-    "appIcon": "anchoralarm.png",
-    "displayName": "Hoeken's Anchor Alarm"
+    "appIcon": "./public/anchoralarm.png",
+    "displayName": "Hoeken's Anchor Alarm",
+    "screenshots": [
+      "./screenshots/circle.png",
+      "./screenshots/sector.png",
+      "./screenshots/polygon.png",
+      "./screenshots/satellite.png",
+      "./screenshots/config.png"
+    ],
+    "recommends": [
+      "signalk-tides"
+    ]
   },
   "author": {
     "name": "Zach Hoeken",
