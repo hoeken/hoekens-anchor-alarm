@@ -26,8 +26,32 @@ export const StatusBar = L.Control.extend({
     container.style.display = "none";
     this._container = container;
     this._items = new Map();
+    this._logError = "";
+    this._logErrorTimer = null;
 
     return container;
+  },
+
+  // Show a transient error message that clears itself after `timeout` seconds.
+  // Stores the text in an internal variable that update() re-asserts each tick.
+  logError: function (error, timeout = 5) {
+    this._logError = error ? String(error) : "";
+
+    if (this._logErrorTimer) {
+      clearTimeout(this._logErrorTimer);
+      this._logErrorTimer = null;
+    }
+
+    if (this._logError.length > 0) {
+      this.set("log-error", this._logError);
+      this._logErrorTimer = setTimeout(() => {
+        this._logError = "";
+        this._logErrorTimer = null;
+        this.clear("log-error");
+      }, timeout * 1000);
+    }
+    else
+      this.clear("log-error");
   },
 
   set: function (id, text, level = "error") {
@@ -102,6 +126,11 @@ export const StatusBar = L.Control.extend({
     }
     else
       this.set("notice-status");
+
+    this.set(
+      "log-error",
+      this._logError && this._logError.length > 0 ? this._logError : null,
+    );
   },
 
   _render: function () {
