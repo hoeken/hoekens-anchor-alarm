@@ -32,7 +32,7 @@
     "signalk-category-notifications"
   ],
   "signalk": {
-    "appIcon": "./public/anchoralarm.png",
+    "appIcon": "anchoralarm.png",
     "displayName": "Hoeken's Anchor Alarm",
     "screenshots": [
       "./screenshots/circle.png",
