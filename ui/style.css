@@ -48,8 +48,9 @@ body,
   -webkit-appearance: none;
   appearance: none;
   border-radius: 5px;
-  border: 1px solid #888;
-  background-color: #f0f0f0;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  background-clip: padding-box;
+  background-color: white;
   color: black;
   font-size: inherit;
 }
@@ -152,8 +153,9 @@ body,
 }
 
 #loginPrompt button {
-  font-size: 20px;
-  width: 100px;
+  font-size: 18px;
+  width: 80px;
+  height: 30px;
 }
 
 #zoneShapeSelect select {
@@ -164,8 +166,9 @@ body,
   -webkit-appearance: none;
   appearance: none;
   border-radius: 5px;
-  border: 1px solid #888;
-  background-color: #f0f0f0;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  background-clip: padding-box;
+  background-color: white;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='black' d='M0 0l6 8 6-8z'/></svg>");
   background-repeat: no-repeat;
   background-position: right 10px center;
@@ -218,8 +221,9 @@ body,
   -webkit-appearance: none;
   appearance: none;
   border-radius: 5px;
-  border: 1px solid #888;
-  background-color: #f0f0f0;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  background-clip: padding-box;
+  background-color: white;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='black' d='M0 0l6 8 6-8z'/></svg>");
   background-repeat: no-repeat;
   background-position: right 10px center;
