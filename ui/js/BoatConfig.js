@@ -18,10 +18,13 @@ const DEFAULTS = {
   aisShipType: 36,
   mmsi: "",
   heading: 0,
+  cog: null,
+  sog: null,
 };
 
 export class BoatConfig {
   constructor({
+    name,
     loa,
     beam,
     anchorRollerHeight,
@@ -31,7 +34,10 @@ export class BoatConfig {
     aisShipType,
     mmsi,
     heading,
+    cog,
+    sog,
   }) {
+    this.name = name;
     this.loa = loa;
     this.beam = beam;
     this.anchorRollerHeight = anchorRollerHeight;
@@ -41,6 +47,8 @@ export class BoatConfig {
     this.aisShipType = aisShipType;
     this.mmsi = mmsi;
     this.heading = heading;
+    this.cog = cog;
+    this.sog = sog;
   }
 
   static extract(data) {
@@ -78,6 +86,14 @@ export class BoatConfig {
     config.aisShipType =
       SignalKHelper.value(data, "design.aisShipType")?.id ??
       DEFAULTS.aisShipType;
+
+    // Stored in Signal K base units (sog: m/s, cog: rad true). DisplayUnit
+    // handles conversion + formatting (speed → kn, angle → °) at render time.
+    config.sog =
+      SignalKHelper.value(data, "navigation.speedOverGround") ?? DEFAULTS.sog;
+    config.cog =
+      SignalKHelper.value(data, "navigation.courseOverGroundTrue") ??
+      DEFAULTS.cog;
 
     return new BoatConfig(config);
   }

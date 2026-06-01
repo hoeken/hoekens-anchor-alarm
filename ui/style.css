@@ -529,3 +529,17 @@ body,
 .leaflet-bottom {
   bottom: var(--attributionHeight, 0px);
 }
+
+h4.vesselName {
+  font-size: 18px;
+  margin: 0px;
+}
+
+span.mmsi {
+  font-size: 12px;
+  color: #666;
+}
+
+table.vesselData td:nth-child(3) {
+  padding-left: 12px;
+}

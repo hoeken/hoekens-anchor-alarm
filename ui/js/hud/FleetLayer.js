@@ -5,9 +5,10 @@
 // own boat is never auto-removed (its mmsi key never appears in the AIS list).
 
 import simplify from "simplify-js";
-import { distance, point, radiansToDegrees } from "@turf/turf";
+import { bearing, distance, point, radiansToDegrees } from "@turf/turf";
 import { SignalKHelper } from "../SignalKHelper.js";
 import { BoatConfig } from "../BoatConfig.js";
+import { DisplayUnit } from "../DisplayUnit.js";
 
 const POLL_INTERVAL_MS = 5000;
 const DEFAULT_FILTER_RADIUS = 500;
@@ -210,14 +211,22 @@ export class FleetLayer {
       if (dist > filterRadius)
         continue;
 
+      // Bearing in degrees from our position to the vessel, normalized to 0-360.
+      const brng = Math.round(
+        (bearing(
+          point([ownLatLng.lng, ownLatLng.lat]),
+          point([position.longitude, position.latitude]),
+        ) + 360) % 360,
+      );
+
       detected.push(vessel.mmsi);
       const heading = this.deriveVesselHeading(vessel, twa);
       const distanceRounded = Math.round(dist);
 
       if (vessel.mmsi in this.vessels) {
-        this.updateExistingVessel(vessel, position, heading, distanceRounded);
+        this.updateExistingVessel(vessel, position, heading, distanceRounded, brng);
       } else {
-        this.addNewVessel(vessel, position, heading, distanceRounded);
+        this.addNewVessel(vessel, position, heading, distanceRounded, brng);
       }
     }
 
@@ -257,18 +266,24 @@ export class FleetLayer {
     return 0;
   }
 
-  updateExistingVessel(vessel, position, heading, distance) {
+  updateExistingVessel(vessel, position, heading, distance, bearing) {
     const marker = this.vessels[vessel.mmsi];
     marker.setLatLng([position.latitude, position.longitude]);
     marker.setHeading(heading);
-    marker.setPopupContent(`${vessel.name} at ${distance} meters`);
+
+    const config = BoatConfig.extract(vessel);
+    marker.setPopupContent(this.getVesselInfoHTML(config, distance, bearing));
     marker.gpsAntennaMarker.setLatLng([position.latitude, position.longitude]);
 
     this.addPointToTrack(vessel.mmsi, position.latitude, position.longitude);
   }
 
-  addNewVessel(vessel, position, heading, distance) {
+  addNewVessel(vessel, position, heading, distance, bearing) {
     const config = BoatConfig.extract(vessel);
+
+    console.log(config.name);
+    console.log(vessel);
+    console.log(config);
 
     const marker = new L.BoatMarker([position.latitude, position.longitude], {
       beam: config.beam,
@@ -277,7 +292,7 @@ export class FleetLayer {
       heading: heading,
       icon: config.icon,
     });
-    marker.addTo(this.map).bindPopup(`${vessel.name} at ${distance} meters`);
+    marker.addTo(this.map).bindPopup(this.getVesselInfoHTML(config, distance, bearing));
 
     marker.gpsAntennaMarker = L.marker(
       [position.latitude, position.longitude],
@@ -297,6 +312,30 @@ export class FleetLayer {
       );
       this.trackPointCounts[vessel.mmsi] = 1;
     }
+  }
+
+  getVesselInfoHTML(config, distance, bearing) {
+    let distanceUnit = "length";
+    if (distance > 1000)
+      distanceUnit = "distance";
+
+    return `
+      <h4 class="vesselName">${config.name} <span class="mmsi">${config.mmsi}</span></h4>
+      <table class="vesselData">
+        <tr>
+          <td><b>Length:</b></td><td>${DisplayUnit.formatValue(config.loa, "length")}</td>
+          <td><b>Beam:</b></td><td>${DisplayUnit.formatValue(config.beam, "length")}</td>
+        </tr>
+        <tr>
+          <td><b>Distance:</b></td><td>${DisplayUnit.formatValue(distance, distanceUnit)}</td>
+          <td><b>Bearing:</b></td><td>${bearing}°</td>
+        </tr>
+        <tr>
+          <td><b>SOG:</b></td><td>${DisplayUnit.formatValue(config.sog, "speed")}</td>
+          <td><b>COG:</b></td><td>${DisplayUnit.formatValue(config.cog, "angle")}</td>
+        </tr>
+      </table>
+    `;
   }
 
   // Bulk-load entry: pre-simplifies the input so a long history (e.g. a 24h
