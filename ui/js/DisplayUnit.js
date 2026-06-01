@@ -268,7 +268,12 @@ export class DisplayUnit {
       text = String(converted);
     }
 
-    return symbol ? `${text} ${symbol}` : text;
+    if (symbol === "°")
+      return `${text}${symbol}`;
+    else if (symbol)
+      return `${text} ${symbol}`;
+    else
+      return text;
   }
 }
 

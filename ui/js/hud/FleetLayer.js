@@ -282,10 +282,6 @@ export class FleetLayer {
   addNewVessel(vessel, position, heading, distance, bearing) {
     const config = BoatConfig.extract(vessel);
 
-    console.log(config.name);
-    console.log(vessel);
-    console.log(config);
-
     const marker = new L.BoatMarker([position.latitude, position.longitude], {
       beam: config.beam,
       loa: config.loa,
@@ -325,16 +321,16 @@ export class FleetLayer {
       <h4 class="vesselName">${config.name} <span class="mmsi">${config.mmsi}</span></h4>
       <table class="vesselData">
         <tr>
-          <td><b>Length:</b></td><td>${DisplayUnit.formatValue(config.loa, "length")}</td>
-          <td><b>Beam:</b></td><td>${DisplayUnit.formatValue(config.beam, "length")}</td>
+          <td><b>Length:</b></td><td align="right">${DisplayUnit.formatValue(config.loa, "length")}</td>
+          <td><b>Beam:</b></td><td align="right">${DisplayUnit.formatValue(config.beam, "length")}</td>
         </tr>
         <tr>
-          <td><b>Distance:</b></td><td>${DisplayUnit.formatValue(distance, distanceUnit)}</td>
-          <td><b>Bearing:</b></td><td>${bearing}°</td>
+          <td><b>Distance:</b></td><td align="right">${DisplayUnit.formatValue(distance, distanceUnit)}</td>
+          <td><b>Bearing:</b></td><td align="right">${bearing}°</td>
         </tr>
         <tr>
-          <td><b>SOG:</b></td><td>${DisplayUnit.formatValue(config.sog, "speed")}</td>
-          <td><b>COG:</b></td><td>${DisplayUnit.formatValue(config.cog, "angle")}</td>
+          <td><b>SOG:</b></td><td align="right">${DisplayUnit.formatValue(config.sog, "speed")}</td>
+          <td><b>COG:</b></td><td align="right">${DisplayUnit.formatValue(config.cog, "angle", 0)}</td>
         </tr>
       </table>
     `;
