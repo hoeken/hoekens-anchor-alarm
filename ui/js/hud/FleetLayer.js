@@ -318,7 +318,7 @@ export class FleetLayer {
       distanceUnit = "distance";
 
     return `
-      <h4 class="vesselName">${config.name} <span class="mmsi">${config.mmsi}</span></h4>
+      <h4 class="vesselName"><span class="vesselNameText">${config.name}</span><span class="mmsi"><span class="mmsiLabel">MMSI</span><span class="mmsiNum">${config.mmsi}</span></span></h4>
       <table class="vesselData">
         <tr>
           <td><b>Length:</b></td><td align="right">${DisplayUnit.formatValue(config.loa, "length")}</td>
