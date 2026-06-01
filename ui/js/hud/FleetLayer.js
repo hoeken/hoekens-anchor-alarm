@@ -273,7 +273,7 @@ export class FleetLayer {
     marker.setHeading(heading);
 
     const config = BoatConfig.extract(vessel);
-    marker.setPopupContent(this.getVesselInfoHTML(config, distance, bearing));
+    this.setVesselInfo(marker.vesselInfo, config, distance, bearing);
     marker.gpsAntennaMarker.setLatLng([position.latitude, position.longitude]);
 
     this.addPointToTrack(vessel.mmsi, position.latitude, position.longitude);
@@ -289,7 +289,8 @@ export class FleetLayer {
       heading: heading,
       icon: config.icon,
     });
-    marker.addTo(this.map).bindPopup(this.getVesselInfoHTML(config, distance, bearing));
+    marker.vesselInfo = this.buildVesselInfo(config, distance, bearing);
+    marker.addTo(this.map).bindPopup(marker.vesselInfo);
 
     marker.gpsAntennaMarker = L.marker(
       [position.latitude, position.longitude],
@@ -312,28 +313,48 @@ export class FleetLayer {
     }
   }
 
-  getVesselInfoHTML(config, distance, bearing) {
-    let distanceUnit = "length";
-    if (distance > 1000)
-      distanceUnit = "distance";
-
-    return `
-      <h4 class="vesselName"><span class="vesselNameText">${config.name}</span><span class="mmsi"><span class="mmsiLabel">MMSI</span><span class="mmsiNum">${config.mmsi}</span></span></h4>
+  // Build the popup as a live DOM element. The element is kept on the marker
+  // so later syncs can update each field in place via setVesselInfo instead of
+  // replacing the whole popup body.
+  buildVesselInfo(config, distance, bearing) {
+    const el = document.createElement("div");
+    el.innerHTML = `
+      <h4 class="vesselName"><span class="vesselNameText"></span><span class="mmsi"><span class="mmsiLabel">MMSI</span><span class="mmsiNum"></span></span></h4>
       <table class="vesselData">
         <tr>
-          <td><b>Length:</b></td><td align="right">${DisplayUnit.formatValue(config.loa, "length")}</td>
-          <td><b>Beam:</b></td><td align="right">${DisplayUnit.formatValue(config.beam, "length")}</td>
+          <td><b>Length:</b></td><td align="right" class="field-loa"></td>
+          <td><b>Beam:</b></td><td align="right" class="field-beam"></td>
         </tr>
         <tr>
-          <td><b>Distance:</b></td><td align="right">${DisplayUnit.formatValue(distance, distanceUnit)}</td>
-          <td><b>Bearing:</b></td><td align="right">${bearing}°</td>
+          <td><b>Distance:</b></td><td align="right" class="field-distance"></td>
+          <td><b>Bearing:</b></td><td align="right" class="field-bearing"></td>
         </tr>
         <tr>
-          <td><b>SOG:</b></td><td align="right">${DisplayUnit.formatValue(config.sog, "speed")}</td>
-          <td><b>COG:</b></td><td align="right">${DisplayUnit.formatValue(config.cog, "angle", 0)}</td>
+          <td><b>SOG:</b></td><td align="right" class="field-sog"></td>
+          <td><b>COG:</b></td><td align="right" class="field-cog"></td>
         </tr>
       </table>
     `;
+    this.setVesselInfo(el, config, distance, bearing);
+    return el;
+  }
+
+  setVesselInfo(el, config, distance, bearing) {
+    const distanceUnit = distance > 1000 ? "distance" : "length";
+    // Only rewrite a field when its value actually changed.
+    const setText = (sel, value) => {
+      const node = el.querySelector(sel);
+      if (node.textContent !== value)
+        node.textContent = value;
+    };
+    setText(".vesselNameText", config.name);
+    setText(".mmsiNum", String(config.mmsi));
+    setText(".field-loa", DisplayUnit.formatValue(config.loa, "length"));
+    setText(".field-beam", DisplayUnit.formatValue(config.beam, "length"));
+    setText(".field-distance", DisplayUnit.formatValue(distance, distanceUnit));
+    setText(".field-bearing", `${bearing}°`);
+    setText(".field-sog", DisplayUnit.formatValue(config.sog, "speed"));
+    setText(".field-cog", DisplayUnit.formatValue(config.cog, "angle", 0));
   }
 
   // Bulk-load entry: pre-simplifies the input so a long history (e.g. a 24h
