@@ -114,6 +114,7 @@ export class FleetLayer {
 
     this.ownAntenna = L.marker(coords, {
       icon: GPS_ANTENNA_ICON,
+      interactive: false,
     }).addTo(this.map);
   }
 
@@ -298,6 +299,7 @@ export class FleetLayer {
       [position.latitude, position.longitude],
       {
         icon: GPS_ANTENNA_ICON,
+        interactive: false,
       },
     ).addTo(this.map);
 
