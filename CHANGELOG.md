@@ -1,3 +1,18 @@
+# v2.3.1
+
+## New features
+
+- **Richer fleet vessel popups** — clicking an AIS vessel now opens a detailed info box showing name and MMSI in the title plus a two-column table of length, beam, distance, bearing, SOG, and COG (previously just "<name> at <N> meters")
+- Vessel SOG and COG are now read from Signal K (`navigation.speedOverGround` / `navigation.courseOverGroundTrue`) and rendered with proper unit conversion and formatting
+
+## Reliability & UX
+
+- Vessel info boxes now update each field in place on every poll instead of rebuilding the whole popup body, so open popups refresh without flicker
+- The GPS antenna markers (own boat and fleet) no longer intercept clicks, so clicks reach the vessel markers underneath
+- Angle values now render without a space before the degree symbol (e.g. `120°` instead of `120 °`)
+- Bearing columns and other numeric fields in the vessel info table are right-aligned
+- Cleaned up debug logging
+
 # v2.3
 
 ## New features
