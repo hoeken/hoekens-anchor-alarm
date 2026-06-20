@@ -2,31 +2,38 @@
 
 <a href="docs/screenshots/satellite.jpg"><img src="docs/screenshots/satellite.jpg" alt="Hoeken's Anchor Alarm on the satellite basemap" width="50%" align="right"/></a>
 
-A simple web UI anchor alarm for [SignalK](https://signalk.org/), built for setting from your phone or tablet.  Handy for setting the anchor alarm from the helm, or a quick wind and position check from bed when the wind picks up at 2am.
+A simple web UI anchor alarm for [SignalK](https://signalk.org/), built for setting from your phone, tablet or computer.  Handy for setting the anchor alarm from the helm, or a quick check from bed when the wind picks up at 2am.
 
 This started life as a fork of the venerable [signalk-anchoralarm-plugin](https://github.com/sbender9/signalk-anchoralarm-plugin) by Scott Bender, but has since grown its own personality (and a fair bit of new code). The goal is a focused web UI with my own style and a few opinionated features, like automatically cancelling the alarm when your engines fire up. If you'd rather drive everything from an external app or API, the original plugin might be a better fit for you.
 
 ## Features
 
-**🗺️ Watch zones that aren't just circles**
+### 🗺️ Watch zones that aren't just circles
+
 The classic circle is still here (now resizable by dragging a handle on the rim), but you can also switch to a **sector** (radius plus a draggable arc, handy when your safe swing is only astern), or a free-form **polygon** with draggable vertices. Drag an edge midpoint to add a point, drag a vertex onto its neighbor to remove it. Self-intersection is prevented for you, so you can't tie your watch zone in a knot.
 
-**⚓ Physically accurate boat icons**
+### ⚓ Physically accurate boat icons
+
 Give it your beam, LOA, and GPS antenna position and the boat icon is drawn to your boat's *true* size, rotating around the antenna location. At high zoom this is genuinely useful: pre-pick your spot on satellite imagery, line your bow up over the anchor icon, and drop. The alarm triggers on your GPS antenna position leaving the zone, so set your offset and it all lines up.
 
-**📐 Scope calculator**
+### 📐 Scope calculator
+
 When the anchor's up, a panel shows what your scope would be at 3:1, 4:1, 5:1, and 7:1, based on current depth, your bow height above water, and estimated tidal rise. Install [signalk-tides](https://github.com/bkeepers/signalk-tides) for the tide data. It'll also flag rows in red if the required rode exceeds the chain you actually have aboard (set `totalAnchorChainLength` in the config).
 
-**🔧 Engine override**
+### 🔧 Engine override
+
 I always forget to switch the alarm off before motoring away, so now I don't have to. If you've got engine data in SignalK (`propulsion.*.rpm` or `propulsion.*.state`), starting your engines silences an *active* alarm. It only kicks in when you're already outside the zone (motoring away or firing up the motor to reposition while dragging), so it just quiets the alarm you already know about. Anchor watch keeps running, and as long as you're inside the circle nothing changes.
 
-**🛰️ Tracks & fleet**
+### 🛰️ Tracks & fleet
+
 Historical tracks are color-coded (green for fresh, fading to red as they age) via the [@signalk/tracks-plugin](https://github.com/SignalK/tracks). Other AIS vessels show up too, with their own tracks and accurately-typed icons. Click a vessel for a detailed popup: name, MMSI, length, beam, distance, bearing, SOG, and COG.
 
-**📊 Heads-up panels**
+### 📊 Heads-up panels
+
 Compact HUD panels for wind (with a wind barb on the map), depth, tide state (plus the next two tides), and anchor status. They show and hide themselves based on what data is actually available, so you're never staring at a panel full of dashes.
 
-**⚙️ In-map settings**
+### ⚙️ In-map settings
+
 Logged-in users can tweak the UI without leaving for the plugin config page. A gear button opens a settings dialog (panel toggles, basemap, default zone shape, fleet radius, connection type) and most changes apply live.
 
 ## Usage
