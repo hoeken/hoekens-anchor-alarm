@@ -13,7 +13,8 @@
     "format:check": "eslint . && prettier --check .",
     "prepare": "husky || true",
     "build:ui": "vite build",
-    "prepack": "npm run build:ui"
+    "prepack": "npm run build:ui",
+    "prepublishOnly": "npm test"
   },
   "files": [
     "src",
