@@ -17,12 +17,12 @@ const SIMPLIFY_TOLERANCE_OTHERS = 0.00001;
 const SIMPLIFY_THRESHOLD_SELF = 10000;
 const SIMPLIFY_THRESHOLD_OTHERS = 1000;
 
-const GPS_ANTENNA_ICON = L.icon({
-  iconUrl: "icons/antenna.svg",
-  iconSize: [25, 25],
-  iconAnchor: [13, 25],
+const GPS_ANTENNA_ICON = L.divIcon({
+  className: "gps-antenna-dot",
+  html: '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="#000" viewBox="0 0 16 16" style="display:block"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/></svg>',
+  iconSize: [12, 12],
+  iconAnchor: [6, 6],
 });
-
 export class FleetLayer {
   constructor({ app, map, ownMmsi, filterRadius }) {
     this.app = app;
