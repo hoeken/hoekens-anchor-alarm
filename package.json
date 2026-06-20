@@ -18,7 +18,7 @@
   "files": [
     "src",
     "shared",
-    "screenshots",
+    "docs/screenshots",
     "public"
   ],
   "lint-staged": {
@@ -35,14 +35,15 @@
     "appIcon": "anchoralarm.png",
     "displayName": "Hoeken's Anchor Alarm",
     "screenshots": [
-      "./screenshots/circle.png",
-      "./screenshots/sector.png",
-      "./screenshots/polygon.png",
-      "./screenshots/satellite.png",
-      "./screenshots/config.png"
+      "./docs/screenshots/circle.jpg",
+      "./docs/screenshots/sector.jpg",
+      "./docs/screenshots/polygon.jpg",
+      "./docs/screenshots/satellite.jpg",
+      "./docs/screenshots/config.jpg"
     ],
     "recommends": [
-      "signalk-tides"
+      "signalk-tides",
+      "signalk-autostate"
     ]
   },
   "author": {

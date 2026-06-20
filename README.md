@@ -1,6 +1,6 @@
 # hoekens-anchor-alarm
 
-<a href="/screenshot.png"><img src="/screenshot.png" alt="drawing" width="50%" align="right"/></a>
+<a href="docs/screenshots/screenshot.png"><img src="docs/screenshots/screenshot.png" alt="drawing" width="50%" align="right"/></a>
 
 This is a fork of the venerable [signalk-anchoralarm-plugin](https://github.com/sbender9/signalk-anchoralarm-plugin) by Scott Bender.
 
@@ -34,7 +34,7 @@ This plugin is intended to be used through the web interface with a phone or com
 
 The way I use this app is to anchor the boat first, then once I'm settled I will use the webapp to set the anchor alarm. This is where its good to have a high resolution on the tracks, as you can usually see exactly where you dropped the hook. Make sure to set your radius a bit bigger to avoid false alarms.
 
-With v1.3 and the more accurate icons, it is now easy to pre-select your anchor location with the satellite imagery, circle the radius of the anchor alarm to check the depth is okay, and then use the app to get your bow exactly in the center of the alarm circle for a perfect drop.
+It is also very handy to use the circle mode to choose your desired anchor location and then navigate your boat icon until the bow is over the anchor icon and drop there.  You can get really accurate that way.  Since v1.3 the icons are physically accurate at high zooms.  Make sure you set your gps antenna offset!
 
 If you have engine data in SignalK (`propulsion.*.rpm` or `propulsion.*.state`) then you can enable the engine check functionality. Then, when you leave the anchorage under engine power, it will automatically end the anchor watch. Additionally, if you are dragging anchor and you start your engines to reposition, it will also disable the anchor alarm. When your anchor is dragging, it can sometimes be hectic. There's no reason to bombard you with alarms when you are aware of it and getting it sorted.
 
