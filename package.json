@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "release": "git tag -d v$npm_package_version; git tag v$npm_package_version && git push --tags && git push && npm publish",
+    "release": "git tag -d v$npm_package_version; git tag v$npm_package_version && git push && git push origin v$npm_package_version",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "format": "eslint --fix . && prettier --write .",
@@ -19,7 +19,8 @@
     "src",
     "shared",
     "docs/screenshots",
-    "public"
+    "public",
+    "CHANGELOG.md"
   ],
   "lint-staged": {
     "*.js": "eslint --fix",
