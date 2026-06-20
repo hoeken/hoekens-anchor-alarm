@@ -2,7 +2,9 @@
 
 * add unit tests to this project.
   * [x] shared/watch-zones (alarm geometry) — `npm test`
-  * [ ] src/ signalk plugin lifecycle + schema
+  * [x] src/utils (engine-override + freshness), src/schema (config migrate/coerce/defaults)
+  * [x] ui/js GeoMath (tide estimate), DisplayUnit (unit conversion/formatting)
+  * [ ] src/ signalk plugin lifecycle (index.js, signalk-bus, http-routes, watchdog) — needs a mock app
 
 # LONG TERM
 
