@@ -5,7 +5,7 @@
   "main": "src/index.cjs",
   "type": "module",
   "scripts": {
-    "test": "echo \"no tests — Signal K plugin CI validates lifecycle and schema\" && exit 0",
+    "test": "node --test",
     "release": "git tag -d v$npm_package_version; git tag v$npm_package_version && git push --tags && git push && npm publish",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",

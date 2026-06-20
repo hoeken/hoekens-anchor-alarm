@@ -1,6 +1,8 @@
 # v2.4
 
-* add unit tests for signalk library.
+* add unit tests to this project.
+  * [x] shared/watch-zones (alarm geometry) — `npm test`
+  * [ ] src/ signalk plugin lifecycle + schema
 
 # LONG TERM
 
