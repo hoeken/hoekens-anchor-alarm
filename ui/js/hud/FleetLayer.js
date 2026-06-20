@@ -29,6 +29,9 @@ const DIM_PALETTE = { 0.0: "#bbb", 1.0: "#bbb" };
 const TRACK_WEIGHT = 1;
 const SELECTED_WEIGHT = 2;
 const DIM_WEIGHT = 1;
+// The drawn track is only 1px wide, giving a ~0.5px native hit target. Widen
+// the hover/hit tolerance so the historical path is actually hoverable.
+const TRACK_HOVER_TOLERANCE = 8;
 
 const GPS_ANTENNA_ICON = L.divIcon({
   className: "gps-antenna-dot",
@@ -51,6 +54,7 @@ export class FleetLayer {
     this._pollInFlight = false;
     this.filterRadius = filterRadius ?? DEFAULT_FILTER_RADIUS;
     this.selectedMmsi = null; // mmsi of the vessel whose popup is open, or null
+    this.hoveredMmsi = null; // mmsi of the vessel/track under the cursor, or null
 
     this.setOwnVessel(this.app.state.getPosition(), this.app.state.boatConfig);
 
@@ -150,6 +154,10 @@ export class FleetLayer {
       heading: boatConfig.heading,
       icon: boatConfig.icon,
     }).addTo(this.map);
+
+    // Hovering our own boat highlights its track, mirroring AIS vessels.
+    this.ownVessel.on("mouseover", () => this.setHoveredTrack(this.ownMmsi));
+    this.ownVessel.on("mouseout", () => this.setHoveredTrack(null));
 
     this.ownAntenna = L.marker(coords, {
       icon: GPS_ANTENNA_ICON,
@@ -334,6 +342,10 @@ export class FleetLayer {
     marker.vesselInfo = this.buildVesselInfo(config, distance, bearing);
     marker.addTo(this.map).bindPopup(marker.vesselInfo);
 
+    // Hovering the boat icon highlights its track, same style as selection.
+    marker.on("mouseover", () => this.setHoveredTrack(marker.vesselMmsi));
+    marker.on("mouseout", () => this.setHoveredTrack(null));
+
     // Clickable name label above the icon. The permanent tooltip auto-tracks
     // the marker on setLatLng; an explicit handler opens the same popup as the
     // marker since tooltip clicks don't bubble to the marker.
@@ -345,10 +357,16 @@ export class FleetLayer {
       className: "boat-name-label",
     });
     marker.on("tooltipopen", (e) => {
-      e.tooltip.getElement().addEventListener("click", (ev) => {
+      const el = e.tooltip.getElement();
+      el.addEventListener("click", (ev) => {
         ev.stopPropagation();
         marker.openPopup();
       });
+      // Hovering the name label highlights the track, same as the icon.
+      el.addEventListener("mouseenter", () =>
+        this.setHoveredTrack(marker.vesselMmsi),
+      );
+      el.addEventListener("mouseleave", () => this.setHoveredTrack(null));
     });
 
     marker.gpsAntennaMarker = L.marker(
@@ -421,7 +439,7 @@ export class FleetLayer {
   createTrack(points, max, mmsi) {
     const simplified = simplifyHotlinePoints(points, this.getSimplifyTolerance(mmsi));
     const style = this.trackStyleFor(mmsi);
-    return L.hotline(simplified, {
+    const track = L.hotline(simplified, {
       color: "red",
       weight: style.weight,
       min: 0,
@@ -430,22 +448,35 @@ export class FleetLayer {
       outlineWidth: 0,
       text: "",
     }).addTo(this.map);
+
+    // The 1px line gives a near-zero native hit target; widen it so the path
+    // is hoverable. Hovering it highlights this track, same style as selection.
+    track._clickTolerance = () => TRACK_HOVER_TOLERANCE;
+    track.on("mouseover", () => this.setHoveredTrack(mmsi));
+    track.on("mouseout", () => this.setHoveredTrack(null));
+    return track;
   }
 
-  // Palette/weight a track should use given the current selection. A boat is
-  // selected via its open popup; mmsi keys are strings throughout.
+  // The mmsi whose track is currently highlighted. A pinned selection (open
+  // popup) wins over a transient hover.
+  highlightedMmsi() {
+    return this.selectedMmsi || this.hoveredMmsi;
+  }
+
+  // Palette/weight a track should use given the current highlight. A boat is
+  // highlighted via its open popup or by hover; mmsi keys are strings throughout.
   trackStyleFor(mmsi) {
-    if (!this.selectedMmsi)
+    const highlighted = this.highlightedMmsi();
+    if (!highlighted)
       return { palette: TRACK_PALETTE, weight: TRACK_WEIGHT };
-    if (String(mmsi) === this.selectedMmsi)
+    if (String(mmsi) === highlighted)
       return { palette: TRACK_PALETTE, weight: SELECTED_WEIGHT };
     return { palette: DIM_PALETTE, weight: DIM_WEIGHT };
   }
 
-  // Highlight one vessel's track and dim the others. Pass null to restore all.
-  // All hotlines share one canvas renderer, so the per-frame redraw coalesces.
-  setSelectedTrack(mmsi) {
-    this.selectedMmsi = mmsi ? String(mmsi) : null;
+  // Restyle every track for the current highlight and redraw. All hotlines
+  // share one canvas renderer, so the per-frame redraw coalesces.
+  refreshTrackStyles() {
     for (let key in this.vesselTracks) {
       const track = this.vesselTracks[key];
       const style = this.trackStyleFor(key);
@@ -453,6 +484,24 @@ export class FleetLayer {
       track.options.weight = style.weight;
       track.redraw();
     }
+  }
+
+  // Pin one vessel's track highlight (popup open). Pass null to unpin.
+  setSelectedTrack(mmsi) {
+    this.selectedMmsi = mmsi ? String(mmsi) : null;
+    this.refreshTrackStyles();
+  }
+
+  // Transiently highlight one vessel's track on hover. Pass null to clear.
+  setHoveredTrack(mmsi) {
+    const next = mmsi ? String(mmsi) : null;
+    if (next === this.hoveredMmsi)
+      return;
+    this.hoveredMmsi = next;
+    // A pinned selection takes precedence, so hover can't change what's drawn.
+    if (this.selectedMmsi)
+      return;
+    this.refreshTrackStyles();
   }
 
   getSimplifyTolerance(mmsi) {
