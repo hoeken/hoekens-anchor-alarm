@@ -56,7 +56,6 @@
     "node": ">=20.19"
   },
   "dependencies": {
-    "@signalk/client": "^2.4.0",
     "@signalk/tracks-plugin": "^2.0.2",
     "@turf/turf": "^7.3.5",
     "d3": "^7.9.0",

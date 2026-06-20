@@ -3,7 +3,7 @@
 // HudPanels (Info/Scope/Wind/Home), and hands the anchor state machine to
 // AnchorController.
 
-import { Client } from "@signalk/client";
+import { SignalKStream } from "./SignalKStream.js";
 import { SignalKHelper } from "./SignalKHelper.js";
 import { AppState } from "./AppState.js";
 import { FleetLayer } from "./hud/FleetLayer.js";
@@ -60,15 +60,13 @@ class AnchorAlarm {
   }
 
   setupWebsockets() {
-    this.client = new Client({
+    this.client = new SignalKStream({
       hostname: window.location.hostname,
       port:
         Number(window.location.port) ||
         (window.location.protocol === "https:" ? 443 : 80),
       useTLS: window.location.protocol === "https:",
       reconnect: true,
-      autoConnect: false,
-      notifications: true,
     });
     this.client.on("delta", (delta) => this.handleDeltas(delta));
     this.client.on("connect", () => this.state.websocketSubscribe(this.client));
