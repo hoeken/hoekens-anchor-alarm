@@ -396,7 +396,7 @@ export class FleetLayer {
   buildVesselInfo(config, distance, bearing) {
     const el = document.createElement("div");
     el.innerHTML = `
-      <h4 class="vesselName"><span class="vesselNameText"></span><span class="mmsi"><span class="mmsiLabel">MMSI</span><span class="mmsiNum"></span></span></h4>
+      <h4 class="vesselName"><span class="vesselNameText"></span><span class="mmsi"><span class="mmsiLabel">MMSI</span><a class="mmsiNum" target="_blank" rel="noopener"></a></span></h4>
       <table class="vesselData">
         <tr>
           <td><b>Length:</b></td><td align="right" class="field-loa"></td>
@@ -426,6 +426,10 @@ export class FleetLayer {
     };
     setText(".vesselNameText", config.name);
     setText(".mmsiNum", String(config.mmsi));
+    const mmsiLink = el.querySelector(".mmsiNum");
+    const mmsiHref = `https://www.vesselfinder.com/?mmsi=${config.mmsi}`;
+    if (mmsiLink.getAttribute("href") !== mmsiHref)
+      mmsiLink.setAttribute("href", mmsiHref);
     setText(".field-loa", DisplayUnit.formatValue(config.loa, "length"));
     setText(".field-beam", DisplayUnit.formatValue(config.beam, "length"));
     setText(".field-distance", DisplayUnit.formatValue(distance, distanceUnit));
