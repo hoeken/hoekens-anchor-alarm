@@ -20,6 +20,16 @@ const SIMPLIFY_TOLERANCE_OTHERS = 0.00001;
 const SIMPLIFY_THRESHOLD_SELF = 10000;
 const SIMPLIFY_THRESHOLD_OTHERS = 1000;
 
+// Track styling. Hotlines render to a single shared canvas (the plugin's
+// default renderer is one instance, see leaflet.hotline.js), so there are no
+// per-track DOM nodes to style with CSS — dimming/highlighting is done by
+// swapping each hotline's palette/weight and redrawing.
+const TRACK_PALETTE = { 0.0: "red", 0.5: "yellow", 1.0: "green" };
+const DIM_PALETTE = { 0.0: "#bbb", 1.0: "#bbb" };
+const TRACK_WEIGHT = 1;
+const SELECTED_WEIGHT = 2;
+const DIM_WEIGHT = 1;
+
 const GPS_ANTENNA_ICON = L.divIcon({
   className: "gps-antenna-dot",
   html: '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="#000" viewBox="0 0 16 16" style="display:block"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/></svg>',
@@ -40,8 +50,22 @@ export class FleetLayer {
     this.fleetTimer = null;
     this._pollInFlight = false;
     this.filterRadius = filterRadius ?? DEFAULT_FILTER_RADIUS;
+    this.selectedMmsi = null; // mmsi of the vessel whose popup is open, or null
 
     this.setOwnVessel(this.app.state.getPosition(), this.app.state.boatConfig);
+
+    // A vessel is "selected" while its info popup is open. Highlight that
+    // boat's track and dim the rest; restore everything when it closes.
+    this.map.on("popupopen", (e) => {
+      const mmsi = e.popup?._source?.vesselMmsi;
+      if (mmsi)
+        this.setSelectedTrack(mmsi);
+    });
+    this.map.on("popupclose", (e) => {
+      const mmsi = e.popup?._source?.vesselMmsi;
+      if (mmsi && mmsi === this.selectedMmsi)
+        this.setSelectedTrack(null);
+    });
 
     // Toggle name-label visibility on zoom. Class lives on the map container so
     // a single CSS rule hides every label at once.
@@ -306,6 +330,7 @@ export class FleetLayer {
       heading: heading,
       icon: config.icon,
     });
+    marker.vesselMmsi = String(vessel.mmsi);
     marker.vesselInfo = this.buildVesselInfo(config, distance, bearing);
     marker.addTo(this.map).bindPopup(marker.vesselInfo);
 
@@ -395,15 +420,39 @@ export class FleetLayer {
   // own-boat dwell with thousands of jitter samples) doesn't get drawn raw.
   createTrack(points, max, mmsi) {
     const simplified = simplifyHotlinePoints(points, this.getSimplifyTolerance(mmsi));
+    const style = this.trackStyleFor(mmsi);
     return L.hotline(simplified, {
       color: "red",
-      weight: 1,
+      weight: style.weight,
       min: 0,
       max: max,
-      palette: { 0.0: "red", 0.5: "yellow", 1.0: "green" },
+      palette: style.palette,
       outlineWidth: 0,
       text: "",
     }).addTo(this.map);
+  }
+
+  // Palette/weight a track should use given the current selection. A boat is
+  // selected via its open popup; mmsi keys are strings throughout.
+  trackStyleFor(mmsi) {
+    if (!this.selectedMmsi)
+      return { palette: TRACK_PALETTE, weight: TRACK_WEIGHT };
+    if (String(mmsi) === this.selectedMmsi)
+      return { palette: TRACK_PALETTE, weight: SELECTED_WEIGHT };
+    return { palette: DIM_PALETTE, weight: DIM_WEIGHT };
+  }
+
+  // Highlight one vessel's track and dim the others. Pass null to restore all.
+  // All hotlines share one canvas renderer, so the per-frame redraw coalesces.
+  setSelectedTrack(mmsi) {
+    this.selectedMmsi = mmsi ? String(mmsi) : null;
+    for (let key in this.vesselTracks) {
+      const track = this.vesselTracks[key];
+      const style = this.trackStyleFor(key);
+      track.options.palette = style.palette;
+      track.options.weight = style.weight;
+      track.redraw();
+    }
   }
 
   getSimplifyTolerance(mmsi) {

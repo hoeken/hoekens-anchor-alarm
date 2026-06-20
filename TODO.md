@@ -1,6 +1,6 @@
 # v2.4
 
-* when boat is selected, highlight track history and dim other boats' track history
+* add unit tests for signalk library.
 
 # LONG TERM
 
