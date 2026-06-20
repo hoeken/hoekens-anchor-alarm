@@ -43,7 +43,8 @@
     ],
     "recommends": [
       "signalk-tides",
-      "signalk-autostate"
+      "signalk-autostate",
+      "@signalk/tracks-plugin"
     ]
   },
   "author": {
