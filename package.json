@@ -11,7 +11,7 @@
     "lint:fix": "eslint --fix .",
     "format": "eslint --fix . && prettier --write .",
     "format:check": "eslint . && prettier --check .",
-    "postinstall": "node -e \"try{if(!process.env.CI&&require('fs').existsSync('.git'))require('husky')()}catch(e){}\"",
+    "prepare": "husky || true",
     "build:ui": "vite build",
     "prepack": "npm run build:ui"
   },
