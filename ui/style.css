@@ -555,3 +555,30 @@ span.mmsiLabel {
 table.vesselData td:nth-child(3) {
   padding-left: 12px;
 }
+
+/* Boat name label above each vessel marker. Strip the default tooltip box and
+   arrow, then use a white halo so the text stays legible over any map tile. */
+.boat-name-label.leaflet-tooltip {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  color: #000;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  text-shadow:
+    0 0 3px #fff,
+    0 0 3px #fff,
+    0 0 3px #fff,
+    0 0 2px #fff;
+}
+
+.boat-name-label.leaflet-tooltip-top::before {
+  display: none;
+}
+
+.hide-boat-labels .boat-name-label {
+  display: none;
+}

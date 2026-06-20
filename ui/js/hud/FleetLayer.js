@@ -12,6 +12,9 @@ import { DisplayUnit } from "../DisplayUnit.js";
 
 const POLL_INTERVAL_MS = 5000;
 const DEFAULT_FILTER_RADIUS = 500;
+// Name labels only show once boats are zoomed in enough to be visually
+// distinct; below this they'd just clutter the map.
+const LABEL_MIN_ZOOM = 16;
 const SIMPLIFY_TOLERANCE_SELF = 0.000002;
 const SIMPLIFY_TOLERANCE_OTHERS = 0.00001;
 const SIMPLIFY_THRESHOLD_SELF = 10000;
@@ -40,7 +43,19 @@ export class FleetLayer {
 
     this.setOwnVessel(this.app.state.getPosition(), this.app.state.boatConfig);
 
+    // Toggle name-label visibility on zoom. Class lives on the map container so
+    // a single CSS rule hides every label at once.
+    this.map.on("zoomend", () => this.updateLabelVisibility());
+    this.updateLabelVisibility();
+
     this.loadInitialData();
+  }
+
+  updateLabelVisibility() {
+    const show = this.map.getZoom() >= LABEL_MIN_ZOOM;
+    this.map
+      .getContainer()
+      .classList.toggle("hide-boat-labels", !show);
   }
 
   loadInitialData() {
@@ -274,6 +289,8 @@ export class FleetLayer {
 
     const config = BoatConfig.extract(vessel);
     this.setVesselInfo(marker.vesselInfo, config, distance, bearing);
+    if (marker.getTooltip()?.getContent() !== config.name)
+      marker.setTooltipContent(config.name);
     marker.gpsAntennaMarker.setLatLng([position.latitude, position.longitude]);
 
     this.addPointToTrack(vessel.mmsi, position.latitude, position.longitude);
@@ -291,6 +308,23 @@ export class FleetLayer {
     });
     marker.vesselInfo = this.buildVesselInfo(config, distance, bearing);
     marker.addTo(this.map).bindPopup(marker.vesselInfo);
+
+    // Clickable name label above the icon. The permanent tooltip auto-tracks
+    // the marker on setLatLng; an explicit handler opens the same popup as the
+    // marker since tooltip clicks don't bubble to the marker.
+    marker.bindTooltip(config.name, {
+      permanent: true,
+      direction: "top",
+      offset: [0, -12],
+      interactive: true,
+      className: "boat-name-label",
+    });
+    marker.on("tooltipopen", (e) => {
+      e.tooltip.getElement().addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        marker.openPopup();
+      });
+    });
 
     marker.gpsAntennaMarker = L.marker(
       [position.latitude, position.longitude],
