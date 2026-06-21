@@ -37,11 +37,12 @@
     "appIcon": "anchoralarm.png",
     "displayName": "Hoeken's Anchor Alarm",
     "screenshots": [
-      "./docs/screenshots/circle.jpg",
-      "./docs/screenshots/sector.jpg",
-      "./docs/screenshots/polygon.jpg",
-      "./docs/screenshots/satellite.jpg",
-      "./docs/screenshots/config.jpg"
+      "./docs/screenshots/watching.png",
+      "./docs/screenshots/circle.png",
+      "./docs/screenshots/sector.png",
+      "./docs/screenshots/polygon.png",
+      "./docs/screenshots/neighbors.png",
+      "./docs/screenshots/config.png"
     ],
     "recommends": [
       "signalk-tides",

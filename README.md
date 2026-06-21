@@ -1,6 +1,6 @@
 # hoekens-anchor-alarm
 
-<a href="docs/screenshots/satellite.jpg"><img src="docs/screenshots/satellite.jpg" alt="Hoeken's Anchor Alarm on the satellite basemap" width="50%" align="right"/></a>
+<a href="docs/screenshots/watching.png"><img src="docs/screenshots/watching.png" alt="Hoeken's Anchor Alarm on the satellite basemap" width="50%" align="right"/></a>
 
 A simple web UI anchor alarm for [SignalK](https://signalk.org/), built for setting from your phone, tablet or computer.  Handy for setting the anchor alarm from the helm, or a quick check from bed when the wind picks up at 2am.
 
@@ -53,11 +53,11 @@ If you have engine data in SignalK, enable the engine check and the watch will e
 > [!NOTE]
 > You can view the app without logging in (read-only). Editing controls (dropping/raising the anchor, resizing zones, settings) appear once you log into your SignalK server.
 
-## Screenshots
+## Watch Zone Shapes
 
 | Circle | Sector | Polygon |
 |:--:|:--:|:--:|
-| [![Circle zone](docs/screenshots/circle.jpg)](docs/screenshots/circle.jpg) | [![Sector zone](docs/screenshots/sector.jpg)](docs/screenshots/sector.jpg) | [![Polygon zone](docs/screenshots/polygon.jpg)](docs/screenshots/polygon.jpg) |
+| [![Circle zone](docs/screenshots/circle.png)](docs/screenshots/circle.png) | [![Sector zone](docs/screenshots/sector.png)](docs/screenshots/sector.png) | [![Polygon zone](docs/screenshots/polygon.png)](docs/screenshots/polygon.png) |
 
 ## Recommendations
 
