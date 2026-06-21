@@ -1,14 +1,12 @@
 # hoekens-anchor-alarm
 
-<a href="docs/screenshots/watching.png"><img src="docs/screenshots/watching.png" alt="Hoeken's Anchor Alarm on the satellite basemap" width="50%" align="right"/></a>
-
 A simple web UI anchor alarm for [SignalK](https://signalk.org/), built for setting from your phone, tablet or computer.  Handy for setting the anchor alarm from the helm, or a quick check from bed when the wind picks up at 2am.
 
 This started life as a fork of the venerable [signalk-anchoralarm-plugin](https://github.com/sbender9/signalk-anchoralarm-plugin) by Scott Bender, but has since grown its own personality (and a fair bit of new code). The goal is a focused web UI with my own style and a few opinionated features, like automatically cancelling the alarm when your engines fire up. If you'd rather drive everything from an external app or API, the original plugin might be a better fit for you.
 
 ## Features
 
-### 🗺️ Watch zones that aren't just circles
+### 👀 Watch zones that aren't just circles
 
 The classic circle is still here (now resizable by dragging a handle on the rim), but you can also switch to a **sector** (radius plus a draggable arc, handy when your safe swing is only astern), or a free-form **polygon** with draggable vertices. Drag an edge midpoint to add a point, drag a vertex onto its neighbor to remove it. Self-intersection is prevented for you, so you can't tie your watch zone in a knot.
 
