@@ -1,3 +1,10 @@
+# v2.4.1
+
+## Bug fixes
+
+- Corrected the recommended plugin package name to `@meri-imperiumi/signalk-autostate`
+- Fixed a broken icon link in the README
+
 # v2.4.0
 
 ## New features
