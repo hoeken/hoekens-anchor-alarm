@@ -73,4 +73,4 @@ Issues and PRs are welcome; this is an open source project and I'm happy to have
 
 ## Attribution
 
-<a href="https://www.flaticon.com/free-icons/anchor" title="anchor icons">Anchor icons created by Freepik - Flaticon</a>
+[Anchor icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/anchor)
