@@ -46,7 +46,7 @@
     ],
     "recommends": [
       "signalk-tides",
-      "signalk-autostate",
+      "@meri-imperiumi/signalk-autostate",
       "@signalk/tracks-plugin"
     ]
   },
