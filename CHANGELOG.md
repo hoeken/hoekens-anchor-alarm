@@ -1,3 +1,21 @@
+# v2.4.0
+
+## New features
+
+- **Boat name labels** — when zoomed in, fleet vessels now show their name on a white drop-shadow background above the icon for contrast against the map; the label is clickable and opens the vessel info box just like the marker
+- **VesselFinder link** — the vessel info popup now includes a link to look the boat up on VesselFinder
+- **Track highlight on hover** — hovering or selecting a vessel now highlights its track history and dims the other tracks
+- GPS antenna marker is now a small cross instead of the large antenna icon, so it's less obtrusive
+
+## Under the hood
+
+- Replaced the `@signalk/client` dependency with a native `WebSocket` wrapper (`SignalKStream`), dropping a heavy dependency
+- Greatly expanded test coverage — unit tests for `shared/watch-zones` alarm geometry plus full lifecycle and critical-path tests for the HTTP routes, plugin index, SignalK bus, and watchdog; tests now run as a pre-commit and pre-publish requirement
+- New GitHub Action–based release/publish workflow
+- Replaced the `postinstall` husky eval with a `prepare` script; `npm audit fix`
+- Added `signalk-tracks-plugin` to recommended plugins
+- README, screenshots, and docs cleanup; screenshots moved to `docs/screenshots/` and refreshed
+
 # v2.3.1
 
 ## New features

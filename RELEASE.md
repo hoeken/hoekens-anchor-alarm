@@ -32,10 +32,10 @@ npm run format:check
 
 ### 2. Edit two files:
 
+- [package.json](package.json) — bump the `version` field
 - [CHANGELOG.md](CHANGELOG.md) — add a new `# vX.Y.Z` section at the top
   matching the style of previous entries (the version heading must match the
   tag exactly, e.g. tag `v2.4.0` → heading `# v2.4.0`)
-- [package.json](package.json) — bump the `version` field
 
 ### 3. Commit:
 
