@@ -58,13 +58,13 @@ export class BoatConfig {
     config.mmsi = data.mmsi ?? DEFAULTS.mmsi;
 
     config.loa =
-      SignalKHelper.value(data, "design.length")?.overall ?? DEFAULTS.loa;
-    config.beam = SignalKHelper.value(data, "design.beam") ?? DEFAULTS.beam;
+      SignalKHelper.value(data, "design.length")?.overall || DEFAULTS.loa;
+    config.beam = SignalKHelper.value(data, "design.beam") || DEFAULTS.beam;
     config.anchorRollerHeight =
       SignalKHelper.value(data, "design.bowAnchorRollerHeight") ??
       DEFAULTS.anchorRollerHeight;
     config.totalAnchorChainLength =
-      SignalKHelper.value(data, "design.totalAnchorChainLength") ??
+      SignalKHelper.value(data, "design.totalAnchorChainLength") ||
       DEFAULTS.totalAnchorChainLength;
     if (data.sensors?.gps) {
       config.gpsBowXDistance =
