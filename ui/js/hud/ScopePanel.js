@@ -166,7 +166,7 @@ export const ScopePanel = L.Control.extend({
       this._refs.tidalFall.innerHTML = DisplayUnit.formatValue(state.tidalFall, "depth");
 
       let minimumDepth = state.belowKeel.value;
-      if (state.tides)
+      if (state.tide)
         minimumDepth -= state.tidalFall;
       this._refs.minimumDepth.innerHTML = DisplayUnit.formatValue(minimumDepth, "depth");
 
