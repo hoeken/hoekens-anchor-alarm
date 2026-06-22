@@ -1,3 +1,10 @@
+# v2.4.2
+
+## Bug fixes
+
+- Fixed a typo that caused the wrong minimum depth calculation
+- `loa` / `beam` / `totalAnchorChainLength` now fall back to sensible defaults when configured as zero
+
 # v2.4.1
 
 ## Bug fixes
