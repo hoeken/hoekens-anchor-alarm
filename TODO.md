@@ -1,10 +1,8 @@
 # v2.5.0
 
-- update icon - 5% pullback + better background
-- fix loading issue with navico display - doesnt zoom properly
-- make login self contained like on watch scheduler
+- raise/drop still not working navico
 - fix boat name label to be based on center of boat instead of antenna
-- raise anchor doesnt work on navico
+- update icon - 5% pullback + better background
 
 # LONG TERM
 

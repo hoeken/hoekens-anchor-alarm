@@ -5,6 +5,7 @@
 // so the existing style.css rules keep working.
 
 import { DisplayUnit } from "../../DisplayUnit.js";
+import { Modal } from "../Modal.js";
 
 export class CircleZoneControls {
   static get type() {
@@ -30,9 +31,18 @@ export class CircleZoneControls {
 
     this._container
       .querySelector("#setRadius")
-      .addEventListener("click", () => {
-        const input = prompt("Enter Radius:", parseInt(this._radiusEl.innerHTML, 10));
-        if (input === null)
+      .addEventListener("click", async () => {
+        // Native prompt() freezes the Navico WebView; use the reusable Modal.
+        const current = parseInt(this._radiusEl.innerHTML, 10);
+        const input = await Modal.prompt({
+          title: "Set Radius",
+          message: "Enter Radius:",
+          value: isNaN(current) ? "" : current,
+          inputType: "number",
+          inputMode: "numeric",
+          okLabel: "Set",
+        });
+        if (input == null)
           return;
         const newRadius = parseInt(input, 10);
         if (isNaN(newRadius) || newRadius <= 0)

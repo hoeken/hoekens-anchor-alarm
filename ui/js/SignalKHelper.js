@@ -10,6 +10,23 @@ export class SignalKHelper {
   constructor({ baseUrl = "", pluginName = null } = {}) {
     this.baseUrl = baseUrl;
     this.pluginName = pluginName;
+    // Optional handler invoked when an auth-gated request returns 401 (e.g. an
+    // expired session). The app sets this to open the login modal; when unset
+    // we fall back to redirecting to the SignalK admin login.
+    this.onUnauthorized = null;
+  }
+
+  // Authenticate against SignalK's REST endpoint. On success the server sets
+  // the JAUTHENTICATION cookie, which (being same-origin) is then sent
+  // automatically on every subsequent request — the same cookie the auth-gated
+  // plugin POSTs already rely on. Rejects with { status, statusText } on bad
+  // credentials (401) or other HTTP errors.
+  login(username, password) {
+    return fetch(`${this.baseUrl}/signalk/v1/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    }).then(SignalKHelper._toJsonOrReject);
   }
 
   // Fetchers return native Promises that resolve with the parsed JSON body and
@@ -43,8 +60,12 @@ export class SignalKHelper {
       body: JSON.stringify(data ?? {}),
     }).then((response) => {
       if (response.status === 401) {
-        const here = window.location.pathname + window.location.search + window.location.hash;
-        window.location.href = "/admin/#/login?redirect=" + encodeURIComponent(here);
+        if (typeof this.onUnauthorized === "function") {
+          this.onUnauthorized();
+        } else {
+          const here = window.location.pathname + window.location.search + window.location.hash;
+          window.location.href = "/admin/#/login?redirect=" + encodeURIComponent(here);
+        }
       }
       return SignalKHelper._toJsonOrReject(response);
     });

@@ -18,6 +18,7 @@ import { AnchorOverlay } from "./hud/AnchorOverlay.js";
 import { AnchorController } from "./AnchorController.js";
 import { ControlToolbar } from "./hud/ControlToolbar.js";
 import { ConfigPanel } from "./hud/ConfigPanel.js";
+import { Modal } from "./hud/Modal.js";
 import { nativeTooltipsSuppressed } from "./BrowserSupport.js";
 
 const UPDATE_INTERVAL_MS = 500;
@@ -27,6 +28,9 @@ const INITIAL_LOAD_RETRY_MS = 5000;
 class AnchorAlarm {
   constructor() {
     this.signalK = new SignalKHelper({ pluginName: "hoekens-anchor-alarm" });
+    // A 401 on any auth-gated request (e.g. an expired session) pops the login
+    // modal instead of bouncing to the SignalK admin login page.
+    this.signalK.onUnauthorized = () => this.showLoginModal();
     this.state = new AppState();
     this.config = {
       connectionType: "WEBSOCKET",
@@ -53,6 +57,7 @@ class AnchorAlarm {
     this.updateTimer = null;
     this.pollTimer = null;
     this._pollInFlight = false;
+    this._loginModal = null;
   }
 
   static startup() {
@@ -131,6 +136,7 @@ class AnchorAlarm {
       onRaise: () => this.anchorController.requestRaise(),
       onDrop: () => this.anchorController.requestDrop(),
       onSetZone: (zoneConfig) => this.anchorController.setZone(zoneConfig),
+      onLogin: () => this.showLoginModal(),
     });
 
     this.signalK
@@ -193,6 +199,77 @@ class AnchorAlarm {
       console.error("Failed to load config, using defaults", error);
       this.state.loggedIn = false;
     }
+  }
+
+  // Log in to SignalK from within the app (replacing the old redirect to the
+  // admin login SPA, which never returned on the Navico MFD). On success the
+  // auth cookie is set and we reload, so startup re-fetches config as the
+  // logged-in user and builds the full control set. Used by both the toolbar
+  // Login button and the 401 handler, so guard against opening twice.
+  showLoginModal() {
+    if (this._loginModal && this._loginModal.isOpen())
+      return;
+
+    const modal = new Modal({ title: "Login" });
+    this._loginModal = modal;
+
+    const form = document.createElement("div");
+    form.className = "modalForm";
+
+    const userLabel = document.createElement("label");
+    userLabel.className = "modalMessage";
+    userLabel.textContent = "Username";
+    const username = document.createElement("input");
+    username.type = "text";
+    username.className = "modalInput";
+    username.setAttribute("autocomplete", "username");
+
+    const passLabel = document.createElement("label");
+    passLabel.className = "modalMessage";
+    passLabel.textContent = "Password";
+    const password = document.createElement("input");
+    password.type = "password";
+    password.className = "modalInput";
+    password.setAttribute("autocomplete", "current-password");
+
+    form.appendChild(userLabel);
+    form.appendChild(username);
+    form.appendChild(passLabel);
+    form.appendChild(password);
+    modal.setContent(form);
+
+    modal.setButtons([
+      { label: "Cancel", variant: "secondary", value: null },
+      {
+        label: "Login",
+        variant: "primary",
+        primary: true,
+        onClick: async (m) => {
+          const user = username.value.trim();
+          const pass = password.value;
+          if (!user || !pass) {
+            m.setError("Enter your username and password.");
+            return;
+          }
+          m.setError("");
+          m.setBusy(true);
+          try {
+            await this.signalK.login(user, pass);
+            window.location.reload();
+          } catch (err) {
+            m.setBusy(false);
+            m.setError(
+              err && err.status === 401
+                ? "Invalid username or password."
+                : "Login failed. Please try again.",
+            );
+            password.select();
+          }
+        },
+      },
+    ]);
+    modal.setFocusTarget(username);
+    modal.open();
   }
 
   // Persist UI settings edited via the ConfigPanel. We merge into the live

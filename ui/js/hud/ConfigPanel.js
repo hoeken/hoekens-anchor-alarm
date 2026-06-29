@@ -10,6 +10,7 @@
 // dialog surfaces a note for those so the user isn't confused when nothing
 // changes on screen.
 import { setTitle } from "../BrowserSupport.js";
+import { Modal } from "./Modal.js";
 
 const FIELDS = [
   { key: "enableTidePanel", label: "Show Tide Panel", type: "checkbox" },
@@ -61,7 +62,7 @@ export const ConfigPanel = L.Control.extend({
     onChange: null, // (newConfig) => void | Promise, resolves when persisted
   },
 
-  onAdd: function (map) {
+  onAdd: function () {
     const container = L.DomUtil.create("div", "leaflet-bar leaflet-control");
     const button = L.DomUtil.create("a", "leaflet-control-config", container);
     button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-gear" viewBox="0 0 16 16">
@@ -79,78 +80,48 @@ export const ConfigPanel = L.Control.extend({
     });
 
     this._inputs = {};
-    // Mount the dialog as a sibling of the map element (one level up, in
-    // #map_container) rather than inside it. The map element sets z-index: 1,
-    // which makes it its own stacking context — anything inside it (including
-    // a z-index: 1000 backdrop) is trapped below #controlToolbar (z-index: 99),
-    // which sits next to the map. Mounting alongside the map lets the backdrop
-    // out-stack the toolbar.
-    this._buildDialog(map.getContainer().parentNode || map.getContainer());
+    this._buildDialog();
 
     return container;
   },
 
   onRemove: function () {
-    if (this._backdrop && this._backdrop.parentNode)
-      this._backdrop.parentNode.removeChild(this._backdrop);
+    if (this._modal)
+      this._modal.destroy();
   },
 
-  // The dialog lives as a sibling overlay next to the map (see onAdd) rather
-  // than inside the leaflet-bar, so it can render as a centered modal that
-  // covers the whole map and the #controlToolbar, independent of the little
-  // gear button.
-  _buildDialog: function (parent) {
+  // Build the settings form into a reusable Modal. The Modal mounts itself on
+  // document.body (outside the map's stacking context), so it renders as a
+  // centered, page-dimming dialog that covers the map and #controlToolbar
+  // independent of the little gear button.
+  _buildDialog: function () {
     const hasReloadField = FIELDS.some((field) => field.reload);
     const reloadNote = hasReloadField
       ? `<div class="configReloadNote">* applies after reloading the page</div>`
       : "";
 
-    const backdrop = document.createElement("div");
-    backdrop.id = "configDialogBackdrop";
-    backdrop.style.display = "none";
-    backdrop.innerHTML = `
-      <div id="configDialog">
-        <div id="configDialogHeader">
-          <span>Settings</span>
-          <button type="button" id="configDialogClose" aria-label="Close">&times;</button>
-        </div>
-        <form id="configForm">
-          ${FIELDS.map((field) => this._rowHtml(field)).join("")}
-        </form>
-        ${reloadNote}
-        <div id="configStatus"></div>
-        <div id="configVersion"></div>
-      </div>`;
+    this._modal = new Modal({ title: "Settings", className: "configModal" });
+    this._modal.setContent(`
+      <div id="configForm">
+        ${FIELDS.map((field) => this._rowHtml(field)).join("")}
+      </div>
+      ${reloadNote}
+      <div id="configStatus"></div>
+      <div id="configVersion"></div>`);
+    // A single "Done" button (plus the header ×) closes the dialog; settings
+    // persist live as each field changes, so there is nothing to submit.
+    this._modal.setButtons([
+      { label: "Done", variant: "primary", primary: true },
+    ]);
 
-    parent.appendChild(backdrop);
-
-    // Resolve the references the rest of the control relies on, and wire each
-    // input back to the save handler now that the markup exists.
-    this._status = backdrop.querySelector("#configStatus");
-    this._version = backdrop.querySelector("#configVersion");
+    const body = this._modal.body;
+    this._status = body.querySelector("#configStatus");
+    this._version = body.querySelector("#configVersion");
     for (const field of FIELDS) {
-      const input = backdrop.querySelector(`[data-config-key="${field.key}"]`);
+      const input = body.querySelector(`[data-config-key="${field.key}"]`);
       this._inputs[field.key] = input;
       input.addEventListener("change", () => this._onFieldChange());
     }
-
-    // Keep map interactions from firing while the dialog is open.
-    L.DomEvent.disableClickPropagation(backdrop);
-    L.DomEvent.disableScrollPropagation(backdrop);
-
-    // Clicking the dim area (but not the dialog body) closes it.
-    backdrop.addEventListener("click", (e) => {
-      if (e.target === backdrop)
-        this._hide();
-    });
-    backdrop
-      .querySelector("#configDialogClose")
-      .addEventListener("click", () => this._hide());
-    backdrop
-      .querySelector("#configForm")
-      .addEventListener("submit", (e) => e.preventDefault());
-
-    this._backdrop = backdrop;
   },
 
   // Returns the markup for one form row. Checkboxes read left-to-right (box
@@ -222,10 +193,10 @@ export const ConfigPanel = L.Control.extend({
   },
 
   _toggle: function () {
-    if (this._backdrop && this._backdrop.style.display === "none")
-      this._show();
-    else
+    if (this._modal && this._modal.isOpen())
       this._hide();
+    else
+      this._show();
   },
 
   _show: function () {
@@ -235,12 +206,12 @@ export const ConfigPanel = L.Control.extend({
       const version = this.options.getVersion ? this.options.getVersion() : null;
       this._version.textContent = version ? `Hoeken's Anchor Alarm v${version}` : "";
     }
-    if (this._backdrop)
-      this._backdrop.style.display = "flex";
+    if (this._modal)
+      this._modal.open();
   },
 
   _hide: function () {
-    if (this._backdrop)
-      this._backdrop.style.display = "none";
+    if (this._modal)
+      this._modal.close();
   },
 });

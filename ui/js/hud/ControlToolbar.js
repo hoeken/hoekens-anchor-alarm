@@ -11,13 +11,15 @@ import {
   createZoneControls,
   getZoneTypeOptions,
 } from "./zones/index.js";
+import { Modal } from "./Modal.js";
 
 export class ControlToolbar {
-  constructor({ parent, getMapContainer, onDrop, onRaise, onSetZone }) {
+  constructor({ parent, getMapContainer, onDrop, onRaise, onSetZone, onLogin }) {
     this._getMapContainer = getMapContainer;
     this._onDrop = onDrop;
     this._onRaise = onRaise;
     this._onSetZone = onSetZone;
+    this._onLogin = onLogin;
 
     this._isAnchored = false;
     this._zoneControls = null;
@@ -63,18 +65,26 @@ export class ControlToolbar {
     this._container
       .querySelector("#loginButton")
       .addEventListener("click", () => {
-        // redirect to our login page.
-        const here =
-          window.location.pathname + window.location.search + window.location.hash;
-        window.location.href =
-          "/admin/#/login?redirect=" + encodeURIComponent(here);
+        // Log in within the app (see AnchorAlarm.showLoginModal) rather than
+        // bouncing to the SignalK admin SPA — that redirect never came back on
+        // the Navico MFD.
+        if (this._onLogin)
+          this._onLogin();
       });
     this._container
       .querySelector("#raiseAnchor")
-      .addEventListener("click", () => {
+      .addEventListener("click", async () => {
         if (!this._isAnchored)
           return;
-        if (!confirm("Do you really want to disable your anchor alarm?"))
+        // Native confirm() freezes the Navico WebView, so the raise never ran;
+        // route through the reusable Modal instead.
+        const ok = await Modal.confirm({
+          title: "Raise Anchor",
+          message: "Do you really want to disable your anchor alarm?",
+          okLabel: "Raise Anchor",
+          cancelLabel: "Cancel",
+        });
+        if (!ok)
           return;
         if (this._onRaise)
           this._onRaise();
