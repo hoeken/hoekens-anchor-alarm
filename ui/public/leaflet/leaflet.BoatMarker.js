@@ -5,6 +5,7 @@ L.BoatMarker = L.Marker.extend({
     loa: 0, // metres length (y-axis, top→bottom)
     gpsOffset: { x: 0, y: 0 }, // metres from SVG top-left to antenna
     icon: "", // path or URL to your SVG
+    fallbackIcon: "icons/ships/png/default.png", // shown if icon fails to load
     heading: 0, // initial rotation in degrees
   },
 
@@ -27,8 +28,27 @@ L.BoatMarker = L.Marker.extend({
 
   onAdd(map) {
     L.Marker.prototype.onAdd.call(this, map);
+    this._setupIconFallback();
     this._update(); // initial sizing & rotation
     map.on("zoom viewreset", this._update, this);
+  },
+
+  // If the icon image fails to load (missing/renamed file, 404, etc.) swap in
+  // the fallback once so we never render a broken/blank boat.
+  _setupIconFallback() {
+    const img = this._icon && this._icon.querySelector("img");
+    const fallback = this.options.fallbackIcon;
+    if (!img || !fallback) return;
+
+    const applyFallback = () => {
+      // Guard against an infinite loop if the fallback itself is missing.
+      if (img.src.endsWith(fallback)) return;
+      img.src = fallback;
+    };
+
+    img.addEventListener("error", applyFallback);
+    // The error may have already fired before this handler was attached.
+    if (img.complete && img.naturalWidth === 0) applyFallback();
   },
 
   onRemove(map) {
