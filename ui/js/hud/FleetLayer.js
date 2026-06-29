@@ -215,7 +215,11 @@ export class FleetLayer {
     if (!track)
       return;
 
-    const last = track.getLatLngs().at(-1);
+    // Index the last point directly rather than Array.prototype.at(-1):
+    // .at() is Chrome 92+ and absent on the Navico MFD engine (Chromium 69),
+    // where calling it threw and broke track rendering.
+    const latLngs = track.getLatLngs();
+    const last = latLngs[latLngs.length - 1];
     if (last && last.lat === lat && last.lng === lng)
       return;
 
