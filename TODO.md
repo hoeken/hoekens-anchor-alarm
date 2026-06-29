@@ -1,6 +1,7 @@
 # v2.5.0
 
 - raise/drop still not working navico
+- FleetLayer track rendering broken on Navico (Chromium 69): `getLatLngs().at(-1)` in ui/js/hud/FleetLayer.js uses Array.prototype.at() (Chrome 92+, absent on Chromium 69). Replace with slice(-1)[0] / index math.
 - fix boat name label to be based on center of boat instead of antenna
 - update icon - 5% pullback + better background
 

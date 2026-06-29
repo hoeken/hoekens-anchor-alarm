@@ -312,12 +312,22 @@ export class AppState {
   // Capture the current anchor envelopes so a failed client action can roll
   // back. Deep-cloned so subsequent in-place mutations (applyClientAnchorState,
   // cleanDisplayUnits) don't corrupt the snapshot.
+  //
+  // Cloned via JSON round-trip rather than structuredClone(): the latter only
+  // landed in Chrome 98 and is absent on the Navico MFD engine (Chromium 69),
+  // where it threw here — before the drop/raise POST was sent — and silently
+  // killed both actions. Transpilation can't help; it's a missing runtime
+  // global, not syntax. The envelopes are plain JSON (ISO-string timestamps,
+  // primitive/object values, no Dates/Maps/functions/cycles), so this is a
+  // faithful clone.
   snapshotAnchorState() {
-    return structuredClone({
-      position: this.anchor.position ?? null,
-      state: this.anchor.state ?? null,
-      watchZone: this.anchor.watchZone ?? null,
-    });
+    return JSON.parse(
+      JSON.stringify({
+        position: this.anchor.position ?? null,
+        state: this.anchor.state ?? null,
+        watchZone: this.anchor.watchZone ?? null,
+      }),
+    );
   }
 
   // Restore from a snapshot and release the suppression window so the next
