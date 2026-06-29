@@ -5,7 +5,6 @@
 - make login self contained like on watch scheduler
 - fix boat name label to be based on center of boat instead of antenna
 - raise anchor doesnt work on navico
-- config panel doesnt open on navico - title on icon?
 
 # LONG TERM
 

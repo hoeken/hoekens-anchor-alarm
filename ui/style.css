@@ -171,10 +171,26 @@ body,
   box-sizing: border-box;
 }
 
+#anchorDown button,
+#anchorUp button {
+  /* Same Chromium 69 (Navico MFD) fix as #loginPrompt button: drop the UA's
+     default button padding and use a line-height that fills the button's
+     content box (40px height − 4px border) so the label is vertically centered
+     instead of sitting low. */
+  padding: 0;
+  line-height: 36px;
+}
+
 #loginPrompt button {
   font-size: 18px;
   width: 80px;
   height: 30px;
+  /* Drop the UA's default button padding, which on Chromium 69 (Navico MFDs)
+     pushes the text down and clips the descender of "Login". A line-height that
+     fills the button's content box then centers the label vertically. Keeping
+     the button as the default inline-block lets the parent center it. */
+  padding: 0;
+  line-height: 26px;
 }
 
 #zoneShapeSelect select {

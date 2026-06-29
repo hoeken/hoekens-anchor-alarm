@@ -6,6 +6,7 @@
 import * as d3 from "d3";
 import { DisplayUnit } from "../DisplayUnit.js";
 import { GeoMath } from "../GeoMath.js";
+import { setTitle } from "../BrowserSupport.js";
 
 const TIDES_HREF = "/signalk-tides/";
 const HOURS_BEFORE_NOW = 1;
@@ -33,7 +34,7 @@ export const TidePanel = L.Control.extend({
     const container = L.DomUtil.create("div", "tides leaflet-bar");
     L.DomEvent.disableClickPropagation(container);
     container.id = "tidesUI";
-    container.title = "View tides";
+    setTitle(container, "View tides");
     container.style.cursor = "pointer";
     container.style.display = "none";
     L.DomEvent.on(container, "click", () => {

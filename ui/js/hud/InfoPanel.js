@@ -4,6 +4,7 @@
 // in style.css; do not rename without updating the stylesheet.
 
 import { DisplayUnit } from "../DisplayUnit.js";
+import { setTitle } from "../BrowserSupport.js";
 
 export const InfoPanel = L.Control.extend({
   options: { position: "bottomright" },
@@ -17,7 +18,7 @@ export const InfoPanel = L.Control.extend({
         <table>
           <tr>
             <th>Depth:</th>
-            <td><span title="Depth" id='depthValue'>~</span></td>
+            <td><span id='depthValue'>~</span></td>
           </tr>
           <tr>
             <th>Status:</th>
@@ -27,6 +28,7 @@ export const InfoPanel = L.Control.extend({
     `;
     this._container = container;
     this._depthValue = container.querySelector("#depthValue");
+    setTitle(this._depthValue, "Depth");
     this._pluginStatus = container.querySelector("#pluginStatus");
     return container;
   },

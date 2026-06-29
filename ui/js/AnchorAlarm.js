@@ -18,6 +18,7 @@ import { AnchorOverlay } from "./hud/AnchorOverlay.js";
 import { AnchorController } from "./AnchorController.js";
 import { ControlToolbar } from "./hud/ControlToolbar.js";
 import { ConfigPanel } from "./hud/ConfigPanel.js";
+import { nativeTooltipsSuppressed } from "./BrowserSupport.js";
 
 const UPDATE_INTERVAL_MS = 500;
 const POLL_INTERVAL_MS = 1000;
@@ -355,7 +356,10 @@ class AnchorAlarm {
       if (attr && parts.indexOf(attr) === -1)
         parts.push(attr);
     });
-    const prefix = `<a href="https://leafletjs.com" title="A JavaScript library for interactive maps">Leaflet</a>`;
+    const leafletTitle = nativeTooltipsSuppressed
+      ? ""
+      : ` title="A JavaScript library for interactive maps"`;
+    const prefix = `<a href="https://leafletjs.com"${leafletTitle}>Leaflet</a>`;
     el.innerHTML = [prefix, ...parts].join(" | ");
 
     // Expose the strip's rendered height so bottom-anchored Leaflet controls
