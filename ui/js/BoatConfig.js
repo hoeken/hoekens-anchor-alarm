@@ -22,6 +22,14 @@ const DEFAULTS = {
   sog: null,
 };
 
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+// Returns value only when it's a positive, finite number; otherwise fallback.
+// Used for beam/loa, which must be nonzero: they're divisors for icon scaling
+// and the extents the GPS offsets get clamped to.
+const positiveOr = (value, fallback) =>
+  Number.isFinite(value) && value > 0 ? value : fallback;
+
 export class BoatConfig {
   constructor({
     name,
@@ -57,9 +65,14 @@ export class BoatConfig {
     config.name = data.name ?? DEFAULTS.name;
     config.mmsi = data.mmsi ?? DEFAULTS.mmsi;
 
-    config.loa =
-      SignalKHelper.value(data, "design.length")?.overall || DEFAULTS.loa;
-    config.beam = SignalKHelper.value(data, "design.beam") || DEFAULTS.beam;
+    config.loa = positiveOr(
+      SignalKHelper.value(data, "design.length")?.overall,
+      DEFAULTS.loa,
+    );
+    config.beam = positiveOr(
+      SignalKHelper.value(data, "design.beam"),
+      DEFAULTS.beam,
+    );
     config.anchorRollerHeight =
       SignalKHelper.value(data, "design.bowAnchorRollerHeight") ??
       DEFAULTS.anchorRollerHeight;
@@ -83,6 +96,16 @@ export class BoatConfig {
       config.gpsBowXDistance = DEFAULTS.gpsBowXDistance;
       config.gpsBowYDistance = DEFAULTS.gpsBowYDistance;
     }
+
+    // Clamp the GPS antenna offsets to the hull so a bad or stale Signal K
+    // value can't place the antenna off the boat when we draw the icon and
+    // anchor overlay. Done after beam/loa are resolved to positive values
+    // above: X (from centerline) can't sit wider than half the beam, and Y
+    // (aft of the bow) must fall between the bow (0) and the stern (loa).
+    const halfBeam = config.beam / 2;
+    config.gpsBowXDistance = clamp(config.gpsBowXDistance, -halfBeam, halfBeam);
+    config.gpsBowYDistance = clamp(config.gpsBowYDistance, 0, config.loa);
+
     config.aisShipType =
       SignalKHelper.value(data, "design.aisShipType")?.id ??
       DEFAULTS.aisShipType;
