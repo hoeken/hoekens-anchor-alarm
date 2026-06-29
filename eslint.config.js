@@ -34,7 +34,13 @@ export default [
     rules: stylisticRules,
   },
   {
-    files: ["src/**/*.js", "shared/**/*.js", "eslint.config.js", "vite.config.js"],
+    files: [
+      "src/**/*.js",
+      "shared/**/*.js",
+      "scripts/**/*.js",
+      "eslint.config.js",
+      "vite.config.js",
+    ],
     languageOptions: {
       sourceType: "module",
       globals: { ...globals.node },

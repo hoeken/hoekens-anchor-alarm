@@ -7,7 +7,22 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
     />
+    <!-- Tints the mobile browser toolbar/status bar; matches theme_color in
+         site.webmanifest. -->
+    <meta name="theme-color" content="#000000" />
     <title>Hoeken's Anchor Alarm</title>
+
+    <!-- Add-to-home-screen launch behaviour. iOS Safari ignores the
+         manifest's `display: standalone`, so these meta tags are what make the
+         home-screen icon open full-screen (no Safari chrome). Status bar style
+         is `black` rather than `black-translucent`: translucent would extend
+         the web view under the iOS clock and hide #controlToolbar (top: 10px),
+         and black matches the manifest theme_color. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Anchor Alarm" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
     <link
       rel="apple-touch-icon"
       sizes="180x180"

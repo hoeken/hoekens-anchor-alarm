@@ -1,7 +1,6 @@
 # v2.5.0
 
 - fix boat name label to be based on center of boat instead of antenna
-- update icon - 5% pullback + better background
 
 # LONG TERM
 
