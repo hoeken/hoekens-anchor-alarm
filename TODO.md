@@ -2,9 +2,10 @@
 
 - update icon - 5% pullback + better background
 - fix loading issue with navico display - doesnt zoom properly
-- fix css issues with navico display - button text is weird
 - make login self contained like on watch scheduler
 - fix boat name label to be based on center of boat instead of antenna
+- raise anchor doesnt work on navico
+- config panel doesnt open on navico - title on icon?
 
 # LONG TERM
 
