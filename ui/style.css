@@ -8,6 +8,16 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
+/* Form controls (notably <button>) do not inherit font-family by default, so on
+   some browsers (e.g. Chromium 69 on Navico MFDs) they fall back to the UA serif
+   font. Force them to use the body's sans-serif stack. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
 html,
 body,
 #map {
@@ -37,8 +47,14 @@ body,
   pointer-events: none;
   display: flex;
   flex-direction: column;
-  gap: 6px;
   font-size: 22px;
+}
+
+/* Flexbox `gap` is unsupported before Chromium 84, so on Navico MFDs (Chromium
+   69) it collapses to zero spacing. Replace it with margins between items. The
+   same pattern is used for every flex container below. */
+#controlToolbar > * + * {
+  margin-top: 6px;
 }
 
 #controlToolbar button {
@@ -119,7 +135,10 @@ body,
   background-color: white;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+}
+
+.scope > * + * {
+  margin-top: 10px;
 }
 
 .normal {
@@ -181,9 +200,12 @@ body,
 
 #radiusControl {
   display: flex;
-  gap: 8px;
   width: 100%;
   box-sizing: border-box;
+}
+
+#radiusControl > * + * {
+  margin-left: 8px;
 }
 
 #radiusControl button {
@@ -206,10 +228,13 @@ body,
 #polygonControl {
   display: flex;
   flex-direction: row;
-  gap: 6px;
   width: 100%;
   box-sizing: border-box;
   font-size: 18px;
+}
+
+#polygonControl > * + * {
+  margin-left: 6px;
 }
 
 #polygonControl select {
@@ -254,7 +279,10 @@ body,
 
 #configDialogBackdrop {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -300,19 +328,29 @@ body,
 #configForm {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+}
+
+#configForm > * + * {
+  margin-top: 10px;
 }
 
 .configRow {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+}
+
+.configRow > * + * {
+  margin-top: 3px;
 }
 
 .configRow.configRowCheckbox {
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+}
+
+.configRow.configRowCheckbox > * + * {
+  margin-top: 0;
+  margin-left: 8px;
 }
 
 .configLabel {
@@ -534,8 +572,15 @@ h4.vesselName {
   font-size: 20px;
   margin: 0px;
   display: flex;
+  /* "last baseline" is unsupported before ~Chromium 84; flex-end is the closest
+     value Chromium 69 understands and is overridden by the line below where
+     supported. */
+  align-items: flex-end;
   align-items: last baseline;
-  gap: 8px;
+}
+
+h4.vesselName > * + * {
+  margin-left: 8px;
 }
 
 span.mmsi {
