@@ -64,7 +64,68 @@ L.BoatMarker = L.Marker.extend({
     const img = this._icon.querySelector("img");
     if (img) img.style.transform = `rotate(${deg}deg)`;
 
+    // The name label sits above the boat's center, which swings around the
+    // antenna as the boat rotates, so re-place it on every heading change.
+    this._updateLabelPosition();
+
     return this;
+  },
+
+  // The boat icon's geometric center as a map layer point, accounting for the
+  // current heading. getLatLng() tracks the GPS antenna (the marker's anchor),
+  // which can sit anywhere on the hull; the center is offset from it by half
+  // the icon's size and rotates about the antenna along with the image.
+  getBoatCenter() {
+    if (!this._map || this._wPx === undefined) return null;
+
+    const anchor = this._map.latLngToLayerPoint(this.getLatLng());
+    // Antenna→center vector in the unrotated icon frame (px).
+    const dx = this._wPx / 2 - this._oX;
+    const dy = this._hPx / 2 - this._oY;
+    // Rotate it the same way the image is rotated (CSS rotate, clockwise).
+    const rad = (this.options.heading * Math.PI) / 180;
+    const sin = Math.sin(rad);
+    const cos = Math.cos(rad);
+    return L.point(
+      anchor.x + dx * cos - dy * sin,
+      anchor.y + dx * sin + dy * cos,
+    );
+  },
+
+  // Bind the name label, then place it correctly straight away. The marker's
+  // geometry is computed by _update() during onAdd, so by the time a tooltip
+  // is bound the dimensions needed to position it are already available.
+  bindTooltip(content, options) {
+    L.Marker.prototype.bindTooltip.call(this, content, options);
+    this._updateLabelPosition();
+    return this;
+  },
+
+  // Keep a permanent "top" tooltip centered above the boat. Such a tooltip
+  // anchors its bottom-center at markerPos + offset, and markerPos is the GPS
+  // antenna — not the boat's center — so we offset to the center and lift the
+  // label clear of the rotated icon's vertical extent.
+  _updateLabelPosition() {
+    const tooltip = this.getTooltip();
+    if (!tooltip || !tooltip._map || this._wPx === undefined) return;
+
+    const LABEL_GAP = 2; // px between the top of the icon and the label
+    const anchor = this._map.latLngToLayerPoint(this.getLatLng());
+    const center = this.getBoatCenter();
+
+    // Half-height of the rotated wPx×hPx bounding box: the distance straight up
+    // from the center to the icon's topmost point at the current heading.
+    const rad = (this.options.heading * Math.PI) / 180;
+    const halfExtent =
+      (Math.abs(Math.sin(rad)) * this._wPx +
+        Math.abs(Math.cos(rad)) * this._hPx) /
+      2;
+
+    tooltip.options.offset = [
+      center.x - anchor.x,
+      center.y - anchor.y - halfExtent - LABEL_GAP,
+    ];
+    tooltip._updatePosition();
   },
 
   // Recompute size, anchor and rotation
@@ -105,6 +166,13 @@ L.BoatMarker = L.Marker.extend({
     // Compute the offset in px for the GPS antenna
     const oX = Math.round((this.options.gpsOffset.x / this.options.beam) * wPx);
     const oY = Math.round((this.options.gpsOffset.y / this.options.loa) * hPx);
+
+    // Cache the current pixel geometry so getBoatCenter()/the name label can
+    // place themselves relative to the hull without recomputing it.
+    this._wPx = wPx;
+    this._hPx = hPx;
+    this._oX = oX;
+    this._oY = oY;
 
     // Apply to the icon’s container
     Object.assign(this._icon.style, {

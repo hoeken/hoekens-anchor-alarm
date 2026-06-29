@@ -352,11 +352,12 @@ export class FleetLayer {
 
     // Clickable name label above the icon. The permanent tooltip auto-tracks
     // the marker on setLatLng; an explicit handler opens the same popup as the
-    // marker since tooltip clicks don't bubble to the marker.
+    // marker since tooltip clicks don't bubble to the marker. BoatMarker owns
+    // the offset, keeping the label centered over the hull (not the antenna)
+    // and clear of the icon as the boat rotates.
     marker.bindTooltip(config.name, {
       permanent: true,
       direction: "top",
-      offset: [0, -12],
       interactive: true,
       className: "boat-name-label",
     });
