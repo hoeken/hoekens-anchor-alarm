@@ -1,26 +1,25 @@
 # v2.5.0
 
-## Navico MFD compatibility
+## Now works on Navico chartplotters
 
-The HUD now runs on Navico chartplotters (via the SignalK Navico embedder), whose WebView is Chromium 69 (2018). A round of fixes for browser features that postdate it:
+The HUD now runs on Navico MFDs (via the SignalK Navico embedder). Everything that was broken on those older displays now works:
 
-- **Drop / raise work again** — `structuredClone()` (Chrome 98) is undefined on Chromium 69 and threw before any request went out, so drop did nothing and raise died at the confirm box. Anchor-state snapshots now deep-clone via a JSON round-trip
-- **Vessel tracks render again** — `Array.prototype.at(-1)` (Chrome 92) broke track rendering; the last point is now indexed directly
-- **Reusable in-app modals** — native `confirm()` / `prompt()` freeze the Navico WebView, so raise-anchor stalled at the confirm dialog. A new `Modal` class replaces every blocking dialog (raise confirm, set-radius prompt, settings panel), and login now happens in-app via a modal form instead of redirecting to the admin login page
-- **CSS rendering fixes** — buttons no longer fall back to a serif font, flexbox `gap` is replaced with explicit margins, the config backdrop covers and centers correctly (`inset` → explicit offsets), and the vessel-name label gets a `last baseline` fallback
-- **Button labels no longer clipped, and native tooltips suppressed on touch** — a new `BrowserSupport` helper detects the Chromium version, fixes button label vertical centering, and suppresses the badly-placed native `title` tooltips on Chromium ≤ 69 while keeping them on desktop
+- **Drop and raise the anchor again** — both buttons were dead on Navico displays; they now work
+- **Vessel tracks show up again** — track history now renders correctly
+- **No more frozen screens** — the raise confirmation, set-radius, settings, and login prompts used to lock up the display; they're now smooth in-app dialogs, and you log in right inside the app
+- **Looks right again** — fixed fonts, spacing, layout, and labels that displayed incorrectly
 
 ## New features
 
-- **All icons generated from a single master at build time** — `scripts/generate-icons.js` (sharp + png-to-ico) derives every icon from one source image: the SignalK appstore icon, favicons (16/32 + multi-res `.ico`), the iOS apple-touch-icon, and Android/PWA icons including maskable variants scaled into the launcher safe zone. The master lives in `branding/` (outside the build output and npm tarball) and the derived icons are gitignored and regenerated on every build
-- **Add-to-home-screen / standalone launch** — iOS standalone meta tags, a `theme-color`, and `any`/`maskable` manifest entries so the app opens full-screen from the home screen instead of in a browser tab
+- **Add it to your home screen** — install the HUD like an app and launch it full-screen, with a proper icon, instead of opening a browser tab
+- **Crisper icons everywhere** — app, browser, and home-screen icons are all sharper and consistent
 - Added `signalk-navico-embedder` to the recommended plugins
 
 ## Bug fixes
 
-- **Default boat icon fallback** — a failed ship-icon load (404, stale cache, renamed file) rendered a blank boat; `L.BoatMarker` now swaps in a default icon on the image's error event (fixes #16)
-- **Boat geometry sanitized** — a bad or stale GPS antenna offset from SignalK could place the antenna off the hull and skew the icon and anchor overlay. Offsets are now clamped to the hull (X within ±beam/2, Y within [0, loa]), and `beam` / `loa` fall back to defaults on negative or NaN values, not just zero
-- **Boat name label centered over the hull** — the label was anchored at the GPS antenna (which can sit anywhere on the boat), so it floated off-center; it now sits above the icon's geometric midpoint with rotation-accurate clearance at any heading
+- **No more blank boats** — when a vessel's icon failed to load it showed up empty; it now falls back to a default boat icon (fixes #16)
+- **Boats sit correctly on the map** — a bad GPS offset could skew your boat icon and anchor circle off-center; boat shape and position are now kept sensible even with bad data
+- **Boat name labels centered** — names now sit centered above the boat at any heading, instead of floating off to one side
 
 # v2.4.2
 
