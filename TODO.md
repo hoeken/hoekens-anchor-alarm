@@ -1,7 +1,6 @@
 # v2.5.1
 
 - new icon w/ better contrast
-- remove icon generation from build:ui
 
 # 2.6.0
 
