@@ -232,10 +232,21 @@ class AnchorAlarm {
     password.className = "modalInput";
     password.setAttribute("autocomplete", "current-password");
 
+    const rememberRow = document.createElement("label");
+    rememberRow.className = "modalCheckbox";
+    const rememberMe = document.createElement("input");
+    rememberMe.type = "checkbox";
+    rememberMe.checked = true;
+    const rememberText = document.createElement("span");
+    rememberText.textContent = "Remember me?";
+    rememberRow.appendChild(rememberMe);
+    rememberRow.appendChild(rememberText);
+
     form.appendChild(userLabel);
     form.appendChild(username);
     form.appendChild(passLabel);
     form.appendChild(password);
+    form.appendChild(rememberRow);
     modal.setContent(form);
 
     modal.setButtons([
@@ -254,7 +265,7 @@ class AnchorAlarm {
           m.setError("");
           m.setBusy(true);
           try {
-            await this.signalK.login(user, pass);
+            await this.signalK.login(user, pass, rememberMe.checked);
             window.location.reload();
           } catch (err) {
             m.setBusy(false);

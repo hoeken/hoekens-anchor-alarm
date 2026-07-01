@@ -21,11 +21,11 @@ export class SignalKHelper {
   // automatically on every subsequent request — the same cookie the auth-gated
   // plugin POSTs already rely on. Rejects with { status, statusText } on bad
   // credentials (401) or other HTTP errors.
-  login(username, password) {
+  login(username, password, rememberMe = false) {
     return fetch(`${this.baseUrl}/signalk/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username, password, rememberMe }),
     }).then(SignalKHelper._toJsonOrReject);
   }
 

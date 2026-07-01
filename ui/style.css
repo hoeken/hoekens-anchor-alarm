@@ -382,6 +382,22 @@ body,
   font-size: 16px;
 }
 
+.modalCheckbox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  color: #333;
+}
+
+.modalCheckbox > * + * {
+  margin-left: 8px;
+}
+
+.modalCheckbox input {
+  width: 18px;
+  height: 18px;
+}
+
 .modalError {
   color: #c0392b;
   font-size: 13px;

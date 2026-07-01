@@ -1,6 +1,6 @@
 # v2.5.1
 
-- Add Remember me? toggle to login form, default true and pass that to the login call as rememberMe
+- remove icon generation from build:ui
 
 # LONG TERM
 
