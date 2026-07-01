@@ -420,7 +420,7 @@ export default function (app) {
       !resolvedZone.contains(vesselPosition, parsedPosition)
     ) {
       throw new StateError(
-        "boat is outside the watch zone — alarm would trigger immediately",
+        "Boat is outside the watch zone.",
       );
     }
 
@@ -473,7 +473,7 @@ export default function (app) {
       !resolvedZone.contains(vesselPosition, anchorPosition)
     ) {
       throw new StateError(
-        "boat is outside the watch zone — alarm would trigger immediately",
+        "Boat is outside the watch zone.",
       );
     }
 

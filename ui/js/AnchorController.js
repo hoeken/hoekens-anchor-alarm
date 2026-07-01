@@ -8,7 +8,6 @@
 import { destination, point } from "@turf/turf";
 import { GeoMath } from "./GeoMath.js";
 import { createDefaultZoneConfig } from "./hud/zones/index.js";
-import { watchZoneFromConfig } from "../../shared/watch-zones/index.js";
 
 export class AnchorController {
   constructor({ appState, overlay, signalK, statusBar, defaultShape, onChange }) {
@@ -45,18 +44,6 @@ export class AnchorController {
       state: "on",
     });
 
-    // Refuse a drop that leaves the boat outside the zone — it would trip the
-    // drag alarm on the very first tick. Check after the optimistic write (so
-    // the zone is in place) but before the backend POST; the backend re-checks
-    // authoritatively.
-    if (!this._currentPositionInZone(zoneConfig, anchorPos)) {
-      this._appState.restoreAnchorState(snapshot);
-      this._statusBar.logError("Boat is outside the watch zone.");
-      this._onChange();
-      this._pending = false;
-      return;
-    }
-
     this._onChange();
 
     this._signalK
@@ -66,8 +53,8 @@ export class AnchorController {
       })
       .catch((err) => {
         this._appState.restoreAnchorState(snapshot);
-        const detail = err?.statusText || err?.message || "unknown error";
-        this._statusBar.set("anchor-drop", `Failed to drop anchor: ${detail}`, "error");
+        const detail = err?.message || err?.statusText || "unknown error";
+        this._statusBar.set("anchor-drop", `Error: ${detail}`, "error");
         this._onChange();
       })
       .finally(() => {
@@ -97,8 +84,8 @@ export class AnchorController {
       })
       .catch((err) => {
         this._appState.restoreAnchorState(snapshot);
-        const detail = err?.statusText || err?.message || "unknown error";
-        this._statusBar.set("anchor-raise", `Failed to raise anchor: ${detail}`, "error");
+        const detail = err?.message || err?.statusText || "unknown error";
+        this._statusBar.set("anchor-raise", `Error: ${detail}`, "error");
         this._onChange();
       })
       .finally(() => {
@@ -131,20 +118,6 @@ export class AnchorController {
 
     const snapshot = this._appState.snapshotAnchorState();
     this._appState.applyClientAnchorState({ watchZone: zoneConfig });
-
-    // When anchored, refuse a zone that no longer contains the boat — saving it
-    // would trip the drag alarm immediately. Check after the optimistic write
-    // but before the backend POST. (Not anchored → no alarm, nothing to guard.)
-    if (
-      this._appState.isAnchored() &&
-      !this._currentPositionInZone(zoneConfig, this._appState.anchor?.position?.value)
-    ) {
-      this._appState.restoreAnchorState(snapshot);
-      this._statusBar.logError("Boat is outside the watch zone.");
-      this._onChange();
-      return;
-    }
-
     this._onChange();
 
     if (!this._appState.isAnchored())
@@ -154,37 +127,14 @@ export class AnchorController {
       .setZone(zoneConfig)
       .then(() => this._statusBar.clear("anchor-zone"))
       .catch((err) => {
-        const detail = err?.statusText || err?.message || "unknown error";
-        this._statusBar.set("anchor-zone", `Failed to set zone: ${detail}`, "error");
+        this._appState.restoreAnchorState(snapshot);
+        const detail = err?.message || err?.statusText || "unknown error";
+        this._statusBar.set("anchor-zone", `Error: ${detail}`, "error");
+        this._onChange();
       });
   }
 
   // === Helpers ====================================================================
-
-  // True when the vessel's current GPS fix lies inside `zoneConfig` anchored at
-  // `anchorPos` ({ latitude, longitude }). Used to refuse a drop / zone change
-  // that would immediately trip the drag alarm. Returns true when we can't
-  // prove otherwise (no fix, unknown anchor, or a malformed config) so missing
-  // data never blocks the action — the backend re-checks authoritatively.
-  _currentPositionInZone(zoneConfig, anchorPos) {
-    const current = this._appState.currentCoordinates?.value;
-    if (!current || current.latitude == null || current.longitude == null)
-      return true;
-    if (!anchorPos || anchorPos.latitude == null || anchorPos.longitude == null)
-      return true;
-
-    let zone;
-    try {
-      zone = watchZoneFromConfig(zoneConfig);
-    } catch {
-      return true;
-    }
-
-    return zone.contains(
-      { latitude: current.latitude, longitude: current.longitude },
-      { latitude: anchorPos.latitude, longitude: anchorPos.longitude },
-    );
-  }
 
   // Pull the current zone config from AppState.
   _currentZoneConfig() {

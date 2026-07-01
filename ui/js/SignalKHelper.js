@@ -20,7 +20,8 @@ export class SignalKHelper {
   // the JAUTHENTICATION cookie, which (being same-origin) is then sent
   // automatically on every subsequent request — the same cookie the auth-gated
   // plugin POSTs already rely on. Rejects with { status, statusText } on bad
-  // credentials (401) or other HTTP errors.
+  // credentials (401) or other HTTP errors. The rejection also carries the
+  // backend's { message } when the error body includes one.
   login(username, password, rememberMe = false) {
     return fetch(`${this.baseUrl}/signalk/v1/auth/login`, {
       method: "POST",
@@ -30,7 +31,8 @@ export class SignalKHelper {
   }
 
   // Fetchers return native Promises that resolve with the parsed JSON body and
-  // reject with { status, statusText } on HTTP errors.
+  // reject with { status, statusText, message } on HTTP errors (message is the
+  // backend's error text when present).
   request(path) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort("Request timed out"), 5000);
@@ -73,10 +75,21 @@ export class SignalKHelper {
 
   static _toJsonOrReject(response) {
     if (!response.ok) {
-      return Promise.reject({
-        status: response.status,
-        statusText: response.statusText,
-      });
+      // Our plugin routes reply with a JSON { message } body describing why the
+      // request failed (e.g. "boat is outside the watch zone — alarm would
+      // trigger immediately"). Read it so callers can surface the real reason
+      // rather than the bare HTTP status. Tolerate a non-JSON body (some
+      // SignalK errors are plain text) by falling back to no message.
+      return response
+        .json()
+        .catch(() => null)
+        .then((body) =>
+          Promise.reject({
+            status: response.status,
+            statusText: response.statusText,
+            message: body?.message,
+          }),
+        );
     }
     return response.json();
   }
