@@ -172,6 +172,16 @@ describe("dropAnchor()", () => {
     );
   });
 
+  test("allows a drop outside the zone when allowZoneOutsideVessel is set", () => {
+    const { h, plugin } = setup();
+    plugin.configuration = { state: "emergency", allowZoneOutsideVessel: true };
+    h.setSelfPath("navigation.position.value", vesselAt(ANCHOR, 200, 0));
+    plugin.dropAnchor({ position: ANCHOR, zone: { type: "circle", radius: 60 } });
+
+    assert.equal(h.lastDelta("navigation.anchor.state"), "on");
+    assert.equal(h.calls.subscriptions.length, 1);
+  });
+
   test("success emits anchor deltas, saves zone+position, and starts watching", () => {
     const { h, plugin } = setup();
     plugin.configuration = { state: "emergency" };
@@ -215,6 +225,20 @@ describe("setZone()", () => {
     plugin.configuration = { zone: droppedZone(), state: "emergency" };
     h.setSelfPath("navigation.position.value", vesselAt(ANCHOR, 90, 0));
     assert.throws(() => plugin.setZone({ type: "circle", radius: 60 }), StateError);
+  });
+
+  test("allows a zone that excludes the boat when allowZoneOutsideVessel is set", () => {
+    const { h, plugin } = setup();
+    plugin.configuration = {
+      zone: droppedZone(),
+      state: "emergency",
+      allowZoneOutsideVessel: true,
+    };
+    h.setSelfPath("navigation.position.value", vesselAt(ANCHOR, 90, 0));
+    plugin.setZone({ type: "circle", radius: 60 });
+
+    assert.equal(JSON.parse(plugin.configuration.zone).radius, 60);
+    assert.ok(h.calls.savePluginOptions.length >= 1);
   });
 
   test("success updates the saved zone and persists", () => {

@@ -194,6 +194,13 @@ export function buildSchema(app) {
           "Check propulsion.* to see if the engines are on before sending alarm notification.",
         default: true,
       },
+      allowZoneOutsideVessel: {
+        type: "boolean",
+        title: "Allow Watch Zone Outside Vessel Position",
+        description:
+          "Allow setting the anchor watch zone outside of the vessel's position. Useful for testing the alarm - normally a drop or zone that would trip the drag alarm immediately is refused.",
+        default: false,
+      },
       anchorAlarmInterval: {
         type: "number",
         title:

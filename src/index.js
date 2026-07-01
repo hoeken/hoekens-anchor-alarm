@@ -411,9 +411,14 @@ export default function (app) {
     const resolvedZone = plugin.resolveZone(zone);
 
     // Refuse a drop that leaves the boat outside the zone — it would trip the
-    // drag alarm immediately. Skip the guard when we have no GPS fix.
+    // drag alarm immediately. Skip the guard when we have no GPS fix, or when
+    // allowZoneOutsideVessel is enabled for alarm testing.
     const vesselPosition = app.getSelfPath("navigation.position.value");
-    if (vesselPosition && !resolvedZone.contains(vesselPosition, parsedPosition)) {
+    if (
+      !plugin.configuration.allowZoneOutsideVessel &&
+      vesselPosition &&
+      !resolvedZone.contains(vesselPosition, parsedPosition)
+    ) {
       throw new StateError(
         "boat is outside the watch zone — alarm would trigger immediately",
       );
@@ -461,8 +466,12 @@ export default function (app) {
     const resolvedZone = plugin.resolveZone(zone);
 
     // Refuse a zone that no longer contains the boat — saving it would trip the
-    // drag alarm immediately.
-    if (!resolvedZone.contains(vesselPosition, anchorPosition)) {
+    // drag alarm immediately. Skip the guard when allowZoneOutsideVessel is
+    // enabled for alarm testing.
+    if (
+      !plugin.configuration.allowZoneOutsideVessel &&
+      !resolvedZone.contains(vesselPosition, anchorPosition)
+    ) {
       throw new StateError(
         "boat is outside the watch zone — alarm would trigger immediately",
       );

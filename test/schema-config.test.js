@@ -124,6 +124,7 @@ describe("applyDefaults()", () => {
     assert.equal(config.defaultBasemap, "Satellite");
     assert.equal(config.enableTidePanel, true);
     assert.equal(config.anchorAlarmInterval, 60);
+    assert.equal(config.allowZoneOutsideVessel, false);
   });
 
   test("never overwrites a value the user already set", () => {
