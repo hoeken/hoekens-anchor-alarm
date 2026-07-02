@@ -1,3 +1,18 @@
+# v2.5.1
+
+## New features
+
+- **Test your alarm from the helm** — a new "Allow setting anchor watch zone outside of vessel position" option (off by default) lets you drop the anchor or set a watch zone even when the boat is currently outside it, so you can deliberately trip the alarm to check that it works
+- **"Remember me?" on login** — the in-app login form now has a "Remember me?" checkbox (on by default) that keeps you signed in with a long-lived session instead of logging you back out shortly after
+
+## Bug fixes
+
+- **One clear answer on drop / zone changes** — the map UI no longer second-guesses whether the boat is inside the watch zone when you drop the anchor or change the zone; the backend is now the single source of truth and its messages are shown directly, so you get one consistent, correct result (fixes #17)
+
+## Under the hood
+
+- Slightly darker app icon
+
 # v2.5.0
 
 ## Now works on Navico chartplotters
