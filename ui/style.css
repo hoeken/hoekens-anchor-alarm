@@ -317,6 +317,7 @@ body,
 #scopeTotalRow td,
 #minimumDepthRow td {
   border-top: 1px solid var(--divider);
+  font-weight: bold;
 }
 
 #currentTideDirection svg {
