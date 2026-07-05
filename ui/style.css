@@ -80,6 +80,10 @@ html.dark {
   --accent-fg: #e6e8eb;
   --danger: #e06055;
   --shadow: rgba(0, 0, 0, 0.6);
+  /* Soft accent-blue glow that replaces Leaflet's hard black control-bar
+     drop shadow in dark mode (see the .leaflet-bar override below). Only
+     referenced by html.dark rules, so light mode never sees it. */
+  --control-glow: rgba(102, 178, 255, 0.5);
   --backdrop: rgba(0, 0, 0, 0.7);
   --close-fg: #b0b6bd;
   --attribution-bg: rgba(20, 24, 28, 0.72);
@@ -127,6 +131,17 @@ html.dark .leaflet-control-theme:hover {
 html.dark .leaflet-bar a.leaflet-disabled {
   background-color: var(--surface-bg);
   color: var(--surface-fainter);
+}
+
+/* Leaflet's control bars and panels (zoom/home/config/theme, layers,
+   info/scope/status) and our own toolbar buttons ship a hard black drop
+   shadow, which just reads as a dark smudge against the night map. In dark
+   mode swap it for a soft accent-blue glow so the chrome still lifts off the
+   map. Light mode is untouched. */
+html.dark .leaflet-bar,
+html.dark .leaflet-control-layers,
+html.dark #controlToolbar button {
+  box-shadow: 0 0 4px var(--control-glow);
 }
 
 /* Leaflet's default container background is a light grey shown while tiles
