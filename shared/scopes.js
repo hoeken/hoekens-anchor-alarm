@@ -15,14 +15,31 @@ export const MAX_SCOPE = 10;
 // Fault tolerant by design: accepts a comma-separated string (what the admin
 // and UI text fields produce) or an array. Each entry is trimmed and coerced to
 // a number; anything non-numeric or outside [MIN_SCOPE, MAX_SCOPE] is discarded,
-// duplicates are collapsed, and the survivors are sorted highest→lowest. If
-// nothing usable remains, the defaults are returned instead.
+// duplicates are collapsed, and the survivors are sorted highest→lowest.
+//
+// Three "no valid numbers" outcomes are deliberately distinguished:
+//   - Unset (undefined/null, e.g. an upgraded config missing the key): the
+//     value was never configured, so return the defaults.
+//   - Explicitly blank ("" / whitespace / empty array): the user cleared the
+//     field to turn scopes off, so return an empty list (no scopes at all).
+//   - Non-blank but unparseable ("abc", "0,99"): likely a typo, so fall back
+//     to the defaults rather than silently showing nothing.
 export function parseScopes(input, fallback = DEFAULT_SCOPES) {
-  const parts = typeof input === "string"
-    ? input.split(",")
-    : Array.isArray(input)
-      ? input
-      : [];
+  if (input === undefined || input === null)
+    return [...fallback];
+
+  let parts;
+  let blank;
+  if (typeof input === "string") {
+    blank = input.trim() === "";
+    parts = input.split(",");
+  } else if (Array.isArray(input)) {
+    blank = input.length === 0;
+    parts = input;
+  } else {
+    // Unexpected type — treat as unset.
+    return [...fallback];
+  }
 
   const seen = new Set();
   const scopes = [];
@@ -37,7 +54,7 @@ export function parseScopes(input, fallback = DEFAULT_SCOPES) {
   }
 
   if (scopes.length === 0)
-    return [...fallback];
+    return blank ? [] : [...fallback];
 
   scopes.sort((a, b) => b - a);
   return scopes;

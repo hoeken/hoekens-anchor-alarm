@@ -21,6 +21,7 @@ const FIELDS = [
     label: "Scope Ratios",
     type: "text",
     placeholder: "7,5,4,3",
+    hint: "Comma-separated values 1–10. Leave blank to hide the scope rows.",
   },
   {
     key: "defaultBasemap",
@@ -154,7 +155,8 @@ export const ConfigPanel = L.Control.extend({
 
     if (field.type === "checkbox")
       return `<label class="configRow configRowCheckbox">${control}${label}</label>`;
-    return `<label class="configRow">${label}${control}</label>`;
+    const hint = field.hint ? `<span class="configHint">${field.hint}</span>` : "";
+    return `<label class="configRow">${label}${control}${hint}</label>`;
   },
 
   _onFieldChange: function () {

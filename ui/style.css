@@ -512,6 +512,11 @@ body,
   color: #777;
 }
 
+.configHint {
+  font-size: 9pt;
+  color: #777;
+}
+
 #configStatus {
   display: none;
   margin-top: 8px;

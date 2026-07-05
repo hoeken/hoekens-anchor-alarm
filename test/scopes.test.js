@@ -35,15 +35,27 @@ describe("parseScopes()", () => {
     assert.deepEqual(parseScopes("7,7,5,5,4"), [7, 5, 4]);
   });
 
-  test("falls back to defaults when nothing is usable", () => {
-    for (const input of ["", "abc,xyz", "0,11", "  ", ",,,", undefined, null, 42])
+  test("returns an empty list for an explicitly blank field", () => {
+    assert.deepEqual(parseScopes(""), []);
+    assert.deepEqual(parseScopes("   "), []);
+    assert.deepEqual(parseScopes([]), []);
+  });
+
+  test("falls back to defaults when unset (undefined/null/missing key)", () => {
+    assert.deepEqual(parseScopes(undefined), DEFAULT_SCOPES);
+    assert.deepEqual(parseScopes(null), DEFAULT_SCOPES);
+    assert.deepEqual(parseScopes(42), DEFAULT_SCOPES);
+  });
+
+  test("falls back to defaults for non-blank but unparseable input", () => {
+    for (const input of ["abc,xyz", "0,11", ",,,", ["abc"]])
       assert.deepEqual(parseScopes(input), DEFAULT_SCOPES);
   });
 
   test("returns a fresh array so the defaults can't be mutated", () => {
-    const a = parseScopes("");
+    const a = parseScopes(undefined);
     a.push(99);
-    assert.deepEqual(parseScopes(""), DEFAULT_SCOPES);
+    assert.deepEqual(parseScopes(undefined), DEFAULT_SCOPES);
   });
 
   test("accepts an array as input", () => {

@@ -112,6 +112,10 @@ export const ScopePanel = L.Control.extend({
       spacer.parentNode.insertBefore(row, spacer);
       this._scopeRows.push({ row, value });
     }
+
+    // With no ratio rows the trailing spacer would double up with the one after
+    // the Total row, leaving an empty gap — hide it so blank config reads clean.
+    spacer.style.display = scopes.length ? "" : "none";
   },
 
   // Render a whole scope snapshot. Caller does the math; this is pure rendering

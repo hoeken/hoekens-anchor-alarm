@@ -184,7 +184,7 @@ export function buildSchema(app) {
         type: "string",
         title: "Scope Ratios",
         description:
-          "Comma-separated scope ratios to calculate and display, e.g. \"7,5,4,3\". Each value must be between 1 and 10; invalid entries are ignored and the defaults (7,5,4,3) are used if none are usable. Can also be changed live from the web UI.",
+          "Comma-separated scope ratios (1–10) to calculate and display, e.g. \"7,5,4,3\". Invalid entries are ignored. Leave the field blank to turn off the scope calculations entirely. Also editable live from the web UI.",
         default: "7,5,4,3",
       },
       state: {
