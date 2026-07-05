@@ -6,42 +6,60 @@
    Map tiles are deliberately left un-inverted — dark mode darkens the UI
    chrome, not the chart/imagery. */
 :root {
-  --surface-bg: #ffffff; /* panels, dialogs, buttons */
-  --surface-fg: #000000; /* primary text on surfaces */
-  --surface-hover: #f4f4f4; /* control hover background */
-  --surface-muted: #666666; /* secondary text (mmsi) */
-  --surface-faint: #777777; /* hints, notes */
-  --surface-fainter: #999999; /* version line */
-  --text-body: #333333; /* dialog body / labels */
-  --divider: #999999; /* table rules */
-  --control-border: rgba(0, 0, 0, 0.2); /* button/select borders */
+  --surface-bg: #ffffff;
+  /* panels, dialogs, buttons */
+  --surface-fg: #000000;
+  /* primary text on surfaces */
+  --surface-hover: #f4f4f4;
+  /* control hover background */
+  --surface-muted: #666666;
+  /* secondary text (mmsi) */
+  --surface-faint: #777777;
+  /* hints, notes */
+  --surface-fainter: #999999;
+  /* version line */
+  --text-body: #333333;
+  /* dialog body / labels */
+  --divider: #999999;
+  /* table rules */
+  --control-border: rgba(0, 0, 0, 0.2);
+  /* button/select borders */
   --input-bg: #f7f7f7;
   --input-border: #888888;
   --link: #0066cc;
   --link-hover: #004499;
-  --accent: #0066cc; /* primary button */
-  --accent-fg: #ffffff; /* text on accent/danger */
+  --accent: #0066cc;
+  /* primary button */
+  --accent-fg: #ffffff;
+  /* text on accent/danger */
   --danger: #c0392b;
   --shadow: rgba(0, 0, 0, 0.3);
   --backdrop: rgba(0, 0, 0, 0.6);
-  --close-fg: #555555; /* modal × */
+  --close-fg: #555555;
+  /* modal × */
   --attribution-bg: rgba(255, 255, 255, 0.7);
   --attribution-fg: #333333;
   --attribution-link: #0078a8;
-  --barb-fill: #000000; /* wind barb in the wind panel */
+  --barb-fill: #000000;
+  /* wind barb in the wind panel */
   --barb-stroke: #000000;
   --barb-halo: rgba(255, 255, 255, 0.5);
-  --label-fg: #000000; /* boat name labels over the map */
+  --label-fg: #000000;
+  /* boat name labels over the map */
   --label-halo: #ffffff;
-  --anchor-label-fill: #000000; /* rode-length text on the anchor line */
+  --anchor-label-fill: #000000;
+  /* rode-length text on the anchor line */
   --anchor-label-halo: rgba(255, 255, 255, 0.6);
   --zone-handle-bg: #ffffff;
   --zone-handle-border: #333333;
   --zone-handle-ghost-bg: rgba(255, 255, 255, 0.55);
   --zone-handle-armed: #000000;
-  --tide-line: #0066cc; /* tide graph curve/fill */
-  --tide-now: #000000; /* "now" marker + label */
-  --tide-marker: #003366; /* hi/lo dots + labels */
+  --tide-line: #0066cc;
+  /* tide graph curve/fill */
+  --tide-now: #000000;
+  /* "now" marker + label */
+  --tide-marker: #003366;
+  /* hi/lo dots + labels */
 }
 
 html.dark {
@@ -466,7 +484,7 @@ html.dark #polygonControl select {
 
 .leaflet-control-config svg path {
   stroke: currentColor;
-  stroke-width: 1;
+  stroke-width: 0.5;
 }
 
 /* Reusable modal dialog (see ui/js/hud/Modal.js). Fixed full-viewport backdrop
