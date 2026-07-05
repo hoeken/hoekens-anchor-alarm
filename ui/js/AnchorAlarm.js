@@ -106,7 +106,6 @@ class AnchorAlarm {
         maxZoom: 23,
         maxNativeZoom: 17, // Highest zoom level Esri has real imagery for
         tileSize: 256,
-        noWrap: true,
         keepBuffer: 5,
       },
     );
@@ -129,6 +128,7 @@ class AnchorAlarm {
     this.map = L.map("map", {
       zoomControl: false,
       attributionControl: false, // Prevents the default bottom-right control
+      worldCopyJump: true, // Wrap markers/view to nearest world copy past 180°
     }).setView([0, 0], 5);
     this.statusBar = new StatusBar();
     this.map.addControl(this.statusBar);
