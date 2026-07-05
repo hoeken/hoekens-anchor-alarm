@@ -28,6 +28,7 @@ export class Modal {
     this._buttons = [];
     this._primaryButton = null;
     this._focusTarget = null;
+    this._pressedOnBackdrop = false;
     this._onKeyDown = (e) => this._handleKeyDown(e);
 
     this._backdrop = document.createElement("div");
@@ -71,8 +72,19 @@ export class Modal {
     // Dismiss paths (× button, click on the dim area, Esc) all close with no
     // value so callers can tell a dismissal from an explicit button press.
     this._closeBtn.addEventListener("click", () => this.close());
+    // Only a click that both *starts* and *ends* on the dim area dismisses.
+    // A drag-select inside a field that releases over the backdrop fires a
+    // click whose target is the backdrop (the common ancestor of the down/up
+    // targets); tracking where the press began keeps that from closing us.
+    this._backdrop.addEventListener("mousedown", (e) => {
+      this._pressedOnBackdrop = e.target === this._backdrop;
+    });
     this._backdrop.addEventListener("click", (e) => {
-      if (e.target === this._backdrop && this._dismissible)
+      if (
+        e.target === this._backdrop &&
+        this._pressedOnBackdrop &&
+        this._dismissible
+      )
         this.close();
     });
 
