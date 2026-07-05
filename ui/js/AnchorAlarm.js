@@ -338,7 +338,7 @@ class AnchorAlarm {
     this.setBasemap(this.config.defaultBasemap);
 
     //
-    // Buttons - Top Right
+    // Buttons - Top Left
     //
 
     // Settings gear only makes sense when logged in — anonymous users can't
@@ -352,6 +352,16 @@ class AnchorAlarm {
       this.map.addControl(this.configPanel);
     }
 
+    L.control.layers(this.baseMaps, {}, { position: "topleft" }).addTo(this.map);
+
+    // Light/dark toggle. Unlike the settings gear it isn't login-gated — the
+    // theme is a session-only preference anyone can flip (see hud/ThemeControl).
+    this.themeControl = new ThemeControl();
+    this.map.addControl(this.themeControl);
+
+    //
+    // Buttons - Top Right
+    //
     this.homeButton = new HomeButtonControl({
       onHome: (map) => {
         this.anchorController.estimateAnchorPosition();
@@ -360,13 +370,7 @@ class AnchorAlarm {
     });
     this.map.addControl(this.homeButton);
 
-    // Light/dark toggle. Unlike the settings gear it isn't login-gated — the
-    // theme is a session-only preference anyone can flip (see hud/ThemeControl).
-    this.themeControl = new ThemeControl();
-    this.map.addControl(this.themeControl);
-
     L.control.zoom({ position: "topright" }).addTo(this.map);
-    L.control.layers(this.baseMaps, {}, { position: "topleft" }).addTo(this.map);
 
     // Map attribution lives in a full-width strip at the bottom of the page
     // (#mapAttribution) instead of Leaflet's default corner control, which is
