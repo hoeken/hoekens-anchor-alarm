@@ -197,9 +197,17 @@ body,
 
 /* Flexbox `gap` is unsupported before Chromium 84, so on Navico MFDs (Chromium
    69) it collapses to zero spacing. Replace it with margins between items. The
-   same pattern is used for every flex container below. */
-#controlToolbar > * + * {
-  margin-top: 6px;
+   same pattern is used for every flex container below.
+
+   This toolbar hides children with `display: none` as state changes (login
+   prompt, raise vs. drop button, shape selector), and the leading children are
+   the ones that get hidden. A `> * + *` margin-top would still match the first
+   *visible* child (the `+` combinator ignores display), leaving a phantom 6px
+   gap above it. Spacing with margin-bottom avoids that — a hidden element then
+   contributes no margin — at the cost of an invisible trailing 6px (the
+   toolbar has no background or border). */
+#controlToolbar > * {
+  margin-bottom: 6px;
 }
 
 #controlToolbar button {
