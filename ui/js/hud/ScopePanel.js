@@ -14,56 +14,61 @@ export const ScopePanel = L.Control.extend({
     container.id = "scopeUI";
     container.style.display = "none";
     container.innerHTML = `
-        <table id="scopeDepthTable">
-          <tr>
-            <th>Surface&nbsp;Depth</th>
-            <td><span id='scopeDepth'>~</span></td>
-          </tr>
-          <tr id="bowHeightRow">
-            <th>Bow&nbsp;Height</th>
-            <td>+ <span id='bowHeight'>~</span></td>
-          </tr>
-          <tr id="tidalRiseRow">
-            <th>Tidal&nbsp;Rise</th>
-            <td>+ <span id='tidalRise'>~</span></td>
-          </tr>
-          <tr id="scopeTotalRow">
-            <th>Total</th>
-            <td>= <span id='scopeTotal'>~</span></td>
-          </tr>
-          <tr>
-            <th colspan="2">&nbsp;</th>
-          </tr>
-          <tr id="scope7to1Row">
-            <th>7:1&nbsp;Scope</th>
-            <td><span id='scope7to1'>~</span></td>
-          </tr>
-          <tr id="scope5to1Row">
-            <th>5:1&nbsp;Scope</th>
-            <td><span id='scope5to1'>~</span></td>
-          </tr>
-          <tr id="scope4to1Row">
-            <th>4:1&nbsp;Scope</th>
-            <td><span id='scope4to1'>~</span></td>
-          </tr>
-          <tr id="scope3to1Row">
-            <th>3:1&nbsp;Scope</th>
-            <td><span id='scope3to1'>~</span></td>
-          </tr>
-        </table>
-        <table id="minimumDepthTable">
-          <tr id="belowKeelRow">
-            <th>Below&nbsp;Keel</th>
-            <td><span id='belowKeel'>~</span></td>
-          </tr>
-          <tr id="tidalFallRow">
-            <th>Tidal&nbsp;Fall</th>
-            <td>- <span id='tidalFall'>~</span></td>
-          </tr>
-          <tr id="minimumDepthRow">
-            <th>Minimum&nbsp;Depth</th>
-            <td>= <span id='minimumDepth'>~</span></td>
-          </tr>
+        <table id="scopeTable">
+          <tbody id="scopeDepthTable">
+            <tr>
+              <th>Surface&nbsp;Depth</th>
+              <td><span id='scopeDepth'>~</span></td>
+            </tr>
+            <tr id="bowHeightRow">
+              <th>Bow&nbsp;Height</th>
+              <td>+ <span id='bowHeight'>~</span></td>
+            </tr>
+            <tr id="tidalRiseRow">
+              <th>Tidal&nbsp;Rise</th>
+              <td>+ <span id='tidalRise'>~</span></td>
+            </tr>
+            <tr id="scopeTotalRow">
+              <th>Total</th>
+              <td>= <span id='scopeTotal'>~</span></td>
+            </tr>
+            <tr>
+              <th colspan="2">&nbsp;</th>
+            </tr>
+            <tr id="scope7to1Row">
+              <th>7:1&nbsp;Scope</th>
+              <td><span id='scope7to1'>~</span></td>
+            </tr>
+            <tr id="scope5to1Row">
+              <th>5:1&nbsp;Scope</th>
+              <td><span id='scope5to1'>~</span></td>
+            </tr>
+            <tr id="scope4to1Row">
+              <th>4:1&nbsp;Scope</th>
+              <td><span id='scope4to1'>~</span></td>
+            </tr>
+            <tr id="scope3to1Row">
+              <th>3:1&nbsp;Scope</th>
+              <td><span id='scope3to1'>~</span></td>
+            </tr>
+            <tr>
+              <th colspan="2">&nbsp;</th>
+            </tr>
+          </tbody>
+          <tbody id="minimumDepthTable">
+            <tr id="belowKeelRow">
+              <th>Below&nbsp;Keel</th>
+              <td><span id='belowKeel'>~</span></td>
+            </tr>
+            <tr id="tidalFallRow">
+              <th>Tidal&nbsp;Fall</th>
+              <td>- <span id='tidalFall'>~</span></td>
+            </tr>
+            <tr id="minimumDepthRow">
+              <th>Minimum&nbsp;Depth</th>
+              <td>= <span id='minimumDepth'>~</span></td>
+            </tr>
+          </tbody>
         </table>
     `;
     this._container = container;

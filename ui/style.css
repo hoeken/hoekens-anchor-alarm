@@ -118,6 +118,15 @@ body,
   text-align: right;
 }
 
+.scope th {
+  padding-right: 8px;
+}
+
+#scopeTotalRow td,
+#minimumDepthRow td {
+  border-top: 1px solid #999;
+}
+
 #currentTideDirection svg {
   margin-left: 2px;
 }
@@ -129,7 +138,6 @@ body,
 
 .scope {
   padding: 5px;
-  width: 200px;
   font-size: 11pt;
   line-height: 1.1;
   background-color: white;
