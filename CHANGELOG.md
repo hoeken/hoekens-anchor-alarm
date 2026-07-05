@@ -1,3 +1,10 @@
+# v2.6.1
+
+## Bug fixes
+
+- **Fewer oversized ships on the map** — recreational Class B AIS transponders sometimes broadcast garbage length/beam; when a Class B target reports a length above the 24m Class A threshold, its dimensions now fall back to defaults instead of drawing a giant ship marker (fixes #18)
+- **Map wraps cleanly across the date line** — panning over the antimeridian (180° longitude) now scrolls smoothly, and markers jump to the correct side instead of stranding on the far edge
+
 # v2.6.0
 
 ## Light & dark mode
