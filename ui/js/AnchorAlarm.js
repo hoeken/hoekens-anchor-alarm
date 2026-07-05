@@ -18,6 +18,7 @@ import { AnchorOverlay } from "./hud/AnchorOverlay.js";
 import { AnchorController } from "./AnchorController.js";
 import { ControlToolbar } from "./hud/ControlToolbar.js";
 import { ConfigPanel } from "./hud/ConfigPanel.js";
+import { ThemeControl } from "./hud/ThemeControl.js";
 import { Modal } from "./hud/Modal.js";
 import { nativeTooltipsSuppressed } from "./BrowserSupport.js";
 
@@ -54,6 +55,7 @@ class AnchorAlarm {
     this.windPanel = undefined;
     this.homeButton = undefined;
     this.configPanel = undefined;
+    this.themeControl = undefined;
     this.toolbar = undefined;
     this.updateTimer = null;
     this.pollTimer = null;
@@ -357,6 +359,11 @@ class AnchorAlarm {
       },
     });
     this.map.addControl(this.homeButton);
+
+    // Light/dark toggle. Unlike the settings gear it isn't login-gated — the
+    // theme is a session-only preference anyone can flip (see hud/ThemeControl).
+    this.themeControl = new ThemeControl();
+    this.map.addControl(this.themeControl);
 
     L.control.zoom({ position: "topright" }).addTo(this.map);
     L.control.layers(this.baseMaps, {}, { position: "topleft" }).addTo(this.map);

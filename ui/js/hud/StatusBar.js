@@ -5,13 +5,14 @@
 //
 // Statuses are keyed by id so transient conditions (stale data, failed
 // fetches) can be cleared when they resolve. The most recently set entry
-// wins. Levels map to a color: "status" (black), "warning" (amber),
+// wins. Levels map to a color: "status" inherits the panel's themed text
+// color (empty string clears the inline override), "warning" (amber),
 // "error" (red).
 
 import { SignalKHelper } from "../SignalKHelper.js";
 
 const LEVEL_COLORS = {
-  status: "black",
+  status: "",
   warning: "#d97706",
   error: "red",
 };
@@ -146,7 +147,8 @@ export const StatusBar = L.Control.extend({
         latest = item;
     }
     this._container.textContent = latest.text;
-    this._container.style.color = LEVEL_COLORS[latest.level] || "black";
+    // "" falls back to the CSS-driven, theme-aware color on .statusBar.
+    this._container.style.color = LEVEL_COLORS[latest.level] ?? "";
     this._container.style.display = "";
   },
 });

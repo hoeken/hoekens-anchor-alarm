@@ -1,3 +1,148 @@
+/* Theme palette. Colors below are referenced through these variables so the
+   whole UI can switch between light and dark. The active theme is a class on
+   <html> ("light" or "dark") set before first paint by the inline script in
+   index.html and flipped at runtime by js/Theme.js. `:root` holds the light
+   values (also the fallback if no class is set); `html.dark` overrides them.
+   Map tiles are deliberately left un-inverted — dark mode darkens the UI
+   chrome, not the chart/imagery. */
+:root {
+  --surface-bg: #ffffff; /* panels, dialogs, buttons */
+  --surface-fg: #000000; /* primary text on surfaces */
+  --surface-hover: #f4f4f4; /* control hover background */
+  --surface-muted: #666666; /* secondary text (mmsi) */
+  --surface-faint: #777777; /* hints, notes */
+  --surface-fainter: #999999; /* version line */
+  --text-body: #333333; /* dialog body / labels */
+  --divider: #999999; /* table rules */
+  --control-border: rgba(0, 0, 0, 0.2); /* button/select borders */
+  --input-bg: #f7f7f7;
+  --input-border: #888888;
+  --link: #0066cc;
+  --link-hover: #004499;
+  --accent: #0066cc; /* primary button */
+  --accent-fg: #ffffff; /* text on accent/danger */
+  --danger: #c0392b;
+  --shadow: rgba(0, 0, 0, 0.3);
+  --backdrop: rgba(0, 0, 0, 0.6);
+  --close-fg: #555555; /* modal × */
+  --attribution-bg: rgba(255, 255, 255, 0.7);
+  --attribution-fg: #333333;
+  --attribution-link: #0078a8;
+  --barb-fill: #000000; /* wind barb in the wind panel */
+  --barb-stroke: #000000;
+  --barb-halo: rgba(255, 255, 255, 0.5);
+  --label-fg: #000000; /* boat name labels over the map */
+  --label-halo: #ffffff;
+  --anchor-label-fill: #000000; /* rode-length text on the anchor line */
+  --anchor-label-halo: rgba(255, 255, 255, 0.6);
+  --zone-handle-bg: #ffffff;
+  --zone-handle-border: #333333;
+  --zone-handle-ghost-bg: rgba(255, 255, 255, 0.55);
+  --zone-handle-armed: #000000;
+  --tide-line: #0066cc; /* tide graph curve/fill */
+  --tide-now: #000000; /* "now" marker + label */
+  --tide-marker: #003366; /* hi/lo dots + labels */
+}
+
+html.dark {
+  --surface-bg: #232830;
+  --surface-fg: #cdd1d6;
+  --surface-hover: #30363f;
+  --surface-muted: #9aa0a6;
+  --surface-faint: #8a9099;
+  --surface-fainter: #6f757c;
+  --text-body: #c8ccd2;
+  --divider: #4a5058;
+  --control-border: rgba(255, 255, 255, 0.18);
+  --input-bg: #2c323b;
+  --input-border: #545b64;
+  --link: #66b2ff;
+  --link-hover: #99ccff;
+  --accent: #2f6fed;
+  --accent-fg: #e6e8eb;
+  --danger: #e06055;
+  --shadow: rgba(0, 0, 0, 0.6);
+  --backdrop: rgba(0, 0, 0, 0.7);
+  --close-fg: #b0b6bd;
+  --attribution-bg: rgba(20, 24, 28, 0.72);
+  --attribution-fg: #c8ccd2;
+  --attribution-link: #66b2ff;
+  --barb-fill: #cdd1d6;
+  --barb-stroke: #cdd1d6;
+  --barb-halo: rgba(0, 0, 0, 0.55);
+  --label-fg: #cdd1d6;
+  --label-halo: #000000;
+  --anchor-label-fill: #cdd1d6;
+  --anchor-label-halo: rgba(0, 0, 0, 0.6);
+  --zone-handle-bg: #2c323b;
+  --zone-handle-border: #d0d3d8;
+  --zone-handle-ghost-bg: rgba(44, 50, 59, 0.6);
+  --zone-handle-armed: #ffffff;
+  --tide-line: #66b2ff;
+  --tide-now: #cdd1d6;
+  --tide-marker: #8ab6f2;
+}
+
+/* Dark-mode overrides for Leaflet's own chrome (zoom/layers/popups). These
+   ship white with dark text from leaflet.css; only the pieces that are its
+   defaults (not our themed panels) need patching here. Scoped to the specific
+   control classes so the info-panel's underlined links keep their own color. */
+html.dark .leaflet-control-zoom-in,
+html.dark .leaflet-control-zoom-out,
+html.dark .leaflet-control-home,
+html.dark .leaflet-control-config,
+html.dark .leaflet-control-theme {
+  background-color: var(--surface-bg);
+  color: var(--surface-fg);
+  border-bottom-color: var(--divider);
+}
+
+html.dark .leaflet-control-zoom-in:hover,
+html.dark .leaflet-control-zoom-out:hover,
+html.dark .leaflet-control-home:hover,
+html.dark .leaflet-control-config:hover,
+html.dark .leaflet-control-theme:hover {
+  background-color: var(--surface-hover);
+  color: var(--surface-fg);
+}
+
+html.dark .leaflet-bar a.leaflet-disabled {
+  background-color: var(--surface-bg);
+  color: var(--surface-fainter);
+}
+
+/* Leaflet's default container background is a light grey shown while tiles
+   load and beyond the chart edges; keep it dark so night mode never flashes
+   bright. Map tiles themselves are left un-inverted. */
+html.dark .leaflet-container {
+  background: #1a1d21;
+}
+
+html.dark .leaflet-control-layers {
+  background: var(--surface-bg);
+  color: var(--surface-fg);
+}
+
+/* The collapsed layers toggle is a dark raster icon; invert it so it reads on
+   the dark control background. */
+html.dark .leaflet-control-layers-toggle {
+  filter: invert(1);
+}
+
+html.dark .leaflet-popup-content-wrapper,
+html.dark .leaflet-popup-tip {
+  background: var(--surface-bg);
+  color: var(--surface-fg);
+}
+
+html.dark .leaflet-popup-content a {
+  color: var(--link);
+}
+
+html.dark .leaflet-container a.leaflet-popup-close-button {
+  color: var(--surface-muted);
+}
+
 body {
   padding: 0;
   margin: 0;
@@ -64,10 +209,10 @@ body,
   -webkit-appearance: none;
   appearance: none;
   border-radius: 5px;
-  border: 2px solid rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--control-border);
   background-clip: padding-box;
-  background-color: white;
-  color: black;
+  background-color: var(--surface-bg);
+  color: var(--surface-fg);
   font-size: inherit;
 }
 
@@ -80,7 +225,8 @@ body,
   width: 150px;
   font-size: 11pt;
   line-height: 1.1;
-  background-color: white;
+  background-color: var(--surface-bg);
+  color: var(--surface-fg);
 }
 
 .info th,
@@ -101,7 +247,7 @@ body,
   border-radius: 0;
   text-align: left;
   text-decoration: underline;
-  color: #0066cc;
+  color: var(--link);
 }
 
 .info.leaflet-bar a:hover,
@@ -109,7 +255,7 @@ body,
 .leaflet-touch .info.leaflet-bar a:hover,
 .leaflet-touch .info.leaflet-bar a:focus {
   background-color: transparent;
-  color: #004499;
+  color: var(--link-hover);
 }
 
 .info td,
@@ -124,7 +270,7 @@ body,
 
 #scopeTotalRow td,
 #minimumDepthRow td {
-  border-top: 1px solid #999;
+  border-top: 1px solid var(--divider);
 }
 
 #currentTideDirection svg {
@@ -140,7 +286,8 @@ body,
   padding: 5px;
   font-size: 11pt;
   line-height: 1.1;
-  background-color: white;
+  background-color: var(--surface-bg);
+  color: var(--surface-fg);
   display: flex;
   flex-direction: column;
 }
@@ -209,14 +356,14 @@ body,
   -webkit-appearance: none;
   appearance: none;
   border-radius: 5px;
-  border: 2px solid rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--control-border);
   background-clip: padding-box;
-  background-color: white;
+  background-color: var(--surface-bg);
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='black' d='M0 0l6 8 6-8z'/></svg>");
   background-repeat: no-repeat;
   background-position: right 10px center;
   background-size: 12px 8px;
-  color: black;
+  color: var(--surface-fg);
   font-family: inherit;
   font-size: inherit;
   padding: 0 28px 0 8px;
@@ -270,14 +417,14 @@ body,
   -webkit-appearance: none;
   appearance: none;
   border-radius: 5px;
-  border: 2px solid rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--control-border);
   background-clip: padding-box;
-  background-color: white;
+  background-color: var(--surface-bg);
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='black' d='M0 0l6 8 6-8z'/></svg>");
   background-repeat: no-repeat;
   background-position: right 10px center;
   background-size: 12px 8px;
-  color: black;
+  color: var(--surface-fg);
   font-family: inherit;
   font-size: inherit;
   padding: 0 28px 0 8px;
@@ -289,8 +436,16 @@ body,
   box-sizing: border-box;
 }
 
+/* The dropdown arrow is a baked-in data URI (fill='black'); swap it for a
+   white one in dark mode since the fill can't be driven by a CSS variable. */
+html.dark #zoneShapeSelect select,
+html.dark #polygonControl select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='white' d='M0 0l6 8 6-8z'/></svg>");
+}
+
 .leaflet-control-home,
-.leaflet-control-config {
+.leaflet-control-config,
+.leaflet-control-theme {
   display: flex !important;
   align-items: center;
   justify-content: center;
@@ -315,15 +470,16 @@ body,
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: var(--backdrop);
   pointer-events: auto;
 }
 
 .modalDialog {
   margin: 0;
-  background-color: white;
+  background-color: var(--surface-bg);
+  color: var(--surface-fg);
   border-radius: 6px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 12px var(--shadow);
   width: 320px;
   max-width: calc(100% - 32px);
   max-height: calc(100% - 32px);
@@ -356,14 +512,14 @@ body,
   font-size: 24px;
   line-height: 1;
   cursor: pointer;
-  color: #555;
+  color: var(--close-fg);
   padding: 0 4px;
 }
 
 .modalMessage {
   display: block;
   margin: 0;
-  color: #333;
+  color: var(--text-body);
   line-height: 1.3;
 }
 
@@ -382,8 +538,9 @@ body,
   width: 100%;
   height: 38px;
   border-radius: 4px;
-  border: 1px solid #888;
-  background-color: #f7f7f7;
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--surface-fg);
   padding: 0 8px;
   box-sizing: border-box;
   font-family: inherit;
@@ -394,7 +551,7 @@ body,
   display: flex;
   flex-direction: row;
   align-items: center;
-  color: #333;
+  color: var(--text-body);
 }
 
 .modalCheckbox > * + * {
@@ -407,7 +564,7 @@ body,
 }
 
 .modalError {
-  color: #c0392b;
+  color: var(--danger);
   font-size: 13px;
   line-height: 1.3;
 }
@@ -428,25 +585,25 @@ body,
   min-height: 40px;
   padding: 0 16px;
   border-radius: 5px;
-  border: 2px solid rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--control-border);
   background-clip: padding-box;
-  background-color: white;
-  color: black;
+  background-color: var(--surface-bg);
+  color: var(--surface-fg);
   font-family: inherit;
   font-size: 16px;
   cursor: pointer;
 }
 
 .modalButton.primary {
-  background-color: #0066cc;
-  border-color: #0066cc;
-  color: white;
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
 }
 
 .modalButton.danger {
-  background-color: #c0392b;
-  border-color: #c0392b;
-  color: white;
+  background-color: var(--danger);
+  border-color: var(--danger);
+  color: var(--accent-fg);
 }
 
 .modalButton:disabled {
@@ -483,7 +640,7 @@ body,
 }
 
 .configLabel {
-  color: #333;
+  color: var(--text-body);
 }
 
 .configInput {
@@ -496,8 +653,9 @@ body,
   width: 100%;
   height: 32px;
   border-radius: 4px;
-  border: 1px solid #888;
-  background-color: #f7f7f7;
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--surface-fg);
   padding: 0 8px;
 }
 
@@ -509,12 +667,12 @@ body,
 .configReloadNote {
   margin-top: 10px;
   font-size: 9pt;
-  color: #777;
+  color: var(--surface-faint);
 }
 
 .configHint {
   font-size: 9pt;
-  color: #777;
+  color: var(--surface-faint);
 }
 
 #configStatus {
@@ -534,7 +692,7 @@ body,
 #configVersion {
   margin-top: 8px;
   font-size: 8pt;
-  color: #999;
+  color: var(--surface-fainter);
 }
 
 /* Map attribution pinned to the very bottom of the page, spanning full width
@@ -546,15 +704,15 @@ body,
   right: 0;
   z-index: 1000;
   padding: 2px 6px;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--attribution-bg);
   text-align: right;
   font-size: 8pt;
   line-height: 1.4;
-  color: #333;
+  color: var(--attribution-fg);
 }
 
 #mapAttribution a {
-  color: #0078a8;
+  color: var(--attribution-link);
 }
 
 .leaflet-touch .leaflet-control-layers-toggle {
@@ -566,18 +724,18 @@ body,
 }
 
 .anchorLineLabel textPath {
-  fill: black;
+  fill: var(--anchor-label-fill);
   /* or whatever text color you want */
   paint-order: stroke;
-  stroke: rgba(255, 255, 255, 0.6);
-  /* transparent white "background" */
+  stroke: var(--anchor-label-halo);
+  /* halo behind the text for contrast over the map */
   stroke-width: 3px;
   /* thickness of the background */
 }
 
 .zoneHandle {
-  background: white;
-  border: 3px solid #333;
+  background: var(--zone-handle-bg);
+  border: 3px solid var(--zone-handle-border);
   border-radius: 50%;
   box-sizing: border-box;
   cursor: grab;
@@ -588,7 +746,7 @@ body,
 }
 
 .zoneHandleGhost {
-  background: rgba(255, 255, 255, 0.55);
+  background: var(--zone-handle-ghost-bg);
   border-width: 2px;
   border-style: solid;
   opacity: 0.7;
@@ -602,15 +760,15 @@ body,
    !important overrides the inline border-color set by ZoneHandle.setStyle.
    z-index lifts it above the target neighbor so the feedback stays visible. */
 .zoneHandleMergeArmed {
-  background: #000 !important;
-  border-color: #000 !important;
+  background: var(--zone-handle-armed) !important;
+  border-color: var(--zone-handle-armed) !important;
   opacity: 1;
   z-index: 1000 !important;
 }
 
 .wind-barb {
-  fill: black;
-  stroke: black;
+  fill: var(--barb-fill);
+  stroke: var(--barb-stroke);
   stroke-width: 4;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -618,7 +776,7 @@ body,
   z-index: 100;
 
   /* Adds a shadow: X-offset, Y-offset, Blur-radius, Color */
-  filter: drop-shadow(0px 0px 1px rgba(255, 255, 255, 0.5));
+  filter: drop-shadow(0px 0px 1px var(--barb-halo));
 }
 
 #windBarbContainer .wind-barb {
@@ -629,7 +787,8 @@ body,
   padding: 5px;
   font-size: 11pt;
   line-height: 1.1;
-  background-color: white;
+  background-color: var(--surface-bg);
+  color: var(--surface-fg);
   text-align: center;
   width: 70px;
 }
@@ -637,7 +796,8 @@ body,
 .tides {
   width: 160px;
   height: 75px;
-  background-color: white;
+  background-color: var(--surface-bg);
+  color: var(--surface-fg);
   overflow: hidden;
   cursor: pointer;
 }
@@ -651,38 +811,38 @@ body,
 }
 
 .tides .tides-line {
-  stroke: #0066cc;
+  stroke: var(--tide-line);
   stroke-width: 1.25;
 }
 
 .tides .tides-gradient-stop1 {
-  stop-color: #0066cc;
+  stop-color: var(--tide-line);
   stop-opacity: 0.55;
 }
 
 .tides .tides-gradient-stop2 {
-  stop-color: #0066cc;
+  stop-color: var(--tide-line);
   stop-opacity: 0.05;
 }
 
 .tides .tides-now {
-  stroke: #000;
+  stroke: var(--tide-now);
   stroke-width: 1;
   stroke-dasharray: 2 2;
 }
 
 .tides .tides-now-label {
-  fill: #000;
+  fill: var(--tide-now);
   font-weight: bold;
 }
 
 .tides .tides-marker-dot {
-  fill: #003366;
+  fill: var(--tide-marker);
 }
 
 .tides .tides-marker-height,
 .tides .tides-marker-time {
-  fill: #003366;
+  fill: var(--tide-marker);
 }
 
 .statusBar {
@@ -690,7 +850,8 @@ body,
   max-width: 320px;
   font-size: 11pt;
   line-height: 1.1;
-  background-color: white;
+  background-color: var(--surface-bg);
+  color: var(--surface-fg);
   font-weight: bold;
   line-height: 1.2;
 }
@@ -722,7 +883,7 @@ span.mmsi {
   flex-direction: column;
   font-size: 9px;
   line-height: 1.1;
-  color: #666;
+  color: var(--surface-muted);
   white-space: nowrap;
 }
 
@@ -742,16 +903,16 @@ table.vesselData td:nth-child(3) {
   border: none;
   box-shadow: none;
   padding: 0;
-  color: #000;
+  color: var(--label-fg);
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
   text-shadow:
-    0 0 3px #fff,
-    0 0 3px #fff,
-    0 0 3px #fff,
-    0 0 2px #fff;
+    0 0 3px var(--label-halo),
+    0 0 3px var(--label-halo),
+    0 0 3px var(--label-halo),
+    0 0 2px var(--label-halo);
 }
 
 .boat-name-label.leaflet-tooltip-top::before {

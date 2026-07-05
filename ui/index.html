@@ -45,6 +45,32 @@
     <link rel="preload" href="icons/anchor.png" as="image" />
     <link rel="preload" href="icons/crosshair.png" as="image" />
 
+    <!--
+      Theme selection, run synchronously before first paint (no flash).
+      B&G / Navico MFDs load embedded web apps with a `?mode=night` or
+      `?mode=day` query param instead of honoring prefers-color-scheme, so
+      catch that first; otherwise fall back to the OS preference. The chosen
+      theme is applied as a class on <html>, which styles.css keys off of.
+      The runtime toggle (see js/Theme.js) just flips this class; the choice
+      is intentionally not persisted, so each load re-derives it.
+    -->
+    <script>
+      (function () {
+        var m = location.search.match(/[?&]mode=([^&]*)/);
+        var mode = m ? decodeURIComponent(m[1]) : null;
+        var theme = "dark";
+        if (mode !== null) {
+          theme = mode === "night" ? "dark" : "light";
+        } else if (
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: light)").matches
+        ) {
+          theme = "light";
+        }
+        document.documentElement.className = theme;
+      })();
+    </script>
+
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="leaflet/leaflet.css" />
     <script src="leaflet/leaflet.js"></script>
