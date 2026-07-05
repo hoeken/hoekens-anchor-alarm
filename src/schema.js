@@ -180,6 +180,13 @@ export function buildSchema(app) {
           "Show the scope/depth calculator panel while the anchor is up.",
         default: true,
       },
+      scopes: {
+        type: "string",
+        title: "Scope Ratios",
+        description:
+          "Comma-separated scope ratios to calculate and display, e.g. \"7,5,4,3\". Each value must be between 1 and 10; invalid entries are ignored and the defaults (7,5,4,3) are used if none are usable. Can also be changed live from the web UI.",
+        default: "7,5,4,3",
+      },
       state: {
         title: "Alarm Severity",
         description: "Anchor alarm notification level",
@@ -262,6 +269,7 @@ export const UI_CONFIG_KEYS = [
   "enableTidePanel",
   "enableWindPanel",
   "enableScopePanel",
+  "scopes",
 ];
 
 // Project the UI-relevant subset out of a full plugin config (the /ui-config

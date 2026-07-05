@@ -125,6 +125,7 @@ describe("applyDefaults()", () => {
     assert.equal(config.enableTidePanel, true);
     assert.equal(config.anchorAlarmInterval, 60);
     assert.equal(config.allowZoneOutsideVessel, false);
+    assert.equal(config.scopes, "7,5,4,3");
   });
 
   test("never overwrites a value the user already set", () => {

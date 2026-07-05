@@ -10,6 +10,7 @@ import {
 } from "@turf/turf";
 import { GeoMath } from "./GeoMath.js";
 import { watchZoneFromConfig } from "../../shared/watch-zones/index.js";
+import { parseScopes, DEFAULT_SCOPES } from "../../shared/scopes.js";
 
 const DEFAULT_FRESHNESS_SEC = 300;
 
@@ -27,10 +28,10 @@ export class AppState {
     this.anchor = {};
     this.tidalRise = 0;
     this.tidalFall = 0;
-    this.scope7 = 0;
-    this.scope5 = 0;
-    this.scope4 = 0;
-    this.scope3 = 0;
+    // Which scope ratios to compute + display, and the resulting rode lengths.
+    // Defaults until setScopeRatios() is called with the plugin config value.
+    this.scopeRatios = [...DEFAULT_SCOPES];
+    this.scopes = [];
     this._anchorSuppressUntil = { position: 0, state: 0, watchZone: 0 };
     this._lastRadius = 0;
   }
@@ -400,11 +401,20 @@ export class AppState {
     this.tidalFall = this.currentTide - this.tide.heightLow.value;
   }
 
+  // Set which scope ratios to calculate from a user-supplied value (the
+  // plugin's comma-separated `scopes` config, or an array). Fault tolerant:
+  // invalid/out-of-range entries are dropped and the defaults are used if
+  // nothing usable remains. See shared/scopes.js.
+  setScopeRatios(input) {
+    this.scopeRatios = parseScopes(input);
+  }
+
+  // Produce one {ratio, length} entry per configured ratio, highest→lowest.
   calculateScopes() {
-    this.scope7 = this.calculateScope(7);
-    this.scope5 = this.calculateScope(5);
-    this.scope4 = this.calculateScope(4);
-    this.scope3 = this.calculateScope(3);
+    this.scopes = this.scopeRatios.map((ratio) => ({
+      ratio,
+      length: this.calculateScope(ratio),
+    }));
   }
 
   calculateScope(scope) {

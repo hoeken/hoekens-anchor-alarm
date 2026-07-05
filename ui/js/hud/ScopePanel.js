@@ -4,6 +4,7 @@
 // in style.css; do not rename without updating the stylesheet.
 
 import { DisplayUnit } from "../DisplayUnit.js";
+import { formatScopeRatio } from "../../../shared/scopes.js";
 
 export const ScopePanel = L.Control.extend({
   options: { position: "bottomright" },
@@ -35,23 +36,9 @@ export const ScopePanel = L.Control.extend({
             <tr>
               <th colspan="2">&nbsp;</th>
             </tr>
-            <tr id="scope7to1Row">
-              <th>7:1&nbsp;Scope</th>
-              <td><span id='scope7to1'>~</span></td>
-            </tr>
-            <tr id="scope5to1Row">
-              <th>5:1&nbsp;Scope</th>
-              <td><span id='scope5to1'>~</span></td>
-            </tr>
-            <tr id="scope4to1Row">
-              <th>4:1&nbsp;Scope</th>
-              <td><span id='scope4to1'>~</span></td>
-            </tr>
-            <tr id="scope3to1Row">
-              <th>3:1&nbsp;Scope</th>
-              <td><span id='scope3to1'>~</span></td>
-            </tr>
-            <tr>
+            <!-- Per-ratio scope rows are inserted here dynamically, before this
+                 trailing spacer, by _syncScopeRows(). -->
+            <tr id="scopeRatioSpacer">
               <th colspan="2">&nbsp;</th>
             </tr>
           </tbody>
@@ -79,14 +66,7 @@ export const ScopePanel = L.Control.extend({
       tidalRiseRow: container.querySelector("#tidalRiseRow"),
       scopeTotalRow: container.querySelector("#scopeTotalRow"),
       scopeTotal: container.querySelector("#scopeTotal"),
-      scope7to1: container.querySelector("#scope7to1"),
-      scope5to1: container.querySelector("#scope5to1"),
-      scope4to1: container.querySelector("#scope4to1"),
-      scope3to1: container.querySelector("#scope3to1"),
-      scope7to1Row: container.querySelector("#scope7to1Row"),
-      scope5to1Row: container.querySelector("#scope5to1Row"),
-      scope4to1Row: container.querySelector("#scope4to1Row"),
-      scope3to1Row: container.querySelector("#scope3to1Row"),
+      scopeRatioSpacer: container.querySelector("#scopeRatioSpacer"),
       belowKeel: container.querySelector("#belowKeel"),
       tidalFall: container.querySelector("#tidalFall"),
       bowHeightRow: container.querySelector("#bowHeightRow"),
@@ -97,7 +77,41 @@ export const ScopePanel = L.Control.extend({
       scopeDepthTable: container.querySelector("#scopeDepthTable"),
       minimumDepthTable: container.querySelector("#minimumDepthTable"),
     };
+    // Dynamically-built scope-ratio rows, kept in sync with state.scopes by
+    // _syncScopeRows. `_scopeSig` is the ratio list that produced the current
+    // rows, so we only rebuild the DOM when the configured ratios change.
+    this._scopeRows = [];
+    this._scopeSig = null;
     return container;
+  },
+
+  // Rebuild the per-ratio rows when the configured ratio list changes. Rows are
+  // inserted before the trailing spacer so they sit between the Total line and
+  // the minimum-depth section. No-op when the ratios are unchanged.
+  _syncScopeRows: function (scopes) {
+    const sig = scopes.map((s) => s.ratio).join(",");
+    if (sig === this._scopeSig)
+      return;
+    this._scopeSig = sig;
+
+    for (const entry of this._scopeRows)
+      entry.row.remove();
+    this._scopeRows = [];
+
+    const spacer = this._refs.scopeRatioSpacer;
+    for (const { ratio } of scopes) {
+      const row = document.createElement("tr");
+      const th = document.createElement("th");
+      th.innerHTML = `${formatScopeRatio(ratio)}:1&nbsp;Scope`;
+      const td = document.createElement("td");
+      const value = document.createElement("span");
+      value.textContent = "~";
+      td.appendChild(value);
+      row.appendChild(th);
+      row.appendChild(td);
+      spacer.parentNode.insertBefore(row, spacer);
+      this._scopeRows.push({ row, value });
+    }
   },
 
   // Render a whole scope snapshot. Caller does the math; this is pure rendering
@@ -144,20 +158,19 @@ export const ScopePanel = L.Control.extend({
       else
         this._refs.scopeTotalRow.style.display = "none";
 
-      this._refs.scope7to1.innerHTML = DisplayUnit.formatValue(state.scope7, "depth");
-      this._refs.scope5to1.innerHTML = DisplayUnit.formatValue(state.scope5, "depth");
-      this._refs.scope4to1.innerHTML = DisplayUnit.formatValue(state.scope4, "depth");
-      this._refs.scope3to1.innerHTML = DisplayUnit.formatValue(state.scope3, "depth");
-
-      // Flag any scope whose rode length exceeds the chain we actually carry.
+      // Render one row per configured scope ratio, rebuilding the rows only
+      // when the ratio list itself changes. Flag any scope whose rode length
+      // exceeds the chain we actually carry.
+      const scopes = state.scopes || [];
+      this._syncScopeRows(scopes);
       const chainLength = state.boatConfig?.totalAnchorChainLength;
-      const flagOverChain = (rowRef, length) => {
-        rowRef.style.color = chainLength && length > chainLength ? "red" : "";
-      };
-      flagOverChain(this._refs.scope7to1Row, state.scope7);
-      flagOverChain(this._refs.scope5to1Row, state.scope5);
-      flagOverChain(this._refs.scope4to1Row, state.scope4);
-      flagOverChain(this._refs.scope3to1Row, state.scope3);
+      scopes.forEach(({ length }, i) => {
+        const ref = this._scopeRows[i];
+        if (!ref)
+          return;
+        ref.value.innerHTML = DisplayUnit.formatValue(length, "depth");
+        ref.row.style.color = chainLength && length > chainLength ? "red" : "";
+      });
 
       this._refs.scopeDepthTable.style.display = "";
     } else {

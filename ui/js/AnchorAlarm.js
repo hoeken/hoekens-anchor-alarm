@@ -40,6 +40,7 @@ class AnchorAlarm {
       enableTidePanel: true,
       enableWindPanel: true,
       enableScopePanel: true,
+      scopes: "7,5,4,3",
     };
     this.state.loggedIn = false;
 
@@ -171,6 +172,11 @@ class AnchorAlarm {
         await this.loadConfig();
         console.log("UI Config:", this.config);
 
+        // Apply the configured scope ratios and recompute so the first render
+        // reflects them (state.calculate above ran with the defaults).
+        this.state.setScopeRatios(this.config.scopes);
+        this.state.calculateScopes();
+
         this.setupConnection();
         this.buildMap();
 
@@ -291,6 +297,9 @@ class AnchorAlarm {
   // status.
   saveConfig(newConfig) {
     Object.assign(this.config, newConfig);
+    // Scope ratios can change live; re-parse and recompute before re-rendering.
+    this.state.setScopeRatios(this.config.scopes);
+    this.state.calculateScopes();
     this.setBasemap(this.config.defaultBasemap);
     this.updateMap();
     this.statusBar.clear("config-save");

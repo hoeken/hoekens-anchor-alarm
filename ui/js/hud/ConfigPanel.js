@@ -17,6 +17,12 @@ const FIELDS = [
   { key: "enableWindPanel", label: "Show Wind Panel", type: "checkbox" },
   { key: "enableScopePanel", label: "Show Scope Panel", type: "checkbox" },
   {
+    key: "scopes",
+    label: "Scope Ratios",
+    type: "text",
+    placeholder: "7,5,4,3",
+  },
+  {
     key: "defaultBasemap",
     label: "Default Basemap",
     type: "select",
@@ -139,6 +145,9 @@ export const ConfigPanel = L.Control.extend({
       control = `<select class="configInput" data-config-key="${field.key}">${options}</select>`;
     } else if (field.type === "checkbox") {
       control = `<input type="checkbox" class="configInput" data-config-key="${field.key}">`;
+    } else if (field.type === "text") {
+      const placeholder = field.placeholder ? ` placeholder="${field.placeholder}"` : "";
+      control = `<input type="text" class="configInput" data-config-key="${field.key}"${placeholder}>`;
     } else {
       control = `<input type="number" min="0" class="configInput" data-config-key="${field.key}">`;
     }
