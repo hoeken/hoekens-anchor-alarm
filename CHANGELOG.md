@@ -1,3 +1,27 @@
+# v2.6.0
+
+## Light & dark mode
+
+The HUD now has a full light and dark theme, and it picks the right one on its own:
+
+- **Automatic on MFDs** — B&G / Navico displays that pass a `?mode=night|day` query param get that theme; otherwise the HUD follows your device's OS light/dark setting, defaulting to dark
+- **Toggle button** — a sun/moon button in the top-left corner flips the theme at any time (not saved, so each load re-derives it from your MFD or OS)
+- **No flash on load** — the theme is chosen before the first paint, so you never see a light flash before dark (or vice-versa)
+- Dark mode also restyles Leaflet's own controls, popups, and dropdowns, and tones stark whites down to a softer grey for better night legibility
+
+## New features
+
+- **Configurable scope ratios** — a new "Scope Ratios" setting lets you choose which scope multiples the scope calculator shows (e.g. `7,5,4,3`), editable from the plugin config or live in the web UI. Leave it blank to turn the scope rows off entirely; invalid entries are ignored
+
+## Reliability & UX
+
+- Scope panel layout and styling refined
+- Control toolbar button borders, backgrounds, and top spacing now match Leaflet's own controls more closely
+
+## Bug fixes
+
+- Drag-selecting text inside a dialog field and releasing over the dimmed backdrop no longer closes the dialog — it only dismisses on a genuine click that both starts and ends on the backdrop
+
 # v2.5.1
 
 ## New features
