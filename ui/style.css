@@ -217,7 +217,12 @@ body,
   -webkit-appearance: none;
   appearance: none;
   border-radius: 5px;
-  border: 2px solid var(--control-border);
+  /* Match Leaflet's own control bars (zoom/home/config/theme), whose border is
+     the fixed `2px solid rgba(0, 0, 0, 0.2)` from leaflet.css rather than the
+     themed --control-border. Using the same literal keeps these buttons
+     homogeneous with the map controls in both light and dark mode — the border
+     stays fixed instead of flipping to a light stroke in dark mode. */
+  border: 2px solid rgba(0, 0, 0, 0.2);
   background-clip: padding-box;
   background-color: var(--surface-bg);
   color: var(--surface-fg);
