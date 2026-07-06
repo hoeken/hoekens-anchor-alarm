@@ -42,6 +42,7 @@ class AnchorAlarm {
       enableWindPanel: true,
       enableScopePanel: true,
       enableBoatLabels: true,
+      enableChartLayers: true,
       scopes: "7,5,4,3",
     };
     this.state.loggedIn = false;
@@ -515,12 +516,12 @@ class AnchorAlarm {
   }
 
   // Re-derive which cached local charts belong in the layer control for the
-  // current view. A chart is listed (and, per its checkbox, enabled by default)
-  // only while the map is zoomed in far enough to render its tiles — below a
-  // chart's native minzoom Leaflet draws nothing — and its coverage overlaps
-  // the visible area. Charts with no bounds/zoom metadata are treated as global
-  // and always shown. Panning or zooming a chart out of view removes it from
-  // both the map and the control; bringing it back re-adds it, enabled.
+  // current view. A chart is listed (and, when the "Use Chart Layers" option is
+  // on, enabled by default) only while the map is zoomed in far enough to render
+  // its tiles — below a chart's native minzoom Leaflet draws nothing — and its
+  // coverage overlaps the visible area. Charts with no bounds/zoom metadata are
+  // treated as global and always shown. Panning or zooming a chart out of view
+  // removes it from both the map and the control; bringing it back re-adds it.
   updateChartLayers() {
     if (!this.map || !this.layersControl || !this.chartLayers.length)
       return;
@@ -536,7 +537,10 @@ class AnchorAlarm {
       if (show) {
         // Add to the map before the control so the control renders the
         // overlay's checkbox already ticked (it reads map.hasLayer at build).
-        chart.layer.addTo(this.map);
+        // With the option off, list it in the control but leave it off the map
+        // so its checkbox renders unticked, ready to enable by hand.
+        if (this.config.enableChartLayers)
+          chart.layer.addTo(this.map);
         this.layersControl.addOverlay(chart.layer, chart.name);
       } else {
         this.map.removeLayer(chart.layer);

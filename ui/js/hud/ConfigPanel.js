@@ -16,6 +16,7 @@ const FIELDS = [
   { key: "enableWindPanel", label: "Show Wind Panel", type: "checkbox" },
   { key: "enableScopePanel", label: "Show Scope Panel", type: "checkbox" },
   { key: "enableBoatLabels", label: "Show Boat Name Labels", type: "checkbox" },
+  { key: "enableChartLayers", label: "Use Chart Layers if Available", type: "checkbox" },
   {
     key: "scopes",
     label: "Scope Ratios",

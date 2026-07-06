@@ -180,6 +180,13 @@ export function buildSchema(app) {
           "Show other vessels' names as labels on the map (only once zoomed in enough to be legible).",
         default: true,
       },
+      enableChartLayers: {
+        type: "boolean",
+        title: "Use Chart Layers if Available",
+        description:
+          "When local raster charts are available (via a charts plugin), enable them as map overlays by default. Turn off to keep them in the layer control but off until toggled on manually.",
+        default: true,
+      },
       scopes: {
         type: "string",
         title: "Scope Ratios",
@@ -269,6 +276,7 @@ export const UI_CONFIG_KEYS = [
   "enableWindPanel",
   "enableScopePanel",
   "enableBoatLabels",
+  "enableChartLayers",
   "scopes",
 ];
 

@@ -123,6 +123,7 @@ describe("applyDefaults()", () => {
     assert.equal(config.defaultBasemap, "Satellite");
     assert.equal(config.enableTidePanel, true);
     assert.equal(config.enableBoatLabels, true);
+    assert.equal(config.enableChartLayers, true);
     assert.equal(config.anchorAlarmInterval, 60);
     assert.equal(config.allowZoneOutsideVessel, false);
     assert.equal(config.scopes, "7,5,4,3");
