@@ -35,6 +35,9 @@ const FIELDS = [
       ["Satellite", "Satellite"],
       ["OpenStreetMap", "OpenStreetMap"],
       ...(supportsMaplibre() ? [["Seascape", "Seascape"]] : []),
+      // No-tiles base for offline/slow links or crews using only their own
+      // local charts (see AnchorAlarm.blankLayer).
+      ["Blank", "Blank"],
     ],
   },
   {

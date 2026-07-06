@@ -146,9 +146,17 @@ class AnchorAlarm {
       },
     );
 
+    // An empty base layer for boats offline or on slow links, and for crews who
+    // rely solely on their own local charts (see ChartLayers): selecting it
+    // fetches no tiles at all, leaving just the themed .leaflet-container
+    // background (light grey / dark #1a1d21 — see style.css) with whatever chart
+    // overlays are enabled drawn on top. It carries no attribution.
+    this.blankLayer = L.layerGroup();
+
     this.baseMaps = {
       OpenStreetMap: this.osmLayer,
       Satellite: this.satelliteLayer,
+      Blank: this.blankLayer,
     };
 
     // Map shell and status bar first so failures during initial load (missing

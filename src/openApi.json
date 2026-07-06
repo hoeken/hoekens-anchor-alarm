@@ -66,8 +66,8 @@
         "properties": {
           "defaultBasemap": {
             "type": "string",
-            "enum": ["OpenStreetMap", "Satellite"],
-            "description": "Which map layer to show on load."
+            "enum": ["OpenStreetMap", "Satellite", "Blank"],
+            "description": "Which map layer to show on load. \"Blank\" draws no tiles (offline / local-charts-only use)."
           },
           "defaultShape": {
             "type": "string",
