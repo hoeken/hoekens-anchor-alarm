@@ -12,12 +12,19 @@
 // broken startup. Unlike Seascape it needs no special engine support, so local
 // charts also work on the Chromium 69 MFDs.
 
-// Chart overlays sit above the base tile layers but below the anchor overlay
-// and vessel markers (those live in higher Leaflet panes). An explicit z-index
-// keeps a chart on top of the base even after the user switches base maps —
-// which re-inserts the base layer's tiles later in the tile pane's DOM and
-// would otherwise cover an active chart.
-const CHART_OVERLAY_Z_INDEX = 300;
+// Local charts draw in their own Leaflet pane, stacked above the tile pane —
+// where the base maps and the Seascape bathymetry overlay live — but below the
+// overlay/marker panes that hold the anchor circle and vessel markers. A
+// dedicated pane guarantees a local chart always draws on top of the base and
+// Seascape (and stays there when the user switches base maps, which re-inserts
+// base tiles into the tile pane), without depending on fragile z-index ordering
+// between siblings inside the single shared tile pane — where Seascape's
+// transform-positioned WebGL canvas would otherwise win. AnchorAlarm creates
+// this pane on the map before any chart layer is added.
+export const CHART_PANE = "chartPane";
+// Above tilePane (200: base maps + Seascape) and below overlayPane (400: anchor
+// overlay) and markerPane (600: vessel markers).
+export const CHART_PANE_Z_INDEX = 350;
 
 // SAS.Planet and similar tools export charts with a literal "Unnamed map" name;
 // in that case the identifier ("Fiji_Nanuku-Passage") is the more useful label
@@ -47,7 +54,7 @@ export function chartToLayerSpec(chart) {
   if (!url || !url.includes("{z}"))
     return null;
 
-  const options = { zIndex: CHART_OVERLAY_Z_INDEX };
+  const options = { pane: CHART_PANE };
 
   // bounds is [west, south, east, north]; Leaflet wants [[S, W], [N, E]].
   // Bounding the layer stops it requesting (404) tiles outside the coverage.

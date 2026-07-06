@@ -1,6 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { chartToLayerSpec } from "../ui/js/ChartLayers.js";
+import { chartToLayerSpec, CHART_PANE } from "../ui/js/ChartLayers.js";
 
 // The v2 charts catalog entry the plugin's TODO/issue #21 is modeled on: a
 // SAS.Planet export served through @signalk/charts-plugin.
@@ -36,8 +36,8 @@ describe("chartToLayerSpec", () => {
       ]);
     });
 
-    test("sets a z-index so the chart stays above the base layer", () => {
-      assert.equal(chartToLayerSpec(FIJI).options.zIndex, 300);
+    test("assigns the dedicated chart pane so it stays above the base and Seascape", () => {
+      assert.equal(chartToLayerSpec(FIJI).options.pane, CHART_PANE);
     });
 
     test("accepts a missing type when the URL is a tile template", () => {

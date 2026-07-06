@@ -15,7 +15,7 @@ import { WindPanel } from "./hud/WindPanel.js";
 import { ScopePanel } from "./hud/ScopePanel.js";
 import { StaleReloader } from "./StaleReloader.js";
 import { loadSeascapeLayer } from "./SeascapeLoader.js";
-import { loadChartLayers } from "./ChartLayers.js";
+import { loadChartLayers, CHART_PANE, CHART_PANE_Z_INDEX } from "./ChartLayers.js";
 import { AnchorOverlay } from "./hud/AnchorOverlay.js";
 import { AnchorController } from "./AnchorController.js";
 import { ControlToolbar } from "./hud/ControlToolbar.js";
@@ -28,9 +28,10 @@ const UPDATE_INTERVAL_MS = 500;
 const INITIAL_LOAD_RETRY_MS = 5000;
 
 // Stacking order for the Seascape bathymetry overlay, whose GL canvas shares the
-// Leaflet tile pane with the base tiles. It must sit above the base but below
-// the local raster charts (CHART_OVERLAY_Z_INDEX = 300 in ChartLayers) so a more
-// detailed local chart stays legible on top of the broad depth shading.
+// Leaflet tile pane with the base tiles. It sits above the base tiles but stays
+// below the local raster charts, which draw in their own higher pane (see
+// CHART_PANE in ChartLayers) so a more detailed local chart always stays legible
+// on top of the broad depth shading.
 const SEASCAPE_OVERLAY_Z_INDEX = 250;
 
 class AnchorAlarm {
@@ -173,6 +174,10 @@ class AnchorAlarm {
       attributionControl: false, // Prevents the default bottom-right control
       worldCopyJump: true, // Wrap markers/view to nearest world copy past 180°
     }).setView([0, 0], 5);
+    // Dedicated pane so local raster charts always draw above the base maps and
+    // the Seascape overlay (both in the tile pane) while staying below the
+    // anchor overlay and vessel markers. See CHART_PANE in ChartLayers.
+    this.map.createPane(CHART_PANE).style.zIndex = CHART_PANE_Z_INDEX;
     this.statusBar = new StatusBar();
     this.map.addControl(this.statusBar);
 
