@@ -173,6 +173,13 @@ export function buildSchema(app) {
           "Show the scope/depth calculator panel while the anchor is up.",
         default: true,
       },
+      enableBoatLabels: {
+        type: "boolean",
+        title: "Show Boat Name Labels",
+        description:
+          "Show other vessels' names as labels on the map (only once zoomed in enough to be legible).",
+        default: true,
+      },
       scopes: {
         type: "string",
         title: "Scope Ratios",
@@ -261,6 +268,7 @@ export const UI_CONFIG_KEYS = [
   "enableTidePanel",
   "enableWindPanel",
   "enableScopePanel",
+  "enableBoatLabels",
   "scopes",
 ];
 

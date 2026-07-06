@@ -39,6 +39,7 @@ class AnchorAlarm {
       enableTidePanel: true,
       enableWindPanel: true,
       enableScopePanel: true,
+      enableBoatLabels: true,
       scopes: "7,5,4,3",
     };
     this.state.loggedIn = false;
@@ -326,6 +327,7 @@ class AnchorAlarm {
     this.setBasemap(this.config.defaultBasemap);
     this.anchorController?.setDefaultShape(this.config.defaultShape);
     this.fleetLayer?.setFilterRadius(this.config.fleetFilterRadius);
+    this.fleetLayer?.setShowLabels(this.config.enableBoatLabels);
     this.updateMap();
     this.statusBar.clear("config-save");
     return this.signalK.saveConfig(newConfig).catch((error) => {
@@ -432,6 +434,7 @@ class AnchorAlarm {
       map: this.map,
       ownMmsi: this.state.boatConfig.mmsi,
       filterRadius: this.config.fleetFilterRadius,
+      showLabels: this.config.enableBoatLabels,
     });
 
     this.anchorOverlay = new AnchorOverlay({

@@ -54,10 +54,12 @@ const GPS_ANTENNA_ICON = L.divIcon({
   iconAnchor: [6, 6],
 });
 export class FleetLayer {
-  constructor({ app, map, ownMmsi, filterRadius }) {
+  constructor({ app, map, ownMmsi, filterRadius, showLabels }) {
     this.app = app;
     this.map = map;
     this.ownMmsi = ownMmsi;
+    // Master on/off for name labels, layered on top of the zoom gate below.
+    this.showLabels = showLabels ?? true;
     this.vessels = {}; // mmsi -> L.BoatMarker (with .gpsAntennaMarker attached)
     this.vesselTracks = {}; // mmsi -> L.hotline
     this.trackPointCounts = {}; // mmsi -> current point count in the hotline
@@ -98,10 +100,20 @@ export class FleetLayer {
   }
 
   updateLabelVisibility() {
-    const show = this.map.getZoom() >= LABEL_MIN_ZOOM;
+    const show = this.showLabels && this.map.getZoom() >= LABEL_MIN_ZOOM;
     this.map
       .getContainer()
       .classList.toggle("hide-boat-labels", !show);
+  }
+
+  // Flip the name-label master switch live (from the settings dialog). Zoom
+  // still gates whether labels actually draw when this is on.
+  setShowLabels(show) {
+    const next = show ?? true;
+    if (next === this.showLabels)
+      return;
+    this.showLabels = next;
+    this.updateLabelVisibility();
   }
 
   loadInitialData() {

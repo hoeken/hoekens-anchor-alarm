@@ -90,6 +90,10 @@
           "enableScopePanel": {
             "type": "boolean",
             "description": "Show the scope/depth calculator panel while the anchor is up."
+          },
+          "enableBoatLabels": {
+            "type": "boolean",
+            "description": "Show other vessels' names as labels on the map (only once zoomed in enough to be legible)."
           }
         }
       },
