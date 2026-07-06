@@ -71,6 +71,38 @@ L.BoatMarker = L.Marker.extend({
     return this;
   },
 
+  // Swap the boat image in place. AIS static data (ship type, dimensions) can
+  // arrive after the marker was first drawn from defaults — e.g. a WebSocket
+  // position delta created the vessel before its /vessels static fetch
+  // resolved — so the icon has to be correctable on the fly. The error/fallback
+  // handler bound in _setupIconFallback stays attached across src changes, so a
+  // bad new path still falls back.
+  setBoatIcon(iconPath) {
+    const img = this._icon && this._icon.querySelector("img");
+    if (!img || img.getAttribute("src") === iconPath) return this;
+    img.src = iconPath;
+    return this;
+  },
+
+  // Change the hull geometry after creation, for the same late-static-data
+  // reason as setBoatIcon (real beam/loa also decide sailboat-vs-catamaran and
+  // the drawn size). No-ops unless something actually changed so the per-sync
+  // tick doesn't thrash the DOM.
+  setDimensions({ beam, loa, gpsOffset }) {
+    if (
+      this.options.beam === beam &&
+      this.options.loa === loa &&
+      this.options.gpsOffset.x === gpsOffset.x &&
+      this.options.gpsOffset.y === gpsOffset.y
+    )
+      return this;
+    this.options.beam = beam;
+    this.options.loa = loa;
+    this.options.gpsOffset = gpsOffset;
+    this._update();
+    return this;
+  },
+
   // The boat icon's geometric center as a map layer point, accounting for the
   // current heading. getLatLng() tracks the GPS antenna (the marker's anchor),
   // which can sit anywhere on the hull; the center is offset from it by half

@@ -451,6 +451,16 @@ export class FleetLayer {
     marker.setHeading(heading);
 
     const config = BoatConfig.extract(vessel);
+    // Static data (AIS ship type, dimensions) can land after the marker was
+    // first drawn from defaults — a WebSocket position delta creates the vessel
+    // before its static fetch resolves, and REST polls can also fill in design
+    // late. Re-apply icon + hull geometry so the marker reflects the real type.
+    marker.setBoatIcon(config.icon);
+    marker.setDimensions({
+      beam: config.beam,
+      loa: config.loa,
+      gpsOffset: config.bowOffset,
+    });
     this.setVesselInfo(marker.vesselInfo, config, distance, bearing);
     if (marker.getTooltip()?.getContent() !== config.name)
       marker.setTooltipContent(config.name);
