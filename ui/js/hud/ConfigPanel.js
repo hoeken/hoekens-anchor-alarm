@@ -17,6 +17,12 @@ const FIELDS = [
   { key: "enableScopePanel", label: "Show Scope Panel", type: "checkbox" },
   { key: "enableBoatLabels", label: "Show Boat Name Labels", type: "checkbox" },
   { key: "enableChartLayers", label: "Use Chart Layers if Available", type: "checkbox" },
+  // The Seascape depth overlay needs MapLibre/WebGL (see SeascapeLoader), so the
+  // toggle is only offered where it can render; on the Chromium 69 MFDs it's
+  // hidden rather than left as a dead switch.
+  ...(supportsMaplibre()
+    ? [{ key: "enableSeascape", label: "Use Seascape Bathymetry", type: "checkbox" }]
+    : []),
   {
     key: "scopes",
     label: "Scope Ratios",
@@ -28,13 +34,12 @@ const FIELDS = [
     key: "defaultBasemap",
     label: "Default Basemap",
     type: "select",
-    // Seascape is only offered where MapLibre can run (see SeascapeLoader); on
-    // the Chromium 69 MFDs the option is omitted rather than left as a dead
-    // choice that silently falls back to satellite.
+    // Seascape is not a base map — it's a depth overlay that always appears in
+    // the layer control when available; the "Use Seascape Bathymetry" setting
+    // above only sets whether it starts on (see AnchorAlarm.addSeascapeLayer).
     options: [
       ["Satellite", "Satellite"],
       ["OpenStreetMap", "OpenStreetMap"],
-      ...(supportsMaplibre() ? [["Seascape", "Seascape"]] : []),
       // No-tiles base for offline/slow links or crews using only their own
       // local charts (see AnchorAlarm.blankLayer).
       ["Blank", "Blank"],

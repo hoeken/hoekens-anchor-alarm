@@ -27,6 +27,12 @@ import { nativeTooltipsSuppressed } from "./BrowserSupport.js";
 const UPDATE_INTERVAL_MS = 500;
 const INITIAL_LOAD_RETRY_MS = 5000;
 
+// Stacking order for the Seascape bathymetry overlay, whose GL canvas shares the
+// Leaflet tile pane with the base tiles. It must sit above the base but below
+// the local raster charts (CHART_OVERLAY_Z_INDEX = 300 in ChartLayers) so a more
+// detailed local chart stays legible on top of the broad depth shading.
+const SEASCAPE_OVERLAY_Z_INDEX = 250;
+
 class AnchorAlarm {
   constructor() {
     this.signalK = new SignalKHelper({ pluginName: "hoekens-anchor-alarm" });
@@ -43,6 +49,7 @@ class AnchorAlarm {
       enableScopePanel: true,
       enableBoatLabels: true,
       enableChartLayers: true,
+      enableSeascape: false,
       scopes: "7,5,4,3",
     };
     this.state.loggedIn = false;
@@ -339,6 +346,7 @@ class AnchorAlarm {
     this.state.setScopeRatios(this.config.scopes);
     this.state.calculateScopes();
     this.setBasemap(this.config.defaultBasemap);
+    this.setSeascapeEnabled(this.config.enableSeascape);
     this.anchorController?.setDefaultShape(this.config.defaultShape);
     this.fleetLayer?.setFilterRadius(this.config.fleetFilterRadius);
     this.fleetLayer?.setShowLabels(this.config.enableBoatLabels);
@@ -479,24 +487,43 @@ class AnchorAlarm {
     });
   }
 
-  // Seascape is a WebGL vector chart that only capable engines can render, so it
-  // loads asynchronously (or never, on the Chromium 69 MFDs — see SeascapeLoader)
-  // and joins the layer control once ready. If it's the configured default and
-  // the fallback (satellite) is still showing — i.e. the user hasn't picked
-  // another layer during the load — switch to it on arrival.
+  // Seascape is a WebGL bathymetry chart (see SeascapeLoader) that shades the
+  // water by depth and is transparent over land, so it belongs on top of a base
+  // map as an overlay rather than replacing one. It loads asynchronously (or
+  // never, on the Chromium 69 MFDs) and joins the layer control as a toggleable
+  // overlay once ready, switched on at startup when config.enableSeascape. If it
+  // can't load — offline or an unsupported engine — the selected base map simply
+  // stays visible, so there's no fallback to handle.
   addSeascapeLayer() {
     loadSeascapeLayer().then((layer) => {
       if (!layer || !this.map)
         return;
       this.seascapeLayer = layer;
-      this.baseMaps.Seascape = layer;
-      this.layersControl?.addBaseLayer(layer, "Seascape");
-      if (
-        this.config.defaultBasemap === "Seascape" &&
-        this.map.hasLayer(this.satelliteLayer)
-      )
-        this.setBasemap("Seascape");
+      // Its GL canvas is created on first add and lives in the tile pane; pin
+      // the z-index on every add so switching base maps (which re-inserts base
+      // tiles later in the DOM) can't bury it. See SEASCAPE_OVERLAY_Z_INDEX.
+      layer.on("add", () => {
+        const container = layer.getContainer && layer.getContainer();
+        if (container)
+          container.style.zIndex = SEASCAPE_OVERLAY_Z_INDEX;
+      });
+      this.layersControl?.addOverlay(layer, "Seascape");
+      if (this.config.enableSeascape)
+        layer.addTo(this.map);
     });
+  }
+
+  // Match the Seascape overlay to config.enableSeascape once it has loaded. A
+  // no-op before the async load resolves or on engines where it never does —
+  // addSeascapeLayer re-reads the flag when the layer finally arrives.
+  setSeascapeEnabled(enabled) {
+    const layer = this.seascapeLayer;
+    if (!layer || !this.map)
+      return;
+    if (enabled && !this.map.hasLayer(layer))
+      layer.addTo(this.map);
+    else if (!enabled && this.map.hasLayer(layer))
+      this.map.removeLayer(layer);
   }
 
   // Local raster charts served by SignalK's resources API (see ChartLayers) are

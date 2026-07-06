@@ -187,6 +187,13 @@ export function buildSchema(app) {
           "When local raster charts are available (via a charts plugin), enable them as map overlays by default. Turn off to keep them in the layer control but off until toggled on manually.",
         default: true,
       },
+      enableSeascape: {
+        type: "boolean",
+        title: "Use Seascape Bathymetry",
+        description:
+          "Overlay the Seascape bathymetry (water depth) chart on top of the base map by default. Needs an internet connection and a WebGL-capable browser; where either is missing the base map shows unchanged. Also toggleable at runtime in the layer control.",
+        default: false,
+      },
       scopes: {
         type: "string",
         title: "Scope Ratios",
@@ -277,6 +284,7 @@ export const UI_CONFIG_KEYS = [
   "enableScopePanel",
   "enableBoatLabels",
   "enableChartLayers",
+  "enableSeascape",
   "scopes",
 ];
 

@@ -94,6 +94,10 @@
           "enableBoatLabels": {
             "type": "boolean",
             "description": "Show other vessels' names as labels on the map (only once zoomed in enough to be legible)."
+          },
+          "enableSeascape": {
+            "type": "boolean",
+            "description": "Overlay the Seascape bathymetry (depth) chart on the base map by default. Requires internet + WebGL; toggleable at runtime in the layer control."
           }
         }
       },
