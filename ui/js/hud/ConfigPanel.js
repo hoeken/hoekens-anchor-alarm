@@ -8,7 +8,7 @@
 // Form layout. Order is display order. Every setting here applies live — the
 // host's onChange pushes each change into the running UI, so none of them
 // require a page reload.
-import { setTitle } from "../BrowserSupport.js";
+import { setTitle, supportsMaplibre } from "../BrowserSupport.js";
 import { Modal } from "./Modal.js";
 
 const FIELDS = [
@@ -27,9 +27,13 @@ const FIELDS = [
     key: "defaultBasemap",
     label: "Default Basemap",
     type: "select",
+    // Seascape is only offered where MapLibre can run (see SeascapeLoader); on
+    // the Chromium 69 MFDs the option is omitted rather than left as a dead
+    // choice that silently falls back to satellite.
     options: [
       ["Satellite", "Satellite"],
       ["OpenStreetMap", "OpenStreetMap"],
+      ...(supportsMaplibre() ? [["Seascape", "Seascape"]] : []),
     ],
   },
   {

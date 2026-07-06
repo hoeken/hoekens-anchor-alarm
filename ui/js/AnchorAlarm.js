@@ -14,6 +14,7 @@ import { TidePanel } from "./hud/TidePanel.js";
 import { WindPanel } from "./hud/WindPanel.js";
 import { ScopePanel } from "./hud/ScopePanel.js";
 import { StaleReloader } from "./StaleReloader.js";
+import { loadSeascapeLayer } from "./SeascapeLoader.js";
 import { AnchorOverlay } from "./hud/AnchorOverlay.js";
 import { AnchorController } from "./AnchorController.js";
 import { ControlToolbar } from "./hud/ControlToolbar.js";
@@ -371,7 +372,10 @@ class AnchorAlarm {
       this.map.addControl(this.configPanel);
     }
 
-    L.control.layers(this.baseMaps, {}, { position: "topleft" }).addTo(this.map);
+    this.layersControl = L.control
+      .layers(this.baseMaps, {}, { position: "topleft" })
+      .addTo(this.map);
+    this.addSeascapeLayer();
 
     // Light/dark toggle. Unlike the settings gear it isn't login-gated — the
     // theme is a session-only preference anyone can flip (see hud/ThemeControl).
@@ -451,6 +455,26 @@ class AnchorAlarm {
       statusBar: this.statusBar,
       defaultShape: this.config.defaultShape,
       onChange: () => this.updateMap(),
+    });
+  }
+
+  // Seascape is a WebGL vector chart that only capable engines can render, so it
+  // loads asynchronously (or never, on the Chromium 69 MFDs — see SeascapeLoader)
+  // and joins the layer control once ready. If it's the configured default and
+  // the fallback (satellite) is still showing — i.e. the user hasn't picked
+  // another layer during the load — switch to it on arrival.
+  addSeascapeLayer() {
+    loadSeascapeLayer().then((layer) => {
+      if (!layer || !this.map)
+        return;
+      this.seascapeLayer = layer;
+      this.baseMaps.Seascape = layer;
+      this.layersControl?.addBaseLayer(layer, "Seascape");
+      if (
+        this.config.defaultBasemap === "Seascape" &&
+        this.map.hasLayer(this.satelliteLayer)
+      )
+        this.setBasemap("Seascape");
     });
   }
 

@@ -25,3 +25,25 @@ export function setTitle(el, title) {
   if (!nativeTooltipsSuppressed)
     el.title = title;
 }
+
+// Whether this engine can run MapLibre GL, which powers the optional Seascape
+// base layer (see SeascapeLoader). MapLibre needs a WebGL2 context and ES2019+
+// JavaScript; the Chromium 69 MFD engine has neither reliably. The check is
+// capability-based rather than UA-based so it also excludes any other old
+// engine — where it returns false the Seascape layer simply never loads.
+export function supportsMaplibre() {
+  // Gate on the engine version, not runtime features: our reverse proxy
+  // polyfills missing APIs (Object.fromEntries and friends), so a capability
+  // probe passes even on the Chromium 69 MFDs — the polyfills mask the very
+  // deficiency we'd be testing for — and WebGL2 reports as present there too.
+  // MapLibre GL needs Chromium 73+ (its ES2019 baseline); below that, bail.
+  if (chromiumMajor !== null && chromiumMajor < 73)
+    return false;
+  // For non-Chromium and newer engines, still require a live WebGL2 context
+  // (e.g. it may be disabled or unavailable).
+  try {
+    return !!document.createElement("canvas").getContext("webgl2");
+  } catch {
+    return false;
+  }
+}
