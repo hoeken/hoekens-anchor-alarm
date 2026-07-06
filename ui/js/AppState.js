@@ -17,11 +17,6 @@ const DEFAULT_FRESHNESS_SEC = 300;
 const DELTA_FAST_SPEED = 250;
 const DELTA_SLOW_SPEED = 1000;
 
-// Other vessels only need position/heading/COG/SOG, and far less often than our
-// own boat. "instant" + minPeriod streams each AIS update as it lands but rate-
-// limits per vessel per path so a busy anchorage can't flood the socket.
-const DELTA_FLEET_MIN_PERIOD = 1000;
-
 // Window after a client-initiated anchor change during which incoming server
 // updates for anchor.position/state/zone are ignored. Covers in-flight
 // polls whose response was computed before the server processed our request,
@@ -143,10 +138,10 @@ export class AppState {
     client.subscribe({
       context: "vessels.*",
       subscribe: [
-        { path: "navigation.position", policy: "instant", minPeriod: DELTA_FLEET_MIN_PERIOD },
-        { path: "navigation.headingTrue", policy: "instant", minPeriod: DELTA_FLEET_MIN_PERIOD },
-        { path: "navigation.courseOverGroundTrue", policy: "instant", minPeriod: DELTA_FLEET_MIN_PERIOD },
-        { path: "navigation.speedOverGround", policy: "instant", minPeriod: DELTA_FLEET_MIN_PERIOD },
+        { path: "navigation.position", policy: "instant" },
+        { path: "navigation.headingTrue", policy: "instant" },
+        { path: "navigation.courseOverGroundTrue", policy: "instant" },
+        { path: "navigation.speedOverGround", policy: "instant" },
       ],
     });
   }

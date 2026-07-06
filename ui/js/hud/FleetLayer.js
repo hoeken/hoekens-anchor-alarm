@@ -29,7 +29,7 @@ const CACHE_SYNC_INTERVAL_MS = 1000;
 // Generous enough not to flicker anchored Class B neighbours (whose position
 // reports can be minutes apart); departures within radius linger up to this
 // long, but out-of-radius vessels are still removed the instant they move.
-const VESSEL_TTL_MS = 6 * 60 * 1000;
+const VESSEL_TTL_MS = 30 * 60 * 1000;
 const DEFAULT_FILTER_RADIUS = 500;
 // Name labels only show once boats are zoomed in enough to be visually
 // distinct; below this they'd just clutter the map.
@@ -175,6 +175,8 @@ export class FleetLayer {
     const mmsi = this.mmsiFromContext(context);
     if (!mmsi || mmsi == this.ownMmsi)
       return;
+
+    // console.log(mmsi, values[0].path, values[0].value);
 
     let vessel = this.vesselCache[mmsi];
     if (!vessel) {
