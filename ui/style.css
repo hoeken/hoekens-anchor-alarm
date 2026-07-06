@@ -730,10 +730,19 @@ html.dark #polygonControl select {
   color: red;
 }
 
+/* Lives in the modal footer; margin-right:auto pins it left while the Done
+   button stays right. align-self:flex-end sits it on the footer's baseline. */
 #configVersion {
-  margin-top: 8px;
+  margin-right: auto;
+  align-self: flex-end;
+  padding-bottom: 4px;
   font-size: 8pt;
   color: var(--surface-fainter);
+  text-decoration: none;
+}
+
+#configVersion:hover {
+  text-decoration: underline;
 }
 
 /* Map attribution pinned to the very bottom of the page, spanning full width

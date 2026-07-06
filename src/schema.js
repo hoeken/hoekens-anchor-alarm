@@ -150,7 +150,7 @@ export function buildSchema(app) {
         title: "Fleet Filter Radius (m)",
         description:
           "Radius around own vessel to display other vessels and historical tracks.",
-        default: 500,
+        default: 100000,
       },
       enableTidePanel: {
         type: "boolean",

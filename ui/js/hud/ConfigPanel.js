@@ -20,7 +20,7 @@ const FIELDS = [
     label: "Scope Ratios",
     type: "text",
     placeholder: "7,5,4,3",
-    hint: "Comma-separated values 1–10. Leave blank to hide the scope rows.",
+    hint: "Comma-separated values 1–10. Leave blank to hide.",
   },
   {
     key: "defaultBasemap",
@@ -94,17 +94,23 @@ export const ConfigPanel = L.Control.extend({
       <div id="configForm">
         ${FIELDS.map((field) => this._rowHtml(field)).join("")}
       </div>
-      <div id="configStatus"></div>
-      <div id="configVersion"></div>`);
+      <div id="configStatus"></div>`);
     // A single "Done" button (plus the header ×) closes the dialog; settings
     // persist live as each field changes, so there is nothing to submit.
     this._modal.setButtons([
       { label: "Done", variant: "primary", primary: true },
     ]);
 
+    // Version sits in the footer's bottom-left corner as a link to the repo,
+    // with the Done button pushed to the right (see #configVersion in style.css).
+    this._modal.footer.insertAdjacentHTML(
+      "afterbegin",
+      `<a id="configVersion" href="https://www.npmjs.com/package/hoekens-anchor-alarm" target="_blank" rel="noopener"></a>`,
+    );
+    this._version = this._modal.footer.querySelector("#configVersion");
+
     const body = this._modal.body;
     this._status = body.querySelector("#configStatus");
-    this._version = body.querySelector("#configVersion");
     for (const field of FIELDS) {
       const input = body.querySelector(`[data-config-key="${field.key}"]`);
       this._inputs[field.key] = input;

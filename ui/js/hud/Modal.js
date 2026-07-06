@@ -102,6 +102,12 @@ export class Modal {
     return this._body;
   }
 
+  // The footer element, exposed so hosts can drop extra chrome (e.g. a version
+  // link) alongside the buttons. setButtons() clears it, so add to it after.
+  get footer() {
+    return this._footer;
+  }
+
   isOpen() {
     return this._open;
   }
