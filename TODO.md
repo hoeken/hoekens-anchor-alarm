@@ -1,7 +1,9 @@
 # v2.7
 
-- https://openwaters.io/charts/seascape
-- chart providers?
+- local charts as toggleable map overlays (#21) — done
+  - reads /signalk/v2/api/resources/charts (any charts provider plugin)
+  - XYZ raster ("tilelayer") only for now; WMS + vector (mapstyleJSON) skipped
+  - see ui/js/ChartLayers.js
 
 # LONG TERM
 

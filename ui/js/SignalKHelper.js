@@ -110,6 +110,15 @@ export class SignalKHelper {
   fetchTracks(radius) {
     return this.request(`tracks?radius=${radius}`);
   }
+  // Fetch the local chart catalog from the v2 resources API (populated by a
+  // charts provider plugin such as @signalk/charts-plugin). Hits the v2 path
+  // directly since request() is hardwired to /signalk/v1/api/. Rejects like the
+  // other fetchers on HTTP error, including a 404 when no charts plugin is
+  // installed — callers treat that as "no local charts available".
+  fetchCharts() {
+    return fetch(`${this.baseUrl}/signalk/v2/api/resources/charts`)
+      .then(SignalKHelper._toJsonOrReject);
+  }
   fetchConfig() {
     return fetch(`${this.baseUrl}/plugins/${this.pluginName}/ui-config`)
       .then(SignalKHelper._toJsonOrReject);

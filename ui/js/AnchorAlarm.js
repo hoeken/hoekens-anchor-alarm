@@ -15,6 +15,7 @@ import { WindPanel } from "./hud/WindPanel.js";
 import { ScopePanel } from "./hud/ScopePanel.js";
 import { StaleReloader } from "./StaleReloader.js";
 import { loadSeascapeLayer } from "./SeascapeLoader.js";
+import { loadChartLayers } from "./ChartLayers.js";
 import { AnchorOverlay } from "./hud/AnchorOverlay.js";
 import { AnchorController } from "./AnchorController.js";
 import { ControlToolbar } from "./hud/ControlToolbar.js";
@@ -376,6 +377,7 @@ class AnchorAlarm {
       .layers(this.baseMaps, {}, { position: "topleft" })
       .addTo(this.map);
     this.addSeascapeLayer();
+    this.addChartLayers();
 
     // Light/dark toggle. Unlike the settings gear it isn't login-gated — the
     // theme is a session-only preference anyone can flip (see hud/ThemeControl).
@@ -400,6 +402,10 @@ class AnchorAlarm {
     // disabled. Refresh it whenever the active base layer changes.
     this.updateAttribution();
     this.map.on("baselayerchange", () => this.updateAttribution());
+    // Toggling a chart overlay fires overlayadd/overlayremove (not
+    // baselayerchange), so refresh here too or a chart's credit wouldn't appear.
+    this.map.on("overlayadd", () => this.updateAttribution());
+    this.map.on("overlayremove", () => this.updateAttribution());
     window.addEventListener("resize", () => this.updateAttribution());
 
     // L.control.scale({ position: "bottomleft" }).addTo(this.map);
@@ -475,6 +481,20 @@ class AnchorAlarm {
         this.map.hasLayer(this.satelliteLayer)
       )
         this.setBasemap("Seascape");
+    });
+  }
+
+  // Local raster charts served by SignalK's resources API (see ChartLayers) are
+  // fetched asynchronously and added to the layer control as toggleable
+  // overlays — off by default, drawn on top of the active base map within their
+  // bounds. A missing charts plugin or a fetch error resolves to an empty list,
+  // making this a no-op then.
+  addChartLayers() {
+    loadChartLayers(this.signalK).then((charts) => {
+      if (!this.map || !this.layersControl)
+        return;
+      for (const { name, layer } of charts)
+        this.layersControl.addOverlay(layer, name);
     });
   }
 
