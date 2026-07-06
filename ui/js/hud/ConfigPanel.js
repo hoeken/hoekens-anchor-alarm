@@ -5,10 +5,9 @@
 // for persisting to the backend. Element IDs/classes are CSS hooks in
 // style.css; do not rename without updating the stylesheet.
 
-// Form layout. Order is display order. `reload: true` flags settings that the
-// running UI can't apply live (they take effect on the next page load); the
-// dialog surfaces a note for those so the user isn't confused when nothing
-// changes on screen.
+// Form layout. Order is display order. Every setting here applies live — the
+// host's onChange pushes each change into the running UI, so none of them
+// require a page reload.
 import { setTitle } from "../BrowserSupport.js";
 import { Modal } from "./Modal.js";
 
@@ -41,13 +40,11 @@ const FIELDS = [
       ["sector", "Sector"],
       ["polygon", "Polygon"],
     ],
-    reload: true,
   },
   {
     key: "fleetFilterRadius",
     label: "Fleet Filter Radius (m)",
     type: "number",
-    reload: true,
   },
 ];
 
@@ -92,17 +89,11 @@ export const ConfigPanel = L.Control.extend({
   // centered, page-dimming dialog that covers the map and #controlToolbar
   // independent of the little gear button.
   _buildDialog: function () {
-    const hasReloadField = FIELDS.some((field) => field.reload);
-    const reloadNote = hasReloadField
-      ? `<div class="configReloadNote">* applies after reloading the page</div>`
-      : "";
-
     this._modal = new Modal({ title: "Settings", className: "configModal" });
     this._modal.setContent(`
       <div id="configForm">
         ${FIELDS.map((field) => this._rowHtml(field)).join("")}
       </div>
-      ${reloadNote}
       <div id="configStatus"></div>
       <div id="configVersion"></div>`);
     // A single "Done" button (plus the header ×) closes the dialog; settings
@@ -125,8 +116,7 @@ export const ConfigPanel = L.Control.extend({
   // then label); everything else stacks label above the control. Inputs carry
   // a data-config-key so _buildDialog can find them after innerHTML.
   _rowHtml: function (field) {
-    const labelText = field.reload ? `${field.label} *` : field.label;
-    const label = `<span class="configLabel">${labelText}</span>`;
+    const label = `<span class="configLabel">${field.label}</span>`;
     let control;
 
     if (field.type === "select") {

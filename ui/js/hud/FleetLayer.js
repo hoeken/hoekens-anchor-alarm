@@ -105,6 +105,21 @@ export class FleetLayer {
   }
 
   loadInitialData() {
+    this.fetchAndLoadTracks();
+
+    // Seed names/dimensions/positions once, then let deltas keep the cache
+    // live; the timer prunes silent vessels and re-renders from the cache.
+    this.seedFleet();
+    this.fleetTimer = setInterval(
+      () => this.renderFromCache(),
+      CACHE_SYNC_INTERVAL_MS,
+    );
+  }
+
+  // Fetch historical tracks for the current filter radius and draw them. Split
+  // out of loadInitialData so setFilterRadius can re-run it on a radius change
+  // without re-arming the fleet timer.
+  fetchAndLoadTracks() {
     this.app.signalK
       .fetchTracks(this.filterRadius)
       .then((tracks) => {
@@ -123,14 +138,19 @@ export class FleetLayer {
           "warning",
         );
       });
+  }
 
-    // Seed names/dimensions/positions once, then let deltas keep the cache
-    // live; the timer prunes silent vessels and re-renders from the cache.
-    this.seedFleet();
-    this.fleetTimer = setInterval(
-      () => this.renderFromCache(),
-      CACHE_SYNC_INTERVAL_MS,
-    );
+  // Apply a new fleet filter radius live (from the settings dialog). Re-fetch
+  // historical tracks for the new radius and re-render the cached live vessels:
+  // syncOtherVessels reads this.filterRadius fresh, so renderFromCache adds
+  // newly-in-range vessels and drops those now outside.
+  setFilterRadius(radius) {
+    const next = radius ?? DEFAULT_FILTER_RADIUS;
+    if (next === this.filterRadius)
+      return;
+    this.filterRadius = next;
+    this.fetchAndLoadTracks();
+    this.renderFromCache();
   }
 
   // One-shot seed of the vessel cache so BoatConfig has real names/dimensions
@@ -299,6 +319,11 @@ export class FleetLayer {
 
       if (!points.length)
         continue;
+      // A prior load or live deltas may already have drawn a track for this
+      // mmsi; drop it before replacing so a re-fetch (e.g. a radius change)
+      // doesn't orphan the old layer on the map.
+      if (this.vesselTracks[mmsi])
+        this.map.removeLayer(this.vesselTracks[mmsi]);
       this.vesselTracks[mmsi] = this.createTrack(points, points.length, mmsi);
       this.trackPointCounts[mmsi] = this.vesselTracks[mmsi].getLatLngs().length;
     }

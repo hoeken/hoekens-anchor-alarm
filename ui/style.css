@@ -711,12 +711,6 @@ html.dark #polygonControl select {
   height: 18px;
 }
 
-.configReloadNote {
-  margin-top: 10px;
-  font-size: 9pt;
-  color: var(--surface-faint);
-}
-
 .configHint {
   font-size: 9pt;
   color: var(--surface-faint);

@@ -313,10 +313,10 @@ class AnchorAlarm {
   }
 
   // Persist UI settings edited via the ConfigPanel. We merge into the live
-  // config and re-render immediately so panel-visibility toggles and the
-  // basemap take effect without a reload; settings that can't be applied live
-  // (shape, fleet radius) are flagged in the dialog and pick
-  // up on the next load. Returns the save promise so the dialog can report
+  // config and re-render immediately so every setting takes effect without a
+  // reload: panel toggles and basemap re-render here, while the default
+  // watch-zone shape and fleet radius are pushed into the objects that captured
+  // them at construction. Returns the save promise so the dialog can report
   // status.
   saveConfig(newConfig) {
     Object.assign(this.config, newConfig);
@@ -324,6 +324,8 @@ class AnchorAlarm {
     this.state.setScopeRatios(this.config.scopes);
     this.state.calculateScopes();
     this.setBasemap(this.config.defaultBasemap);
+    this.anchorController?.setDefaultShape(this.config.defaultShape);
+    this.fleetLayer?.setFilterRadius(this.config.fleetFilterRadius);
     this.updateMap();
     this.statusBar.clear("config-save");
     return this.signalK.saveConfig(newConfig).catch((error) => {

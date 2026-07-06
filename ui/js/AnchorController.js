@@ -21,6 +21,15 @@ export class AnchorController {
     this._pending = false;
   }
 
+  // Update the default watch-zone shape live (from the settings dialog) and
+  // re-estimate so an undropped preview zone adopts the new shape immediately.
+  // estimateAnchorPosition is a no-op while anchored, so an active zone keeps
+  // its shape.
+  setDefaultShape(shape) {
+    this._defaultShape = shape || "circle";
+    this.estimateAnchorPosition();
+  }
+
   // === User-initiated transitions =================================================
 
   requestDrop() {
