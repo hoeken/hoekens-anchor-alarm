@@ -22,6 +22,10 @@
     {
       "name": "config",
       "description": "Plugin configuration exposed to the UI"
+    },
+    {
+      "name": "icon",
+      "description": "Custom own-boat icon shown on the map"
     }
   ],
   "components": {
@@ -98,6 +102,11 @@
           "enableSeascape": {
             "type": "boolean",
             "description": "Overlay the Seascape bathymetry (depth) chart on the base map by default. Requires internet + WebGL; toggleable at runtime in the layer control."
+          },
+          "hasCustomIcon": {
+            "type": "boolean",
+            "readOnly": true,
+            "description": "Derived (not stored): whether a custom own-boat icon has been uploaded via PUT /icon. The UI uses it to decide whether to render the custom icon and how to seed the settings preview."
           }
         }
       },
@@ -393,6 +402,131 @@
           },
           "403": {
             "$ref": "#/components/responses/AnchorError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/icon": {
+      "get": {
+        "tags": ["icon"],
+        "summary": "Get the custom own-boat icon",
+        "description": "Serves the uploaded own-boat icon image. Returns 404 when no custom icon has been set.",
+        "responses": {
+          "200": {
+            "description": "The custom icon image.",
+            "content": {
+              "image/png": {
+                "schema": { "type": "string", "format": "binary" }
+              },
+              "image/jpeg": {
+                "schema": { "type": "string", "format": "binary" }
+              },
+              "image/gif": {
+                "schema": { "type": "string", "format": "binary" }
+              },
+              "image/webp": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "404": {
+            "description": "No custom icon is set.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "statusCode": 404,
+                  "state": "FAILED",
+                  "message": "no custom boat icon set"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["icon"],
+        "summary": "Upload (or replace) the custom own-boat icon",
+        "description": "Stores the request body as the own-boat icon, overwriting any existing one. The body is the raw image bytes; the type is detected from the file's magic bytes (the Content-Type header is not trusted). Accepts jpg, png, gif, or webp up to 500 KB. Requires authentication.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "image/png": { "schema": { "type": "string", "format": "binary" } },
+            "image/jpeg": {
+              "schema": { "type": "string", "format": "binary" }
+            },
+            "image/gif": { "schema": { "type": "string", "format": "binary" } },
+            "image/webp": { "schema": { "type": "string", "format": "binary" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Icon stored successfully.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Empty upload.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "statusCode": 400,
+                  "state": "FAILED",
+                  "message": "empty upload"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Image exceeds the 500 KB size limit.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "statusCode": 413,
+                  "state": "FAILED",
+                  "message": "image too large — max 500 KB"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Body is not a recognized jpg/png/gif/webp image.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "statusCode": 415,
+                  "state": "FAILED",
+                  "message": "unsupported image type — use jpg, png, gif, or webp"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["icon"],
+        "summary": "Delete the custom own-boat icon",
+        "description": "Removes any stored own-boat icon. Idempotent — succeeds whether or not an icon was set. The map reverts to the AIS ship-type icon. Requires authentication.",
+        "responses": {
+          "200": {
+            "description": "Icon removed (or none was set).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
           },
           "500": {
             "$ref": "#/components/responses/InternalError"

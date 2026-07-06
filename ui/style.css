@@ -716,6 +716,68 @@ html.dark #polygonControl select {
   color: var(--surface-faint);
 }
 
+/* Custom boat-icon row: a preview box beside the upload/delete buttons. */
+.configIconControls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.configIconPreview {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  background-color: var(--input-bg);
+  padding: 2px;
+  box-sizing: border-box;
+  flex: none;
+}
+
+.configIconNone {
+  font-size: 9pt;
+  color: var(--surface-faint);
+  flex: 1;
+}
+
+.configIconButtons {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.configIconBtn {
+  font-family: inherit;
+  font-size: inherit;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 4px;
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--surface-fg);
+  cursor: pointer;
+}
+
+.configIconBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+#configIconStatus {
+  display: none;
+  margin-top: 6px;
+  font-size: 10pt;
+}
+
+#configIconStatus.configStatusOk {
+  color: green;
+}
+
+#configIconStatus.configStatusError {
+  color: red;
+}
+
 #configStatus {
   display: none;
   margin-top: 8px;

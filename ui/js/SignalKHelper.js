@@ -56,21 +56,53 @@ export class SignalKHelper {
   }
 
   pluginPost(action, data) {
-    return fetch(`${this.baseUrl}/plugins/${this.pluginName}/${action}`, {
+    return this.pluginFetch(action, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data ?? {}),
-    }).then((response) => {
-      if (response.status === 401) {
-        if (typeof this.onUnauthorized === "function") {
-          this.onUnauthorized();
-        } else {
-          const here = window.location.pathname + window.location.search + window.location.hash;
-          window.location.href = "/admin/#/login?redirect=" + encodeURIComponent(here);
-        }
-      }
-      return SignalKHelper._toJsonOrReject(response);
     });
+  }
+
+  // Fetch a plugin route, funneling 401s through the shared auth handler (open
+  // the login modal, or fall back to the admin login redirect) before parsing
+  // the JSON body. Every auth-gated plugin call goes through here.
+  pluginFetch(action, init) {
+    return fetch(`${this.baseUrl}/plugins/${this.pluginName}/${action}`, init).then(
+      (response) => {
+        if (response.status === 401) {
+          if (typeof this.onUnauthorized === "function") {
+            this.onUnauthorized();
+          } else {
+            const here = window.location.pathname + window.location.search + window.location.hash;
+            window.location.href = "/admin/#/login?redirect=" + encodeURIComponent(here);
+          }
+        }
+        return SignalKHelper._toJsonOrReject(response);
+      },
+    );
+  }
+
+  // URL of the custom own-boat icon (GET), used directly as the boat marker's
+  // image source. Pass a cache-busting token (e.g. Date.now()) after an
+  // upload/delete so the browser refetches the overwritten-in-place file.
+  boatIconUrl(bust) {
+    const base = `${this.baseUrl}/plugins/${this.pluginName}/icon`;
+    return bust ? `${base}?v=${bust}` : base;
+  }
+
+  // Upload/replace the custom own-boat icon. The body is the raw image bytes
+  // with the file's own MIME type; the backend detects the real type from the
+  // magic bytes regardless.
+  uploadBoatIcon(file) {
+    return this.pluginFetch("icon", {
+      method: "PUT",
+      headers: { "Content-Type": file.type || "application/octet-stream" },
+      body: file,
+    });
+  }
+
+  deleteBoatIcon() {
+    return this.pluginFetch("icon", { method: "DELETE" });
   }
 
   static _toJsonOrReject(response) {

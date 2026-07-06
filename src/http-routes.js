@@ -14,11 +14,135 @@
  */
 
 import { createRequire } from "module";
+import fs from "fs";
+import path from "path";
 import { AnchorError } from "./errors.js";
 import { pickUiConfig, coerceUiConfig } from "./schema.js";
 
 const require = createRequire(import.meta.url);
 const openapi = require("./openApi.json");
+
+// Custom own-boat icon upload (see /icon routes below). The image is stored in
+// the plugin data dir as a single `boat-icon.<ext>` file; the extension is
+// derived from the bytes, never from the client's Content-Type claim.
+const MAX_ICON_BYTES = 500 * 1024;
+const ICON_BASENAME = "boat-icon";
+
+// Recognized image types keyed by the extension we store under. `test(buf)`
+// sniffs the leading bytes so a spoofed Content-Type can't smuggle a
+// non-image through. Order doesn't matter — the first matching test wins.
+const ICON_TYPES = [
+  {
+    ext: "png",
+    mime: "image/png",
+    test: (b) =>
+      b.length >= 8 &&
+      b[0] === 0x89 &&
+      b[1] === 0x50 &&
+      b[2] === 0x4e &&
+      b[3] === 0x47 &&
+      b[4] === 0x0d &&
+      b[5] === 0x0a &&
+      b[6] === 0x1a &&
+      b[7] === 0x0a,
+  },
+  {
+    ext: "jpg",
+    mime: "image/jpeg",
+    test: (b) => b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
+  },
+  {
+    // GIF87a / GIF89a
+    ext: "gif",
+    mime: "image/gif",
+    test: (b) =>
+      b.length >= 6 &&
+      b[0] === 0x47 &&
+      b[1] === 0x49 &&
+      b[2] === 0x46 &&
+      b[3] === 0x38 &&
+      (b[4] === 0x37 || b[4] === 0x39) &&
+      b[5] === 0x61,
+  },
+  {
+    // RIFF....WEBP
+    ext: "webp",
+    mime: "image/webp",
+    test: (b) =>
+      b.length >= 12 &&
+      b[0] === 0x52 &&
+      b[1] === 0x49 &&
+      b[2] === 0x46 &&
+      b[3] === 0x46 &&
+      b[8] === 0x57 &&
+      b[9] === 0x45 &&
+      b[10] === 0x42 &&
+      b[11] === 0x50,
+  },
+];
+
+// Identify the image type from its magic bytes, or null if unrecognized.
+function sniffIconType(buf) {
+  return ICON_TYPES.find((t) => t.test(buf)) || null;
+}
+
+// Absolute path of the stored icon (whatever its extension), or null when none
+// exists. Tolerates a missing/unreadable data dir by returning null so callers
+// treat it as "no custom icon".
+function iconPath(app) {
+  try {
+    const dir = app.getDataDirPath();
+    const match = fs
+      .readdirSync(dir)
+      .find((f) => f.startsWith(`${ICON_BASENAME}.`));
+    return match ? path.join(dir, match) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Remove any stored icon file(s). Idempotent — silently does nothing when none.
+function removeIcon(app) {
+  const existing = iconPath(app);
+  if (existing)
+    fs.rmSync(existing, { force: true });
+}
+
+// Read the raw request body into a Buffer, stopping buffering once the byte cap
+// is exceeded so an oversized upload can't be held in memory in full. Resolves
+// with the bytes, or rejects with an { tooLarge: true } marker when over the
+// cap. Tests pass a pre-buffered Buffer as req.body, which we honor directly.
+function readBodyBytes(req, limit) {
+  if (Buffer.isBuffer(req.body)) {
+    return req.body.length > limit
+      ? Promise.reject({ tooLarge: true })
+      : Promise.resolve(req.body);
+  }
+
+  return new Promise((resolve, reject) => {
+    let chunks = [];
+    let total = 0;
+    let over = false;
+    req.on("data", (chunk) => {
+      // Once over the cap, drop what we've buffered and discard the rest, but
+      // keep draining the request instead of destroying it: tearing down the
+      // socket mid-upload makes the browser's fetch reject with a generic
+      // "Failed to fetch" rather than receiving our 413 "image too large" body.
+      if (over)
+        return;
+      total += chunk.length;
+      if (total > limit) {
+        over = true;
+        chunks = null;
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on("end", () =>
+      over ? reject({ tooLarge: true }) : resolve(Buffer.concat(chunks)));
+    req.on("error", reject);
+  });
+}
 
 export function register(app, plugin, router) {
   plugin.getOpenApi = () => openapi;
@@ -72,7 +196,93 @@ export function register(app, plugin, router) {
   });
 
   router.get("/ui-config", (req, res) => {
-    res.json(pickUiConfig(plugin.configuration || {}));
+    // hasCustomIcon is derived (file existence), not a stored config key, so it
+    // rides along on the projection here rather than in schema.js. coerceUiConfig
+    // ignores unknown keys, so a client echoing it back on POST is harmless.
+    res.json({
+      ...pickUiConfig(plugin.configuration || {}),
+      hasCustomIcon: iconPath(app) !== null,
+    });
+  });
+
+  // ============================================================
+  // CUSTOM OWN-BOAT ICON  (GET public; PUT/DELETE are writes and rely on
+  // SignalK gating write methods on plugin routes — same assumption as the
+  // POST /ui-config route above.)
+  // ============================================================
+
+  router.get("/icon", (req, res) => {
+    try {
+      const file = iconPath(app);
+      if (!file) {
+        res.status(404).json({
+          statusCode: 404,
+          state: "FAILED",
+          message: "no custom boat icon set",
+        });
+        return;
+      }
+      const type = ICON_TYPES.find((t) => t.ext === path.extname(file).slice(1));
+      res.set("Content-Type", type ? type.mime : "application/octet-stream");
+      // The file is overwritten in place on re-upload, so keep it revalidatable
+      // rather than long-cached; the UI also cache-busts with a ?v= param.
+      res.set("Cache-Control", "no-cache");
+      res.send(fs.readFileSync(file));
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  router.put("/icon", (req, res) => {
+    readBodyBytes(req, MAX_ICON_BYTES)
+      .then((buf) => {
+        if (!buf || buf.length === 0) {
+          res.status(400).json({
+            statusCode: 400,
+            state: "FAILED",
+            message: "empty upload",
+          });
+          return;
+        }
+
+        const type = sniffIconType(buf);
+        if (!type) {
+          res.status(415).json({
+            statusCode: 415,
+            state: "FAILED",
+            message: "unsupported image type — use jpg, png, gif, or webp",
+          });
+          return;
+        }
+
+        // Replace any prior icon (which may have a different extension) so only
+        // one boat-icon.* ever exists.
+        removeIcon(app);
+        const dir = app.getDataDirPath();
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, `${ICON_BASENAME}.${type.ext}`), buf);
+        res.json({ statusCode: 200, state: "COMPLETED" });
+      })
+      .catch((err) => {
+        if (err && err.tooLarge) {
+          res.status(413).json({
+            statusCode: 413,
+            state: "FAILED",
+            message: `image too large — max ${MAX_ICON_BYTES / 1024} KB`,
+          });
+          return;
+        }
+        fail(res, err);
+      });
+  });
+
+  router.delete("/icon", (req, res) => {
+    try {
+      removeIcon(app);
+      res.json({ statusCode: 200, state: "COMPLETED" });
+    } catch (err) {
+      fail(res, err);
+    }
   });
 
   // Persist UI-editable settings. Only whitelisted keys are accepted; each is

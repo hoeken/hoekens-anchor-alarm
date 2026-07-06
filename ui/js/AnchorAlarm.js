@@ -52,6 +52,7 @@ class AnchorAlarm {
       enableChartLayers: true,
       enableSeascape: false,
       scopes: "7,5,4,3",
+      hasCustomIcon: false,
     };
     this.state.loggedIn = false;
 
@@ -367,6 +368,26 @@ class AnchorAlarm {
     });
   }
 
+  // Upload a custom own-boat icon, then live-update the marker (cache-busted so
+  // the overwritten-in-place file refetches). Returns the request promise so the
+  // settings dialog can report status; on failure the marker is left unchanged.
+  uploadBoatIcon(file) {
+    return this.signalK.uploadBoatIcon(file).then((result) => {
+      this.config.hasCustomIcon = true;
+      this.fleetLayer?.setOwnBoatIcon(this.signalK.boatIconUrl(Date.now()));
+      return result;
+    });
+  }
+
+  // Remove the custom icon and revert the marker to the AIS ship-type icon.
+  deleteBoatIcon() {
+    return this.signalK.deleteBoatIcon().then((result) => {
+      this.config.hasCustomIcon = false;
+      this.fleetLayer?.setOwnBoatIcon(null);
+      return result;
+    });
+  }
+
   setupConnection() {
     this.setupWebsockets();
     this.updateTimer = setInterval(
@@ -394,6 +415,9 @@ class AnchorAlarm {
         getConfig: () => this.config,
         getVersion: () => this.version,
         onChange: (newConfig) => this.saveConfig(newConfig),
+        getIconUrl: (bust) => this.signalK.boatIconUrl(bust),
+        onUploadIcon: (file) => this.uploadBoatIcon(file),
+        onDeleteIcon: () => this.deleteBoatIcon(),
       });
       this.map.addControl(this.configPanel);
     }

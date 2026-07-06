@@ -68,6 +68,11 @@ export const ConfigPanel = L.Control.extend({
     getConfig: null, // () => current config object
     getVersion: null, // () => plugin version string, shown at dialog bottom
     onChange: null, // (newConfig) => void | Promise, resolves when persisted
+    // Custom own-boat icon. The icon isn't a schema field (it's an uploaded
+    // file), so it lives outside the FIELDS-driven form and gets its own hooks.
+    getIconUrl: null, // (bust) => URL of the current custom icon (GET /icon)
+    onUploadIcon: null, // (file) => Promise, resolves when stored
+    onDeleteIcon: null, // () => Promise, resolves when removed
   },
 
   onAdd: function () {
@@ -107,6 +112,7 @@ export const ConfigPanel = L.Control.extend({
     this._modal.setContent(`
       <div id="configForm">
         ${FIELDS.map((field) => this._rowHtml(field)).join("")}
+        ${this._iconRowHtml()}
       </div>
       <div id="configStatus"></div>`);
     // A single "Done" button (plus the header ×) closes the dialog; settings
@@ -130,6 +136,96 @@ export const ConfigPanel = L.Control.extend({
       this._inputs[field.key] = input;
       input.addEventListener("change", () => this._onFieldChange());
     }
+
+    // Custom boat-icon controls: a preview, a hidden file input driven by an
+    // Upload button, and a Delete button. See _iconRowHtml / _setIconState.
+    this._iconPreview = body.querySelector("#configIconPreview");
+    this._iconNone = body.querySelector("#configIconNone");
+    this._iconFile = body.querySelector("#configIconFile");
+    this._iconUploadBtn = body.querySelector("#configIconUpload");
+    this._iconDeleteBtn = body.querySelector("#configIconDelete");
+    this._iconStatus = body.querySelector("#configIconStatus");
+    this._hasCustomIcon = false;
+
+    this._iconUploadBtn.addEventListener("click", () => this._iconFile.click());
+    this._iconFile.addEventListener("change", () => this._onIconSelected());
+    this._iconDeleteBtn.addEventListener("click", () => this._onIconDelete());
+  },
+
+  // The boat-icon row. Kept out of _rowHtml/FIELDS because it's an uploaded
+  // file, not a persisted schema value.
+  _iconRowHtml: function () {
+    return `<div class="configRow" id="configIconRow">
+      <span class="configLabel">Custom Boat Icon</span>
+      <div class="configIconControls">
+        <img id="configIconPreview" class="configIconPreview" alt="Custom boat icon" hidden />
+        <span id="configIconNone" class="configIconNone">No icon uploaded yet.</span>
+        <div class="configIconButtons">
+          <button type="button" id="configIconUpload" class="configIconBtn">Choose</button>
+          <button type="button" id="configIconDelete" class="configIconBtn">Delete</button>
+        </div>
+        <input type="file" id="configIconFile" accept="image/png,image/jpeg,image/gif,image/webp" hidden />
+      </div>
+      <span class="configHint">jpg, png, gif, or webp · max 500&nbsp;KB.</span>
+      <div id="configIconStatus"></div>
+    </div>`;
+  },
+
+  // Reflect whether a custom icon exists: show the preview (cache-busted so a
+  // re-upload refreshes) or the "using default" note, and show/hide Delete.
+  _setIconState: function (hasCustom) {
+    this._hasCustomIcon = Boolean(hasCustom);
+    const getUrl = this.options.getIconUrl;
+    if (this._hasCustomIcon && getUrl) {
+      this._iconPreview.src = getUrl(Date.now());
+      this._iconPreview.hidden = false;
+      this._iconNone.hidden = true;
+    } else {
+      this._iconPreview.removeAttribute("src");
+      this._iconPreview.hidden = true;
+      this._iconNone.hidden = false;
+    }
+    this._iconDeleteBtn.hidden = !this._hasCustomIcon;
+  },
+
+  _setIconStatus: function (text, className) {
+    if (!this._iconStatus)
+      return;
+    this._iconStatus.textContent = text || "";
+    this._iconStatus.className = className || "";
+    this._iconStatus.style.display = text ? "block" : "none";
+  },
+
+  _onIconSelected: function () {
+    const file = this._iconFile.files && this._iconFile.files[0];
+    // Reset the input so re-picking the same file fires change again.
+    this._iconFile.value = "";
+    if (!file)
+      return;
+
+    this._setIconStatus("Uploading…", "");
+    Promise.resolve(this.options.onUploadIcon && this.options.onUploadIcon(file))
+      .then(() => {
+        this._setIconState(true);
+        this._setIconStatus("Icon updated", "configStatusOk");
+      })
+      .catch((err) => {
+        this._setIconStatus(
+          (err && err.message) || "Upload failed", "configStatusError");
+      });
+  },
+
+  _onIconDelete: function () {
+    this._setIconStatus("Removing…", "");
+    Promise.resolve(this.options.onDeleteIcon && this.options.onDeleteIcon())
+      .then(() => {
+        this._setIconState(false);
+        this._setIconStatus("Icon removed", "configStatusOk");
+      })
+      .catch((err) => {
+        this._setIconStatus(
+          (err && err.message) || "Delete failed", "configStatusError");
+      });
   },
 
   // Returns the markup for one form row. Checkboxes read left-to-right (box
@@ -211,8 +307,11 @@ export const ConfigPanel = L.Control.extend({
   },
 
   _show: function () {
-    this._populate(this.options.getConfig ? this.options.getConfig() : null);
+    const config = this.options.getConfig ? this.options.getConfig() : null;
+    this._populate(config);
     this._setStatus("", "");
+    this._setIconStatus("", "");
+    this._setIconState(config && config.hasCustomIcon);
     if (this._version) {
       const version = this.options.getVersion ? this.options.getVersion() : null;
       this._version.textContent = version ? `Hoeken's Anchor Alarm v${version}` : "";

@@ -275,12 +275,19 @@ export class FleetLayer {
   // removes it.
   setOwnVessel(coords, boatConfig) {
     this.ownBoatConfig = boatConfig;
+    // Prefer a user-uploaded custom icon; if it's missing/broken the marker's
+    // own error handler (fallbackIcon) drops back to the ship-type silhouette.
+    const customIcon =
+      this.app.config && this.app.config.hasCustomIcon
+        ? this.app.signalK.boatIconUrl()
+        : null;
     this.ownVessel = new L.BoatMarker(coords, {
       beam: boatConfig.beam,
       loa: boatConfig.loa,
       gpsOffset: boatConfig.bowOffset,
       heading: boatConfig.heading,
-      icon: boatConfig.icon,
+      icon: customIcon || boatConfig.icon,
+      fallbackIcon: boatConfig.icon,
     }).addTo(this.map);
 
     // Hovering our own boat highlights its track, mirroring AIS vessels.
@@ -297,6 +304,15 @@ export class FleetLayer {
     this.ownVessel.setLatLng(coords);
     this.ownVessel.setHeading(heading);
     this.ownAntenna.setLatLng(coords);
+  }
+
+  // Swap the own-boat marker image live from the settings dialog. A url (a
+  // cache-busted /icon URL) applies a custom icon; null reverts to the
+  // ship-type icon derived from the boat config.
+  setOwnBoatIcon(url) {
+    if (!this.ownVessel)
+      return;
+    this.ownVessel.setBoatIcon(url || this.ownBoatConfig.icon);
   }
 
   // Initial bulk history load from /tracks. Includes self.

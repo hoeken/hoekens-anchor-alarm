@@ -1,8 +1,21 @@
+import fs from "fs";
+import os from "os";
+import path from "path";
+
 // A fake SignalK `app` for driving the plugin in tests. Every method the
 // plugin touches is a recorder; assertions read back from `calls` and the
 // delta helpers. getSelfPath reads a settable map so tests can stage a GPS
 // fix, engine state, etc.
 export function createMockApp(overrides = {}) {
+  // Lazily-created per-app temp data dir, mirroring app.getDataDirPath() in the
+  // real server. Only tests that touch it (e.g. the icon routes) pay for it;
+  // they should call cleanupDataDir() when done.
+  let dataDir = null;
+  const getDataDirPath = () => {
+    if (!dataDir)
+      dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "aa-plugin-"));
+    return dataDir;
+  };
   const calls = {
     status: [],
     pluginError: [],
@@ -35,6 +48,7 @@ export function createMockApp(overrides = {}) {
     },
     registerActionHandler: (context, path, handler) =>
       calls.actionHandlers.push({ context, path, handler }),
+    getDataDirPath,
     ...overrides,
   };
 
@@ -56,6 +70,13 @@ export function createMockApp(overrides = {}) {
     },
     hasDelta: (path) => deltas().some((d) => d.path === path),
     lastStatus: () => calls.status[calls.status.length - 1],
+    // Path of the temp data dir (creating it if needed), and a cleanup for it.
+    dataDir: getDataDirPath,
+    cleanupDataDir: () => {
+      if (dataDir)
+        fs.rmSync(dataDir, { recursive: true, force: true });
+      dataDir = null;
+    },
     // Forget everything recorded so far — handy between phases of one test.
     reset: () => {
       for (const key of Object.keys(calls))
