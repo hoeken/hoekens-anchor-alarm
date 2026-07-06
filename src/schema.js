@@ -135,7 +135,7 @@ export function buildSchema(app) {
         description:
           "Which map layer to show on load; all remain switchable at runtime via the layer control. \"Blank\" draws no tiles — useful offline, on slow links, or when relying only on local charts.",
         default: "Satellite",
-        enum: ["OpenStreetMap", "Satellite", "Blank"],
+        enum: ["Blank", "OpenStreetMap", "Satellite"],
       },
       defaultShape: {
         type: "string",

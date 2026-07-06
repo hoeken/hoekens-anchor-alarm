@@ -162,9 +162,9 @@ class AnchorAlarm {
     this.blankLayer = L.layerGroup();
 
     this.baseMaps = {
+      Blank: this.blankLayer,
       OpenStreetMap: this.osmLayer,
       Satellite: this.satelliteLayer,
-      Blank: this.blankLayer,
     };
 
     // Map shell and status bar first so failures during initial load (missing
@@ -512,7 +512,7 @@ class AnchorAlarm {
         if (container)
           container.style.zIndex = SEASCAPE_OVERLAY_Z_INDEX;
       });
-      this.layersControl?.addOverlay(layer, "Seascape");
+      this.layersControl?.addOverlay(layer, "Seascape Bathymetry");
       if (this.config.enableSeascape)
         layer.addTo(this.map);
     });

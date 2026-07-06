@@ -38,11 +38,11 @@ const FIELDS = [
     // the layer control when available; the "Use Seascape Bathymetry" setting
     // above only sets whether it starts on (see AnchorAlarm.addSeascapeLayer).
     options: [
-      ["Satellite", "Satellite"],
-      ["OpenStreetMap", "OpenStreetMap"],
       // No-tiles base for offline/slow links or crews using only their own
       // local charts (see AnchorAlarm.blankLayer).
       ["Blank", "Blank"],
+      ["OpenStreetMap", "OpenStreetMap"],
+      ["Satellite", "Satellite"],
     ],
   },
   {
