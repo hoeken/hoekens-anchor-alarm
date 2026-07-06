@@ -9,8 +9,9 @@ npm install
 npm run build:ui
 ```
 
-This runs `npm run generate:icons` followed by `vite build` (see
-[vite.config.js](vite.config.js)) and outputs to `public/`.
+This runs `vite build` (see [vite.config.js](vite.config.js)) and outputs to
+`public/`. The app icons are committed to git (see below), so the build no
+longer generates them and does not need the `sharp`/`png-to-ico` toolchain.
 
 ## Icons
 
@@ -35,14 +36,16 @@ npm run generate:icons
 ```
 
 The generator writes into `ui/public/` (Vite's publicDir), and `vite build`
-copies the results into `public/`. The generated icons are gitignored and
-rebuilt on every `npm run build:ui`; only the master is committed.
+copies the results into `public/`. This is a standalone step: the generated
+icons are committed to git, so `npm run build:ui` does **not** run it. Run it
+only when the master changes, then commit the regenerated icons alongside it.
 
 The master lives outside `ui/public/` on purpose so Vite never copies it into
 the build output, and it is excluded from the published npm tarball (`branding/`
 is not listed in `files` in [package.json](package.json)). To change the icon,
-replace `branding/anchoralarm.png` with a new square image (≥512×512) and
-rebuild.
+replace `branding/anchoralarm.png` with a new square image (≥512×512), run
+`npm run generate:icons`, and commit the master together with the regenerated
+`ui/public/` icons.
 
 ## Releasing
 

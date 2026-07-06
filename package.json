@@ -13,7 +13,7 @@
     "format:check": "eslint . && prettier --check .",
     "prepare": "husky || true",
     "generate:icons": "node scripts/generate-icons.js",
-    "build:ui": "npm run generate:icons && vite build",
+    "build:ui": "vite build",
     "prepack": "npm run build:ui",
     "prepublishOnly": "npm test"
   },

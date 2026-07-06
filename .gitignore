@@ -135,9 +135,3 @@ dist
 
 # Vite build output
 /public/
-
-# Icons generated from branding/anchoralarm.png by scripts/generate-icons.js
-# (copied into public/ by `vite build`). The master in branding/ is committed;
-# these derived files are not.
-/ui/public/anchoralarm.png
-/ui/public/favicons/

@@ -6,10 +6,12 @@
 // tarball — it is used only as the source for the icons produced here.
 //
 // Outputs land in ui/public/ (Vite's publicDir). `vite build` then copies them
-// verbatim into public/, which is what ships. All outputs are gitignored and
-// regenerated on every build; see DEVELOPMENT.md.
+// verbatim into public/, which is what ships. The outputs are committed to git
+// and this script is standalone — run it only when the master changes, then
+// commit the results. It is intentionally NOT part of `npm run build:ui`, so a
+// build never needs the heavy `sharp`/`png-to-ico` toolchain. See DEVELOPMENT.md.
 //
-// Run via `npm run generate:icons` (also runs as part of `npm run build:ui`).
+// Run via `npm run generate:icons`.
 
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
