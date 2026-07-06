@@ -58,6 +58,9 @@ class AnchorAlarm {
     this.configPanel = undefined;
     this.themeControl = undefined;
     this.toolbar = undefined;
+    // Startup snapshot of the local raster charts (see addChartLayers). Every
+    // later add/remove works off this copy so we never re-fetch the catalog.
+    this.chartLayers = [];
     this.updateTimer = null;
     this._loginModal = null;
     // Own-boat stream context, learned from the hello frame. Used to route each
@@ -406,6 +409,9 @@ class AnchorAlarm {
     // baselayerchange), so refresh here too or a chart's credit wouldn't appear.
     this.map.on("overlayadd", () => this.updateAttribution());
     this.map.on("overlayremove", () => this.updateAttribution());
+    // Panning or zooming re-derives which local charts belong in the layer
+    // control for the new view (moveend also fires after a zoom completes).
+    this.map.on("moveend", () => this.updateChartLayers());
     window.addEventListener("resize", () => this.updateAttribution());
 
     // L.control.scale({ position: "bottomleft" }).addTo(this.map);
@@ -485,17 +491,64 @@ class AnchorAlarm {
   }
 
   // Local raster charts served by SignalK's resources API (see ChartLayers) are
-  // fetched asynchronously and added to the layer control as toggleable
-  // overlays — off by default, drawn on top of the active base map within their
-  // bounds. A missing charts plugin or a fetch error resolves to an empty list,
-  // making this a no-op then.
+  // fetched once on startup and cached in this.chartLayers, keyed with the
+  // coverage bounds and native min-zoom read back off each Leaflet layer. Every
+  // later chart operation works off that snapshot instead of re-fetching. A
+  // missing charts plugin or a fetch error resolves to an empty list, making
+  // this a no-op then. updateChartLayers() populates the layer control for the
+  // current view.
   addChartLayers() {
     loadChartLayers(this.signalK).then((charts) => {
       if (!this.map || !this.layersControl)
         return;
-      for (const { name, layer } of charts)
-        this.layersControl.addOverlay(layer, name);
+      this.chartLayers = charts.map(({ name, layer }) => ({
+        name,
+        layer,
+        bounds: Array.isArray(layer.options.bounds)
+          ? L.latLngBounds(layer.options.bounds)
+          : null,
+        minZoom: layer.options.minZoom,
+        listed: false,
+      }));
+      this.updateChartLayers();
     });
+  }
+
+  // Re-derive which cached local charts belong in the layer control for the
+  // current view. A chart is listed (and, per its checkbox, enabled by default)
+  // only while the map is zoomed in far enough to render its tiles — below a
+  // chart's native minzoom Leaflet draws nothing — and its coverage overlaps
+  // the visible area. Charts with no bounds/zoom metadata are treated as global
+  // and always shown. Panning or zooming a chart out of view removes it from
+  // both the map and the control; bringing it back re-adds it, enabled.
+  updateChartLayers() {
+    if (!this.map || !this.layersControl || !this.chartLayers.length)
+      return;
+    const zoom = this.map.getZoom();
+    const view = this.map.getBounds();
+    let changed = false;
+    for (const chart of this.chartLayers) {
+      const show =
+        (!Number.isFinite(chart.minZoom) || zoom >= chart.minZoom) &&
+        (!chart.bounds || chart.bounds.intersects(view));
+      if (show === chart.listed)
+        continue;
+      if (show) {
+        // Add to the map before the control so the control renders the
+        // overlay's checkbox already ticked (it reads map.hasLayer at build).
+        chart.layer.addTo(this.map);
+        this.layersControl.addOverlay(chart.layer, chart.name);
+      } else {
+        this.map.removeLayer(chart.layer);
+        this.layersControl.removeLayer(chart.layer);
+      }
+      chart.listed = show;
+      changed = true;
+    }
+    // Programmatic add/remove doesn't fire overlayadd/overlayremove, so refresh
+    // the attribution strip by hand when a chart's credit came or went.
+    if (changed)
+      this.updateAttribution();
   }
 
   // Swap the active base layer to the named basemap (falling back to satellite
