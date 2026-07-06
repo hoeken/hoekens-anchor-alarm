@@ -1,4 +1,4 @@
-// AnchorAlarm is the composition root: it owns boat geometry and the polling
+// AnchorAlarm is the composition root: it owns boat geometry and the live-update
 // lifecycle, delegates rendering to FleetLayer (vessels + tracks) and the four
 // HudPanels (Info/Scope/Wind/Home), and hands the anchor state machine to
 // AnchorController.
@@ -23,7 +23,6 @@ import { Modal } from "./hud/Modal.js";
 import { nativeTooltipsSuppressed } from "./BrowserSupport.js";
 
 const UPDATE_INTERVAL_MS = 500;
-const POLL_INTERVAL_MS = 1000;
 const INITIAL_LOAD_RETRY_MS = 5000;
 
 class AnchorAlarm {
@@ -34,7 +33,6 @@ class AnchorAlarm {
     this.signalK.onUnauthorized = () => this.showLoginModal();
     this.state = new AppState();
     this.config = {
-      connectionType: "WEBSOCKET",
       fleetFilterRadius: 500,
       defaultBasemap: "Satellite",
       defaultShape: "circle",
@@ -58,8 +56,6 @@ class AnchorAlarm {
     this.themeControl = undefined;
     this.toolbar = undefined;
     this.updateTimer = null;
-    this.pollTimer = null;
-    this._pollInFlight = false;
     this._loginModal = null;
     // Own-boat stream context, learned from the hello frame. Used to route each
     // delta to either own-boat state or the fleet layer once we subscribe to
@@ -319,7 +315,7 @@ class AnchorAlarm {
   // Persist UI settings edited via the ConfigPanel. We merge into the live
   // config and re-render immediately so panel-visibility toggles and the
   // basemap take effect without a reload; settings that can't be applied live
-  // (shape, fleet radius, connection type) are flagged in the dialog and pick
+  // (shape, fleet radius) are flagged in the dialog and pick
   // up on the next load. Returns the save promise so the dialog can report
   // status.
   saveConfig(newConfig) {
@@ -341,17 +337,11 @@ class AnchorAlarm {
   }
 
   setupConnection() {
-    if (this.config.connectionType === "WEBSOCKET") {
-      console.log("Using Websockets");
-      this.setupWebsockets();
-      this.updateTimer = setInterval(
-        () => this.update(),
-        UPDATE_INTERVAL_MS,
-      );
-    } else {
-      console.log("Using REST Polling");
-      this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
-    }
+    this.setupWebsockets();
+    this.updateTimer = setInterval(
+      () => this.update(),
+      UPDATE_INTERVAL_MS,
+    );
   }
 
   // Decorates the map shell built in init() with the rest of the controls.
@@ -540,38 +530,11 @@ class AnchorAlarm {
       this.windPanel.hide();
   }
 
-  // === Live polling ================================================================
+  // === Live updates ===============================================================
 
-  // One GET of vessels/self per tick feeds position, depth, wind, anchor state,
-  // and the anchor alarm — they're all subtrees of the same document. The fleet
-  // poll runs on its own slower timer.
-  poll() {
-    // Skip the tick if the previous fetch is still in flight; otherwise a slow
-    // response can land after a newer one and stomp fresher state.
-    if (this._pollInFlight)
-      return;
-    this._pollInFlight = true;
-
-    this.signalK
-      .fetchSelf()
-      .then((data) => {
-        this.statusBar.clear("self-poll");
-        this.state.extractAll(data);
-        this.state.calculate();
-        this.updateMap();
-      })
-      .catch((error) => {
-        const detail = error.statusText || error.message || "unknown error";
-        const status = error.status ? `${error.status} ` : "";
-        const msg = `Self update failed: ${status}${detail}`;
-        this.statusBar.set("self-poll", msg, "warning");
-        console.error(msg, error);
-      })
-      .finally(() => {
-        this._pollInFlight = false;
-      });
-  }
-
+  // Recompute derived state from the delta-fed AppState and re-render on a fixed
+  // cadence, decoupled from the delta arrival rate so a burst of updates doesn't
+  // trigger a redraw per message.
   update() {
     try {
       this.state.calculate();
@@ -587,9 +550,9 @@ class AnchorAlarm {
   }
 
   destroy() {
-    if (this.pollTimer) {
-      clearInterval(this.pollTimer);
-      this.pollTimer = null;
+    if (this.updateTimer) {
+      clearInterval(this.updateTimer);
+      this.updateTimer = null;
     }
   }
 }

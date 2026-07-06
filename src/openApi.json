@@ -64,11 +64,6 @@
         "type": "object",
         "description": "UI-relevant plugin configuration. Properties are omitted when unset; the UI falls back to its own defaults.",
         "properties": {
-          "connectionType": {
-            "type": "string",
-            "enum": ["REST_POLLING", "WEBSOCKET"],
-            "description": "How the UI connects to SignalK for live data updates."
-          },
           "defaultBasemap": {
             "type": "string",
             "enum": ["OpenStreetMap", "Satellite"],
@@ -352,8 +347,7 @@
                   "$ref": "#/components/schemas/Config"
                 },
                 "example": {
-                  "fleetFilterRadius": 500,
-                  "connectionType": "WEBSOCKET"
+                  "fleetFilterRadius": 500
                 }
               }
             }

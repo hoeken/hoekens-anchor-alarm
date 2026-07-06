@@ -66,12 +66,12 @@ describe("readZoneConfig()", () => {
 describe("pickUiConfig()", () => {
   test("projects exactly the whitelisted keys", () => {
     const picked = pickUiConfig({
-      connectionType: "WEBSOCKET",
+      defaultBasemap: "Satellite",
       zone: "secret",
       state: "emergency",
     });
     assert.deepEqual(Object.keys(picked).sort(), [...UI_CONFIG_KEYS].sort());
-    assert.equal(picked.connectionType, "WEBSOCKET");
+    assert.equal(picked.defaultBasemap, "Satellite");
     assert.equal("zone" in picked, false);
     assert.equal("state" in picked, false);
   });
@@ -86,10 +86,10 @@ describe("pickUiConfig()", () => {
 describe("coerceUiConfig()", () => {
   test("returns only the whitelisted keys that were present", () => {
     const updates = coerceUiConfig(APP, {
-      connectionType: "REST_POLLING",
+      defaultBasemap: "OpenStreetMap",
       state: "alarm", // not a UI key — must be ignored
     });
-    assert.deepEqual(updates, { connectionType: "REST_POLLING" });
+    assert.deepEqual(updates, { defaultBasemap: "OpenStreetMap" });
   });
 
   test("coerces integers (rounding) and booleans", () => {
@@ -103,7 +103,7 @@ describe("coerceUiConfig()", () => {
 
   test("throws ValidationError on an enum violation", () => {
     assert.throws(
-      () => coerceUiConfig(APP, { connectionType: "CARRIER_PIGEON" }),
+      () => coerceUiConfig(APP, { defaultBasemap: "CARRIER_PIGEON" }),
       ValidationError,
     );
   });
@@ -120,7 +120,6 @@ describe("applyDefaults()", () => {
   test("fills schema defaults for unset keys", () => {
     const config = {};
     applyDefaults(APP, config);
-    assert.equal(config.connectionType, "WEBSOCKET");
     assert.equal(config.defaultBasemap, "Satellite");
     assert.equal(config.enableTidePanel, true);
     assert.equal(config.anchorAlarmInterval, 60);
@@ -129,9 +128,9 @@ describe("applyDefaults()", () => {
   });
 
   test("never overwrites a value the user already set", () => {
-    const config = { connectionType: "REST_POLLING", fleetFilterRadius: 999 };
+    const config = { defaultBasemap: "OpenStreetMap", fleetFilterRadius: 999 };
     applyDefaults(APP, config);
-    assert.equal(config.connectionType, "REST_POLLING");
+    assert.equal(config.defaultBasemap, "OpenStreetMap");
     assert.equal(config.fleetFilterRadius, 999);
   });
 });

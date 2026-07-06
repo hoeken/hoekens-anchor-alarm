@@ -150,14 +150,14 @@ describe("http-routes register()", () => {
   describe("GET /ui-config", () => {
     test("returns the whitelisted projection of the config", () => {
       plugin.configuration = {
-        connectionType: "WEBSOCKET",
+        defaultBasemap: "Satellite",
         zone: "secret",
         state: "emergency",
       };
       wire();
       const res = fakeRes();
       router.handlers.get["/ui-config"]({}, res);
-      assert.equal(res.body.connectionType, "WEBSOCKET");
+      assert.equal(res.body.defaultBasemap, "Satellite");
       assert.equal("zone" in res.body, false);
       assert.equal("state" in res.body, false);
     });
@@ -177,15 +177,15 @@ describe("http-routes register()", () => {
       wire();
       const res = fakeRes();
       router.handlers.post["/ui-config"](
-        { body: { connectionType: "REST_POLLING", fleetFilterRadius: "250" } },
+        { body: { defaultBasemap: "OpenStreetMap", fleetFilterRadius: "250" } },
         res,
       );
-      assert.equal(plugin.configuration.connectionType, "REST_POLLING");
+      assert.equal(plugin.configuration.defaultBasemap, "OpenStreetMap");
       assert.equal(plugin.configuration.fleetFilterRadius, 250);
       assert.equal(plugin.saveCount, 1);
       assert.equal(res.statusCode, 200);
       assert.deepEqual(res.body.config, {
-        connectionType: "REST_POLLING",
+        defaultBasemap: "OpenStreetMap",
         fleetFilterRadius: 250,
       });
     });
@@ -195,7 +195,7 @@ describe("http-routes register()", () => {
       wire();
       const res = fakeRes();
       router.handlers.post["/ui-config"](
-        { body: { connectionType: "CARRIER_PIGEON" } },
+        { body: { defaultBasemap: "CARRIER_PIGEON" } },
         res,
       );
       assert.equal(res.statusCode, 403);

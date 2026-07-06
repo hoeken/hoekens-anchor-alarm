@@ -4,14 +4,11 @@
 // other vessels. Out-of-range AIS vessels are removed on each sync; the own
 // boat is never auto-removed (its mmsi key never appears in the AIS list).
 //
-// The other-vessel feed has two modes, chosen by config.connectionType:
-//   REST      — poll the whole /vessels tree every POLL_INTERVAL_MS (legacy).
-//   WEBSOCKET — seed a per-vessel cache once from /vessels, then keep it live
-//               from the vessels.* delta subscription (ingestVesselDelta). A
-//               slow timer prunes vessels that have gone silent and re-renders
-//               the cache through the same syncOtherVessels path REST uses.
-// Both modes ultimately hand syncOtherVessels a { key -> vessel-tree } dict, so
-// marker/track reconciliation is identical regardless of transport.
+// The other-vessel feed seeds a per-vessel cache once from /vessels, then keeps
+// it live from the vessels.* delta subscription (ingestVesselDelta). A slow
+// timer prunes vessels that have gone silent and re-renders the cache through
+// syncOtherVessels, which reconciles markers/tracks against a
+// { key -> vessel-tree } dict.
 
 import simplify from "simplify-js";
 import { bearing, distance, point, radiansToDegrees } from "@turf/turf";
@@ -19,16 +16,14 @@ import { SignalKHelper } from "../SignalKHelper.js";
 import { BoatConfig } from "../BoatConfig.js";
 import { DisplayUnit } from "../DisplayUnit.js";
 
-const POLL_INTERVAL_MS = 5000;
-// WebSocket mode: how often to prune silent vessels and re-render the delta-fed
-// cache. Decoupled from the delta arrival rate so a busy anchorage doesn't
-// trigger a redraw per message.
+// How often to prune silent vessels and re-render the delta-fed cache.
+// Decoupled from the delta arrival rate so a busy anchorage doesn't trigger a
+// redraw per message.
 const CACHE_SYNC_INTERVAL_MS = 1000;
-// WebSocket mode: drop a vessel we haven't heard a delta from in this long.
-// Replaces REST mode's implicit "absent from the latest snapshot" removal.
-// Generous enough not to flicker anchored Class B neighbours (whose position
-// reports can be minutes apart); departures within radius linger up to this
-// long, but out-of-radius vessels are still removed the instant they move.
+// Drop a vessel we haven't heard a delta from in this long. Generous enough not
+// to flicker anchored Class B neighbours (whose position reports can be minutes
+// apart); departures within radius linger up to this long, but out-of-radius
+// vessels are still removed the instant they move.
 const VESSEL_TTL_MS = 30 * 60 * 1000;
 const DEFAULT_FILTER_RADIUS = 500;
 // Name labels only show once boats are zoomed in enough to be visually
@@ -70,11 +65,9 @@ export class FleetLayer {
     this.ownAntenna = undefined;
     this.ownBoatConfig = undefined;
     this.fleetTimer = null;
-    this._pollInFlight = false;
-    this.useWebsocket = this.app.config.connectionType === "WEBSOCKET";
-    // WebSocket mode only: mmsi -> vessel tree, shaped like a /vessels payload
-    // entry and built from deltas + a REST seed. Each entry carries a numeric
-    // _lastSeen for TTL pruning. Unused in REST mode.
+    // mmsi -> vessel tree, shaped like a /vessels payload entry and built from
+    // deltas + a one-shot /vessels seed. Each entry carries a numeric _lastSeen
+    // for TTL pruning.
     this.vesselCache = {};
     this._staticFetches = new Set(); // mmsis with an in-flight static fetch
     this.filterRadius = filterRadius ?? DEFAULT_FILTER_RADIUS;
@@ -131,22 +124,17 @@ export class FleetLayer {
         );
       });
 
-    if (this.useWebsocket) {
-      // Seed names/dimensions/positions once, then let deltas keep the cache
-      // live; the timer prunes silent vessels and re-renders from the cache.
-      this.seedFleet();
-      this.fleetTimer = setInterval(
-        () => this.renderFromCache(),
-        CACHE_SYNC_INTERVAL_MS,
-      );
-    } else {
-      this.fleetTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
-      this.poll();
-    }
+    // Seed names/dimensions/positions once, then let deltas keep the cache
+    // live; the timer prunes silent vessels and re-renders from the cache.
+    this.seedFleet();
+    this.fleetTimer = setInterval(
+      () => this.renderFromCache(),
+      CACHE_SYNC_INTERVAL_MS,
+    );
   }
 
-  // WebSocket mode: one-shot seed of the vessel cache so BoatConfig has real
-  // names/dimensions before the (dynamic-only) delta stream fills in the rest.
+  // One-shot seed of the vessel cache so BoatConfig has real names/dimensions
+  // before the (dynamic-only) delta stream fills in the rest.
   seedFleet() {
     this.app.signalK
       .fetchAllVessels()
@@ -168,9 +156,9 @@ export class FleetLayer {
       .catch((error) => this.reportFleetError(error));
   }
 
-  // WebSocket mode: fold one context's dynamic deltas into the cache. A vessel
-  // seen for the first time is created from its context mmsi and gets a targeted
-  // static fetch (name/design/sensors), since those aren't in the delta stream.
+  // Fold one context's dynamic deltas into the cache. A vessel seen for the
+  // first time is created from its context mmsi and gets a targeted static fetch
+  // (name/design/sensors), since those aren't in the delta stream.
   ingestVesselDelta(context, timestamp, values) {
     const mmsi = this.mmsiFromContext(context);
     if (!mmsi || mmsi == this.ownMmsi)
@@ -188,9 +176,9 @@ export class FleetLayer {
       writeDeltaPath(vessel, path, value, timestamp);
   }
 
-  // WebSocket mode: seed a newly-sighted vessel's static tree with one targeted
-  // /vessels/<id> fetch. Only static branches are merged so it can't clobber
-  // fresher positions that arrived while the request was in flight.
+  // Seed a newly-sighted vessel's static tree with one targeted /vessels/<id>
+  // fetch. Only static branches are merged so it can't clobber fresher positions
+  // that arrived while the request was in flight.
   fetchVesselStatic(context, mmsi) {
     if (this._staticFetches.has(mmsi))
       return;
@@ -214,10 +202,9 @@ export class FleetLayer {
       .finally(() => this._staticFetches.delete(mmsi));
   }
 
-  // WebSocket mode: drop vessels gone silent past the TTL, then reconcile the
-  // cache through the same path REST uses. syncOtherVessels' own "absent from
-  // the payload" removal then clears markers for both pruned and out-of-radius
-  // vessels — no snapshot needed.
+  // Drop vessels gone silent past the TTL, then reconcile the cache through
+  // syncOtherVessels. Its own "absent from the payload" removal then clears
+  // markers for both pruned and out-of-radius vessels — no snapshot needed.
   renderFromCache() {
     const now = Date.now();
     for (const mmsi in this.vesselCache) {
@@ -244,26 +231,6 @@ export class FleetLayer {
     const msg = `Fleet update failed: ${status}${detail}`;
     this.app.statusBar.set("fleet-poll", msg, "warning");
     console.error(msg, error);
-  }
-
-  poll() {
-    if (this._pollInFlight)
-      return;
-    this._pollInFlight = true;
-    this.app.signalK
-      .fetchAllVessels()
-      .then((vessels) => {
-        this.app.statusBar.clear("fleet-poll");
-        this.syncOtherVessels(vessels, {
-          ownLatLng: this.app.state.getPosition(),
-          filterRadius: this.filterRadius,
-          twa: this.app.state.twa,
-        });
-      })
-      .catch((error) => this.reportFleetError(error))
-      .finally(() => {
-        this._pollInFlight = false;
-      });
   }
 
   update(state) {
@@ -454,9 +421,9 @@ export class FleetLayer {
 
     const config = BoatConfig.extract(vessel);
     // Static data (AIS ship type, dimensions) can land after the marker was
-    // first drawn from defaults — a WebSocket position delta creates the vessel
-    // before its static fetch resolves, and REST polls can also fill in design
-    // late. Re-apply icon + hull geometry so the marker reflects the real type.
+    // first drawn from defaults — a position delta creates the vessel before its
+    // static fetch resolves. Re-apply icon + hull geometry so the marker
+    // reflects the real type.
     marker.setBoatIcon(config.icon);
     marker.setDimensions({
       beam: config.beam,

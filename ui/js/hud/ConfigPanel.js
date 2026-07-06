@@ -49,16 +49,6 @@ const FIELDS = [
     type: "number",
     reload: true,
   },
-  {
-    key: "connectionType",
-    label: "Connection Type",
-    type: "select",
-    options: [
-      ["WEBSOCKET", "WebSocket"],
-      ["REST_POLLING", "REST Polling"],
-    ],
-    reload: true,
-  },
 ];
 
 export const ConfigPanel = L.Control.extend({

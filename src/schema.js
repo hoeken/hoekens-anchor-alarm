@@ -129,13 +129,6 @@ export function buildSchema(app) {
         type: "object",
         properties: {},
       },
-      connectionType: {
-        type: "string",
-        title: "Connection Type",
-        description: "How the UI connects to SignalK for live data updates.",
-        default: "WEBSOCKET",
-        enum: ["REST_POLLING", "WEBSOCKET"],
-      },
       defaultBasemap: {
         type: "string",
         title: "Default Basemap",
@@ -262,7 +255,6 @@ export function buildSchema(app) {
 // of truth. Anchor state (`zone`) and alarm internals are deliberately
 // excluded — those are owned by the anchor service, not the settings form.
 export const UI_CONFIG_KEYS = [
-  "connectionType",
   "defaultBasemap",
   "defaultShape",
   "fleetFilterRadius",

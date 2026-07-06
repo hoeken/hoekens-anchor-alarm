@@ -3,7 +3,6 @@
 - https://openwaters.io/charts/seascape
 - chart providers?
 - github issue #20 - boat labels
-- boat labels should be clickable
 
 # LONG TERM
 
