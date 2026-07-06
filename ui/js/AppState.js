@@ -17,6 +17,11 @@ const DEFAULT_FRESHNESS_SEC = 300;
 const DELTA_FAST_SPEED = 250;
 const DELTA_SLOW_SPEED = 1000;
 
+// Other vessels only need position/heading/COG/SOG, and far less often than our
+// own boat. "instant" + minPeriod streams each AIS update as it lands but rate-
+// limits per vessel per path so a busy anchorage can't flood the socket.
+const DELTA_FLEET_MIN_PERIOD = 1000;
+
 // Window after a client-initiated anchor change during which incoming server
 // updates for anchor.position/state/zone are ignored. Covers in-flight
 // polls whose response was computed before the server processed our request,
@@ -128,6 +133,22 @@ export class AppState {
         ],
       },
     );
+  }
+
+  // Fleet subscription: the dynamic paths for every *other* vessel, keyed by the
+  // stream's per-message `context`. Static identity/geometry (name, design,
+  // sensors) isn't streamed here — FleetLayer seeds that once from REST and
+  // fills in newly-sighted vessels with a targeted per-vessel fetch.
+  websocketSubscribeFleet(client) {
+    client.subscribe({
+      context: "vessels.*",
+      subscribe: [
+        { path: "navigation.position", policy: "instant", minPeriod: DELTA_FLEET_MIN_PERIOD },
+        { path: "navigation.headingTrue", policy: "instant", minPeriod: DELTA_FLEET_MIN_PERIOD },
+        { path: "navigation.courseOverGroundTrue", policy: "instant", minPeriod: DELTA_FLEET_MIN_PERIOD },
+        { path: "navigation.speedOverGround", policy: "instant", minPeriod: DELTA_FLEET_MIN_PERIOD },
+      ],
+    });
   }
 
   getPosition() {
@@ -280,8 +301,8 @@ export class AppState {
     }
     else if (path == "notifications.navigation.anchor")
       this.anchor.notification = apply(this.anchor.notification);
-    else if (!path.startsWith("notifications"))
-      console.log(`[websocket] Ignoring: ${path}`);
+    // else if (!path.startsWith("notifications"))
+    //   console.log(`[websocket] Ignoring: ${path}`);
   }
 
   // Client-initiated optimistic write into the anchor envelopes.

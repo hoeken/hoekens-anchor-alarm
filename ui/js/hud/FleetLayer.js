@@ -1,8 +1,17 @@
 // FleetLayer owns every vessel marker and history hotline on the map,
 // including our own. The host drives it with three inputs: a one-shot bulk
-// history load from /tracks, per-tick own-position append, and per-tick AIS
-// sync from /vessels. Out-of-range AIS vessels are removed on each sync; the
-// own boat is never auto-removed (its mmsi key never appears in the AIS list).
+// history load from /tracks, per-tick own-position append, and a live feed of
+// other vessels. Out-of-range AIS vessels are removed on each sync; the own
+// boat is never auto-removed (its mmsi key never appears in the AIS list).
+//
+// The other-vessel feed has two modes, chosen by config.connectionType:
+//   REST      — poll the whole /vessels tree every POLL_INTERVAL_MS (legacy).
+//   WEBSOCKET — seed a per-vessel cache once from /vessels, then keep it live
+//               from the vessels.* delta subscription (ingestVesselDelta). A
+//               slow timer prunes vessels that have gone silent and re-renders
+//               the cache through the same syncOtherVessels path REST uses.
+// Both modes ultimately hand syncOtherVessels a { key -> vessel-tree } dict, so
+// marker/track reconciliation is identical regardless of transport.
 
 import simplify from "simplify-js";
 import { bearing, distance, point, radiansToDegrees } from "@turf/turf";
@@ -11,6 +20,16 @@ import { BoatConfig } from "../BoatConfig.js";
 import { DisplayUnit } from "../DisplayUnit.js";
 
 const POLL_INTERVAL_MS = 5000;
+// WebSocket mode: how often to prune silent vessels and re-render the delta-fed
+// cache. Decoupled from the delta arrival rate so a busy anchorage doesn't
+// trigger a redraw per message.
+const CACHE_SYNC_INTERVAL_MS = 1000;
+// WebSocket mode: drop a vessel we haven't heard a delta from in this long.
+// Replaces REST mode's implicit "absent from the latest snapshot" removal.
+// Generous enough not to flicker anchored Class B neighbours (whose position
+// reports can be minutes apart); departures within radius linger up to this
+// long, but out-of-radius vessels are still removed the instant they move.
+const VESSEL_TTL_MS = 6 * 60 * 1000;
 const DEFAULT_FILTER_RADIUS = 500;
 // Name labels only show once boats are zoomed in enough to be visually
 // distinct; below this they'd just clutter the map.
@@ -52,6 +71,12 @@ export class FleetLayer {
     this.ownBoatConfig = undefined;
     this.fleetTimer = null;
     this._pollInFlight = false;
+    this.useWebsocket = this.app.config.connectionType === "WEBSOCKET";
+    // WebSocket mode only: mmsi -> vessel tree, shaped like a /vessels payload
+    // entry and built from deltas + a REST seed. Each entry carries a numeric
+    // _lastSeen for TTL pruning. Unused in REST mode.
+    this.vesselCache = {};
+    this._staticFetches = new Set(); // mmsis with an in-flight static fetch
     this.filterRadius = filterRadius ?? DEFAULT_FILTER_RADIUS;
     this.selectedMmsi = null; // mmsi of the vessel whose popup is open, or null
     this.hoveredMmsi = null; // mmsi of the vessel/track under the cursor, or null
@@ -106,8 +131,117 @@ export class FleetLayer {
         );
       });
 
-    this.fleetTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
-    this.poll();
+    if (this.useWebsocket) {
+      // Seed names/dimensions/positions once, then let deltas keep the cache
+      // live; the timer prunes silent vessels and re-renders from the cache.
+      this.seedFleet();
+      this.fleetTimer = setInterval(
+        () => this.renderFromCache(),
+        CACHE_SYNC_INTERVAL_MS,
+      );
+    } else {
+      this.fleetTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
+      this.poll();
+    }
+  }
+
+  // WebSocket mode: one-shot seed of the vessel cache so BoatConfig has real
+  // names/dimensions before the (dynamic-only) delta stream fills in the rest.
+  seedFleet() {
+    this.app.signalK
+      .fetchAllVessels()
+      .then((vessels) => {
+        this.app.statusBar.clear("fleet-poll");
+        const now = Date.now();
+        for (const key in vessels) {
+          const vessel = vessels[key];
+          if (!vessel || vessel.mmsi == this.ownMmsi)
+            continue;
+          const mmsi = vessel.mmsi ?? this.mmsiFromContext(key);
+          if (!mmsi)
+            continue;
+          vessel._lastSeen = now;
+          this.vesselCache[String(mmsi)] = vessel;
+        }
+        this.renderFromCache();
+      })
+      .catch((error) => this.reportFleetError(error));
+  }
+
+  // WebSocket mode: fold one context's dynamic deltas into the cache. A vessel
+  // seen for the first time is created from its context mmsi and gets a targeted
+  // static fetch (name/design/sensors), since those aren't in the delta stream.
+  ingestVesselDelta(context, timestamp, values) {
+    const mmsi = this.mmsiFromContext(context);
+    if (!mmsi || mmsi == this.ownMmsi)
+      return;
+
+    let vessel = this.vesselCache[mmsi];
+    if (!vessel) {
+      vessel = this.vesselCache[mmsi] = { mmsi };
+      this.fetchVesselStatic(context, mmsi);
+    }
+    vessel._lastSeen = Date.now();
+    for (const { path, value } of values)
+      writeDeltaPath(vessel, path, value, timestamp);
+  }
+
+  // WebSocket mode: seed a newly-sighted vessel's static tree with one targeted
+  // /vessels/<id> fetch. Only static branches are merged so it can't clobber
+  // fresher positions that arrived while the request was in flight.
+  fetchVesselStatic(context, mmsi) {
+    if (this._staticFetches.has(mmsi))
+      return;
+    this._staticFetches.add(mmsi);
+    this.app.signalK
+      .fetchVessel(context)
+      .then((data) => {
+        const vessel = this.vesselCache[mmsi];
+        if (!vessel)
+          return; // pruned before the fetch resolved
+        if (data.name != null)
+          vessel.name = data.name;
+        if (data.mmsi != null)
+          vessel.mmsi = data.mmsi;
+        if (data.design)
+          vessel.design = data.design;
+        if (data.sensors)
+          vessel.sensors = data.sensors;
+      })
+      .catch(() => { }) // static stays at BoatConfig defaults; not worth surfacing
+      .finally(() => this._staticFetches.delete(mmsi));
+  }
+
+  // WebSocket mode: drop vessels gone silent past the TTL, then reconcile the
+  // cache through the same path REST uses. syncOtherVessels' own "absent from
+  // the payload" removal then clears markers for both pruned and out-of-radius
+  // vessels — no snapshot needed.
+  renderFromCache() {
+    const now = Date.now();
+    for (const mmsi in this.vesselCache) {
+      if (now - this.vesselCache[mmsi]._lastSeen > VESSEL_TTL_MS)
+        delete this.vesselCache[mmsi];
+    }
+    this.syncOtherVessels(this.vesselCache, {
+      ownLatLng: this.app.state.getPosition(),
+      filterRadius: this.filterRadius,
+      twa: this.app.state.twa,
+    });
+  }
+
+  // The mmsi digits from a stream context / vessel key, or null for a vessel
+  // with no MMSI (e.g. a uuid-only context — not an AIS target we render).
+  mmsiFromContext(context) {
+    const match = String(context).match(/urn:mrn:imo:mmsi:(\d+)/);
+    return match ? match[1] : null;
+  }
+
+  reportFleetError(error) {
+    const detail = error.statusText || error.message || "unknown error";
+    const status = error.status ? `${error.status} ` : "";
+    const msg = `Fleet update failed: ${status}${detail}`;
+    this.app.statusBar.set("fleet-poll", msg, "warning");
+    console.error(msg, error);
   }
 
   poll() {
@@ -124,14 +258,7 @@ export class FleetLayer {
           twa: this.app.state.twa,
         });
       })
-      .catch((error) => {
-        const detail = error.statusText || error.message || "unknown error";
-        const status = error.status ? `${error.status} ` : "";
-        const msg = `Fleet update failed: ${status}${detail}`;
-
-        this.app.statusBar.set("fleet-poll", msg, "warning");
-        console.error(msg, error);
-      })
+      .catch((error) => this.reportFleetError(error))
       .finally(() => {
         this._pollInFlight = false;
       });
@@ -545,4 +672,24 @@ function simplifyHotlinePoints(points, tolerance) {
 
 function toTuple(p) {
   return Array.isArray(p) ? p : [p.lat, p.lng, p.alt];
+}
+
+// Fold one delta (path + value) into a vessel tree as a { value, timestamp }
+// leaf, mirroring the /vessels REST shape so BoatConfig/syncOtherVessels read it
+// unchanged. Reuses an existing envelope so any meta already on it survives.
+function writeDeltaPath(vessel, path, value, timestamp) {
+  const parts = path.split(".");
+  let node = vessel;
+  for (let i = 0; i < parts.length - 1; i++) {
+    if (node[parts[i]] == null || typeof node[parts[i]] !== "object")
+      node[parts[i]] = {};
+    node = node[parts[i]];
+  }
+  const leaf = parts[parts.length - 1];
+  if (node[leaf] && typeof node[leaf] === "object" && "value" in node[leaf]) {
+    node[leaf].value = value;
+    node[leaf].timestamp = timestamp;
+  } else {
+    node[leaf] = { value, timestamp };
+  }
 }

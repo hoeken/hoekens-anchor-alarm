@@ -10,6 +10,12 @@
 // every parsed delta message to "delta" listeners. The "connect" event fires on
 // every (re)connection, so the caller's connect handler re-subscribes after a
 // reconnect without any extra bookkeeping here.
+//
+// The very first frame the server sends is a "hello" carrying the `self`
+// identity (e.g. "vessels.urn:mrn:imo:mmsi:123456789"). It has no `updates`, so
+// it isn't a delta; we surface it via the "hello" event and stash it on `.self`
+// so callers can tell own-boat deltas apart from other vessels' once they
+// subscribe to more than one context.
 
 const RECONNECT_BASE_MS = 1000;
 const RECONNECT_MAX_MS = 30000;
@@ -21,7 +27,8 @@ export class SignalKStream {
     this.useTLS = useTLS;
     this.reconnect = reconnect;
     this.ws = null;
-    this.listeners = { delta: [], connect: [] };
+    this.self = null;
+    this.listeners = { delta: [], connect: [], hello: [] };
     this._reconnectDelay = RECONNECT_BASE_MS;
     this._closed = false;
   }
@@ -55,6 +62,13 @@ export class SignalKStream {
         delta = JSON.parse(event.data);
       } catch {
         return; // ignore any non-JSON frame
+      }
+      // The hello frame carries `self` and no `updates`; capture it and route
+      // it separately so it isn't mistaken for a delta.
+      if (delta && delta.self !== undefined && !delta.updates) {
+        this.self = delta.self;
+        this._emit("hello", delta);
+        return;
       }
       this._emit("delta", delta);
     };

@@ -1,6 +1,12 @@
+# v2.7
+
+- https://openwaters.io/charts/seascape
+- chart providers?
+- github issue #20 - boat labels
+- boat labels should be clickable
+
 # LONG TERM
 
-- figure out how to slim down vessels api call - its returning the entire tree.
 - check if https://github.com/SignalK/signalk-server/pull/2498 is merged yet
 - custom boat icon upload
 - possible glitch filter - filter any moves that are over X speed

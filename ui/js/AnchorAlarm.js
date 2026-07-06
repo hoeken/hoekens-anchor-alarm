@@ -61,6 +61,10 @@ class AnchorAlarm {
     this.pollTimer = null;
     this._pollInFlight = false;
     this._loginModal = null;
+    // Own-boat stream context, learned from the hello frame. Used to route each
+    // delta to either own-boat state or the fleet layer once we subscribe to
+    // both vessels.self and vessels.*.
+    this.selfContext = null;
   }
 
   static startup() {
@@ -77,20 +81,41 @@ class AnchorAlarm {
       useTLS: window.location.protocol === "https:",
       reconnect: true,
     });
+    this.client.on("hello", (hello) => {
+      this.selfContext = this.normalizeContext(hello.self);
+    });
     this.client.on("delta", (delta) => this.handleDeltas(delta));
-    this.client.on("connect", () => this.state.websocketSubscribe(this.client));
+    this.client.on("connect", () => {
+      this.state.websocketSubscribe(this.client);
+      this.state.websocketSubscribeFleet(this.client);
+    });
     this.client.connect();
   }
 
+  // Normalize a stream identity to the "vessels.<id>" form deltas use as their
+  // context, so hello.self and delta.context compare directly.
+  normalizeContext(id) {
+    if (!id)
+      return null;
+    return id.startsWith("vessels.") ? id : `vessels.${id}`;
+  }
+
+  // Route each delta by its context: own-boat updates feed AppState; every other
+  // vessel's dynamic paths feed the fleet layer's cache. A delta with no context
+  // predates the hello (own-boat only at that point), so it's treated as self.
   handleDeltas(delta) {
-    if (delta.updates) {
-      for (const update of delta.updates) {
-        if (update.values) {
-          let timestamp = update.timestamp;
-          for (const value of update.values) {
-            this.state.handleDelta(timestamp, value);
-          }
-        }
+    if (!delta.updates)
+      return;
+    const isSelf = !delta.context || delta.context === this.selfContext;
+    for (const update of delta.updates) {
+      if (!update.values)
+        continue;
+      const timestamp = update.timestamp;
+      if (isSelf) {
+        for (const value of update.values)
+          this.state.handleDelta(timestamp, value);
+      } else if (this.fleetLayer) {
+        this.fleetLayer.ingestVesselDelta(delta.context, timestamp, update.values);
       }
     }
   }
