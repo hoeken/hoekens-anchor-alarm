@@ -140,7 +140,13 @@ html.dark .leaflet-bar a.leaflet-disabled {
    map. Light mode is untouched. */
 html.dark .leaflet-bar,
 html.dark .leaflet-control-layers,
-html.dark #controlToolbar button {
+html.dark #loginPrompt button,
+html.dark #anchorDown button,
+html.dark #anchorUp button,
+html.dark #radiusControl,
+html.dark #polygonControl,
+html.dark #zoneShapeButton,
+html.dark #zoneShapeMenu {
   box-shadow: 0 0 4px var(--control-glow);
 }
 
@@ -216,15 +222,14 @@ body,
   position: absolute;
   top: 10px;
   left: 50%;
-  width: 200px;
-  margin-left: -100px;
+  transform: translateX(-50%);
   z-index: 99;
   opacity: 1;
-  border-radius: 5px;
   text-align: center;
   pointer-events: none;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: flex-start;
   font-size: 22px;
 }
 
@@ -233,37 +238,63 @@ body,
    same pattern is used for every flex container below.
 
    This toolbar hides children with `display: none` as state changes (login
-   prompt, raise vs. drop button, shape selector), and the leading children are
-   the ones that get hidden. A `> * + *` margin-top would still match the first
-   *visible* child (the `+` combinator ignores display), leaving a phantom 6px
-   gap above it. Spacing with margin-bottom avoids that — a hidden element then
-   contributes no margin — at the cost of an invisible trailing 6px (the
-   toolbar has no background or border). */
+   prompt, raise vs. drop button, shape selector), and both leading and middle
+   children get hidden (e.g. while anchored the raise button shows and the drop
+   button between it and the radius panel is hidden). A `> * + *` margin-left
+   would still match the first *visible* child (the `+` combinator ignores
+   display), leaving a phantom gap before it. margin-right per child avoids that
+   — a hidden element contributes no margin, and it spaces around mid-row gaps
+   correctly too — at the cost of an invisible trailing 6px on the far right
+   (the toolbar has no background or border). */
 #controlToolbar > * {
-  margin-bottom: 6px;
+  margin-right: 6px;
 }
 
+/* Shared button chrome. Height and the outer border are set per-control below,
+   since the panels (#radiusControl / #polygonControl) carry the border on their
+   wrapping <div> and their inner buttons are borderless, divided only by
+   lightweight inner rules. */
 #controlToolbar button {
-  height: 40px;
   pointer-events: auto;
   touch-action: none;
   -webkit-appearance: none;
   appearance: none;
-  border-radius: 5px;
-  /* Match Leaflet's own control bars (zoom/home/config/theme), whose border is
-     the fixed `2px solid rgba(0, 0, 0, 0.2)` from leaflet.css rather than the
-     themed --control-border. Using the same literal keeps these buttons
-     homogeneous with the map controls in both light and dark mode — the border
-     stays fixed instead of flipping to a light stroke in dark mode. */
-  border: 2px solid rgba(0, 0, 0, 0.2);
   background-clip: padding-box;
   background-color: var(--surface-bg);
   color: var(--surface-fg);
   font-size: inherit;
 }
 
-#zoneShapeSelect {
-  font-size: 20px;
+#controlToolbar button:enabled:hover {
+  background-color: var(--surface-hover);
+}
+
+/* The outer border shared by every top-level toolbar control — matches
+   Leaflet's own control bars, whose border is the fixed
+   `2px solid rgba(0, 0, 0, 0.2)` from leaflet.css rather than the themed
+   --control-border. Using the same literal keeps our chrome homogeneous with
+   the map controls in both themes (the stroke stays fixed instead of flipping
+   light in dark mode). The panels are <div>s, so this can't live on the button
+   rule above. */
+#loginPrompt button,
+#anchorDown button,
+#anchorUp button,
+#radiusControl,
+#polygonControl,
+#zoneShapeButton {
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  background-clip: padding-box;
+}
+
+/* The three raise/drop/radius/shape controls are one 90px-tall row. */
+#anchorDown button,
+#anchorUp button,
+#radiusControl,
+#polygonControl,
+#zoneShapeButton {
+  height: 90px;
+  box-sizing: border-box;
 }
 
 .info {
@@ -366,27 +397,38 @@ body,
   display: none;
 }
 
-#loginPrompt button,
+/* Raise/Drop: an anchor glyph stacked over a short label, centered, in a
+   90×90 square. */
 #anchorDown button,
 #anchorUp button {
-  width: 100%;
-  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 90px;
+  padding: 0;
+  line-height: 1.1;
 }
 
-#anchorDown button,
-#anchorUp button {
-  /* Same Chromium 69 (Navico MFD) fix as #loginPrompt button: drop the UA's
-     default button padding and use a line-height that fills the button's
-     content box (40px height − 4px border) so the label is vertically centered
-     instead of sitting low. */
-  padding: 0;
-  line-height: 36px;
+.anchorBtnIcon {
+  /* Scaled down from the 100px source so the glyph + label fit the 90px
+     square button. */
+  display: block;
+  width: 44px;
+  height: 44px;
+}
+
+.anchorBtnLabel {
+  margin-top: 4px;
+  font-size: 18px;
+  text-transform: uppercase;
 }
 
 #loginPrompt button {
   font-size: 18px;
   width: 80px;
   height: 30px;
+  box-sizing: border-box;
   /* Drop the UA's default button padding, which on Chromium 69 (Navico MFDs)
      pushes the text down and clips the descender of "Login". A line-height that
      fills the button's content box then centers the label vertically. Keeping
@@ -395,76 +437,89 @@ body,
   line-height: 26px;
 }
 
-#zoneShapeSelect select {
-  pointer-events: auto;
-  width: 100%;
-  height: 40px;
-  box-sizing: border-box;
-  -webkit-appearance: none;
-  appearance: none;
-  border-radius: 5px;
-  border: 2px solid var(--control-border);
-  background-clip: padding-box;
-  background-color: var(--surface-bg);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='black' d='M0 0l6 8 6-8z'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 12px 8px;
-  color: var(--surface-fg);
-  font-family: inherit;
-  font-size: inherit;
-  padding: 0 28px 0 8px;
-}
-
+/* Radius panel: a single bordered box (see the shared border rule above) split
+   into two rows — the radius value on top, the -/+ steppers below — separated
+   by lightweight inner rules. */
 #radiusControl {
   display: flex;
-  width: 100%;
-  box-sizing: border-box;
+  flex-direction: column;
+  width: 90px;
+  background-color: var(--surface-bg);
+  /* Clip the borderless inner buttons to the panel's rounded corners. */
+  overflow: hidden;
 }
 
-#radiusControl > * + * {
-  margin-left: 8px;
+/* Top row: the radius value; click to type an exact value. Sized smaller than
+   the toolbar default, and kept on one line, so a 3-digit value with a wider
+   unit (e.g. "333 ft") fits the 90px square without wrapping or clipping. */
+#setRadius {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 0 6px;
+  font-size: 15px;
+  white-space: nowrap;
+  /* Drop the UA button border so only the panel's outer border and the single
+     inner divider below show — otherwise they double up. */
+  border: none;
+  border-bottom: 1px solid var(--divider);
+  border-radius: 0;
 }
 
-#radiusControl button {
-  box-sizing: border-box;
-  padding: 0;
+/* Bottom row: two equal-width stepper columns. */
+#radiusStepper {
+  display: flex;
+  flex-direction: row;
+  flex: 1 1 0;
+  min-height: 0;
 }
 
 #decreaseRadius,
 #increaseRadius {
-  flex: 0 0 auto;
-  width: 40px;
-  aspect-ratio: 1 / 1;
-}
-
-#setRadius {
-  flex: 1 1 auto;
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
   min-width: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  /* Match Leaflet's zoom buttons (leaflet.css .leaflet-control-zoom-*). */
+  font:
+    bold 22px "Lucida Console",
+    Monaco,
+    monospace;
 }
 
+/* Lightweight inner rule between the two stepper columns. */
+#decreaseRadius {
+  border-right: 1px solid var(--divider);
+}
+
+/* Polygon panel: same two-row box as the radius panel — the sides selector on
+   top, the reset button below. */
 #polygonControl {
   display: flex;
-  flex-direction: row;
-  width: 100%;
-  box-sizing: border-box;
+  flex-direction: column;
+  background-color: var(--surface-bg);
+  overflow: hidden;
   font-size: 18px;
 }
 
-#polygonControl > * + * {
-  margin-left: 6px;
-}
-
+/* Top row: the sides selector. */
 #polygonControl select {
   pointer-events: auto;
   flex: 1 1 0;
-  min-width: 0;
-  height: 40px;
+  min-height: 0;
+  width: 100%;
   box-sizing: border-box;
   -webkit-appearance: none;
   appearance: none;
-  border-radius: 5px;
-  border: 2px solid var(--control-border);
+  border: none;
+  border-bottom: 1px solid var(--divider);
+  border-radius: 0;
   background-clip: padding-box;
   background-color: var(--surface-bg);
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='black' d='M0 0l6 8 6-8z'/></svg>");
@@ -474,18 +529,92 @@ body,
   color: var(--surface-fg);
   font-family: inherit;
   font-size: inherit;
-  padding: 0 28px 0 8px;
+  padding: 0 28px 0 12px;
 }
 
+/* Bottom row: the reset button. */
 #polygonControl button {
   flex: 1 1 0;
-  min-width: 0;
+  min-height: 0;
   box-sizing: border-box;
+  border: none;
+  border-radius: 0;
+}
+
+/* Shape picker: a small custom dropdown. A native <select> can't render an SVG
+   in its options, so the collapsed button shows the current shape's glyph and
+   clicking it drops a menu of shape glyphs below (built in ControlToolbar.js). */
+#zoneShapeSelect {
+  position: relative;
+}
+
+#zoneShapeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 90px;
+  padding: 0;
+}
+
+.zoneShapeCaret {
+  flex: 0 0 auto;
+  margin-left: 6px;
+  color: var(--surface-fg);
+}
+
+#zoneShapeMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  min-width: 100%;
+  box-sizing: border-box;
+  pointer-events: auto;
+  background-color: var(--surface-bg);
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  background-clip: padding-box;
+  /* Clip the borderless options to the menu's rounded corners. */
+  overflow: hidden;
+}
+
+/* The `hidden` attribute would normally set display:none, but the id rule
+   above (display:flex) outranks the UA [hidden] rule, so restore it here. */
+#zoneShapeMenu[hidden] {
+  display: none;
+}
+
+.zoneShapeOption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  border: none;
+  border-radius: 0;
+}
+
+/* Lightweight inner rule between stacked options. */
+.zoneShapeOption + .zoneShapeOption {
+  border-top: 1px solid var(--divider);
+}
+
+.zoneShapeOption.active {
+  background-color: var(--surface-hover);
+}
+
+.zoneShapeOption:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.zoneShapeGlyph {
+  color: var(--surface-fg);
 }
 
 /* The dropdown arrow is a baked-in data URI (fill='black'); swap it for a
    white one in dark mode since the fill can't be driven by a CSS variable. */
-html.dark #zoneShapeSelect select,
 html.dark #polygonControl select {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='white' d='M0 0l6 8 6-8z'/></svg>");
 }

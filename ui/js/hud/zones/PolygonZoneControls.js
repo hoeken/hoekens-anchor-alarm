@@ -21,6 +21,8 @@ export class PolygonZoneControls {
     this._sides = DEFAULT_SIDES;
     this._radius = DEFAULT_RADIUS_M;
 
+    // All-in-one panel matching the radius control: the sides selector sits on
+    // top with the reset button below.
     this._container = document.createElement("div");
     this._container.id = "polygonControl";
     const options = [];

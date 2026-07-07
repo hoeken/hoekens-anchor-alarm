@@ -17,12 +17,17 @@ export class SectorZoneControls {
     this._radius = 0;
     this._zone = null;
 
+    // All-in-one panel: the radius value sits on top (click to type a value),
+    // with the -/+ steppers as two equal columns below. Element IDs match the
+    // style.css hooks shared with CircleZoneControls.
     this._container = document.createElement("div");
     this._container.id = "radiusControl";
     this._container.innerHTML = `
-      <button id="decreaseRadius">-</button>
       <button id="setRadius"><span id="radius">0</span></button>
-      <button id="increaseRadius">+</button>
+      <div id="radiusStepper">
+        <button id="decreaseRadius">−</button>
+        <button id="increaseRadius">+</button>
+      </div>
     `;
     parent.appendChild(this._container);
 
