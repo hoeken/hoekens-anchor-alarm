@@ -1,5 +1,10 @@
 # v2.8
 
+- add missing signalk paths
+  - navigation.anchor.apparentBearing
+  - navigation.anchor.bearingTrue
+  - navigation.anchor.distanceFromBow
+  
 - move login controls to settings panel
   - if not logged in, show the login link in the footer above version
   - if logged in, show a log out link
