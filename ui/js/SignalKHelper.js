@@ -30,6 +30,24 @@ export class SignalKHelper {
     }).then(SignalKHelper._toJsonOrReject);
   }
 
+  // Log out of SignalK: a PUT with no body that clears the JAUTHENTICATION
+  // cookie server-side. The response is plain text ("Logout OK"), not JSON, so
+  // we resolve on any 2xx rather than parsing a body. Rejects with { status,
+  // statusText } on HTTP error. Callers reload afterward so the app re-fetches
+  // as an anonymous user.
+  logout() {
+    return fetch(`${this.baseUrl}/signalk/v1/auth/logout`, {
+      method: "PUT",
+    }).then((response) => {
+      if (!response.ok)
+        return Promise.reject({
+          status: response.status,
+          statusText: response.statusText,
+        });
+      return true;
+    });
+  }
+
   // Fetchers return native Promises that resolve with the parsed JSON body and
   // reject with { status, statusText, message } on HTTP errors (message is the
   // backend's error text when present).

@@ -68,6 +68,12 @@ export const ConfigPanel = L.Control.extend({
     getConfig: null, // () => current config object
     getVersion: null, // () => plugin version string, shown at dialog bottom
     onChange: null, // (newConfig) => void | Promise, resolves when persisted
+    // Auth. When logged out the gear opens the login modal directly; when
+    // logged in it opens the settings dialog, whose footer offers a Log out
+    // link (the dialog is never shown to anonymous users).
+    getLoggedIn: null, // () => boolean, checked on gear click
+    onLogin: null, // () => void, opens the shared login modal
+    onLogout: null, // () => Promise, resolves when logged out (host then reloads)
     // Custom own-boat icon. The icon isn't a schema field (it's an uploaded
     // file), so it lives outside the FIELDS-driven form and gets its own hooks.
     getIconUrl: null, // (bust) => URL of the current custom icon (GET /icon)
@@ -89,6 +95,17 @@ export const ConfigPanel = L.Control.extend({
     L.DomEvent.disableClickPropagation(container);
     L.DomEvent.on(button, "click", (e) => {
       L.DomEvent.stop(e);
+      // Anonymous users can't persist config (the save POST is auth-gated), so
+      // the gear goes straight to the login modal for them; the settings dialog
+      // is only opened once logged in.
+      const loggedIn = this.options.getLoggedIn
+        ? this.options.getLoggedIn()
+        : true;
+      if (!loggedIn) {
+        if (this.options.onLogin)
+          this.options.onLogin();
+        return;
+      }
       this._toggle();
     });
 
@@ -121,13 +138,24 @@ export const ConfigPanel = L.Control.extend({
       { label: "Done", variant: "primary", primary: true },
     ]);
 
-    // Version sits in the footer's bottom-left corner as a link to the repo,
-    // with the Done button pushed to the right (see #configVersion in style.css).
+    // Footer bottom-left, stacked: the Log out link over the version link to
+    // the repo. The Done button stays pushed to the right (see
+    // #configFooterMeta / #configVersion in style.css). The dialog only opens
+    // when logged in, so the auth link is always Log out.
     this._modal.footer.insertAdjacentHTML(
       "afterbegin",
-      `<a id="configVersion" href="https://www.npmjs.com/package/hoekens-anchor-alarm" target="_blank" rel="noopener"></a>`,
+      `<div id="configFooterMeta">
+        <a id="configLogout" href="#">Log out</a>
+        <a id="configVersion" href="https://www.npmjs.com/package/hoekens-anchor-alarm" target="_blank" rel="noopener"></a>
+      </div>`,
     );
     this._version = this._modal.footer.querySelector("#configVersion");
+    this._modal.footer
+      .querySelector("#configLogout")
+      .addEventListener("click", (e) => {
+        e.preventDefault();
+        this._onLogout();
+      });
 
     const body = this._modal.body;
     this._status = body.querySelector("#configStatus");
@@ -321,6 +349,15 @@ export const ConfigPanel = L.Control.extend({
     }
     if (this._modal)
       this._modal.open();
+  },
+
+  // Footer Log out link: hand off to the host, which reloads on success; a
+  // failure is surfaced inline since there's no reload to replace the dialog.
+  _onLogout: function () {
+    this._setStatus("", "");
+    Promise.resolve(this.options.onLogout && this.options.onLogout()).catch(
+      () => this._setStatus("Logout failed", "configStatusError"),
+    );
   },
 
   _hide: function () {

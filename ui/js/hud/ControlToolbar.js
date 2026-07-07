@@ -138,8 +138,9 @@ export class ControlToolbar {
     this._appState = appState;
 
     // Anonymous users can't drop/raise the anchor or set a zone (those POSTs
-    // are auth-gated server-side), so show a login button in place of the
-    // whole control set and bail before touching it.
+    // are auth-gated server-side), so show a Login button in place of the
+    // whole control set and bail before touching it. (The settings gear also
+    // opens the login modal — see ConfigPanel.)
     const loggedIn = appState.loggedIn;
     this._loginPrompt.style.display = loggedIn ? "none" : "block";
     if (!loggedIn) {

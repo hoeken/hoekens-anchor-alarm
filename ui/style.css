@@ -806,11 +806,31 @@ html.dark #polygonControl select {
   color: red;
 }
 
-/* Lives in the modal footer; margin-right:auto pins it left while the Done
-   button stays right. align-self:flex-end sits it on the footer's baseline. */
-#configVersion {
+/* Footer bottom-left cluster: the Log out link stacked over the version link.
+   margin-right:auto pins the cluster left while the Done button stays right;
+   align-self:flex-end sits it on the footer's baseline. */
+#configFooterMeta {
   margin-right: auto;
   align-self: flex-end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+#configLogout {
+  cursor: pointer;
+  padding-bottom: 2px;
+  font-size: 10pt;
+  color: var(--link);
+  text-decoration: none;
+}
+
+#configLogout:hover {
+  color: var(--link-hover);
+  text-decoration: underline;
+}
+
+#configVersion {
   padding-bottom: 4px;
   font-size: 8pt;
   color: var(--surface-fainter);

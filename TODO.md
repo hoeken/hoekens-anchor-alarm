@@ -1,10 +1,5 @@
 # v2.8
 
-- move login controls to settings panel
-  - if not logged in, show the login link in the footer above version
-  - if logged in, show a log out link
-  - use links, not buttons, but use the existing modal flow.
-
 - control toolbar
     - make Raise/Drop button square and put to the right of the shape and radius controls
     - should take up 2 rows

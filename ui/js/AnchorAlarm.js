@@ -340,6 +340,15 @@ class AnchorAlarm {
     modal.open();
   }
 
+  // Log out of SignalK, then reload so startup re-fetches config as an
+  // anonymous user and rebuilds the control set without the logged-in-only
+  // controls. Reachable from the Settings footer's "Log out" link. Returns the
+  // request promise so the ConfigPanel can surface a failure inline (on success
+  // the reload replaces the page before anything else runs).
+  logout() {
+    return this.signalK.logout().then(() => window.location.reload());
+  }
+
   // Persist UI settings edited via the ConfigPanel. We merge into the live
   // config and re-render immediately so every setting takes effect without a
   // reload: panel toggles and basemap re-render here, while the default
@@ -408,19 +417,23 @@ class AnchorAlarm {
     // Buttons - Top Left
     //
 
-    // Settings gear only makes sense when logged in — anonymous users can't
-    // persist config (the POST is auth-gated server-side).
-    if (this.state.loggedIn) {
-      this.configPanel = new ConfigPanel({
-        getConfig: () => this.config,
-        getVersion: () => this.version,
-        onChange: (newConfig) => this.saveConfig(newConfig),
-        getIconUrl: (bust) => this.signalK.boatIconUrl(bust),
-        onUploadIcon: (file) => this.uploadBoatIcon(file),
-        onDeleteIcon: () => this.deleteBoatIcon(),
-      });
-      this.map.addControl(this.configPanel);
-    }
+    // The settings gear is always available: logged-in users open the config
+    // dialog, while anonymous users' clicks go straight to the login modal
+    // (the save POST is auth-gated server-side, so the dialog is useless to
+    // them — see ConfigPanel). Login and logout both reload, so getLoggedIn is
+    // effectively fixed per page load.
+    this.configPanel = new ConfigPanel({
+      getConfig: () => this.config,
+      getVersion: () => this.version,
+      getLoggedIn: () => this.state.loggedIn,
+      onChange: (newConfig) => this.saveConfig(newConfig),
+      onLogin: () => this.showLoginModal(),
+      onLogout: () => this.logout(),
+      getIconUrl: (bust) => this.signalK.boatIconUrl(bust),
+      onUploadIcon: (file) => this.uploadBoatIcon(file),
+      onDeleteIcon: () => this.deleteBoatIcon(),
+    });
+    this.map.addControl(this.configPanel);
 
     this.layersControl = L.control
       .layers(this.baseMaps, {}, { position: "topleft" })
