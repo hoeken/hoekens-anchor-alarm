@@ -4,16 +4,6 @@
     - make Raise/Drop button square and put to the right of the shape and radius controls
     - should take up 2 rows
 
-- combine settings and layer chooser into one control, with a line separator.
-  - similar styling to the zoom in/out buttons
-  - move light/dark mode to be top control
-  - then settings and layers.
-  - settings should be above layers
-
-- navico mfd zoom scroll reverse
-  - detect navico mfds using get params mfdName, mfdModel
-  - if detected, reverse the zoom controls direction
-
 - "chart" mode easter egg
   - long press on home button (3s) will enable
   - make the variable part of appstate so each ui widget can show/hide itself

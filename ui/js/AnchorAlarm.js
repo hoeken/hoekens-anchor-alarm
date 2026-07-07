@@ -22,7 +22,7 @@ import { ControlToolbar } from "./hud/ControlToolbar.js";
 import { ConfigPanel } from "./hud/ConfigPanel.js";
 import { ThemeControl } from "./hud/ThemeControl.js";
 import { Modal } from "./hud/Modal.js";
-import { nativeTooltipsSuppressed } from "./BrowserSupport.js";
+import { nativeTooltipsSuppressed, isNavicoMfd } from "./BrowserSupport.js";
 
 const UPDATE_INTERVAL_MS = 500;
 const INITIAL_LOAD_RETRY_MS = 5000;
@@ -33,6 +33,28 @@ const INITIAL_LOAD_RETRY_MS = 5000;
 // CHART_PANE in ChartLayers) so a more detailed local chart always stays legible
 // on top of the broad depth shading.
 const SEASCAPE_OVERLAY_Z_INDEX = 250;
+
+// Build a stand-in wheel event whose scroll direction is flipped, forwarding the
+// fields Leaflet's ScrollWheelZoom handler reads: the delta axes (negated) plus
+// the cursor position and the two methods its internal stop() calls. Legacy
+// delta fields are negated too so the flip holds on the older wheel-event shapes
+// getWheelDelta falls back to. Used to reverse zoom direction on Navico MFDs;
+// see AnchorAlarm.reverseScrollWheelZoom.
+function negateWheelDelta(e) {
+  return {
+    deltaX: -e.deltaX,
+    deltaY: -e.deltaY,
+    deltaZ: e.deltaZ,
+    deltaMode: e.deltaMode,
+    wheelDelta: e.wheelDelta == null ? e.wheelDelta : -e.wheelDelta,
+    wheelDeltaY: e.wheelDeltaY == null ? e.wheelDeltaY : -e.wheelDeltaY,
+    detail: e.detail == null ? e.detail : -e.detail,
+    clientX: e.clientX,
+    clientY: e.clientY,
+    preventDefault: () => e.preventDefault(),
+    stopPropagation: () => e.stopPropagation(),
+  };
+}
 
 class AnchorAlarm {
   constructor() {
@@ -179,6 +201,10 @@ class AnchorAlarm {
     // the Seascape overlay (both in the tile pane) while staying below the
     // anchor overlay and vessel markers. See CHART_PANE in ChartLayers.
     this.map.createPane(CHART_PANE).style.zIndex = CHART_PANE_Z_INDEX;
+    // The Navico MFDs' rotary/scroll input reports wheel deltas backwards, so
+    // scroll-to-zoom runs inverted on those consoles. Flip it back there only.
+    if (isNavicoMfd())
+      this.reverseScrollWheelZoom();
     this.statusBar = new StatusBar();
     this.map.addControl(this.statusBar);
 
@@ -200,6 +226,33 @@ class AnchorAlarm {
       .catch(() => { });
 
     this.loadInitialData();
+  }
+
+  // Reverse the map's scroll-wheel zoom direction, called on Navico MFDs where
+  // the console's input reports wheel deltas with the opposite sign (see
+  // isNavicoMfd). We wrap Leaflet's ScrollWheelZoom handler so it sees a
+  // delta-negated stand-in event (negateWheelDelta), which keeps all of
+  // Leaflet's own accumulation/rate-limiting intact and leaves control-panel
+  // scrolling untouched. Leaflet registers its wheel listener against the
+  // handler method captured by reference when its hooks are added (during map
+  // construction), so a plain reassignment afterwards wouldn't take effect — we
+  // disable()/enable() to re-register the listener against the wrapper. This
+  // reaches into a Leaflet-internal method (_onWheelScroll); guard so a Leaflet
+  // upgrade that renames it degrades to a no-op rather than throwing.
+  reverseScrollWheelZoom() {
+    const handler = this.map.scrollWheelZoom;
+    if (
+      !handler ||
+      typeof handler._onWheelScroll !== "function" ||
+      !handler.enabled()
+    )
+      return;
+    const original = handler._onWheelScroll;
+    handler.disable();
+    handler._onWheelScroll = function (e) {
+      original.call(this, negateWheelDelta(e));
+    };
+    handler.enable();
   }
 
   // === Initial load (one /self call, broken into phases) ===========================

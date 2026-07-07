@@ -26,6 +26,18 @@ export function setTitle(el, title) {
     el.title = title;
 }
 
+// Whether this webapp is running inside a Navico (Simrad/B&G/Lowrance) MFD's
+// embedded browser. The signalk-navico-embedder plugin appends the console's
+// device identity to the webapp URL as query params — `mfd_name` and
+// `mfd_model_detail` — so their presence is a reliable marker that we're on an
+// MFD rather than a regular desktop/tablet browser. Callers use this to apply
+// MFD-only workarounds; see reverseScrollWheelZoom in AnchorAlarm, where the
+// console's rotary/scroll input needs its zoom direction flipped.
+export function isNavicoMfd() {
+  const params = new URLSearchParams(window.location.search);
+  return params.has("mfd_name") && params.has("mfd_model_detail");
+}
+
 // Whether this engine can run MapLibre GL, which powers the optional Seascape
 // base layer (see SeascapeLoader). MapLibre needs a WebGL2 context and ES2019+
 // JavaScript; the Chromium 69 MFD engine has neither reliably. The check is
