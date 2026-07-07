@@ -140,7 +140,7 @@ export const ConfigPanel = L.Control.extend({
     // Custom boat-icon controls: a preview, a hidden file input driven by an
     // Upload button, and a Delete button. See _iconRowHtml / _setIconState.
     this._iconPreview = body.querySelector("#configIconPreview");
-    this._iconNone = body.querySelector("#configIconNone");
+    this._iconText = body.querySelector("#configIconText");
     this._iconFile = body.querySelector("#configIconFile");
     this._iconUploadBtn = body.querySelector("#configIconUpload");
     this._iconDeleteBtn = body.querySelector("#configIconDelete");
@@ -158,15 +158,19 @@ export const ConfigPanel = L.Control.extend({
     return `<div class="configRow" id="configIconRow">
       <span class="configLabel">Custom Boat Icon</span>
       <div class="configIconControls">
-        <img id="configIconPreview" class="configIconPreview" alt="Custom boat icon" hidden />
-        <span id="configIconNone" class="configIconNone">No icon uploaded yet.</span>
+        <div class="configIconMain">
+          <img id="configIconPreview" class="configIconPreview" alt="Custom boat icon" hidden />
+          <div id="configIconText" class="configIconText">
+            <span id="configIconNone" class="configIconNone">No icon uploaded yet.</span>
+            <span id="configIconHint" class="configHint">jpg, png, gif, or webp · max 500&nbsp;KB.</span>
+          </div>
+        </div>
         <div class="configIconButtons">
           <button type="button" id="configIconUpload" class="configIconBtn">Choose</button>
           <button type="button" id="configIconDelete" class="configIconBtn">Delete</button>
         </div>
         <input type="file" id="configIconFile" accept="image/png,image/jpeg,image/gif,image/webp" hidden />
       </div>
-      <span class="configHint">jpg, png, gif, or webp · max 500&nbsp;KB.</span>
       <div id="configIconStatus"></div>
     </div>`;
   },
@@ -179,12 +183,11 @@ export const ConfigPanel = L.Control.extend({
     if (this._hasCustomIcon && getUrl) {
       this._iconPreview.src = getUrl(Date.now());
       this._iconPreview.hidden = false;
-      this._iconNone.hidden = true;
     } else {
       this._iconPreview.removeAttribute("src");
       this._iconPreview.hidden = true;
-      this._iconNone.hidden = false;
     }
+    this._iconText.hidden = this._hasCustomIcon;
     this._iconDeleteBtn.hidden = !this._hasCustomIcon;
   },
 
@@ -203,11 +206,12 @@ export const ConfigPanel = L.Control.extend({
     if (!file)
       return;
 
-    this._setIconStatus("Uploading…", "");
+    // Clear any prior error; success is self-evident (the icon appears), so
+    // only errors get surfaced.
+    this._setIconStatus("", "");
     Promise.resolve(this.options.onUploadIcon && this.options.onUploadIcon(file))
       .then(() => {
         this._setIconState(true);
-        this._setIconStatus("Icon updated", "configStatusOk");
       })
       .catch((err) => {
         this._setIconStatus(
@@ -216,11 +220,10 @@ export const ConfigPanel = L.Control.extend({
   },
 
   _onIconDelete: function () {
-    this._setIconStatus("Removing…", "");
+    this._setIconStatus("", "");
     Promise.resolve(this.options.onDeleteIcon && this.options.onDeleteIcon())
       .then(() => {
         this._setIconState(false);
-        this._setIconStatus("Icon removed", "configStatusOk");
       })
       .catch((err) => {
         this._setIconStatus(

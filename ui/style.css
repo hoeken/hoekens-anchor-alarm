@@ -723,6 +723,15 @@ html.dark #polygonControl select {
   gap: 10px;
 }
 
+/* Left column: holds the preview or the "no icon" text, centered within it.
+   The buttons form the right column. */
+.configIconMain {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+}
+
 .configIconPreview {
   width: 48px;
   height: 48px;
@@ -735,10 +744,19 @@ html.dark #polygonControl select {
   flex: none;
 }
 
+.configIconText {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.configIconText[hidden] {
+  display: none;
+}
+
 .configIconNone {
   font-size: 9pt;
   color: var(--surface-faint);
-  flex: 1;
 }
 
 .configIconButtons {
@@ -768,10 +786,6 @@ html.dark #polygonControl select {
   display: none;
   margin-top: 6px;
   font-size: 10pt;
-}
-
-#configIconStatus.configStatusOk {
-  color: green;
 }
 
 #configIconStatus.configStatusError {
