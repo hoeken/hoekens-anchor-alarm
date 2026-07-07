@@ -1,12 +1,5 @@
 # v2.8
 
-- websockets not infilling ais data:
-  - name
-  - class
-  - loa
-  - beam
-  - etc.
-
 - add missing signalk paths
   - navigation.anchor.apparentBearing
   - navigation.anchor.bearingTrue

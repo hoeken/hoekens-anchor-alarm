@@ -166,7 +166,8 @@ export class FleetLayer {
   }
 
   // One-shot seed of the vessel cache so BoatConfig has real names/dimensions
-  // before the (dynamic-only) delta stream fills in the rest.
+  // for already-known targets before the delta stream takes over keeping them
+  // (and newly-sighted vessels) current.
   seedFleet() {
     this.app.signalK
       .fetchAllVessels()
@@ -188,9 +189,10 @@ export class FleetLayer {
       .catch((error) => this.reportFleetError(error));
   }
 
-  // Fold one context's dynamic deltas into the cache. A vessel seen for the
-  // first time is created from its context mmsi and gets a targeted static fetch
-  // (name/design/sensors), since those aren't in the delta stream.
+  // Fold one context's deltas into the cache. A vessel seen for the first time
+  // is created from its context mmsi and gets a targeted static fetch to grab
+  // whatever the server already knows; the subscribed static paths
+  // (name/design/sensors) then keep it current as AIS static reports trickle in.
   ingestVesselDelta(context, timestamp, values) {
     const mmsi = this.mmsiFromContext(context);
     if (!mmsi || mmsi == this.ownMmsi)
@@ -204,8 +206,17 @@ export class FleetLayer {
       this.fetchVesselStatic(context, mmsi);
     }
     vessel._lastSeen = Date.now();
-    for (const { path, value } of values)
-      writeDeltaPath(vessel, path, value, timestamp);
+    for (const { path, value } of values) {
+      // `name` lives un-enveloped at the vessel root (matching the /vessels REST
+      // shape BoatConfig reads), so it can't go through the { value, timestamp }
+      // leaf writer. Skip nulls so a stray empty delta can't wipe a good name.
+      if (path === "name") {
+        if (value != null)
+          vessel.name = value;
+      } else {
+        writeDeltaPath(vessel, path, value, timestamp);
+      }
+    }
   }
 
   // Seed a newly-sighted vessel's static tree with one targeted /vessels/<id>
