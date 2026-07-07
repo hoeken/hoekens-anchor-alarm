@@ -1,4 +1,4 @@
-# v3.0
+# v2.8
 
 - move login controls to settings panel
   - if not logged in, show the login link in the footer above version

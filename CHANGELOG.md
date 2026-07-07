@@ -1,3 +1,37 @@
+# v2.7.0
+
+## Charts & base maps
+
+The map is no longer just OSM or satellite — you can now stack your own charts and depth data on top:
+
+- **Local charts** — charts served by chart providers now appear as toggleable overlays in the layer control, drawing on top of the base map within their bounds while the base still fills the rest of the map. They show automatically by view and zoom and are on by default; the new **"Use Chart Layers if Available"** setting keeps them in the layer control but off until you toggle them, if you prefer. No WebGL needed, so they work on the older Chromium 69 MFDs too (fixes #21)
+- **Seascape bathymetry** — an optional water-depth chart overlay from openwaters.io, toggleable in the layer control (off by default). Needs an internet connection and a WebGL-capable browser; where either is missing the base map shows unchanged, and on MFDs that can't render it the toggle is hidden rather than left dead
+- **"Blank" base map** — a no-tiles base for offline use, slow/metered links, or when you're relying only on your own local charts. Base maps now order **Blank → OpenStreetMap → Satellite** everywhere
+
+## New features
+
+- **Custom boat icon** — upload your own custom icon (PNG / JPG / GIF / WebP, up to 500 KB) straight from the settings dialog, with a live preview plus replace and delete. The image is stored on the server and its type is verified from the file's own bytes, not the browser's claim
+- **Boat name label toggle** — a new "Show Boat Name Labels" setting turns other vessels' on-map name labels on or off (default on) (fixes #20)
+
+## Reliability & UX
+
+- **Every setting now applies live** — the watch-zone shape and fleet filter radius used to need a page reload; they now take effect immediately, and the "* applies after reloading" note is gone
+- **Fleet updates from live WebSocket deltas** — other vessels now update straight from the SignalK delta stream instead of being polled, so positions and headings refresh with lower latency
+- **Right icon once AIS static data lands** — a vessel first drawn from an early position delta (before its type/dimensions arrive) no longer stays stuck as the default sailboat; its icon and hull now update in place when the real AIS static data comes in
+- **Bigger default fleet radius** — the fleet filter radius now defaults to 100 km (was 500 m), so nearby vessels show up out of the box
+- **Version link in the settings footer** — the plugin version moved to the bottom-left of the settings dialog as a link to the npm package page
+
+## Breaking / removed
+
+- **REST polling removed** — WebSocket is now the only SignalK transport, and the `connectionType` config option is gone. This is a lower-latency, less chatty connection that had already been the default since v2.1
+
+## Under the hood
+
+- New `ChartLayers` module (catalog fetch → per-chart Leaflet tile layers) and `SeascapeLoader` module; local charts draw in a dedicated `chartPane` so they always stack above the base map and Seascape regardless of base-map switches
+- MapLibre GL and its Leaflet binding are vendored under `ui/public/maplibre/` and injected at runtime only on WebGL-capable engines, keeping the ~1 MB renderer entirely off the Chromium 69 path
+- New `GET` / `POST` / `DELETE /icon` HTTP routes back the custom boat icon, with magic-byte type sniffing, a 500 KB cap, and streaming body-size enforcement; documented in `openApi.json`
+- App icons are now committed to the repo and icon generation was dropped from the build
+
 # v2.6.1
 
 ## Bug fixes
