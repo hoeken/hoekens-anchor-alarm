@@ -1,21 +1,5 @@
 # v2.8
 
-- control toolbar UI refactor:
-  - we want to reduce the vertical height the control toolbar takes up.  right now when the anchor is raised, it has 3 vertically stacked controls.
-    - i want to change that to horizontally stacked controls
-    - controls should have a height of 90px with no fixed width yet.
-    from right to left:
-    - shape selector -> dont use text and instead use an SVG representation of the shape.  keep it a dropdown
-    - anchor radius selector -> build an all-in-one control similar to the zoom in/out control.
-      - normal control/panel border on the outside
-      - lightweight borders on the inside to separate internal controls
-      - two rows:
-        - radius on top, centered
-        - -/+ buttons on bottom, equal width, 2 columns
-        - switch to using the same font and styling as the zoom buttons for these +/- buttons
-      - for polygon, sides selector on top, reset button on bottom.
-    - raise/drop button -> change text to simple Raise/Drop with an anchor icon emoji above the text
-
 - "chart" mode easter egg
   - long press on home button (3s) will enable
   - make the variable part of appstate so each ui widget can show/hide itself

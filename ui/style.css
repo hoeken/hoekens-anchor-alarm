@@ -498,8 +498,8 @@ body,
   border-right: 1px solid var(--divider);
 }
 
-/* Polygon panel: same two-row box as the radius panel — the sides selector on
-   top, the reset button below. */
+/* Polygon panel: same two-row box as the radius panel — the radius value (tap
+   to type) on top, the sides selector below. */
 #polygonControl {
   display: flex;
   flex-direction: column;
@@ -508,7 +508,7 @@ body,
   font-size: 18px;
 }
 
-/* Top row: the sides selector. */
+/* Bottom row: the sides selector. */
 #polygonControl select {
   pointer-events: auto;
   flex: 1 1 0;
@@ -518,7 +518,6 @@ body,
   -webkit-appearance: none;
   appearance: none;
   border: none;
-  border-bottom: 1px solid var(--divider);
   border-radius: 0;
   background-clip: padding-box;
   background-color: var(--surface-bg);
@@ -532,12 +531,13 @@ body,
   padding: 0 28px 0 12px;
 }
 
-/* Bottom row: the reset button. */
+/* Top row: the radius value (tap to type). The shared #setRadius rule supplies
+   the 14px nowrap value styling and the divider below it; this just fills the
+   row height. */
 #polygonControl button {
   flex: 1 1 0;
   min-height: 0;
   box-sizing: border-box;
-  border: none;
   border-radius: 0;
 }
 

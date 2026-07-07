@@ -468,7 +468,15 @@ export class AppState {
   }
 
   getDefaultRadius() {
-    const currentRadius = Number(this.anchor?.watchZone?.value?.radius);
+    // Read the circle-equivalent radius of whatever shape is active. A polygon
+    // has no `radius` field — its size lives in the vertex distances — so going
+    // through getCircleRadius() lets a resized polygon carry its size over when
+    // the user switches to another shape.
+    const config = this.anchor?.watchZone?.value;
+    const currentRadius =
+      config && typeof config === "object"
+        ? Number(watchZoneFromConfig(config).getCircleRadius())
+        : NaN;
     const estimatedRadius = Number(this.getAnchorEstimate()?.radius);
 
     let radius = 60;

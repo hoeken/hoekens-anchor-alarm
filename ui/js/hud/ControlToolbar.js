@@ -26,8 +26,8 @@ const SHAPE_ICONS = {
   // pie slice that fills the frame (mirrors the sector watch zone spreading out
   // from the anchor).
   sector: `<path d="M12 20 L1.4 9.4 A15 15 0 0 1 22.6 9.4 Z"/>`,
-  // Regular octagon (the polygon zone's 8-side default).
-  polygon: `<polygon points="9,4 15,4 20,9 20,15 15,20 9,20 4,15 4,9"/>`,
+  // Regular hexagon (the polygon zone's 6-side default).
+  polygon: `<polygon points="8,5 16,5 20,12 16,19 8,19 4,12"/>`,
 };
 
 function shapeIconMarkup(type) {
