@@ -45,6 +45,8 @@
     - status bar
   - on exit chart, switch back to normal anchor mode.
 
+- investigate signalk-restricted-areas as an additional layer.
+
 # LONG TERM
 
 - glitch filter - filter any moves that are over X speed
