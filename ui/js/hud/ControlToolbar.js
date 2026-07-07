@@ -73,9 +73,7 @@ export class ControlToolbar {
       <div id="zoneShapeSelect">
         <button type="button" id="zoneShapeButton" aria-haspopup="true" aria-expanded="false">
           <span id="zoneShapeCurrent">${shapeIconMarkup("circle")}</span>
-          <svg class="zoneShapeCaret" viewBox="0 0 12 8" width="12" height="8" aria-hidden="true">
-            <path fill="currentColor" d="M0 0l6 8 6-8z"/>
-          </svg>
+          <span class="anchorBtnLabel">Shape</span>
         </button>
         <div id="zoneShapeMenu" hidden>${shapeOptions}</div>
       </div>

@@ -230,7 +230,7 @@ body,
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  font-size: 22px;
+  font-size: 20px;
 }
 
 /* Flexbox `gap` is unsupported before Chromium 84, so on Navico MFDs (Chromium
@@ -287,13 +287,14 @@ body,
   background-clip: padding-box;
 }
 
-/* The three raise/drop/radius/shape controls are one 90px-tall row. */
+/* The three raise/drop/radius/shape controls are one 80px-tall row. */
 #anchorDown button,
 #anchorUp button,
 #radiusControl,
 #polygonControl,
 #zoneShapeButton {
-  height: 90px;
+  height: 80px;
+  width: 80px;
   box-sizing: border-box;
 }
 
@@ -398,14 +399,14 @@ body,
 }
 
 /* Raise/Drop: an anchor glyph stacked over a short label, centered, in a
-   90×90 square. */
+   80×80 square. */
 #anchorDown button,
 #anchorUp button {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 90px;
+  width: 80px;
   padding: 0;
   line-height: 1.1;
 }
@@ -414,14 +415,13 @@ body,
   /* Scaled down from the 100px source so the glyph + label fit the 90px
      square button. */
   display: block;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
 }
 
 .anchorBtnLabel {
   margin-top: 4px;
   font-size: 18px;
-  text-transform: uppercase;
 }
 
 #loginPrompt button {
@@ -443,7 +443,7 @@ body,
 #radiusControl {
   display: flex;
   flex-direction: column;
-  width: 90px;
+  width: 80px;
   background-color: var(--surface-bg);
   /* Clip the borderless inner buttons to the panel's rounded corners. */
   overflow: hidden;
@@ -459,7 +459,7 @@ body,
   justify-content: center;
   min-height: 0;
   padding: 0 6px;
-  font-size: 15px;
+  font-size: 14px;
   white-space: nowrap;
   /* Drop the UA button border so only the panel's outer border and the single
      inner divider below show — otherwise they double up. */
@@ -548,12 +548,16 @@ body,
   position: relative;
 }
 
+/* Match the raise/drop buttons: the current shape's glyph stacked over a short
+   label, centered in the 80×80 square. */
 #zoneShapeButton {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 90px;
+  width: 80px;
   padding: 0;
+  line-height: 1.1;
 }
 
 .zoneShapeCaret {
