@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 
-import { distance, point } from "@turf/turf";
+import { degreesToRadians, distance, point, radiansToDegrees } from "@turf/turf";
 import { Watchdog } from "./watchdog.js";
 import { metas, buildSchema, applyDefaults, migrateConfig, readZoneConfig } from "./schema.js";
 import { watchZoneFromConfig } from "../shared/watch-zones/index.js";
+import { Geo } from "../shared/geo.js";
 import { SignalKBus } from "./signalk-bus.js";
 import { Utils } from "./utils.js";
 import { register as registerHttpRoutes } from "./http-routes.js";
@@ -193,6 +194,18 @@ export default function (app) {
         );
       }
 
+      // Bow-referenced geometry (computed by checkPosition from the live fix).
+      // Emitted whenever the key is present so a null apparentBearing — when
+      // there's no heading to reference it against — clears any stale value,
+      // while callers that don't recompute these (setZone, initial start) leave
+      // them untouched.
+      if ("distanceFromBow" in params)
+        plugin.bus.queueDelta("navigation.anchor.distanceFromBow", params.distanceFromBow);
+      if ("bearingTrue" in params)
+        plugin.bus.queueDelta("navigation.anchor.bearingTrue", params.bearingTrue);
+      if ("apparentBearing" in params)
+        plugin.bus.queueDelta("navigation.anchor.apparentBearing", params.apparentBearing);
+
       if (params.zone) {
         plugin.bus.queueDelta("navigation.anchor.watchZone", params.zone.getConfig());
 
@@ -225,6 +238,9 @@ export default function (app) {
       plugin.bus.queueDelta("navigation.anchor.currentRadius", null);
       plugin.bus.queueDelta("navigation.anchor.maxRadius", null);
       plugin.bus.queueDelta("navigation.anchor.watchZone", null);
+      plugin.bus.queueDelta("navigation.anchor.distanceFromBow", null);
+      plugin.bus.queueDelta("navigation.anchor.bearingTrue", null);
+      plugin.bus.queueDelta("navigation.anchor.apparentBearing", null);
     }
 
     plugin.bus.sendUpdates();
@@ -300,6 +316,37 @@ export default function (app) {
     plugin.onStop = [];
   };
 
+  // Bow-referenced anchor geometry, matching what the UI draws on the map.
+  // Translates the GPS antenna fix to the bow using headingTrue and the
+  // configured GPS→bow offsets, then measures to the anchor. Bearings come
+  // back in radians (Signal K convention). With no heading the antenna fix
+  // stands in for the bow and apparentBearing is null — it can't be referenced
+  // to a bow we can't orient.
+  plugin.computeBowMetrics = function (vesselPosition, anchorPosition) {
+    const headingRad = app.getSelfPath("navigation.headingTrue.value");
+    const hasHeading = Number.isFinite(headingRad);
+    const heading = hasHeading ? radiansToDegrees(headingRad) : 0;
+
+    // Offsets only make sense once we can orient them by a heading.
+    const xOffset = hasHeading
+      ? (app.getSelfPath("sensors.gps.fromCenter.value") ?? 0)
+      : 0;
+    const yOffset = hasHeading
+      ? (app.getSelfPath("sensors.gps.fromBow.value") ?? 0)
+      : 0;
+
+    const bow = Geo.bowPosition(vesselPosition, heading, xOffset, yOffset);
+    const bearingTrue = Geo.bearingTrue(bow, anchorPosition);
+
+    return {
+      distanceFromBow: Geo.distance(bow, anchorPosition),
+      bearingTrue: degreesToRadians(bearingTrue),
+      apparentBearing: hasHeading
+        ? degreesToRadians(Geo.apparentBearing(bearingTrue, heading))
+        : null,
+    };
+  };
+
   plugin.checkPosition = function (vesselPosition) {
     const configuration = plugin.configuration;
     const zoneConfig = readZoneConfig(configuration);
@@ -318,6 +365,7 @@ export default function (app) {
     //update our parameter that may change.
     plugin.updateAnchorState({
       currentRadius: currentRadius,
+      ...plugin.computeBowMetrics(vesselPosition, anchorPosition),
       isSet: true,
     });
 

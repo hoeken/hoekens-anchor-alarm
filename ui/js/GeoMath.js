@@ -1,21 +1,18 @@
-import { destination, point } from "@turf/turf";
+import { Geo } from "../../shared/geo.js";
 
 export class GeoMath {
   // Translates a GPS position to the boat's bow using the heading and the
-  // configured GPS→bow offsets (Y along heading, then X 90° to starboard).
-  // Returns an L.latLng so callers can hand it straight to Leaflet.
+  // configured GPS→bow offsets. Delegates to the shared Geo.bowPosition so the
+  // map and the backend compute the bow identically; wraps the result in an
+  // L.latLng so callers can hand it straight to Leaflet.
   static calculateBowCoordinates(current, heading, xOffset, yOffset) {
-    const opts = { units: "meters" };
-    let pt = destination(
-      point([current.lng, current.lat]),
-      yOffset,
+    const { latitude, longitude } = Geo.bowPosition(
+      { latitude: current.lat, longitude: current.lng },
       heading,
-      opts,
+      xOffset,
+      yOffset,
     );
-    if (xOffset != 0)
-      pt = destination(pt, xOffset, heading - 90, opts);
-    const [lon, lat] = pt.geometry.coordinates;
-    return L.latLng(lat, lon);
+    return L.latLng(latitude, longitude);
   }
 
   /**

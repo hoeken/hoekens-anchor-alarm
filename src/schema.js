@@ -44,6 +44,27 @@ export const metas = {
     },
     description: "Current distance from gps antenna to anchor",
   },
+  "navigation.anchor.distanceFromBow": {
+    units: "m",
+    displayUnits: {
+      category: "length",
+    },
+    description: "Distance from the bow to the anchor",
+  },
+  "navigation.anchor.bearingTrue": {
+    units: "rad",
+    displayUnits: {
+      category: "angle",
+    },
+    description: "The true bearing from the bow to the anchor",
+  },
+  "navigation.anchor.apparentBearing": {
+    units: "rad",
+    displayUnits: {
+      category: "angle",
+    },
+    description: "The apparent bearing from the bow to the anchor, relative to the vessel heading",
+  },
   "navigation.anchor.position": {
     description: "Anchor position, probably an estimate at best",
   },

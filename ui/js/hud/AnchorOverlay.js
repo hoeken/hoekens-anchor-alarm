@@ -6,12 +6,7 @@
 // or position change. The zone layer is delegated to a zone-specific class
 // in ./zones/ — to add a new shape, register it there.
 
-import {
-  bearing as turfBearing,
-  bearingToAzimuth,
-  distance,
-  point,
-} from "@turf/turf";
+import { Geo } from "../../../shared/geo.js";
 import { GeoMath } from "../GeoMath.js";
 import { DisplayUnit } from "../DisplayUnit.js";
 import { createZoneOverlay } from "./zones/index.js";
@@ -237,13 +232,16 @@ export class AnchorOverlay {
     // sit on the same meridian.)
     const flip = bow.lng > this.anchorPosition.lng;
 
-    const bowPt = point([bow.lng, bow.lat]);
-    const anchorPt = point([this.anchorPosition.lng, this.anchorPosition.lat]);
-    let bowToAnchor = distance(bowPt, anchorPt, { units: "meters" });
+    const bowPos = { latitude: bow.lat, longitude: bow.lng };
+    const anchorPos = {
+      latitude: this.anchorPosition.lat,
+      longitude: this.anchorPosition.lng,
+    };
+    let bowToAnchor = Geo.distance(bowPos, anchorPos);
     bowToAnchor = Math.round(bowToAnchor * 10) / 10;
     let distanceLabel = DisplayUnit.formatValue(bowToAnchor, "depth");
 
-    const bearing = Math.round(bearingToAzimuth(turfBearing(bowPt, anchorPt)));
+    const bearing = Math.round(Geo.bearingTrue(bowPos, anchorPos));
     const bearingLabel = `${bearing}°`;
 
     // Rotate so the anchor's ring (top of icon, at iconAnchor [12,4]) faces

@@ -101,6 +101,9 @@ describe("updateAnchorState()", () => {
     assert.equal(h.lastDelta("navigation.anchor.maxRadius"), null);
     assert.equal(h.lastDelta("navigation.anchor.watchZone"), null);
     assert.equal(h.lastDelta("navigation.anchor.currentRadius"), null);
+    assert.equal(h.lastDelta("navigation.anchor.distanceFromBow"), null);
+    assert.equal(h.lastDelta("navigation.anchor.bearingTrue"), null);
+    assert.equal(h.lastDelta("navigation.anchor.apparentBearing"), null);
   });
 
   test("currentRadius is emitted as a parsed number", () => {
@@ -108,6 +111,30 @@ describe("updateAnchorState()", () => {
     plugin.configuration = { state: "emergency" };
     plugin.updateAnchorState({ isSet: true, currentRadius: "42.5" });
     assert.equal(h.lastDelta("navigation.anchor.currentRadius"), 42.5);
+  });
+
+  test("emits bow-referenced distance and bearings when provided", () => {
+    const { h, plugin } = setup();
+    plugin.configuration = { state: "emergency" };
+    plugin.updateAnchorState({
+      isSet: true,
+      distanceFromBow: 33.3,
+      bearingTrue: 1.5,
+      apparentBearing: 0.75,
+    });
+    assert.equal(h.lastDelta("navigation.anchor.distanceFromBow"), 33.3);
+    assert.equal(h.lastDelta("navigation.anchor.bearingTrue"), 1.5);
+    assert.equal(h.lastDelta("navigation.anchor.apparentBearing"), 0.75);
+  });
+
+  test("emits a null apparentBearing to clear it, but leaves omitted paths untouched", () => {
+    const { h, plugin } = setup();
+    plugin.configuration = { state: "emergency" };
+    plugin.updateAnchorState({ isSet: true, apparentBearing: null });
+    assert.equal(h.lastDelta("navigation.anchor.apparentBearing"), null);
+    // bearingTrue/distanceFromBow weren't in params, so they aren't emitted.
+    assert.equal(h.hasDelta("navigation.anchor.bearingTrue"), false);
+    assert.equal(h.hasDelta("navigation.anchor.distanceFromBow"), false);
   });
 });
 
@@ -325,6 +352,33 @@ describe("checkPosition()", () => {
     plugin.checkPosition(vesselAt(ANCHOR, 120, 0));
     assert.equal(h.hasDelta("notifications.navigation.anchor"), false);
     assert.equal(h.hasDelta("navigation.anchor.currentRadius"), true);
+  });
+
+  test("reports bow-referenced distance and bearings using the heading", () => {
+    const { h, plugin } = watching();
+    h.setSelfPath("navigation.headingTrue.value", 0); // pointing due north
+    // Vessel 40 m due south of the anchor → anchor bears due north, dead ahead.
+    plugin.checkPosition(vesselAt(ANCHOR, 40, 180));
+    assert.ok(Math.abs(h.lastDelta("navigation.anchor.distanceFromBow") - 40) < 1);
+    assert.ok(Math.abs(h.lastDelta("navigation.anchor.bearingTrue")) < 0.01); // ~0 rad
+    assert.ok(Math.abs(h.lastDelta("navigation.anchor.apparentBearing")) < 0.01); // dead ahead
+  });
+
+  test("applies the GPS→bow offset along the heading", () => {
+    const { h, plugin } = watching();
+    h.setSelfPath("navigation.headingTrue.value", 0); // north
+    h.setSelfPath("sensors.gps.fromBow.value", 10); // antenna 10 m aft of the bow
+    // Vessel 40 m due south → bow sits 10 m north of the antenna → 30 m out.
+    plugin.checkPosition(vesselAt(ANCHOR, 40, 180));
+    assert.ok(Math.abs(h.lastDelta("navigation.anchor.distanceFromBow") - 30) < 1);
+  });
+
+  test("nulls apparentBearing when heading is unknown but still reports the rest", () => {
+    const { h, plugin } = watching();
+    plugin.checkPosition(vesselAt(ANCHOR, 40, 180));
+    assert.equal(h.lastDelta("navigation.anchor.apparentBearing"), null);
+    assert.ok(Math.abs(h.lastDelta("navigation.anchor.distanceFromBow") - 40) < 1);
+    assert.equal(h.hasDelta("navigation.anchor.bearingTrue"), true);
   });
 });
 
