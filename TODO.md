@@ -1,22 +1,7 @@
-# v2.8
-
-- "chart" mode easter egg
-  - long press on home button (3s) will enable
-  - make the variable part of appstate so each ui widget can show/hide itself
-  - control toolbar
-    - hide anchor controls
-    - show 'exit chart mode' button
-  - hide the following
-    - scope panel
-    - wind panel
-    - tide panel
-    - anchor overlay (line + icon + zone shape)
-    - status bar
-  - on exit chart, switch back to normal anchor mode.
-
-- investigate signalk-restricted-areas as an additional layer.
-
 # LONG TERM
+
+- investigate forking into a separate simple chart plotter
+- investigate signalk-restricted-areas as an additional layer.
 
 - glitch filter - filter any moves that are over X speed
   - speed should be configurable in both the app and the plugin.
