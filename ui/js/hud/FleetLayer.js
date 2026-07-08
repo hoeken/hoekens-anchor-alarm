@@ -25,6 +25,12 @@ const CACHE_SYNC_INTERVAL_MS = 1000;
 // apart); departures within radius linger up to this long, but out-of-radius
 // vessels are still removed the instant they move.
 const VESSEL_TTL_MS = 30 * 60 * 1000;
+// A newly-sighted vessel's first static fetch often lands before the server
+// has the full picture: AIS static reports (name, dimensions, ship type)
+// trickle in slowly, and SignalK currently doesn't deliver `name` over the
+// websocket delta at all. Re-fetch a few times over the first few minutes to
+// pick up whatever has since arrived.
+const STATIC_REFETCH_DELAYS_MS = [60 * 1000, 120 * 1000, 180 * 1000];
 const DEFAULT_FILTER_RADIUS = 500;
 // Name labels only show once boats are zoomed in enough to be visually
 // distinct; below this they'd just clutter the map.
@@ -204,6 +210,14 @@ export class FleetLayer {
     if (!vessel) {
       vessel = this.vesselCache[mmsi] = { mmsi };
       this.fetchVesselStatic(context, mmsi);
+      // Re-fetch over the next few minutes; see STATIC_REFETCH_DELAYS_MS.
+      for (const delay of STATIC_REFETCH_DELAYS_MS) {
+        setTimeout(() => {
+          // Skip if the vessel went silent and was pruned in the meantime.
+          if (this.vesselCache[mmsi])
+            this.fetchVesselStatic(context, mmsi);
+        }, delay);
+      }
     }
     vessel._lastSeen = Date.now();
     for (const { path, value } of values) {

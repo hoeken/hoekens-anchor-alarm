@@ -1,3 +1,7 @@
+# v2.8
+
+- new screenshots with new UI
+
 # LONG TERM
 
 - investigate forking into a separate simple chart plotter
