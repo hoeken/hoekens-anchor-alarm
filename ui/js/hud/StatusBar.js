@@ -112,15 +112,16 @@ export const StatusBar = L.Control.extend({
         : null,
     );
 
-    let notice = state.anchor?.notification;
+    // notice.value is null when normal-state notifications are disabled.
+    let notice = state.anchor?.notification?.value;
     if (notice) {
-      if (notice.value.state != "normal" && notice.value.message != "Watching") {
+      if (notice.state != "normal" && notice.message != "Watching") {
         let level = "status";
-        if (notice.value.state == "alert" || notice.value.state == "warn")
+        if (notice.state == "alert" || notice.state == "warn")
           level = "warning";
-        else if (notice.value.state == "alarm" || notice.value.state == "emergency")
+        else if (notice.state == "alarm" || notice.state == "emergency")
           level = "error";
-        this.set("notice-status", notice.value.message, level);
+        this.set("notice-status", notice.message, level);
       }
       else
         this.set("notice-status");

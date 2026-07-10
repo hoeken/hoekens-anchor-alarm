@@ -229,6 +229,13 @@ export function buildSchema(app) {
         default: "emergency",
         enum: ["alert", "warn", "alarm", "emergency"],
       },
+      enableNormalNotifications: {
+        type: "boolean",
+        title: "Enable notifications for 'normal' state",
+        description:
+          "Emit a normal-state notification (Off, Watching, etc.) on notifications.navigation.anchor. Turn off to reduce clutter — when anchored the state already implies the alarm is watching. When off, the notification is cleared instead of showing a normal message; drag alarms are unaffected.",
+        default: true,
+      },
       enableEngineCheck: {
         type: "boolean",
         title: "Engine Override Enabled",

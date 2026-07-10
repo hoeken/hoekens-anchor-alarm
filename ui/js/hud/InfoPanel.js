@@ -56,19 +56,22 @@ export const InfoPanel = L.Control.extend({
 
   setStatus: function (anchor) {
     this._pluginStatus.className = "";
-    if (anchor.state && anchor.notification) {
-      if (anchor.state.value === "off")
-        this._pluginStatus.textContent = "Off";
-      else if (anchor.state.value === "on") {
-        const notice = anchor.notification;
-        this._pluginStatus.classList.add(notice.value.state);
-        if (notice.value.message === "Watching")
-          this._pluginStatus.textContent = "Watching";
-        else
-          this._pluginStatus.textContent = notice.value.state.toUpperCase();
+    const notice = anchor.notification?.value;
+    if (anchor.state && anchor.state.value === "off") {
+      this._pluginStatus.textContent = "Off";
+    } else if (anchor.state && anchor.state.value === "on") {
+      // notice is null when normal-state notifications are disabled; the anchor
+      // is still set, so display it as watching.
+      if (!notice || notice.state === "normal" || notice.message === "Watching") {
+        this._pluginStatus.classList.add("normal");
+        this._pluginStatus.textContent = "Watching";
+      } else {
+        this._pluginStatus.classList.add(notice.state);
+        this._pluginStatus.textContent = notice.state.toUpperCase();
       }
-    } else
+    } else {
       this._pluginStatus.textContent = "Unknown";
+    }
   },
 
   show: function () {

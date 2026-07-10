@@ -57,6 +57,35 @@ describe("updateAnchorAlarm()", () => {
       message: "Warn",
     });
   });
+
+  test("emits normal-state notifications when enableNormalNotifications is on", () => {
+    const { h, plugin } = setup();
+    plugin.configuration = { enableNormalNotifications: true };
+    plugin.updateAnchorAlarm("normal", "Watching", ["visual"]);
+    assert.deepEqual(h.lastDelta("notifications.navigation.anchor"), {
+      state: "normal",
+      method: ["visual"],
+      message: "Watching",
+    });
+  });
+
+  test("clears the notification for a normal state when normal notifications are disabled", () => {
+    const { h, plugin } = setup();
+    plugin.configuration = { enableNormalNotifications: false };
+    plugin.updateAnchorAlarm("normal", "Watching", ["visual"]);
+    assert.equal(h.lastDelta("notifications.navigation.anchor"), null);
+  });
+
+  test("still emits alarm-state notifications when normal notifications are disabled", () => {
+    const { h, plugin } = setup();
+    plugin.configuration = { enableNormalNotifications: false };
+    plugin.updateAnchorAlarm("emergency", "Dragging", ["visual", "sound"]);
+    assert.deepEqual(h.lastDelta("notifications.navigation.anchor"), {
+      state: "emergency",
+      method: ["visual", "sound"],
+      message: "Dragging",
+    });
+  });
 });
 
 describe("updateAnchorState()", () => {
@@ -483,6 +512,12 @@ describe("start()", () => {
     const { plugin } = setup();
     plugin.start({ noPositionAlarmTime: 60 });
     assert.ok(plugin.positionWatchdogTimer instanceof Watchdog);
+  });
+
+  test("clears the Started notification when normal notifications are disabled", () => {
+    const { h, plugin } = setup();
+    plugin.start({ noPositionAlarmTime: 0, enableNormalNotifications: false });
+    assert.equal(h.lastDelta("notifications.navigation.anchor"), null);
   });
 });
 

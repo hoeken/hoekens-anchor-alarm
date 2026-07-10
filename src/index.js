@@ -58,17 +58,20 @@ export default function (app) {
   plugin.start = function (props) {
     app.setPluginStatus("Started");
 
+    plugin.configuration = props || {};
+    // v2.1 -> v2.2 upgrade: legacy `radius` becomes a `zone` config.
+    // Persist immediately so the next restart sees the migrated shape.
+    const migrated = migrateConfig(plugin.configuration);
+    plugin.configuration = applyDefaults(app, plugin.configuration);
+
+    // Load config before the first notification so enableNormalNotifications
+    // governs the "Started" message too.
     plugin.alarm_state = "normal";
     plugin.updateAnchorAlarm(plugin.alarm_state, "Started", ["visual"]);
 
     for (const [key, value] of Object.entries(metas))
       plugin.bus.queueMeta(key, value);
 
-    plugin.configuration = props || {};
-    // v2.1 -> v2.2 upgrade: legacy `radius` becomes a `zone` config.
-    // Persist immediately so the next restart sees the migrated shape.
-    const migrated = migrateConfig(plugin.configuration);
-    plugin.configuration = applyDefaults(app, plugin.configuration);
     if (migrated) {
       app.debug("migrated legacy radius config to zone shape");
       plugin.savePluginOptions();
@@ -172,11 +175,20 @@ export default function (app) {
     if (!method)
       method = ["visual", "sound"];
 
-    plugin.bus.queueDelta("notifications.navigation.anchor", {
-      state: state,
-      method: method,
-      message: message,
-    });
+    // The 'normal' state (Off, Watching, Started, ...) is informational, not an
+    // alarm. When the operator disables it, clear the notification path instead
+    // of emitting a normal message — the anchor state already implies whether
+    // the alarm is watching. Drag alarms carry a non-normal state and are always
+    // sent. See github issue #24.
+    if (state === "normal" && plugin.configuration?.enableNormalNotifications === false) {
+      plugin.bus.queueDelta("notifications.navigation.anchor", null);
+    } else {
+      plugin.bus.queueDelta("notifications.navigation.anchor", {
+        state: state,
+        method: method,
+        message: message,
+      });
+    }
 
     plugin.bus.sendUpdates();
   };
