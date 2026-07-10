@@ -254,6 +254,17 @@ export class ControlToolbar {
     this._zoneControls?.update(appState);
   }
 
+  // Whole-toolbar visibility, driven by the showAnchorControls URL param (see
+  // AnchorAlarm). This toggles only the container; update() manages the child
+  // controls independently, so the two never fight.
+  show() {
+    this._container.style.display = "";
+  }
+
+  hide() {
+    this._container.style.display = "none";
+  }
+
   _ensureZoneControls(type) {
     if (this._zoneControls && this._zoneType === type)
       return;

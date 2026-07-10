@@ -51,6 +51,30 @@ If you have engine data in SignalK, enable the engine check and the watch will e
 > [!NOTE]
 > You can view the app without logging in (read-only). Editing controls (dropping/raising the anchor, resizing zones, settings) appear once you log into your SignalK server.
 
+## Embedding
+
+If you want to drop the anchor alarm into another app or a dashboard (Grafana, a Node-RED dashboard, an MFD page, a custom SignalK webapp, an `<iframe>`), two query-string parameters let you trim the UI down to just the map. Add them to the webapp URL:
+
+```
+http://[signalk-server-ip-address]:[port-number]/hoekens-anchor-alarm/?embedded=true&showAnchorControls=false
+```
+
+| Parameter | Values | Default | Effect |
+|---|---|---|---|
+| `embedded` | `true` / `false` | `false` | When `true`, hides the tide, wind, scope, and info panels, along with the settings (gear) control, leaving a clean map. `false` or omitted changes nothing. |
+| `showAnchorControls` | `true` / `false` | `true` | When `false`, hides the top anchor toolbar (shape picker, radius, drop/raise). When `true`, shows it. |
+
+The two are independent, so mix and match to taste:
+
+- `?embedded=true` — clean map that still keeps the anchor toolbar for setting the alarm from within the host app.
+- `?embedded=true&showAnchorControls=false` — a bare map with no controls at all, for a read-only status tile.
+- `?showAnchorControls=false` — the full HUD panels but no anchor toolbar.
+
+Values are compared case-insensitively; anything other than `true` is treated as `false`. These parameters only affect what the webapp renders — the map, watch zone, boat, and fleet still update live, and none of your saved plugin settings are changed.
+
+> [!TIP]
+> These pair well with the existing `?mode=night` / `?mode=day` parameter (used by B&G/Navico MFDs), which forces the dark or light theme instead of following the device preference.
+
 ## Watch Zone Shapes
 
 | Circle | Sector | Polygon |

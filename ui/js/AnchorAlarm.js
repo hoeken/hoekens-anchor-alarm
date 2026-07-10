@@ -27,6 +27,17 @@ import { nativeTooltipsSuppressed, isNavicoMfd } from "./BrowserSupport.js";
 const UPDATE_INTERVAL_MS = 500;
 const INITIAL_LOAD_RETRY_MS = 5000;
 
+// Read a boolean-valued query parameter. Returns `fallback` when the param is
+// absent; otherwise a case-insensitive "true" is true and anything else
+// (including "false") is false. Drives the embedding controls — see the
+// `embedded` / `showAnchorControls` params documented in the README.
+function boolParam(params, name, fallback) {
+  const raw = params.get(name);
+  if (raw === null)
+    return fallback;
+  return raw.toLowerCase() === "true";
+}
+
 // Stacking order for the Seascape bathymetry overlay, whose GL canvas shares the
 // Leaflet tile pane with the base tiles. It sits above the base tiles but stays
 // below the local raster charts, which draw in their own higher pane (see
@@ -77,6 +88,16 @@ class AnchorAlarm {
       hasCustomIcon: false,
     };
     this.state.loggedIn = false;
+
+    // URL controls for embedding the app in another dashboard (see README).
+    // `embedded=true` strips the HUD panels (tide/wind/scope/info) and the
+    // settings gear for a clean map; `showAnchorControls` overrides whether the
+    // top anchor toolbar is shown, defaulting to shown to match the standalone
+    // app. The two are independent: a fully bare map is embedded=true plus
+    // showAnchorControls=false.
+    const params = new URLSearchParams(window.location.search);
+    this.embedded = boolParam(params, "embedded", false);
+    this.showAnchorControls = boolParam(params, "showAnchorControls", true);
 
     this.map = undefined;
     this.fleetLayer = undefined;
@@ -221,6 +242,11 @@ class AnchorAlarm {
       onSetZone: (zoneConfig) => this.anchorController.setZone(zoneConfig),
       onLogin: () => this.showLoginModal(),
     });
+    // The anchor toolbar is shown by default; an embedding host can suppress it
+    // with showAnchorControls=false. update() only ever toggles the toolbar's
+    // children, never its container, so this container-level hide sticks.
+    if (!this.showAnchorControls)
+      this.toolbar.hide();
 
     this.signalK
       .fetchPluginInfo()
@@ -479,19 +505,22 @@ class AnchorAlarm {
     // dialog, while anonymous users' clicks go straight to the login modal
     // (the save POST is auth-gated server-side, so the dialog is useless to
     // them — see ConfigPanel). Login and logout both reload, so getLoggedIn is
-    // effectively fixed per page load.
-    this.configPanel = new ConfigPanel({
-      getConfig: () => this.config,
-      getVersion: () => this.version,
-      getLoggedIn: () => this.state.loggedIn,
-      onChange: (newConfig) => this.saveConfig(newConfig),
-      onLogin: () => this.showLoginModal(),
-      onLogout: () => this.logout(),
-      getIconUrl: (bust) => this.signalK.boatIconUrl(bust),
-      onUploadIcon: (file) => this.uploadBoatIcon(file),
-      onDeleteIcon: () => this.deleteBoatIcon(),
-    });
-    this.map.addControl(this.configPanel);
+    // effectively fixed per page load. In embedded mode the gear is omitted
+    // entirely so the host dashboard owns the configuration.
+    if (!this.embedded) {
+      this.configPanel = new ConfigPanel({
+        getConfig: () => this.config,
+        getVersion: () => this.version,
+        getLoggedIn: () => this.state.loggedIn,
+        onChange: (newConfig) => this.saveConfig(newConfig),
+        onLogin: () => this.showLoginModal(),
+        onLogout: () => this.logout(),
+        getIconUrl: (bust) => this.signalK.boatIconUrl(bust),
+        onUploadIcon: (file) => this.uploadBoatIcon(file),
+        onDeleteIcon: () => this.deleteBoatIcon(),
+      });
+      this.map.addControl(this.configPanel);
+    }
 
     this.layersControl = L.control
       .layers(this.baseMaps, {}, { position: "topleft" })
@@ -536,22 +565,24 @@ class AnchorAlarm {
     //
     // Panels - Bottom Right
     //
+    // In embedded mode all four HUD panels stay hidden regardless of config, so
+    // the map sits clean inside a host dashboard (updateMap enforces the same).
     this.infoPanel = new InfoPanel();
 
     this.tidePanel = new TidePanel();
-    if (this.config.enableTidePanel)
+    if (!this.embedded && this.config.enableTidePanel)
       this.tidePanel.show();
     else
       this.tidePanel.hide();
 
     this.windPanel = new WindPanel();
-    if (this.config.enableWindPanel)
+    if (!this.embedded && this.config.enableWindPanel)
       this.windPanel.show();
     else
       this.windPanel.hide();
 
     this.scopePanel = new ScopePanel();
-    if (this.config.enableScopePanel)
+    if (!this.embedded && this.config.enableScopePanel)
       this.scopePanel.show();
     else
       this.scopePanel.hide();
@@ -742,6 +773,16 @@ class AnchorAlarm {
     this.statusBar.update(this.state);
     this.anchorOverlay.update(this.state);
     this.fleetLayer.update(this.state);
+
+    // In embedded mode every HUD panel stays hidden so the map reads clean
+    // inside a host dashboard; bail before the per-panel logic below.
+    if (this.embedded) {
+      this.infoPanel.hide();
+      this.scopePanel.hide();
+      this.tidePanel.hide();
+      this.windPanel.hide();
+      return;
+    }
 
     // Tide/info live in the bottom-right while anchored; the scope panel
     // takes the same slot when the anchor is up. Config flags gate each
