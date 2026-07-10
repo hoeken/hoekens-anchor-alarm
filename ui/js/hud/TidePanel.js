@@ -16,11 +16,9 @@ const CURVE_SAMPLES = 120;
 
 function formatClockTime(value) {
   const d = new Date(value);
-  let h = d.getHours();
+  const h = d.getHours();
   const m = d.getMinutes();
-  const ampm = h >= 12 ? "pm" : "am";
-  h = h % 12 || 12;
-  return `${h}:${m.toString().padStart(2, "0")}${ampm}`;
+  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
 }
 
 function formatHeight(envelope) {
