@@ -151,8 +151,8 @@ export class SignalKHelper {
     return this.request("vessels");
   }
   // Fetch a single vessel's tree by its stream context (e.g.
-  // "vessels.urn:mrn:imo:mmsi:123456789"). Used to seed a newly-sighted AIS
-  // target's static data without re-pulling the whole /vessels tree.
+  // "vessels.urn:mrn:imo:mmsi:123456789"). Used for a one-shot static snapshot
+  // of a newly-sighted AIS target without re-pulling the whole /vessels tree.
   fetchVessel(context) {
     const id = String(context).replace(/^vessels\./, "");
     return this.request(`vessels/${id}`);

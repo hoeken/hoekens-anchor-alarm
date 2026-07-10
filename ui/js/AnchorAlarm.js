@@ -122,6 +122,11 @@ class AnchorAlarm {
     this.client.on("connect", () => {
       this.state.websocketSubscribe(this.client);
       this.state.websocketSubscribeFleet(this.client);
+      // The server drops every subscription when the socket closes, so replay
+      // the per-vessel context subscriptions to keep static identity streaming
+      // after a reconnect. On the first connect this also sends any that
+      // subscribeVessel queued before the socket finished opening.
+      this.fleetLayer?.resubscribeVessels();
     });
     this.client.connect();
   }

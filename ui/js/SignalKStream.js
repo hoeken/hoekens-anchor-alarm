@@ -94,6 +94,17 @@ export class SignalKStream {
   }
 
   subscribe(message) {
+    this.send(message);
+  }
+
+  unsubscribe(message) {
+    this.send(message);
+  }
+
+  // Send a subscribe/unsubscribe frame if the socket is open. A frame sent while
+  // reconnecting is silently dropped; callers re-issue their subscriptions on
+  // the next "connect" event, so nothing is lost.
+  send(message) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message));
     }

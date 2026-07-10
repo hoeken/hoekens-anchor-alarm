@@ -130,12 +130,14 @@ export class AppState {
     );
   }
 
-  // Fleet subscription: the dynamic paths plus the static identity/geometry we
-  // draw for every *other* vessel, keyed by the stream's per-message `context`.
-  // FleetLayer still seeds static data once from REST for targets already known
-  // at load, but subscribing to the static paths lets a newly-sighted vessel's
-  // name/type/dimensions fill in as its (infrequent) AIS static reports arrive,
-  // rather than being pinned to whatever the one-shot fetch happened to catch.
+  // Fleet discovery + live motion for every *other* vessel, keyed by each
+  // message's `context`. This shared vessels.* subscription only carries the
+  // dynamic nav paths that place a boat on the map; it deliberately omits the
+  // static identity/geometry paths because SignalK won't deliver `name` except
+  // under a `*` path, and there's no "other vessels" context to target one at.
+  // FleetLayer instead subscribes to each newly-sighted vessel's own context
+  // with a `*` path (FleetLayer.subscribeVessel) so its name/type/dimensions
+  // stream in as the (infrequent) AIS static reports arrive.
   websocketSubscribeFleet(client) {
     client.subscribe({
       context: "vessels.*",
@@ -144,12 +146,6 @@ export class AppState {
         { path: "navigation.headingTrue", policy: "instant" },
         { path: "navigation.courseOverGroundTrue", policy: "instant" },
         { path: "navigation.speedOverGround", policy: "instant" },
-        { path: "name", policy: "instant" },
-        { path: "design.aisShipType", policy: "instant" },
-        { path: "design.length", policy: "instant" },
-        { path: "design.beam", policy: "instant" },
-        { path: "sensors.ais.fromCenter", policy: "instant" },
-        { path: "sensors.ais.fromBow", policy: "instant" },
       ],
     });
   }

@@ -5,8 +5,13 @@
 // boat is never auto-removed (its mmsi key never appears in the AIS list).
 //
 // The other-vessel feed seeds a per-vessel cache once from /vessels, then keeps
-// it live from the vessels.* delta subscription (ingestVesselDelta). A slow
-// timer prunes vessels that have gone silent and re-renders the cache through
+// it live from the vessels.* delta subscription (ingestVesselDelta). A newly-
+// sighted vessel gets its own context subscription (subscribeVessel) so its
+// static identity — name, ship type, dimensions — streams in live (the shared
+// vessels.* subscription can't carry those; see AppState.websocketSubscribeFleet),
+// plus a one-shot REST fetch (fetchVesselStatic) for an immediate snapshot while
+// that subscription waits for the vessel's next AIS static report. A slow timer
+// prunes vessels that have gone silent and re-renders the cache through
 // syncOtherVessels, which reconciles markers/tracks against a
 // { key -> vessel-tree } dict.
 
@@ -25,12 +30,6 @@ const CACHE_SYNC_INTERVAL_MS = 1000;
 // apart); departures within radius linger up to this long, but out-of-radius
 // vessels are still removed the instant they move.
 const VESSEL_TTL_MS = 30 * 60 * 1000;
-// A newly-sighted vessel's first static fetch often lands before the server
-// has the full picture: AIS static reports (name, dimensions, ship type)
-// trickle in slowly, and SignalK currently doesn't deliver `name` over the
-// websocket delta at all. Re-fetch a few times over the first few minutes to
-// pick up whatever has since arrived.
-const STATIC_REFETCH_DELAYS_MS = [60 * 1000, 120 * 1000, 180 * 1000];
 const DEFAULT_FILTER_RADIUS = 500;
 // Name labels only show once boats are zoomed in enough to be visually
 // distinct; below this they'd just clutter the map.
@@ -77,7 +76,8 @@ export class FleetLayer {
     // deltas + a one-shot /vessels seed. Each entry carries a numeric _lastSeen
     // for TTL pruning.
     this.vesselCache = {};
-    this._staticFetches = new Set(); // mmsis with an in-flight static fetch
+    // mmsis we've sent a per-vessel context subscription for (see subscribeVessel).
+    this._subscribedMmsis = new Set();
     this.filterRadius = filterRadius ?? DEFAULT_FILTER_RADIUS;
     this.selectedMmsi = null; // mmsi of the vessel whose popup is open, or null
     this.hoveredMmsi = null; // mmsi of the vessel/track under the cursor, or null
@@ -189,6 +189,8 @@ export class FleetLayer {
             continue;
           vessel._lastSeen = now;
           this.vesselCache[String(mmsi)] = vessel;
+          // Keep the seeded static data live as fresh AIS static reports arrive.
+          this.subscribeVessel(mmsi);
         }
         this.renderFromCache();
       })
@@ -196,9 +198,12 @@ export class FleetLayer {
   }
 
   // Fold one context's deltas into the cache. A vessel seen for the first time
-  // is created from its context mmsi and gets a targeted static fetch to grab
-  // whatever the server already knows; the subscribed static paths
-  // (name/design/sensors) then keep it current as AIS static reports trickle in.
+  // is created from its context mmsi and gets two things: its own context
+  // subscription (subscribeVessel), which streams the static identity paths —
+  // name, design, sensors — that the shared vessels.* subscription can't carry,
+  // and a one-shot REST fetch (fetchVesselStatic) for an immediate snapshot,
+  // since the subscription only delivers those paths on the next (often minutes
+  // away) AIS static report.
   ingestVesselDelta(context, timestamp, values) {
     const mmsi = this.mmsiFromContext(context);
     if (!mmsi || mmsi == this.ownMmsi)
@@ -209,37 +214,66 @@ export class FleetLayer {
     let vessel = this.vesselCache[mmsi];
     if (!vessel) {
       vessel = this.vesselCache[mmsi] = { mmsi };
+      this.subscribeVessel(mmsi);
       this.fetchVesselStatic(context, mmsi);
-      // Re-fetch over the next few minutes; see STATIC_REFETCH_DELAYS_MS.
-      for (const delay of STATIC_REFETCH_DELAYS_MS) {
-        setTimeout(() => {
-          // Skip if the vessel went silent and was pruned in the meantime.
-          if (this.vesselCache[mmsi])
-            this.fetchVesselStatic(context, mmsi);
-        }, delay);
-      }
     }
     vessel._lastSeen = Date.now();
     for (const { path, value } of values) {
-      // `name` lives un-enveloped at the vessel root (matching the /vessels REST
-      // shape BoatConfig reads), so it can't go through the { value, timestamp }
-      // leaf writer. Skip nulls so a stray empty delta can't wipe a good name.
-      if (path === "name") {
+      // Vessel-root attributes (name, mmsi, …) arrive as a delta with an EMPTY
+      // path and the attribute(s) carried in the value object — e.g.
+      // { name: 'ZEPHYR' } or { mmsi: '368124290' } — not as path "name"/"mmsi".
+      // They live un-enveloped at the vessel root (matching the /vessels REST
+      // shape BoatConfig and the cache key read), so merge each non-null key
+      // straight onto the vessel rather than through the { value, timestamp }
+      // leaf writer. Skip nulls so a stray empty delta can't wipe a good value.
+      if (!path) {
+        if (value && typeof value === "object") {
+          for (const key in value) {
+            if (value[key] != null)
+              vessel[key] = value[key];
+          }
+        }
+      } else if (path === "name" || path === "mmsi") {
+        // Some SignalK versions send these with an explicit path instead.
         if (value != null)
-          vessel.name = value;
+          vessel[path] = value;
       } else {
         writeDeltaPath(vessel, path, value, timestamp);
       }
     }
   }
 
-  // Seed a newly-sighted vessel's static tree with one targeted /vessels/<id>
-  // fetch. Only static branches are merged so it can't clobber fresher positions
-  // that arrived while the request was in flight.
-  fetchVesselStatic(context, mmsi) {
-    if (this._staticFetches.has(mmsi))
+  // Subscribe to one vessel's own context with a `*` path so its (infrequent)
+  // AIS static reports — name, ship type, dimensions — stream in live. SignalK
+  // won't deliver `name` through the shared vessels.* subscription and offers no
+  // "other vessels" context to target, so each target needs its own `*`
+  // subscription. We never subscribe to our own context: `*` there would fire
+  // our entire (potentially huge) SignalK tree back at us. Idempotent — the
+  // _subscribedMmsis guard keeps repeat sightings from re-sending. A send issued
+  // before the socket is open is dropped, but the mmsi stays in the set so the
+  // connect handler's resubscribeVessels replays it once connected.
+  subscribeVessel(mmsi) {
+    const key = String(mmsi);
+    if (!key || key == this.ownMmsi || this._subscribedMmsis.has(key))
       return;
-    this._staticFetches.add(mmsi);
+    this._subscribedMmsis.add(key);
+    this.sendVesselSubscribe(key);
+  }
+
+  sendVesselSubscribe(mmsi) {
+    this.app.client?.subscribe({
+      context: this.contextForMmsi(mmsi),
+      subscribe: [{ path: "*", policy: "instant" }],
+    });
+  }
+
+  // One-shot REST fetch of a newly-sighted vessel's static tree, giving an
+  // immediate name/type/dimensions snapshot while the context subscription
+  // waits for the vessel's next (often minutes-away) AIS static report. Called
+  // exactly once per discovery — the subscription keeps it current afterward.
+  // Only static branches are merged so it can't clobber fresher positions that
+  // arrived over the delta stream while the request was in flight.
+  fetchVesselStatic(context, mmsi) {
     this.app.signalK
       .fetchVessel(context)
       .then((data) => {
@@ -255,8 +289,38 @@ export class FleetLayer {
         if (data.sensors)
           vessel.sensors = data.sensors;
       })
-      .catch(() => { }) // static stays at BoatConfig defaults; not worth surfacing
-      .finally(() => this._staticFetches.delete(mmsi));
+      .catch(() => { }); // static stays at BoatConfig defaults; not worth surfacing
+  }
+
+  // Drop a pruned vessel's context subscription so the set of live `*` streams
+  // stays bounded to vessels we've heard from recently. If it transmits again,
+  // vessels.* re-discovers it and subscribeVessel re-subscribes.
+  unsubscribeVessel(mmsi) {
+    const key = String(mmsi);
+    if (!this._subscribedMmsis.has(key))
+      return;
+    this._subscribedMmsis.delete(key);
+    this.app.client?.unsubscribe({
+      context: this.contextForMmsi(key),
+      unsubscribe: [{ path: "*" }],
+    });
+  }
+
+  // Re-send every per-vessel context subscription. The server forgets our
+  // subscriptions when the socket drops, so the connect handler calls this after
+  // re-issuing the base subscriptions to restore static streams on reconnect. It
+  // also replays anything subscribeVessel queued into _subscribedMmsis before the
+  // socket finished opening on the first connect.
+  resubscribeVessels() {
+    for (const mmsi of this._subscribedMmsis)
+      this.sendVesselSubscribe(mmsi);
+  }
+
+  // Rebuild an AIS vessel's stream context from its MMSI. Every vessel we track
+  // is keyed by MMSI (mmsiFromContext gates out uuid-only contexts), so this
+  // round-trips the context string subscribeVessel/unsubscribeVessel need.
+  contextForMmsi(mmsi) {
+    return `vessels.urn:mrn:imo:mmsi:${mmsi}`;
   }
 
   // Drop vessels gone silent past the TTL, then reconcile the cache through
@@ -265,8 +329,10 @@ export class FleetLayer {
   renderFromCache() {
     const now = Date.now();
     for (const mmsi in this.vesselCache) {
-      if (now - this.vesselCache[mmsi]._lastSeen > VESSEL_TTL_MS)
+      if (now - this.vesselCache[mmsi]._lastSeen > VESSEL_TTL_MS) {
+        this.unsubscribeVessel(mmsi);
         delete this.vesselCache[mmsi];
+      }
     }
     this.syncOtherVessels(this.vesselCache, {
       ownLatLng: this.app.state.getPosition(),
