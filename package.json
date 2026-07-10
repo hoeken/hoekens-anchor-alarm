@@ -1,6 +1,6 @@
 {
   "name": "hoekens-anchor-alarm",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "description": "Various shapes, scope calculator, scribble tracks, engine override, and to-scale icons.",
   "main": "src/index.js",
   "type": "module",

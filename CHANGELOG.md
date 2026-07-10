@@ -1,3 +1,35 @@
+# v2.8.0
+
+## Control toolbar redesign
+
+The anchor controls at the top of the map got a full layout overhaul:
+
+- **A single horizontal row** — the shape picker, radius panel, and raise/drop button now sit side by side in one 80px-tall row instead of stacking vertically, reclaiming map space. Raise/Drop is a 80×80 square with a new anchor icon (replacing the ⚓ emoji) above an all-caps label, and the radius panel is an all-in-one box with the value on top (tap to type) and −/+ steppers below
+- **Shape picker matches the other buttons** — it now shows a glyph over a "SHAPE" label, and is a custom dropdown that renders an SVG glyph per shape (circle / sector wedge / polygon) rather than plain text
+- **Reworked polygon controls** — the polygon reset button is replaced by a tap-to-type radius input, mirroring the circle/sector panel, with the sides selector below it reading "{n} sides". The radius input scales the polygon about the anchor while preserving any freehand vertex edits, polygon size now carries over when you switch between shapes, and the default drops to 6 sides to match the backend
+
+## New features
+
+- **Embed just the map** — two new URL query params trim the webapp for dropping into another app or dashboard: `embedded=true` hides the tide / wind / scope / info panels and the settings gear (the map, watch zone, boat/fleet, and status bar still update live), and `showAnchorControls=true/false` toggles the top anchor toolbar. They're independent, so a bare live map is `embedded=true&showAnchorControls=false`
+- **Log in and out from the settings gear** — the gear is now always on the map: tap it while logged out to open the login modal directly, and a new "Log out" link sits in the settings dialog footer above the version link
+- **Quieter notifications** — a new "Enable notifications for 'normal' state" plugin option (default on) lets you silence the informational Off / Watching / Started anchor notifications while anchored, since the state already implies the alarm is watching; drag alarms are unaffected (fixes #24)
+- **New anchor data paths** — the plugin now publishes `navigation.anchor.distanceFromBow`, `.bearingTrue`, and `.apparentBearing`, computed from the live fix, heading, and GPS→bow offsets, with units metadata
+
+## Reliability & UX
+
+- **Other vessels fill in their name, type, and size reliably** — fleet static data (name, ship type, dimensions, antenna offsets) now streams in over a dedicated per-vessel websocket subscription for each sighted target, backed by a few follow-up REST fetches in the first minutes. This replaces the old single fetch that often landed before the AIS static report existed on the server; vessel names in particular now populate where they previously never did
+- **Anchor paths survive a mid-watch reconnect** — the set-once anchor paths (position, state, watch zone, max radius) are now re-broadcast every 5 minutes while watching, so a consumer like signalk-autostate that starts mid-watch still receives them (closes #23)
+- **Correct zoom direction on Navico MFDs** — scroll/rotary zoom was inverted on B&G / Navico consoles because they report wheel deltas with the opposite sign; the MFD browser is now detected and the zoom direction corrected, leaving desktop browsers untouched
+- **24-hour clock in the tides panel** — tide times now show as zero-padded 24h (20:40, not 8:40pm), which is less ambiguous worldwide and narrower where panel space is tight (fixes #25)
+
+## Bug fixes
+
+- **Plugin loads again on Node < 20.19** — the CJS entry shim threw `ERR_REQUIRE_ESM` on older Node (e.g. 20.18.1) and also broke signalk-server's import() fallback, so the plugin failed to load entirely. The shim is gone, `main` points straight at the ESM entry, and the engine floor relaxes back to Node 20.0.0 (fixes #22)
+
+## Under the hood
+
+- The bow-offset translation and distance/bearing math are extracted into a shared `shared/geo.js` `Geo` class, so the map overlay (`GeoMath`, `AnchorOverlay`) and the newly-published anchor deltas share one implementation instead of duplicating it
+
 # v2.7.0
 
 ## Charts & base maps
