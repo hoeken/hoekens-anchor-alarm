@@ -382,6 +382,51 @@ describe("checkPosition()", () => {
   });
 });
 
+describe("rebroadcastAnchorState()", () => {
+  test("re-emits the static anchor paths from the saved zone", () => {
+    const { h, plugin } = watching();
+    h.reset();
+    plugin.rebroadcastAnchorState();
+
+    assert.equal(h.lastDelta("navigation.anchor.state"), "on");
+    assert.deepEqual(h.lastDelta("navigation.anchor.position"), {
+      latitude: ANCHOR.latitude,
+      longitude: ANCHOR.longitude,
+    });
+    assert.deepEqual(h.lastDelta("navigation.anchor.watchZone"), {
+      type: "circle",
+      radius: 60,
+    });
+    assert.equal(h.lastDelta("navigation.anchor.maxRadius"), 60);
+  });
+
+  test("does not re-emit the per-fix dynamic paths", () => {
+    const { h, plugin } = watching();
+    h.reset();
+    plugin.rebroadcastAnchorState();
+    assert.equal(h.hasDelta("navigation.anchor.currentRadius"), false);
+    assert.equal(h.hasDelta("navigation.anchor.distanceFromBow"), false);
+    assert.equal(h.hasDelta("navigation.anchor.bearingTrue"), false);
+    assert.equal(h.hasDelta("navigation.anchor.apparentBearing"), false);
+  });
+
+  test("emits nothing when no anchor is dropped", () => {
+    const { h, plugin } = setup();
+    plugin.configuration = {};
+    plugin.rebroadcastAnchorState();
+    assert.equal(h.hasDelta("navigation.anchor.position"), false);
+    assert.equal(h.hasDelta("navigation.anchor.state"), false);
+  });
+
+  test("startWatchingPosition schedules the timer and stop clears it", () => {
+    const { plugin } = watching();
+    plugin.startWatchingPosition();
+    assert.ok(plugin.rebroadcastTimer);
+    plugin.stopWatchingPosition();
+    assert.equal(plugin.rebroadcastTimer, null);
+  });
+});
+
 describe("handlePositionUpdate()", () => {
   test("a position update triggers a position check", () => {
     const { h, plugin } = watching();

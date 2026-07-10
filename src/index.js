@@ -36,11 +36,18 @@ export default function (app) {
 
   plugin.subscriberPeriod = 1000;
 
+  // How often, while watching, to re-emit the anchor paths that only change on
+  // a drop/raise (position, state, watchZone, maxRadius). Consumers such as
+  // signalk-autostate that start or restart mid-watch pick them up without
+  // waiting for the next anchor action. See github issue #23.
+  plugin.rebroadcastPeriod = 5 * 60 * 1000;
+
   plugin.onStop = [];
   plugin.alarm_state = undefined;
   plugin.configuration = undefined;
   plugin.lastAlarmSent = 0;
   plugin.positionWatchdogTimer = false;
+  plugin.rebroadcastTimer = null;
 
   plugin.bus = new SignalKBus(app, plugin.id);
 
@@ -279,6 +286,37 @@ export default function (app) {
       },
       plugin.handlePositionUpdate,
     );
+
+    // Re-emit the static anchor paths on a timer so mid-watch consumers see
+    // them without waiting for the next drop/raise. Unref'd so it never keeps
+    // the process alive on its own; torn down with the subscription via onStop.
+    plugin.rebroadcastTimer = setInterval(
+      plugin.rebroadcastAnchorState,
+      plugin.rebroadcastPeriod,
+    );
+    plugin.rebroadcastTimer.unref?.();
+    plugin.onStop.push(() => {
+      clearInterval(plugin.rebroadcastTimer);
+      plugin.rebroadcastTimer = null;
+    });
+  };
+
+  // Periodically re-broadcast the anchor paths that only change on a drop or
+  // raise. The per-fix dynamic paths (currentRadius, distanceFromBow, bearings)
+  // are deliberately left out — they're refreshed on every position update.
+  // Reusing updateAnchorState emits exactly the static set: with no
+  // currentRadius and no bow-metric keys in params, those deltas are skipped.
+  plugin.rebroadcastAnchorState = function () {
+    const zoneConfig = readZoneConfig(plugin.configuration);
+    const anchorPosition = zoneConfig?.position;
+    const zone = watchZoneFromConfig(zoneConfig);
+    if (anchorPosition && zone) {
+      plugin.updateAnchorState({
+        anchorPosition: anchorPosition,
+        zone: zone,
+        isSet: true,
+      });
+    }
   };
 
   plugin.handlePositionUpdate = function (delta) {
