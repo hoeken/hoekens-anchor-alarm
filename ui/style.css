@@ -800,6 +800,18 @@ html.dark #polygonControl select {
   margin-top: 10px;
 }
 
+/* The two settings columns (checkbox toggles / everything else). Each stacks
+   its own rows vertically; #configForm lays the columns out — stacked on
+   mobile, side by side above the breakpoint at the bottom of this section. */
+.configColumn {
+  display: flex;
+  flex-direction: column;
+}
+
+.configColumn > * + * {
+  margin-top: 10px;
+}
+
 .configRow {
   display: flex;
   flex-direction: column;
@@ -972,6 +984,33 @@ html.dark #polygonControl select {
 
 #configVersion:hover {
   text-decoration: underline;
+}
+
+/* Wide displays: widen the settings dialog and sit the two columns side by
+   side (checkbox toggles left, other settings right). Below this the dialog
+   keeps its default 320px width and the columns stack into one, so phones and
+   the narrow MFD panels see the single column they had before. */
+@media (min-width: 640px) {
+  .configModal.modalDialog {
+    width: 600px;
+  }
+
+  #configForm {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  /* Space the columns apart horizontally instead of stacking them; each
+     column keeps its own vertical row spacing from .configColumn above. */
+  #configForm > * + * {
+    margin-top: 0;
+    margin-left: 24px;
+  }
+
+  .configColumn {
+    flex: 1;
+    min-width: 0;
+  }
 }
 
 /* Map attribution pinned to the very bottom of the page, spanning full width

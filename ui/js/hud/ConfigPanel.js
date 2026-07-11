@@ -128,10 +128,22 @@ export const ConfigPanel = L.Control.extend({
   // independent of the little gear button.
   _buildDialog: function () {
     this._modal = new Modal({ title: "Settings", className: "configModal" });
+    // Two columns on wide displays (see .configColumn in style.css): every
+    // boolean toggle on the left, the rest (selects, numbers, the icon
+    // uploader) on the right. Below the CSS breakpoint the columns stack, so
+    // the DOM order — checkboxes, then the others — is also the mobile order,
+    // matching the single-column layout this replaced.
+    const checkboxFields = FIELDS.filter((field) => field.type === "checkbox");
+    const otherFields = FIELDS.filter((field) => field.type !== "checkbox");
     this._modal.setContent(`
       <div id="configForm">
-        ${FIELDS.map((field) => this._rowHtml(field)).join("")}
-        ${this._iconRowHtml()}
+        <div class="configColumn configColumnChecks">
+          ${checkboxFields.map((field) => this._rowHtml(field)).join("")}
+        </div>
+        <div class="configColumn configColumnOther">
+          ${otherFields.map((field) => this._rowHtml(field)).join("")}
+          ${this._iconRowHtml()}
+        </div>
       </div>
       <div id="configStatus"></div>`);
     // A single "Done" button (plus the header ×) closes the dialog; settings
