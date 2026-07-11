@@ -201,6 +201,20 @@ export function buildSchema(app) {
           "Show other vessels' names as labels on the map (only once zoomed in enough to be legible).",
         default: true,
       },
+      enableOwnTrack: {
+        type: "boolean",
+        title: "Show My Boat Track",
+        description:
+          "Draw your own vessel's historical track on the map.",
+        default: true,
+      },
+      enableOtherTracks: {
+        type: "boolean",
+        title: "Show Other Boat Tracks",
+        description:
+          "Draw other vessels' historical tracks on the map.",
+        default: true,
+      },
       enableChartLayers: {
         type: "boolean",
         title: "Use Chart Layers if Available",
@@ -311,6 +325,8 @@ export const UI_CONFIG_KEYS = [
   "enableWindPanel",
   "enableScopePanel",
   "enableBoatLabels",
+  "enableOwnTrack",
+  "enableOtherTracks",
   "enableChartLayers",
   "enableSeascape",
   "scopes",

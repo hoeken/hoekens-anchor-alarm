@@ -16,6 +16,8 @@ const FIELDS = [
   { key: "enableWindPanel", label: "Show Wind Panel", type: "checkbox" },
   { key: "enableScopePanel", label: "Show Scope Panel", type: "checkbox" },
   { key: "enableBoatLabels", label: "Show Boat Name Labels", type: "checkbox" },
+  { key: "enableOwnTrack", label: "Show My Boat Track", type: "checkbox" },
+  { key: "enableOtherTracks", label: "Show Other Boat Tracks", type: "checkbox" },
   { key: "enableChartLayers", label: "Use Chart Layers if Available", type: "checkbox" },
   // The Seascape depth overlay needs MapLibre/WebGL (see SeascapeLoader), so the
   // toggle is only offered where it can render; on the Chromium 69 MFDs it's

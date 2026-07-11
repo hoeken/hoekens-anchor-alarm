@@ -82,6 +82,8 @@ class AnchorAlarm {
       enableWindPanel: true,
       enableScopePanel: true,
       enableBoatLabels: true,
+      enableOwnTrack: true,
+      enableOtherTracks: true,
       enableChartLayers: true,
       enableSeascape: false,
       scopes: "7,5,4,3",
@@ -449,6 +451,8 @@ class AnchorAlarm {
     this.anchorController?.setDefaultShape(this.config.defaultShape);
     this.fleetLayer?.setFilterRadius(this.config.fleetFilterRadius);
     this.fleetLayer?.setShowLabels(this.config.enableBoatLabels);
+    this.fleetLayer?.setShowOwnTrack(this.config.enableOwnTrack);
+    this.fleetLayer?.setShowOtherTracks(this.config.enableOtherTracks);
     this.updateMap();
     this.statusBar.clear("config-save");
     return this.signalK.saveConfig(newConfig).catch((error) => {
@@ -599,6 +603,8 @@ class AnchorAlarm {
       ownMmsi: this.state.boatConfig.mmsi,
       filterRadius: this.config.fleetFilterRadius,
       showLabels: this.config.enableBoatLabels,
+      showOwnTrack: this.config.enableOwnTrack,
+      showOtherTracks: this.config.enableOtherTracks,
     });
 
     this.anchorOverlay = new AnchorOverlay({

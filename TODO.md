@@ -1,11 +1,12 @@
 # v2.9
 
-- add ui config option to "Show Scribble Tracks"
-  - default true
-  - save to defaults, same as 'show boat names'
+- make ui config panel into two columns in large displays: all boolean checkboxes on left, and other settings on right.
+  - on mobile it should collapse to a single column as it is now.
 
 - fix vessel tracks crossing 180E/W longitude bug
   - currently a line crossing the anti-meridian will draw from one side of the map to the other and cause all sorts of problems.
+
+- ui should not reference notifications.navigation.anchor for state, use navigation.anchor.state instead.
 
 # LONG TERM
 

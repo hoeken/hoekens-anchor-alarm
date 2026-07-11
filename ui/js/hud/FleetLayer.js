@@ -59,12 +59,17 @@ const GPS_ANTENNA_ICON = L.divIcon({
   iconAnchor: [6, 6],
 });
 export class FleetLayer {
-  constructor({ app, map, ownMmsi, filterRadius, showLabels }) {
+  constructor({ app, map, ownMmsi, filterRadius, showLabels, showOwnTrack, showOtherTracks }) {
     this.app = app;
     this.map = map;
     this.ownMmsi = ownMmsi;
     // Master on/off for name labels, layered on top of the zoom gate below.
     this.showLabels = showLabels ?? true;
+    // Per-track visibility toggles: own boat vs everyone else. Hidden tracks
+    // stay in this.vesselTracks (points keep accumulating); only their map
+    // membership is toggled, so flipping back on redraws the full path.
+    this.showOwnTrack = showOwnTrack ?? true;
+    this.showOtherTracks = showOtherTracks ?? true;
     this.vessels = {}; // mmsi -> L.BoatMarker (with .gpsAntennaMarker attached)
     this.vesselTracks = {}; // mmsi -> L.hotline
     this.trackPointCounts = {}; // mmsi -> current point count in the hotline
@@ -120,6 +125,51 @@ export class FleetLayer {
       return;
     this.showLabels = next;
     this.updateLabelVisibility();
+  }
+
+  // Flip own-boat track visibility live (from the settings dialog).
+  setShowOwnTrack(show) {
+    const next = show ?? true;
+    if (next === this.showOwnTrack)
+      return;
+    this.showOwnTrack = next;
+    this.applyTrackVisibility();
+  }
+
+  // Flip other-vessel track visibility live (from the settings dialog).
+  setShowOtherTracks(show) {
+    const next = show ?? true;
+    if (next === this.showOtherTracks)
+      return;
+    this.showOtherTracks = next;
+    this.applyTrackVisibility();
+  }
+
+  // Track keys are MMSI strings; our own boat's track is the one keyed by
+  // ownMmsi. Coerce both sides since history keys come in as strings and
+  // ownMmsi originates from the boat config.
+  isOwnTrack(mmsi) {
+    return String(mmsi) === String(this.ownMmsi);
+  }
+
+  // Whether a track should currently be on the map, per the own/other toggles.
+  trackVisible(mmsi) {
+    return this.isOwnTrack(mmsi) ? this.showOwnTrack : this.showOtherTracks;
+  }
+
+  // Add/remove each existing track layer to match the current toggles. Tracks
+  // are kept in this.vesselTracks either way, so a hidden track keeps
+  // accumulating points and reappears intact when toggled back on.
+  applyTrackVisibility() {
+    for (const mmsi in this.vesselTracks) {
+      const track = this.vesselTracks[mmsi];
+      const shouldShow = this.trackVisible(mmsi);
+      const onMap = this.map.hasLayer(track);
+      if (shouldShow && !onMap)
+        track.addTo(this.map);
+      else if (!shouldShow && onMap)
+        this.map.removeLayer(track);
+    }
   }
 
   loadInitialData() {
@@ -706,7 +756,11 @@ export class FleetLayer {
       palette: style.palette,
       outlineWidth: 0,
       text: "",
-    }).addTo(this.map);
+    });
+    // Only draw it now if its visibility toggle is on; either way it's tracked
+    // in this.vesselTracks so applyTrackVisibility can add it back later.
+    if (this.trackVisible(mmsi))
+      track.addTo(this.map);
 
     // The 1px line gives a near-zero native hit target; widen it so the path
     // is hoverable. Hovering it highlights this track, same style as selection.
