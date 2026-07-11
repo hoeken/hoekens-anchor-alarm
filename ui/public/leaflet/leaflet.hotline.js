@@ -441,24 +441,10 @@
       }
     },
 
-    /**
-     * Re-project on every view update, not just on zoom/reset like the base
-     * Polyline. `_projectLatlngs` above anchors each point to the world "copy"
-     * nearest the map center; but with `worldCopyJump` enabled the map pane
-     * shifts by a whole world when you pan across the antimeridian, and Leaflet
-     * only re-projects paths on zoom/reset (a plain pan just re-clips the stale
-     * projected points, for performance). Without re-projecting here the track
-     * would stay pinned to the copy it was last projected in and vanish off the
-     * far side of the 180° line. Tracks are few and pre-simplified, so the extra
-     * projection per moveend is cheap.
-     */
-    _update: function () {
-      if (!this._map) {
-        return;
-      }
-      this._project();
-      L.Polyline.prototype._update.call(this);
-    },
+    // Re-projecting on a plain pan (not just zoom/reset) — needed so the wrap
+    // above follows the map when `worldCopyJump` shifts the pane across the
+    // antimeridian — is handled by the L.Polyline#_update patch in
+    // leaflet.antimeridian.js, which L.Hotline inherits. See that file for why.
 
     /**
      * Just like the Leaflet version, but uses `Util.clipSegment()`.
