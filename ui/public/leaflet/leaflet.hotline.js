@@ -415,10 +415,22 @@
 
       if (flat) {
         ring = [];
+        // Longitude is cyclic (…-180° ≡ 180°…) but Leaflet projects it linearly,
+        // so a track crossing the antimeridian (e.g. 179.9° → -179.9°) would
+        // otherwise draw a segment straight across the whole world. Anchor every
+        // point to the world "copy" nearest the current map center by shifting
+        // its longitude in whole 360° steps to within ±180° of the center: this
+        // keeps consecutive points adjacent and draws the track in the copy the
+        // viewport is actually showing. (Assumes a single track spans <180° of
+        // longitude — always true within the fleet's filter radius.)
+        var centerLng = this._map.getCenter().lng;
         for (i = 0; i < len; i++) {
-          ring[i] = this._map.latLngToLayerPoint(latlngs[i]);
+          var latLng = latlngs[i];
+          var lng =
+            latLng.lng + 360 * Math.round((centerLng - latLng.lng) / 360);
+          ring[i] = this._map.latLngToLayerPoint(L.latLng(latLng.lat, lng));
           // Add the altitude of the latLng as the z coordinate to the point
-          ring[i].z = latlngs[i].alt;
+          ring[i].z = latLng.alt;
           projectedBounds.extend(ring[i]);
         }
         result.push(ring);
@@ -427,6 +439,25 @@
           this._projectLatlngs(latlngs[i], result, projectedBounds);
         }
       }
+    },
+
+    /**
+     * Re-project on every view update, not just on zoom/reset like the base
+     * Polyline. `_projectLatlngs` above anchors each point to the world "copy"
+     * nearest the map center; but with `worldCopyJump` enabled the map pane
+     * shifts by a whole world when you pan across the antimeridian, and Leaflet
+     * only re-projects paths on zoom/reset (a plain pan just re-clips the stale
+     * projected points, for performance). Without re-projecting here the track
+     * would stay pinned to the copy it was last projected in and vanish off the
+     * far side of the 180° line. Tracks are few and pre-simplified, so the extra
+     * projection per moveend is cheap.
+     */
+    _update: function () {
+      if (!this._map) {
+        return;
+      }
+      this._project();
+      L.Polyline.prototype._update.call(this);
     },
 
     /**

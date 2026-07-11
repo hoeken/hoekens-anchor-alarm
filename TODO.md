@@ -1,7 +1,5 @@
 # v2.9
 
-- fix vessel tracks crossing 180E/W longitude bug
-  - currently a line crossing the anti-meridian will draw from one side of the map to the other and cause all sorts of problems.
 
 - ui should not reference notifications.navigation.anchor for state, use navigation.anchor.state instead.
 
