@@ -11,6 +11,7 @@ import {
 import { GeoMath } from "./GeoMath.js";
 import { watchZoneFromConfig } from "../../shared/watch-zones/index.js";
 import { parseScopes, DEFAULT_SCOPES } from "../../shared/scopes.js";
+import { GlitchFilter, describeGlitch } from "../../shared/glitch-filter.js";
 
 const DEFAULT_FRESHNESS_SEC = 300;
 
@@ -34,6 +35,16 @@ export class AppState {
     this.scopes = [];
     this._anchorSuppressUntil = { position: 0, state: 0, watchZone: 0 };
     this._lastRadius = 0;
+    // Own-position glitch filter (speed configured from the plugin config via
+    // setGlitchFilterSpeed). While the latest fix stands rejected,
+    // positionGlitch holds { speed } (m/s) for the status bar; a good fix
+    // clears it.
+    this.glitchFilter = new GlitchFilter();
+    this.positionGlitch = null;
+  }
+
+  setGlitchFilterSpeed(speed) {
+    this.glitchFilter.setMaxSpeed(speed);
   }
 
   websocketSubscribe(client) {
@@ -199,6 +210,15 @@ export class AppState {
     this.boatConfig = BoatConfig.extract(data);
 
     this.currentCoordinates = this.extract(data, "navigation.position");
+    // Seed the glitch filter with the snapshot fix so the first live delta is
+    // judged against it rather than accepted blind.
+    if (this.currentCoordinates?.value) {
+      const seedTime = Date.parse(this.currentCoordinates.timestamp);
+      this.glitchFilter.check(
+        this.currentCoordinates.value,
+        Number.isFinite(seedTime) ? seedTime : Date.now(),
+      );
+    }
     this.heading = this.extract(data, "navigation.headingTrue") ?? this.heading;
     this.belowKeel =
       this.extract(data, "environment.depth.belowKeel") ?? this.belowKeel;
@@ -260,8 +280,30 @@ export class AppState {
       return { value: delta.value, timestamp };
     };
 
-    if (path == "navigation.position")
-      this.currentCoordinates = apply(this.currentCoordinates);
+    if (path == "navigation.position") {
+      // Glitch filter: reject fixes implying an impossible speed so a GPS jump
+      // doesn't move the boat, pollute the track, or skew any derived reading.
+      // The rejection is surfaced via positionGlitch (see StatusBar.update)
+      // and cleared by the next good fix.
+      const time = Date.parse(timestamp);
+      const result = this.glitchFilter.check(
+        delta.value,
+        Number.isFinite(time) ? time : Date.now(),
+      );
+      if (result.accepted) {
+        if (result.limitAccepted)
+          console.warn(
+            `Glitch filter: run limit reached — accepting own fix at ${result.speed.toFixed(1)} m/s as real movement`,
+          );
+        this.positionGlitch = null;
+        this.currentCoordinates = apply(this.currentCoordinates);
+      } else {
+        this.positionGlitch = { speed: result.speed };
+        console.warn(
+          `Glitch filter: rejected own fix ${describeGlitch(this.glitchFilter, result, delta.value)}`,
+        );
+      }
+    }
     else if (path == "navigation.headingTrue")
       this.heading = apply(this.heading);
     else if (path == "environment.depth.belowKeel")

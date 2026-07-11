@@ -18,6 +18,7 @@ import { Watchdog } from "./watchdog.js";
 import { metas, buildSchema, applyDefaults, migrateConfig, readZoneConfig } from "./schema.js";
 import { watchZoneFromConfig } from "../shared/watch-zones/index.js";
 import { Geo } from "../shared/geo.js";
+import { GlitchFilter } from "../shared/glitch-filter.js";
 import { SignalKBus } from "./signalk-bus.js";
 import { Utils } from "./utils.js";
 import { register as registerHttpRoutes } from "./http-routes.js";
@@ -48,6 +49,10 @@ export default function (app) {
   plugin.lastAlarmSent = 0;
   plugin.positionWatchdogTimer = false;
   plugin.rebroadcastTimer = null;
+  plugin.glitchFilter = new GlitchFilter();
+  // Whether the most recent fix was rejected as a glitch — set so the next
+  // good fix knows to swap the glitch pluginError back to the normal status.
+  plugin.positionGlitched = false;
 
   plugin.bus = new SignalKBus(app, plugin.id);
 
@@ -274,6 +279,8 @@ export default function (app) {
       return;
 
     plugin.alarm_state = "normal";
+    plugin.glitchFilter.reset();
+    plugin.positionGlitched = false;
     plugin.updateAnchorAlarm(plugin.alarm_state, "Watching", ["visual"]);
 
     app.setPluginStatus("Watching");
@@ -333,6 +340,7 @@ export default function (app) {
 
   plugin.handlePositionUpdate = function (delta) {
     let vesselPosition;
+    let positionTime;
 
     if (delta.updates) {
       delta.updates.forEach((update) => {
@@ -340,6 +348,7 @@ export default function (app) {
           update.values.forEach((vp) => {
             if (vp.path === "navigation.position") {
               vesselPosition = vp.value;
+              positionTime = Date.parse(update.timestamp);
             }
           });
         }
@@ -347,8 +356,54 @@ export default function (app) {
     }
 
     if (vesselPosition) {
+      // A glitched fix still counts as position data for the watchdog — the
+      // watchdog guards against data loss, not data quality.
       if (plugin.positionWatchdogTimer)
         plugin.positionWatchdogTimer.reset();
+
+      // Glitch filter: a fix implying an impossible speed must not reach
+      // checkPosition, so a GPS jump can't trip the drag alarm. The limit is
+      // read live because /ui-config saves update the running configuration
+      // without restarting the plugin.
+      plugin.glitchFilter.setMaxSpeed(plugin.configuration?.glitchFilterSpeed);
+      const result = plugin.glitchFilter.check(
+        vesselPosition,
+        Number.isFinite(positionTime) ? positionTime : Date.now(),
+      );
+
+      if (!result.accepted) {
+        const speed = result.speed == null ? "" : ` (${result.speed.toFixed(1)} m/s)`;
+        const message = `Position glitch ignored${speed}`;
+        app.setPluginError(message);
+        // Surface the glitching on notifications.navigation.anchor as a
+        // warn-severity alarm so downstream consumers see it too — but never
+        // over a live drag alarm, which a warn would downgrade (and possibly
+        // silence). Emitted once per glitch run; setting alarm_state means the
+        // next good fix mismatches in checkPosition, which re-emits the true
+        // state and thereby clears the warn. Visual-only: a single transient
+        // spike shouldn't sound an alarm.
+        const canWarn =
+          plugin.alarm_state === "normal" || plugin.alarm_state === "warn";
+        if (canWarn && !plugin.positionGlitched) {
+          plugin.alarm_state = "warn";
+          plugin.updateAnchorAlarm(plugin.alarm_state, message, ["visual"]);
+        }
+        plugin.positionGlitched = true;
+        return;
+      }
+
+      if (plugin.positionGlitched) {
+        plugin.positionGlitched = false;
+        // checkPosition below re-derives the notification from this good fix:
+        // the "warn" set when the run began no longer matches, so the right
+        // state ("Watching" or a fresh drag alarm) is re-emitted and the
+        // plugin status restored with it. An ongoing drag alarm was left in
+        // place above (no state change to force a re-emit), so only its
+        // plugin error needs putting back by hand.
+        if (plugin.alarm_state !== "normal" && plugin.alarm_state !== "warn")
+          app.setPluginError("Dragging");
+      }
+
       plugin.checkPosition(vesselPosition);
     }
   };

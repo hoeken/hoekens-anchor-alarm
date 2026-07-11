@@ -276,6 +276,12 @@ export function buildSchema(app) {
           "Send a notification if no position is received for the given number of seconds",
         default: 60,
       },
+      glitchFilterSpeed: {
+        type: "number",
+        title:
+          "Glitch filter: ignore position jumps implying a speed over this value (in m/s).  Zero disables the filter.",
+        default: 0,
+      },
       bowAnchorRollerHeight: {
         type: "number",
         title:
@@ -321,6 +327,7 @@ export const UI_CONFIG_KEYS = [
   "defaultBasemap",
   "defaultShape",
   "fleetFilterRadius",
+  "glitchFilterSpeed",
   "enableTidePanel",
   "enableWindPanel",
   "enableScopePanel",

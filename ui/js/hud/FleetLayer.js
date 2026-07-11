@@ -20,6 +20,7 @@ import { bearing, distance, point, radiansToDegrees } from "@turf/turf";
 import { SignalKHelper } from "../SignalKHelper.js";
 import { BoatConfig } from "../BoatConfig.js";
 import { DisplayUnit } from "../DisplayUnit.js";
+import { GlitchFilter, describeGlitch } from "../../../shared/glitch-filter.js";
 
 // How often to prune silent vessels and re-render the delta-fed cache.
 // Decoupled from the delta arrival rate so a busy anchorage doesn't trigger a
@@ -38,6 +39,11 @@ const SIMPLIFY_TOLERANCE_SELF = 0.000002;
 const SIMPLIFY_TOLERANCE_OTHERS = 0.00001;
 const SIMPLIFY_THRESHOLD_SELF = 10000;
 const SIMPLIFY_THRESHOLD_OTHERS = 1000;
+// The /tracks payload carries bare coordinates with no timestamps, so when
+// glitch-filtering bulk history we assume consecutive points are one second
+// apart — the resolution the README recommends running the tracks plugin at —
+// which turns the speed limit into a per-point distance limit.
+const TRACK_POINT_INTERVAL_MS = 1000;
 
 // Track styling. Hotlines render to a single shared canvas (the plugin's
 // default renderer is one instance, see leaflet.hotline.js), so there are no
@@ -59,10 +65,14 @@ const GPS_ANTENNA_ICON = L.divIcon({
   iconAnchor: [6, 6],
 });
 export class FleetLayer {
-  constructor({ app, map, ownMmsi, filterRadius, showLabels, showOwnTrack, showOtherTracks }) {
+  constructor({ app, map, ownMmsi, filterRadius, showLabels, showOwnTrack, showOtherTracks, glitchFilterSpeed }) {
     this.app = app;
     this.map = map;
     this.ownMmsi = ownMmsi;
+    // Max plausible speed (m/s, 0 = off) for the per-vessel glitch filters
+    // that keep GPS spikes out of the cache and the tracks.
+    this.glitchFilterSpeed = glitchFilterSpeed ?? 0;
+    this.glitchFilters = {}; // mmsi -> GlitchFilter for live position deltas
     // Master on/off for name labels, layered on top of the zoom gate below.
     this.showLabels = showLabels ?? true;
     // Per-track visibility toggles: own boat vs everyone else. Hidden tracks
@@ -143,6 +153,58 @@ export class FleetLayer {
       return;
     this.showOtherTracks = next;
     this.applyTrackVisibility();
+  }
+
+  // Apply a new glitch-filter speed live (from the settings dialog): update
+  // every live filter and re-fetch the bulk history so the drawn tracks are
+  // re-filtered at the new limit.
+  setGlitchFilterSpeed(speed) {
+    const next = Number(speed) || 0;
+    if (next === this.glitchFilterSpeed)
+      return;
+    this.glitchFilterSpeed = next;
+    for (const mmsi in this.glitchFilters)
+      this.glitchFilters[mmsi].setMaxSpeed(next);
+    this.fetchAndLoadTracks();
+  }
+
+  glitchFilterFor(mmsi) {
+    const key = String(mmsi);
+    if (!this.glitchFilters[key])
+      this.glitchFilters[key] = new GlitchFilter(this.glitchFilterSpeed);
+    return this.glitchFilters[key];
+  }
+
+  // Run one vessel's live fix through its glitch filter. A rejected fix shows
+  // a status-bar error naming the vessel, cleared by its next good fix.
+  // Returns whether the fix should be applied.
+  filterVesselPosition(vessel, mmsi, position, timestamp) {
+    const time = Date.parse(timestamp);
+    const filter = this.glitchFilterFor(mmsi);
+    const result = filter.check(
+      position,
+      Number.isFinite(time) ? time : Date.now(),
+    );
+    const name = vessel.name || `MMSI ${mmsi}`;
+
+    const statusId = `glitch-${mmsi}`;
+    if (result.accepted) {
+      if (result.limitAccepted)
+        console.warn(
+          `Glitch filter: run limit reached — accepting ${name} fix at ${result.speed.toFixed(1)} m/s as real movement`,
+        );
+      this.app.statusBar.clear(statusId);
+    } else {
+      const speed =
+        result.speed != null
+          ? ` (${DisplayUnit.formatValue(result.speed, "speed")})`
+          : "";
+      this.app.statusBar.set(statusId, `${name}: position glitch ignored${speed}`);
+      console.warn(
+        `Glitch filter: rejected ${name} fix ${describeGlitch(filter, result, position)}`,
+      );
+    }
+    return result.accepted;
   }
 
   // Track keys are MMSI strings; our own boat's track is the one keyed by
@@ -239,6 +301,14 @@ export class FleetLayer {
             continue;
           vessel._lastSeen = now;
           this.vesselCache[String(mmsi)] = vessel;
+          // Seed the vessel's glitch filter from the snapshot fix so its first
+          // live delta is judged against it rather than accepted blind. The
+          // envelope's own timestamp keeps the implied speed honest when the
+          // snapshot is minutes old.
+          const fix = vessel.navigation?.position;
+          const fixTime = fix ? Date.parse(fix.timestamp) : NaN;
+          if (fix?.value && Number.isFinite(fixTime))
+            this.glitchFilterFor(mmsi).check(fix.value, fixTime);
           // Keep the seeded static data live as fresh AIS static reports arrive.
           this.subscribeVessel(mmsi);
         }
@@ -287,6 +357,11 @@ export class FleetLayer {
         // Some SignalK versions send these with an explicit path instead.
         if (value != null)
           vessel[path] = value;
+      } else if (path === "navigation.position") {
+        // A glitched fix never lands in the cache, so the marker and the live
+        // track (both drawn from the cache) only ever see good positions.
+        if (this.filterVesselPosition(vessel, mmsi, value, timestamp))
+          writeDeltaPath(vessel, path, value, timestamp);
       } else {
         writeDeltaPath(vessel, path, value, timestamp);
       }
@@ -382,6 +457,8 @@ export class FleetLayer {
       if (now - this.vesselCache[mmsi]._lastSeen > VESSEL_TTL_MS) {
         this.unsubscribeVessel(mmsi);
         delete this.vesselCache[mmsi];
+        delete this.glitchFilters[mmsi];
+        this.app.statusBar.clear(`glitch-${mmsi}`);
       }
     }
     this.syncOtherVessels(this.vesselCache, {
@@ -470,11 +547,24 @@ export class FleetLayer {
       if (!history || !history.length)
         continue;
 
+      // Fresh filter per track: bulk history is glitch-filtered on a synthetic
+      // one-second clock (see TRACK_POINT_INTERVAL_MS), independent of the live
+      // per-vessel filters, so spikes recorded by the tracks plugin don't get
+      // drawn. Runs before the radius filter so the last-good baseline follows
+      // the whole track, not just the in-radius part.
+      const glitchFilter = new GlitchFilter(this.glitchFilterSpeed);
       const points = [];
       let i = 0;
+      let syntheticTime = 0;
+      let glitched = 0;
       for (let position of history) {
         const lat = position[1];
         const lon = position[0];
+        syntheticTime += TRACK_POINT_INTERVAL_MS;
+        if (!glitchFilter.check({ latitude: lat, longitude: lon }, syntheticTime).accepted) {
+          glitched++;
+          continue;
+        }
         const dist = distance(
           point([ownLatLng.lng, ownLatLng.lat]),
           point([lon, lat]),
@@ -484,6 +574,16 @@ export class FleetLayer {
           points.push([lat, lon, i]);
           i++;
         }
+      }
+      // One summary line per track — per-point logging would flood the console
+      // on a long high-resolution history.
+      if (glitched) {
+        const label = this.isOwnTrack(mmsi)
+          ? "own track"
+          : this.vesselCache[mmsi]?.name || `MMSI ${mmsi}`;
+        console.warn(
+          `Glitch filter: dropped ${glitched} of ${history.length} historical track points for ${label}`,
+        );
       }
 
       if (!points.length)

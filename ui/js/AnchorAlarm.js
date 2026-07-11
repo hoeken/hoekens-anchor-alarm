@@ -87,6 +87,7 @@ class AnchorAlarm {
       enableChartLayers: true,
       enableSeascape: false,
       scopes: "7,5,4,3",
+      glitchFilterSpeed: 0,
       hasCustomIcon: false,
     };
     this.state.loggedIn = false;
@@ -313,6 +314,7 @@ class AnchorAlarm {
         // reflects them (state.calculate above ran with the defaults).
         this.state.setScopeRatios(this.config.scopes);
         this.state.calculateScopes();
+        this.state.setGlitchFilterSpeed(this.config.glitchFilterSpeed);
 
         this.setupConnection();
         this.buildMap();
@@ -446,6 +448,7 @@ class AnchorAlarm {
     // Scope ratios can change live; re-parse and recompute before re-rendering.
     this.state.setScopeRatios(this.config.scopes);
     this.state.calculateScopes();
+    this.state.setGlitchFilterSpeed(this.config.glitchFilterSpeed);
     this.setBasemap(this.config.defaultBasemap);
     this.setSeascapeEnabled(this.config.enableSeascape);
     this.anchorController?.setDefaultShape(this.config.defaultShape);
@@ -453,6 +456,7 @@ class AnchorAlarm {
     this.fleetLayer?.setShowLabels(this.config.enableBoatLabels);
     this.fleetLayer?.setShowOwnTrack(this.config.enableOwnTrack);
     this.fleetLayer?.setShowOtherTracks(this.config.enableOtherTracks);
+    this.fleetLayer?.setGlitchFilterSpeed(this.config.glitchFilterSpeed);
     this.updateMap();
     this.statusBar.clear("config-save");
     return this.signalK.saveConfig(newConfig).catch((error) => {
@@ -605,6 +609,7 @@ class AnchorAlarm {
       showLabels: this.config.enableBoatLabels,
       showOwnTrack: this.config.enableOwnTrack,
       showOtherTracks: this.config.enableOtherTracks,
+      glitchFilterSpeed: this.config.glitchFilterSpeed,
     });
 
     this.anchorOverlay = new AnchorOverlay({

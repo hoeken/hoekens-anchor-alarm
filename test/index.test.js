@@ -484,6 +484,112 @@ describe("handlePositionUpdate()", () => {
   });
 });
 
+describe("glitch filter", () => {
+  const T0 = Date.parse("2026-01-01T00:00:00Z");
+
+  function positionDelta(position, offsetSec) {
+    return {
+      updates: [
+        {
+          timestamp: new Date(T0 + offsetSec * 1000).toISOString(),
+          values: [{ path: "navigation.position", value: position }],
+        },
+      ],
+    };
+  }
+
+  test("a glitched fix never reaches checkPosition, so it cannot trigger the drag alarm", () => {
+    const { h, plugin } = watching({ glitchFilterSpeed: 5 });
+    plugin.handlePositionUpdate(positionDelta(vesselAt(ANCHOR, 40, 0), 0));
+    h.reset();
+
+    // 500 m in one second — far outside the 60 m zone, but plainly a glitch.
+    plugin.handlePositionUpdate(positionDelta(vesselAt(ANCHOR, 500, 0), 1));
+    assert.equal(plugin.alarm_state, "warn");
+    assert.equal(h.hasDelta("navigation.anchor.currentRadius"), false);
+    assert.match(h.calls.pluginError[0], /glitch/i);
+  });
+
+  test("glitching raises a visual warn notification, once per run", () => {
+    const { h, plugin } = watching({ glitchFilterSpeed: 5 });
+    plugin.handlePositionUpdate(positionDelta(vesselAt(ANCHOR, 40, 0), 0));
+    h.reset();
+
+    plugin.handlePositionUpdate(positionDelta(vesselAt(ANCHOR, 500, 0), 1));
+    const note = h.lastDelta("notifications.navigation.anchor");
+    assert.equal(note.state, "warn");
+    assert.match(note.message, /glitch/i);
+    assert.deepEqual(note.method, ["visual"]);
+
+    // Further glitches in the same run don't re-emit the notification.
+    plugin.handlePositionUpdate(positionDelta(vesselAt(ANCHOR, 500, 90), 2));
+    const notes = h
+      .deltas()
+      .filter((d) => d.path === "notifications.navigation.anchor");
+    assert.equal(notes.length, 1);
+  });
+
+  test("the next good fix clears the glitch warn and resumes checking", () => {
+    const { h, plugin } = watching({ glitchFilterSpeed: 5 });
+    plugin.handlePositionUpdate(positionDelta(vesselAt(ANCHOR, 40, 0), 0));
+    plugin.handlePositionUpdate(positionDelta(vesselAt(ANCHOR, 500, 0), 1));
+    h.reset();
+
+    plugin.handlePositionUpdate(positionDelta(vesselAt(ANCHOR, 42, 0), 2));
+    assert.equal(plugin.alarm_state, "normal");
+    assert.equal(h.lastDelta("notifications.navigation.anchor").state, "normal");
+    assert.equal(h.calls.status[0], "Watching");
+    assert.equal(h.hasDelta("navigation.anchor.currentRadius"), true);
+    assert.equal(h.calls.pluginError.length, 0);
+  });
+
+  test("an active drag alarm is not downgraded by a glitch", () => {
+    const { h, plugin } = watching({ glitchFilterSpeed: 5 });
+    // First fix is always accepted: 120 m out trips the 60 m zone.
+    plugin.handlePositionUpdate(positionDelta(vesselAt(ANCHOR, 120, 0), 0));
+    assert.equal(plugin.alarm_state, "emergency");
+
+    // A glitch during the drag must leave the emergency notification alone.
+    plugin.handlePositionUpdate(positionDelta(vesselAt(ANCHOR, 800, 0), 1));
+    assert.equal(plugin.alarm_state, "emergency");
+    assert.equal(h.lastDelta("notifications.navigation.anchor").state, "emergency");
+    assert.match(h.calls.pluginError[h.calls.pluginError.length - 1], /glitch/i);
+
+    // Next good fix, still dragging, inside the alarm re-send interval: no new
+    // notification, but the Dragging plugin error is put back.
+    h.reset();
+    plugin.handlePositionUpdate(positionDelta(vesselAt(ANCHOR, 121, 0), 2));
+    assert.equal(h.hasDelta("notifications.navigation.anchor"), false);
+    assert.ok(h.calls.pluginError.includes("Dragging"));
+  });
+
+  test("glitched fixes still reset the position watchdog", () => {
+    const { plugin } = watching({ glitchFilterSpeed: 5 });
+    let resets = 0;
+    plugin.positionWatchdogTimer = { reset: () => resets++ };
+    plugin.handlePositionUpdate(positionDelta(vesselAt(ANCHOR, 40, 0), 0));
+    plugin.handlePositionUpdate(positionDelta(vesselAt(ANCHOR, 500, 0), 1));
+    assert.equal(resets, 2);
+  });
+
+  test("with the filter off (the default) a fast jump alarms as before", () => {
+    const { h, plugin } = watching();
+    plugin.handlePositionUpdate(positionDelta(vesselAt(ANCHOR, 40, 0), 0));
+    plugin.handlePositionUpdate(positionDelta(vesselAt(ANCHOR, 500, 0), 1));
+    assert.equal(plugin.alarm_state, "emergency");
+    assert.equal(h.lastDelta("notifications.navigation.anchor").state, "emergency");
+  });
+
+  test("startWatchingPosition resets the filter state", () => {
+    const { plugin } = watching({ glitchFilterSpeed: 5 });
+    plugin.handlePositionUpdate(positionDelta(vesselAt(ANCHOR, 40, 0), 0));
+    assert.ok(plugin.glitchFilter.lastGood);
+    plugin.startWatchingPosition();
+    assert.equal(plugin.glitchFilter.lastGood, null);
+    assert.equal(plugin.positionGlitched, false);
+  });
+});
+
 describe("start()", () => {
   test("migrates a legacy radius config and persists the upgrade", () => {
     const { h, plugin } = setup();

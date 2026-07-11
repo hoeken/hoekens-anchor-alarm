@@ -9,6 +9,7 @@
 // host's onChange pushes each change into the running UI, so none of them
 // require a page reload.
 import { setTitle, supportsMaplibre } from "../BrowserSupport.js";
+import { DisplayUnit } from "../DisplayUnit.js";
 import { Modal } from "./Modal.js";
 
 const FIELDS = [
@@ -61,6 +62,15 @@ const FIELDS = [
     key: "fleetFilterRadius",
     label: "Fleet Filter Radius (m)",
     type: "number",
+  },
+  // Stored in SignalK base units (m/s) but shown/edited in the user's display
+  // unit for the given category — the "unit" type converts both ways.
+  {
+    key: "glitchFilterSpeed",
+    label: "Glitch Filter Max Speed",
+    type: "unit",
+    category: "speed",
+    hint: "Ignore position jumps faster than this. 0 disables.",
   },
 ];
 
@@ -277,7 +287,13 @@ export const ConfigPanel = L.Control.extend({
   // then label); everything else stacks label above the control. Inputs carry
   // a data-config-key so _buildDialog can find them after innerHTML.
   _rowHtml: function (field) {
-    const label = `<span class="configLabel">${field.label}</span>`;
+    // Unit fields get the display unit's symbol appended to the label; it's
+    // filled in at _populate time since the active units profile loads async.
+    const suffix =
+      field.type === "unit"
+        ? ` (<span data-unit-symbol="${field.key}"></span>)`
+        : "";
+    const label = `<span class="configLabel">${field.label}${suffix}</span>`;
     let control;
 
     if (field.type === "select") {
@@ -290,6 +306,8 @@ export const ConfigPanel = L.Control.extend({
     } else if (field.type === "text") {
       const placeholder = field.placeholder ? ` placeholder="${field.placeholder}"` : "";
       control = `<input type="text" class="configInput" data-config-key="${field.key}"${placeholder}>`;
+    } else if (field.type === "unit") {
+      control = `<input type="number" min="0" step="any" class="configInput" data-config-key="${field.key}">`;
     } else {
       control = `<input type="number" min="0" class="configInput" data-config-key="${field.key}">`;
     }
@@ -319,6 +337,12 @@ export const ConfigPanel = L.Control.extend({
         config[field.key] = input.checked;
       else if (field.type === "number")
         config[field.key] = Number(input.value);
+      else if (field.type === "unit")
+        // Convert the displayed value back to SignalK base units for storage.
+        config[field.key] = DisplayUnit.convertFromDisplay(
+          DisplayUnit.categoryConfig(field.category),
+          Number(input.value) || 0,
+        );
       else
         config[field.key] = input.value;
     }
@@ -329,10 +353,23 @@ export const ConfigPanel = L.Control.extend({
     for (const field of FIELDS) {
       const input = this._inputs[field.key];
       const value = config ? config[field.key] : undefined;
-      if (field.type === "checkbox")
+      if (field.type === "checkbox") {
         input.checked = Boolean(value);
-      else
+      } else if (field.type === "unit") {
+        // Stored in base units; shown in the user's display unit. The symbol
+        // is refreshed here too since the units profile loads asynchronously.
+        const cfg = DisplayUnit.categoryConfig(field.category);
+        const symbolEl = this._modal.body.querySelector(
+          `[data-unit-symbol="${field.key}"]`,
+        );
+        if (symbolEl)
+          symbolEl.textContent = cfg?.symbol || cfg?.targetUnit || "m/s";
+        const { converted } = DisplayUnit.convertToDisplay(cfg, Number(value) || 0);
+        input.value =
+          typeof converted === "number" ? parseFloat(converted.toFixed(2)) : "";
+      } else {
         input.value = value ?? "";
+      }
     }
   },
 

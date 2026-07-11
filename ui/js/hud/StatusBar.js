@@ -10,6 +10,7 @@
 // "error" (red).
 
 import { SignalKHelper } from "../SignalKHelper.js";
+import { DisplayUnit } from "../DisplayUnit.js";
 
 const LEVEL_COLORS = {
   status: "",
@@ -109,6 +110,17 @@ export const StatusBar = L.Control.extend({
       "aws-stale",
       state.aws && SignalKHelper.isStale(state.aws)
         ? "Apparent Wind Speed data is stale."
+        : null,
+    );
+
+    // Own-position glitch (see AppState.handleDelta): shown while the latest
+    // fix stands rejected, cleared by the next good fix. The implied speed is
+    // shown in the user's display units.
+    const glitch = state.positionGlitch;
+    this.set(
+      "position-glitch",
+      glitch
+        ? `Position glitch ignored${glitch.speed != null ? ` (${DisplayUnit.formatValue(glitch.speed, "speed")})` : ""}`
         : null,
     );
 
