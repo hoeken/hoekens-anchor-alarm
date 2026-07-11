@@ -1,6 +1,11 @@
-# v2.8
+# v2.9
 
-- new screenshots with new UI
+- add ui config option to "Show Scribble Tracks"
+  - default true
+  - save to defaults, same as 'show boat names'
+
+- fix vessel tracks crossing 180E/W longitude bug
+  - currently a line crossing the anti-meridian will draw from one side of the map to the other and cause all sorts of problems.
 
 # LONG TERM
 
