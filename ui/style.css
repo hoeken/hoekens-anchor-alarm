@@ -1237,12 +1237,16 @@ table.vesselData td:nth-child(3) {
   display: none;
 }
 
-/* Hide with visibility, not display:none. Leaflet positions a "top" tooltip by
-   its offsetWidth/offsetHeight to center it and lift it above the boat; a
-   display:none element measures 0×0, so any reposition while hidden (e.g. during
-   a zoom that crosses the label threshold) lands the label at the wrong spot and
-   it visibly jumps once shown. visibility:hidden keeps the layout box measurable
-   so the position stays correct, and still blocks pointer events. */
-.hide-boat-labels .boat-name-label {
+/* Hide with visibility, not display:none, in both the blanket (master switch)
+   and per-label (collision) cases. Leaflet positions a "top" tooltip by its
+   offsetWidth/offsetHeight to center it and lift it above the boat; a
+   display:none element measures 0×0, so any reposition while hidden (e.g.
+   during a zoom) lands the label at the wrong spot and it visibly jumps once
+   shown. visibility:hidden keeps the layout box measurable so the position
+   stays correct — and, crucially, so a collision-hidden label's box can still
+   be measured by updateLabelCollisions to decide when it may reappear — while
+   still blocking pointer events. */
+.hide-boat-labels .boat-name-label,
+.boat-name-label.label-collision-hidden {
   visibility: hidden;
 }

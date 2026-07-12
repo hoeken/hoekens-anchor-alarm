@@ -32,9 +32,13 @@ const CACHE_SYNC_INTERVAL_MS = 1000;
 // vessels are still removed the instant they move.
 const VESSEL_TTL_MS = 30 * 60 * 1000;
 const DEFAULT_FILTER_RADIUS = 500;
-// Name labels only show once boats are zoomed in enough to be visually
-// distinct; below this they'd just clutter the map.
-const LABEL_MIN_ZOOM = 16;
+// Name labels are hidden only when they'd collide with a higher-priority
+// label rather than by a blanket zoom cutoff — a sparse, far-off vessel keeps
+// its name at any zoom, while a crowded anchorage sheds overlapping labels.
+// The closest vessel to us wins a collision; ties resolve by MMSI so the
+// choice is stable frame-to-frame (no flicker). This gap (in CSS px) is added
+// around each label's box so kept labels never quite touch.
+const LABEL_COLLISION_PADDING = 3;
 const SIMPLIFY_TOLERANCE_SELF = 0.000002;
 const SIMPLIFY_TOLERANCE_OTHERS = 0.00001;
 const SIMPLIFY_THRESHOLD_SELF = 10000;
@@ -112,23 +116,68 @@ export class FleetLayer {
         this.setSelectedTrack(null);
     });
 
-    // Toggle name-label visibility on zoom. Class lives on the map container so
-    // a single CSS rule hides every label at once.
-    this.map.on("zoomend", () => this.updateLabelVisibility());
+    // Re-evaluate which labels collide after any pan or zoom (moveend fires
+    // after a zoom completes too). The set of vessels within view — and how
+    // their labels overlap on screen — changes with the viewport, not just on
+    // data ticks.
+    this.map.on("moveend", () => this.updateLabelCollisions());
     this.updateLabelVisibility();
 
     this.loadInitialData();
   }
 
+  // The master on/off switch, applied as a single container class so one CSS
+  // rule blanks every label at once. Per-label collision hiding is layered on
+  // top by updateLabelCollisions, which this defers to once the switch is on.
   updateLabelVisibility() {
-    const show = this.showLabels && this.map.getZoom() >= LABEL_MIN_ZOOM;
     this.map
       .getContainer()
-      .classList.toggle("hide-boat-labels", !show);
+      .classList.toggle("hide-boat-labels", !this.showLabels);
+    this.updateLabelCollisions();
   }
 
-  // Flip the name-label master switch live (from the settings dialog). Zoom
-  // still gates whether labels actually draw when this is on.
+  // Hide only the labels that would overlap a higher-priority (closer) label,
+  // independent of zoom. Greedy: walk the labels closest-first, keep each one
+  // whose box clears every label already kept, and hide the rest. Reads every
+  // box before touching the DOM so the visibility toggles (which don't affect
+  // layout) can't force a reflow between measurements. A hidden label keeps its
+  // layout box (visibility:hidden, not display:none), so it stays measurable
+  // and can reclaim its spot on a later pass once the crowding clears.
+  updateLabelCollisions() {
+    // The master switch already blanks every label via the container class;
+    // skip the per-label work (and its layout reads) while it's off.
+    if (!this.showLabels)
+      return;
+
+    const labels = [];
+    for (const mmsi in this.vessels) {
+      const el = this.vessels[mmsi].getTooltip()?.getElement();
+      if (!el)
+        continue; // tooltip not opened onto the map yet
+      labels.push({
+        el,
+        rect: el.getBoundingClientRect(),
+        distance: this.vessels[mmsi]._labelDistance ?? Infinity,
+        mmsi,
+      });
+    }
+
+    // Closest wins a collision; MMSI breaks ties so ordering is stable frame to
+    // frame and kept labels don't flicker as near-equal distances jitter.
+    labels.sort(
+      (a, b) => a.distance - b.distance || (a.mmsi < b.mmsi ? -1 : 1),
+    );
+
+    const kept = [];
+    for (const label of labels) {
+      const collides = kept.some((r) => rectsOverlap(r, label.rect));
+      label.el.classList.toggle("label-collision-hidden", collides);
+      if (!collides)
+        kept.push(label.rect);
+    }
+  }
+
+  // Flip the name-label master switch live (from the settings dialog).
   setShowLabels(show) {
     const next = show ?? true;
     if (next === this.showLabels)
@@ -688,6 +737,10 @@ export class FleetLayer {
         }
       }
     }
+
+    // Markers were added, removed, or moved above, so which labels overlap has
+    // changed — re-decide independently of any pan/zoom event.
+    this.updateLabelCollisions();
   }
 
   // Heading preference: true heading > COG (only if moving) > observer's TWA > 0.
@@ -712,6 +765,9 @@ export class FleetLayer {
     const marker = this.vessels[vessel.mmsi];
     marker.setLatLng([position.latitude, position.longitude]);
     marker.setHeading(heading);
+    // Proximity is the label-collision priority: the closest vessel keeps its
+    // name when two would overlap (see updateLabelCollisions).
+    marker._labelDistance = distance;
 
     const config = BoatConfig.extract(vessel);
     // Static data (AIS ship type, dimensions) can land after the marker was
@@ -743,6 +799,7 @@ export class FleetLayer {
       icon: config.icon,
     });
     marker.vesselMmsi = String(vessel.mmsi);
+    marker._labelDistance = distance; // label-collision priority; see updateLabelCollisions
     marker.vesselInfo = this.buildVesselInfo(config, distance, bearing);
     marker.addTo(this.map).bindPopup(marker.vesselInfo);
 
@@ -931,6 +988,19 @@ export class FleetLayer {
     else
       return SIMPLIFY_THRESHOLD_OTHERS;
   }
+}
+
+// Axis-aligned overlap test for two label boxes (viewport-space DOMRects),
+// each grown by LABEL_COLLISION_PADDING so kept labels keep a small gap rather
+// than merely not touching.
+function rectsOverlap(a, b) {
+  const gap = LABEL_COLLISION_PADDING;
+  return (
+    a.left - gap < b.right + gap &&
+    a.right + gap > b.left - gap &&
+    a.top - gap < b.bottom + gap &&
+    a.bottom + gap > b.top - gap
+  );
 }
 
 // Accepts either [lat, lng, alt] tuples (from bulk history) or L.LatLng
