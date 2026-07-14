@@ -53,13 +53,17 @@ Success responses share a common envelope:
 Errors share their own envelope, with an HTTP status matching `statusCode`:
 
 ```json
-{ "statusCode": 403, "state": "FAILED", "message": "position with latitude and longitude required" }
+{
+  "statusCode": 403,
+  "state": "FAILED",
+  "message": "position with latitude and longitude required"
+}
 ```
 
-| Status | Meaning |
-| ------ | ------- |
+| Status | Meaning                                                                                                                                     |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `403`  | Validation or anchor-state error (e.g. missing position, boat outside the zone, no anchor dropped). The `message` explains what went wrong. |
-| `500`  | Unexpected internal error. |
+| `500`  | Unexpected internal error.                                                                                                                  |
 
 (The `icon` upload route adds `400`, `413`, and `415` — see below.)
 
@@ -72,11 +76,11 @@ zone, and starts the anchor watch.
 
 Request body:
 
-| Field      | Type   | Required | Notes |
-| ---------- | ------ | -------- | ----- |
-| `position` | object | yes      | `{ "latitude": <number>, "longitude": <number> }`, decimal degrees (WGS84). |
+| Field      | Type   | Required | Notes                                                                                                 |
+| ---------- | ------ | -------- | ----------------------------------------------------------------------------------------------------- |
+| `position` | object | yes      | `{ "latitude": <number>, "longitude": <number> }`, decimal degrees (WGS84).                           |
 | `zone`     | object | no       | Watch zone (see [Zone object](#zone-object)). If omitted, the previously configured zone is retained. |
-| `radius`   | number | no       | Legacy alarm radius in meters. If both `zone` and `radius` are given, `zone` wins. |
+| `radius`   | number | no       | Legacy alarm radius in meters. If both `zone` and `radius` are given, `zone` wins.                    |
 
 ```bash
 curl -X POST http://[signalk-server]:[port]/plugins/hoekens-anchor-alarm/dropAnchor \
@@ -97,8 +101,8 @@ position is available.
 
 Request body:
 
-| Field  | Type   | Required | Notes |
-| ------ | ------ | -------- | ----- |
+| Field  | Type   | Required | Notes                                         |
+| ------ | ------ | -------- | --------------------------------------------- |
 | `zone` | object | yes      | Watch zone (see [Zone object](#zone-object)). |
 
 ```bash
@@ -122,12 +126,12 @@ curl -X POST http://[signalk-server]:[port]/plugins/hoekens-anchor-alarm/raiseAn
 
 The `zone` object passed to `dropAnchor` and `setZone`:
 
-| Field        | Type   | Applies to        | Notes |
-| ------------ | ------ | ----------------- | ----- |
-| `type`       | string | all               | `"circle"` or `"sector"`. |
-| `radius`     | number | circle, sector    | Alarm radius in meters. |
-| `startAngle` | number | sector            | Clockwise bearing in degrees (0 = true north) of the start of the safe arc. |
-| `endAngle`   | number | sector            | Clockwise bearing in degrees (0 = true north) of the end of the safe arc. When `endAngle < startAngle`, the arc wraps across 0°/360°. |
+| Field        | Type   | Applies to     | Notes                                                                                                                                 |
+| ------------ | ------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`       | string | all            | `"circle"` or `"sector"`.                                                                                                             |
+| `radius`     | number | circle, sector | Alarm radius in meters.                                                                                                               |
+| `startAngle` | number | sector         | Clockwise bearing in degrees (0 = true north) of the start of the safe arc.                                                           |
+| `endAngle`   | number | sector         | Clockwise bearing in degrees (0 = true north) of the end of the safe arc. When `endAngle < startAngle`, the arc wraps across 0°/360°. |
 
 > The web UI can also draw free-form **polygon** zones. Polygons are set through
 > the UI (and stored/published on the tree); the `circle` and `sector` shapes
@@ -143,16 +147,16 @@ required.
 
 Response fields:
 
-| Field               | Type    | Notes |
-| ------------------- | ------- | ----- |
-| `defaultBasemap`    | string  | `"OpenStreetMap"`, `"Satellite"`, or `"Blank"`. |
-| `defaultShape`      | string  | `"circle"`, `"sector"`, or `"polygon"`. Default new-zone shape. |
-| `fleetFilterRadius` | integer | Radius (meters) around own vessel for showing other vessels and tracks. |
-| `enableTidePanel`   | boolean | Show the tide panel while anchored. |
-| `enableWindPanel`   | boolean | Show the wind panel. |
-| `enableScopePanel`  | boolean | Show the scope/depth calculator while the anchor is up. |
-| `enableBoatLabels`  | boolean | Show other vessels' names as labels (when zoomed in enough). |
-| `enableSeascape`    | boolean | Overlay Seascape bathymetry by default. |
+| Field               | Type    | Notes                                                                                           |
+| ------------------- | ------- | ----------------------------------------------------------------------------------------------- |
+| `defaultBasemap`    | string  | `"OpenStreetMap"`, `"Satellite"`, or `"Blank"`.                                                 |
+| `defaultShape`      | string  | `"circle"`, `"sector"`, or `"polygon"`. Default new-zone shape.                                 |
+| `fleetFilterRadius` | integer | Radius (meters) around own vessel for showing other vessels and tracks.                         |
+| `enableTidePanel`   | boolean | Show the tide panel while anchored.                                                             |
+| `enableWindPanel`   | boolean | Show the wind panel.                                                                            |
+| `enableScopePanel`  | boolean | Show the scope/depth calculator while the anchor is up.                                         |
+| `enableBoatLabels`  | boolean | Show other vessels' names as labels (when zoomed in enough).                                    |
+| `enableSeascape`    | boolean | Overlay Seascape bathymetry by default.                                                         |
 | `hasCustomIcon`     | boolean | **Read-only, derived.** Whether a custom own-boat icon has been uploaded. Not a stored setting. |
 
 #### `POST /ui-config`
@@ -170,7 +174,11 @@ curl -X POST http://[signalk-server]:[port]/plugins/hoekens-anchor-alarm/ui-conf
 On success the response echoes the coerced updates:
 
 ```json
-{ "statusCode": 200, "state": "COMPLETED", "config": { "enableTidePanel": false, "fleetFilterRadius": 750 } }
+{
+  "statusCode": 200,
+  "state": "COMPLETED",
+  "config": { "enableTidePanel": false, "fleetFilterRadius": 750 }
+}
 ```
 
 ### Custom boat icon
@@ -196,10 +204,10 @@ curl -X PUT http://[signalk-server]:[port]/plugins/hoekens-anchor-alarm/icon \
 
 Errors specific to this route:
 
-| Status | Meaning |
-| ------ | ------- |
-| `400`  | Empty upload. |
-| `413`  | Image exceeds the 500 KB size limit. |
+| Status | Meaning                                          |
+| ------ | ------------------------------------------------ |
+| `400`  | Empty upload.                                    |
+| `413`  | Image exceeds the 500 KB size limit.             |
 | `415`  | Body is not a recognized jpg/png/gif/webp image. |
 
 #### `DELETE /icon`
@@ -221,19 +229,19 @@ anchor watch.
 
 Under `vessels.self`:
 
-| Path                                   | Value | Units | Notes |
-| -------------------------------------- | ----- | ----- | ----- |
-| `navigation.anchor.state`              | `"on"` / `"off"` | — | Whether the anchor is set and being watched. |
-| `navigation.anchor.position`           | `{ latitude, longitude }` | — | Anchor position; `null` when raised. |
-| `navigation.anchor.currentRadius`      | number | m | Straight-line distance from the GPS antenna to the anchor. Refreshed on every position fix. |
-| `navigation.anchor.maxRadius`          | number | m | Circle radius for circle zones (kept for consumers like Freeboard). `null` for non-circle zones. |
-| `navigation.anchor.watchZone`          | object | — | Watch zone shape + parameters. The canonical source of truth for the zone. |
-| `navigation.anchor.distanceFromBow`    | number | m | Distance from the bow to the anchor. |
-| `navigation.anchor.bearingTrue`        | number | rad | True bearing from the bow to the anchor. |
-| `navigation.anchor.apparentBearing`    | number | rad | Bearing from the bow to the anchor relative to vessel heading; `null` when no heading is available. |
-| `navigation.anchor.meta`               | object | — | `zones` array (`normal`/alarm bands) for circle zones, for legacy consumers. |
-| `design.bowAnchorRollerHeight`         | number | m | Published from config when set; used by the scope calculator. |
-| `design.totalAnchorChainLength`        | number | m | Published from config when set; used by the scope calculator. |
+| Path                                | Value                     | Units | Notes                                                                                               |
+| ----------------------------------- | ------------------------- | ----- | --------------------------------------------------------------------------------------------------- |
+| `navigation.anchor.state`           | `"on"` / `"off"`          | —     | Whether the anchor is set and being watched.                                                        |
+| `navigation.anchor.position`        | `{ latitude, longitude }` | —     | Anchor position; `null` when raised.                                                                |
+| `navigation.anchor.currentRadius`   | number                    | m     | Straight-line distance from the GPS antenna to the anchor. Refreshed on every position fix.         |
+| `navigation.anchor.maxRadius`       | number                    | m     | Circle radius for circle zones (kept for consumers like Freeboard). `null` for non-circle zones.    |
+| `navigation.anchor.watchZone`       | object                    | —     | Watch zone shape + parameters. The canonical source of truth for the zone.                          |
+| `navigation.anchor.distanceFromBow` | number                    | m     | Distance from the bow to the anchor.                                                                |
+| `navigation.anchor.bearingTrue`     | number                    | rad   | True bearing from the bow to the anchor.                                                            |
+| `navigation.anchor.apparentBearing` | number                    | rad   | Bearing from the bow to the anchor relative to vessel heading; `null` when no heading is available. |
+| `navigation.anchor.meta`            | object                    | —     | `zones` array (`normal`/alarm bands) for circle zones, for legacy consumers.                        |
+| `design.bowAnchorRollerHeight`      | number                    | m     | Published from config when set; used by the scope calculator.                                       |
+| `design.totalAnchorChainLength`     | number                    | m     | Published from config when set; used by the scope calculator.                                       |
 
 All bearings follow the Signal K convention (radians). When the anchor is
 raised, the anchor paths above are set to `null` / `"off"`.
@@ -254,7 +262,11 @@ notifications.navigation.anchor
 as a Signal K notification value:
 
 ```json
-{ "state": "alarm", "method": ["visual", "sound"], "message": "Anchor Dragging (42m)" }
+{
+  "state": "alarm",
+  "method": ["visual", "sound"],
+  "message": "Anchor Dragging (42m)"
+}
 ```
 
 - `state` — the notification level. `normal` while watching/idle; the configured

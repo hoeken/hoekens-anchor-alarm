@@ -47,7 +47,7 @@ The map is no longer just OSM or satellite — you can now stack your own charts
 
 ## Reliability & UX
 
-- **Every setting now applies live** — the watch-zone shape and fleet filter radius used to need a page reload; they now take effect immediately, and the "* applies after reloading" note is gone
+- **Every setting now applies live** — the watch-zone shape and fleet filter radius used to need a page reload; they now take effect immediately, and the "\* applies after reloading" note is gone
 - **Fleet updates from live WebSocket deltas** — other vessels now update straight from the SignalK delta stream instead of being polled, so positions and headings refresh with lower latency
 - **Right icon once AIS static data lands** — a vessel first drawn from an early position delta (before its type/dimensions arrive) no longer stays stuck as the default sailboat; its icon and hull now update in place when the real AIS static data comes in
 - **Bigger default fleet radius** — the fleet filter radius now defaults to 100 km (was 500 m), so nearby vessels show up out of the box
@@ -184,7 +184,7 @@ The HUD now runs on Navico MFDs (via the SignalK Navico embedder). Everything th
 
 ## New features
 
-- **In-map settings dialog** — logged-in users can now edit UI settings without leaving for the plugin config page. A gear button on the map opens a modal form (panel toggles, basemap, default shape, fleet radius, connection type); each change saves immediately to the backend and re-renders, so panel show/hide takes effect live. Settings that can't apply on the fly are flagged "* applies after reloading."
+- **In-map settings dialog** — logged-in users can now edit UI settings without leaving for the plugin config page. A gear button on the map opens a modal form (panel toggles, basemap, default shape, fleet radius, connection type); each change saves immediately to the backend and re-renders, so panel show/hide takes effect live. Settings that can't apply on the fly are flagged "\* applies after reloading."
 - **Tide panel** — a new compact HUD panel showing the current tide state plus the next two tides when anchored (split out from the info panel)
 - **Panel visibility config** — new `enableTidePanel` / `enableWindPanel` / `enableScopePanel` flags let you show or hide individual HUD panels; show/hide is centralized in `updateMap()`
 - **Default zone shape** — new plugin/UI config option to choose which watch-zone shape (circle / sector / polygon) new anchors start with
