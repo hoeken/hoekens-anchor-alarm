@@ -79,6 +79,10 @@ Values are compared case-insensitively; anything other than `true` is treated as
 > [!TIP]
 > These pair well with the existing `?mode=night` / `?mode=day` parameter (used by B&G/Navico MFDs), which forces the dark or light theme instead of following the device preference.
 
+## API
+
+Besides the web UI, the plugin exposes an HTTP API (drop/raise the anchor, set the watch zone, manage settings and the boat icon) and publishes anchor state on the Signal K tree (`navigation.anchor.*` and the `notifications.navigation.anchor` alarm). If you want to drive the anchor watch from another app, a dashboard, or a script, see **[docs/API.md](docs/API.md)**. The machine-readable OpenAPI spec is also browsable in the Signal K admin UI under *Documentation → OpenAPI*.
+
 ## Watch Zone Shapes
 
 | Circle | Sector | Polygon |
