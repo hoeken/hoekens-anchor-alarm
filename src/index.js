@@ -20,6 +20,7 @@ import { watchZoneFromConfig } from "../shared/watch-zones/index.js";
 import { Geo } from "../shared/geo.js";
 import { GlitchFilter } from "../shared/glitch-filter.js";
 import { SignalKBus } from "./signalk-bus.js";
+import { SessionLog } from "./session-log.js";
 import { Utils } from "./utils.js";
 import { register as registerHttpRoutes } from "./http-routes.js";
 import { ValidationError, StateError } from "./errors.js";
@@ -55,6 +56,7 @@ export default function (app) {
   plugin.positionGlitched = false;
 
   plugin.bus = new SignalKBus(app, plugin.id);
+  plugin.sessionLog = new SessionLog(app);
 
   // ============================================================
   // PLUGIN LIFECYCLE
@@ -121,6 +123,14 @@ export default function (app) {
 
         plugin.startWatchingPosition();
       }
+
+      // Heal the session log if a restart left it out of sync with the
+      // actual watch state (see SessionLog.reconcile).
+      plugin.sessionLog.reconcile(
+        Boolean(anchorPosition && zone),
+        anchorPosition,
+        zone ? zone.getConfig() : undefined,
+      );
 
       //OLD APIs - only here for backwards compatibility
       if (app.registerActionHandler) {
@@ -596,6 +606,8 @@ export default function (app) {
       position: parsedPosition,
     });
 
+    plugin.sessionLog.start(parsedPosition, resolvedZone.getConfig());
+
     plugin.startWatchingPosition();
     plugin.savePluginOptions();
   };
@@ -641,6 +653,7 @@ export default function (app) {
       ...resolvedZone.getConfig(),
       position: anchorPosition,
     });
+    plugin.sessionLog.updateZone(resolvedZone.getConfig());
     plugin.savePluginOptions();
   };
 
@@ -660,6 +673,8 @@ export default function (app) {
     app.debug("raise anchor");
 
     plugin.updateAnchorState({ isSet: false });
+
+    plugin.sessionLog.end();
 
     delete plugin.configuration.zone;
     plugin.savePluginOptions();

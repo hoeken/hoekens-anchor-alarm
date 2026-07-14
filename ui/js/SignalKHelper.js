@@ -160,6 +160,83 @@ export class SignalKHelper {
   fetchTracks(radius) {
     return this.request(`tracks?radius=${radius}`);
   }
+  // Recorded anchoring sessions (drop/raise spans) from the plugin's session
+  // log, newest first. Plain fetch rather than pluginFetch on purpose: this is
+  // called silently at startup (track rehydration), and a 401 there must
+  // reject quietly instead of popping the login modal uninvited.
+  fetchSessions() {
+    return fetch(`${this.baseUrl}/plugins/${this.pluginName}/sessions`)
+      .then(SignalKHelper._toJsonOrReject);
+  }
+  deleteSession(id) {
+    return this.pluginFetch(`sessions/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+  }
+  // Fetch own-vessel position history from the server's v2 History API,
+  // served by a history provider plugin (e.g. signalk-questdb). `from`/`to`
+  // are ISO timestamps; `resolution` (seconds) downsamples server-side so a
+  // multi-day anchorage doesn't return every raw fix. Rejects on HTTP error —
+  // including the 404/501 when no history provider is installed, which
+  // callers treat as "history unavailable".
+  // Timeout mirrors request() so a provider that accepts the connection but
+  // never answers (flaky boat network) can't hang callers — the startup
+  // probe in particular must always settle. History queries scan a database,
+  // so the deadline is more generous than request()'s 5s.
+  fetchPositionHistory(from, to, resolution) {
+    const params = new URLSearchParams({
+      from,
+      to,
+      paths: "navigation.position",
+    });
+    if (resolution)
+      params.set("resolution", String(resolution));
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort("Request timed out"), 15000);
+    return fetch(
+      `${this.baseUrl}/signalk/v2/api/history/values?${params.toString()}`,
+      { signal: controller.signal },
+    )
+      .finally(() => clearTimeout(timer))
+      .then(SignalKHelper._toJsonOrReject);
+  }
+  // Whether a history provider is available: a minimal one-minute values
+  // query that any provider satisfies cheaply. Resolves a boolean, never
+  // rejects, so startup can branch without try/catch.
+  probeHistory() {
+    const to = new Date();
+    const from = new Date(to.getTime() - 60 * 1000);
+    return this.fetchPositionHistory(from.toISOString(), to.toISOString(), 60)
+      .then(() => true)
+      .catch(() => false);
+  }
+  // Flatten a v2 History API values response (columns per requested path)
+  // into [{time, latitude, longitude}] for the navigation.position column,
+  // skipping the null rows a SAMPLE BY fill produces for empty buckets.
+  static positionsFromHistory(response) {
+    if (!response || !Array.isArray(response.data))
+      return [];
+    const index = (response.values || []).findIndex(
+      (v) => v.path === "navigation.position",
+    );
+    if (index === -1)
+      return [];
+    const positions = [];
+    for (const row of response.data) {
+      const value = row[index + 1]; // row[0] is the timestamp
+      if (
+        value &&
+        typeof value.latitude === "number" &&
+        typeof value.longitude === "number"
+      )
+        positions.push({
+          time: row[0],
+          latitude: value.latitude,
+          longitude: value.longitude,
+        });
+    }
+    return positions;
+  }
   // Fetch the local chart catalog from the v2 resources API (populated by a
   // charts provider plugin such as @signalk/charts-plugin). Hits the v2 path
   // directly since request() is hardwired to /signalk/v1/api/. Rejects like the
