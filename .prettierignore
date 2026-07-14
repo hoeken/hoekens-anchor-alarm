@@ -4,7 +4,6 @@ public/leaflet
 public/favicons
 public/icons
 public/anchoralarm.png
-*.md
 *.js
 *.yml
 *.yaml

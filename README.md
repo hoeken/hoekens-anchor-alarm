@@ -1,6 +1,6 @@
 # hoekens-anchor-alarm
 
-A simple web UI anchor alarm for [SignalK](https://signalk.org/), built for setting from your phone, tablet or computer.  Handy for setting the anchor alarm from the helm, or a quick check from bed when the wind picks up at 2am.
+A simple web UI anchor alarm for [SignalK](https://signalk.org/), built for setting from your phone, tablet or computer. Handy for setting the anchor alarm from the helm, or a quick check from bed when the wind picks up at 2am.
 
 This started life as a fork of the venerable [signalk-anchoralarm-plugin](https://github.com/sbender9/signalk-anchoralarm-plugin) by Scott Bender, but has since grown its own personality (and a fair bit of new code). The goal is a focused web UI with my own style and a few opinionated features, like automatically cancelling the alarm when your engines fire up. If you'd rather drive everything from an external app or API, the original plugin might be a better fit for you.
 
@@ -12,7 +12,7 @@ The classic circle is still here (now resizable by dragging a handle on the rim)
 
 ### ⚓ Physically accurate boat icons
 
-Give it your beam, LOA, and GPS antenna position and the boat icon is drawn to your boat's *true* size, rotating around the antenna location. At high zoom this is genuinely useful: pre-pick your spot on satellite imagery, line your bow up over the anchor icon, and drop. The alarm triggers on your GPS antenna position leaving the zone, so set your offset and it all lines up.
+Give it your beam, LOA, and GPS antenna position and the boat icon is drawn to your boat's _true_ size, rotating around the antenna location. At high zoom this is genuinely useful: pre-pick your spot on satellite imagery, line your bow up over the anchor icon, and drop. The alarm triggers on your GPS antenna position leaving the zone, so set your offset and it all lines up.
 
 ### 📐 Scope calculator
 
@@ -20,7 +20,7 @@ When the anchor's up, a panel shows what your scope would be at 3:1, 4:1, 5:1, a
 
 ### 🔧 Engine override
 
-I always forget to switch the alarm off before motoring away, so now I don't have to. If you've got engine data in SignalK (`propulsion.*.rpm` or `propulsion.*.state`), starting your engines silences an *active* alarm. It only kicks in when you're already outside the zone (motoring away or firing up the motor to reposition while dragging), so it just quiets the alarm you already know about. Anchor watch keeps running, and as long as you're inside the circle nothing changes.
+I always forget to switch the alarm off before motoring away, so now I don't have to. If you've got engine data in SignalK (`propulsion.*.rpm` or `propulsion.*.state`), starting your engines silences an _active_ alarm. It only kicks in when you're already outside the zone (motoring away or firing up the motor to reposition while dragging), so it just quiets the alarm you already know about. Anchor watch keeps running, and as long as you're inside the circle nothing changes.
 
 ### 🛰️ Tracks & fleet
 
@@ -48,7 +48,7 @@ http://[signalk-server-ip-address]:[port-number]/hoekens-anchor-alarm/
 
 The way I use it: anchor the boat first, then once I'm settled I open the webapp and set the alarm. This is where high-resolution tracks earn their keep; you can usually see exactly where you dropped the hook. Set your radius a touch bigger than feels necessary to avoid false alarms in the night.
 
-It's also handy to use a circle zone to *choose* your spot first: position the zone where you want to anchor, then drive your boat icon until the bow sits right over the anchor icon, and let go. Since v1.3 the icons are physically accurate at high zoom, so you can get surprisingly precise, just make sure you've set your GPS antenna offset!
+It's also handy to use a circle zone to _choose_ your spot first: position the zone where you want to anchor, then drive your boat icon until the bow sits right over the anchor icon, and let go. Since v1.3 the icons are physically accurate at high zoom, so you can get surprisingly precise, just make sure you've set your GPS antenna offset!
 
 If you have engine data in SignalK, enable the engine check and the watch will end on its own when you motor off (see Engine override above).
 
@@ -63,10 +63,10 @@ If you want to drop the anchor alarm into another app or a dashboard (Grafana, a
 http://[signalk-server-ip-address]:[port-number]/hoekens-anchor-alarm/?embedded=true&showAnchorControls=false
 ```
 
-| Parameter | Values | Default | Effect |
-|---|---|---|---|
-| `embedded` | `true` / `false` | `false` | When `true`, hides the tide, wind, scope, and info panels, along with the settings (gear) control, leaving a clean map. `false` or omitted changes nothing. |
-| `showAnchorControls` | `true` / `false` | `true` | When `false`, hides the top anchor toolbar (shape picker, radius, drop/raise). When `true`, shows it. |
+| Parameter            | Values           | Default | Effect                                                                                                                                                      |
+| -------------------- | ---------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `embedded`           | `true` / `false` | `false` | When `true`, hides the tide, wind, scope, and info panels, along with the settings (gear) control, leaving a clean map. `false` or omitted changes nothing. |
+| `showAnchorControls` | `true` / `false` | `true`  | When `false`, hides the top anchor toolbar (shape picker, radius, drop/raise). When `true`, shows it.                                                       |
 
 The two are independent, so mix and match to taste:
 
@@ -81,12 +81,12 @@ Values are compared case-insensitively; anything other than `true` is treated as
 
 ## API
 
-Besides the web UI, the plugin exposes an HTTP API (drop/raise the anchor, set the watch zone, manage settings and the boat icon) and publishes anchor state on the Signal K tree (`navigation.anchor.*` and the `notifications.navigation.anchor` alarm). If you want to drive the anchor watch from another app, a dashboard, or a script, see **[docs/API.md](docs/API.md)**. The machine-readable OpenAPI spec is also browsable in the Signal K admin UI under *Documentation → OpenAPI*.
+Besides the web UI, the plugin exposes an HTTP API (drop/raise the anchor, set the watch zone, manage settings and the boat icon) and publishes anchor state on the Signal K tree (`navigation.anchor.*` and the `notifications.navigation.anchor` alarm). If you want to drive the anchor watch from another app, a dashboard, or a script, see **[docs/API.md](docs/API.md)**. The machine-readable OpenAPI spec is also browsable in the Signal K admin UI under _Documentation → OpenAPI_.
 
 ## Watch Zone Shapes
 
-| Circle | Sector | Polygon |
-|:--:|:--:|:--:|
+|                                   Circle                                   |                                   Sector                                   |                                    Polygon                                    |
+| :------------------------------------------------------------------------: | :------------------------------------------------------------------------: | :---------------------------------------------------------------------------: |
 | [![Circle zone](docs/screenshots/circle.png)](docs/screenshots/circle.png) | [![Sector zone](docs/screenshots/sector.png)](docs/screenshots/sector.png) | [![Polygon zone](docs/screenshots/polygon.png)](docs/screenshots/polygon.png) |
 
 ## Recommendations
