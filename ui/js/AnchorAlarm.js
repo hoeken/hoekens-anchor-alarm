@@ -19,6 +19,7 @@ import { loadChartLayers, CHART_PANE, CHART_PANE_Z_INDEX } from "./ChartLayers.j
 import { AnchorOverlay } from "./hud/AnchorOverlay.js";
 import { AnchorController } from "./AnchorController.js";
 import { ControlToolbar } from "./hud/ControlToolbar.js";
+import { AnchorageHistoryControl } from "./hud/AnchorageHistoryControl.js";
 import { ConfigPanel } from "./hud/ConfigPanel.js";
 import { ThemeControl } from "./hud/ThemeControl.js";
 import { Modal } from "./hud/Modal.js";
@@ -322,6 +323,8 @@ class AnchorAlarm {
         this.anchorController.estimateAnchorPosition();
         this.updateMap();
         this.map.fitBounds(this.anchorOverlay.getBounds());
+
+        this.initAnchorageHistory();
       })
       .catch((error) => {
         const detail = error.statusText || error.message || "unknown error";
@@ -487,6 +490,59 @@ class AnchorAlarm {
       this.fleetLayer?.setOwnBoatIcon(null);
       return result;
     });
+  }
+
+  // Anchorage history rides on the server's v2 History API, which only
+  // exists when a history provider plugin (e.g. signalk-questdb) is
+  // installed. Probe once at startup: when available, add the past-anchorages
+  // control and — if we started mid-session, e.g. after a server restart —
+  // rehydrate the live scribble track from recorded history, which the
+  // in-memory tracks plugin has lost. Without a provider this is a silent
+  // no-op and the app behaves exactly as before.
+  initAnchorageHistory() {
+    this.signalK.probeHistory().then((available) => {
+      if (!available || !this.map)
+        return;
+
+      this.historyControl = new AnchorageHistoryControl({
+        signalK: this.signalK,
+        statusBar: this.statusBar,
+        getLoggedIn: () => this.state.loggedIn,
+      });
+      this.map.addControl(this.historyControl);
+
+      if (this.state.isAnchored())
+        this.rehydrateOwnTrack();
+    });
+  }
+
+  // Replace the own-boat scribble track with the full current-session track
+  // from the History API (droppedAt → now). Failures are non-fatal: the
+  // tracks-plugin buffer (however much survived) keeps being used.
+  rehydrateOwnTrack() {
+    this.signalK
+      .fetchSessions()
+      .then(({ sessions }) => {
+        const open = sessions && sessions.find((s) => !s.raisedAt);
+        if (!open)
+          return;
+        const from = open.droppedAt;
+        const to = new Date().toISOString();
+        const durationSec = Math.max(1, (Date.parse(to) - Date.parse(from)) / 1000);
+        // Same point budget as the anchorage-history display: cap what a
+        // days-long session sends over and hands to the hotline.
+        const resolution = Math.max(1, Math.ceil(durationSec / 2000));
+        return this.signalK
+          .fetchPositionHistory(from, to, resolution)
+          .then((response) => {
+            const positions = SignalKHelper.positionsFromHistory(response);
+            if (positions.length)
+              this.fleetLayer?.seedOwnTrack(positions, resolution * 1000);
+          });
+      })
+      .catch((error) => {
+        console.warn("Own-track rehydration from history failed", error);
+      });
   }
 
   setupConnection() {

@@ -625,7 +625,8 @@ html.dark #polygonControl select {
 
 .leaflet-control-home,
 .leaflet-control-config,
-.leaflet-control-theme {
+.leaflet-control-theme,
+.leaflet-control-history {
   display: flex !important;
   align-items: center;
   justify-content: center;
@@ -789,6 +790,58 @@ html.dark #polygonControl select {
 .modalButton:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+/* Past Anchorages dialog (see ui/js/hud/AnchorageHistoryControl.js): a
+   scrollable list of recorded sessions, one clickable row each. */
+.sessionList {
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.sessionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.sessionRow:hover,
+.sessionRow:focus-visible {
+  background-color: var(--surface-hover);
+}
+
+.sessionRow + .sessionRow {
+  border-top: 1px solid var(--divider);
+}
+
+.sessionRow.shown {
+  background-color: var(--surface-faint);
+}
+
+.sessionWhen {
+  font-weight: bold;
+}
+
+.sessionDetail {
+  font-size: 13px;
+  color: var(--surface-muted);
+}
+
+.sessionDelete {
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--surface-muted);
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.sessionDelete:hover {
+  color: var(--danger);
 }
 
 #configForm {

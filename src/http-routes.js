@@ -195,6 +195,26 @@ export function register(app, plugin, router) {
     }
   });
 
+  // Anchoring session metadata (drop/raise timestamps, anchor position,
+  // zone), newest first. The open session — anchor still down — has no
+  // raisedAt. Tracks are not served here: the UI reconstructs them from the
+  // server's History API using each session's time window.
+  router.get("/sessions", (req, res) => {
+    res.json({ sessions: plugin.sessionLog.all() });
+  });
+
+  router.delete("/sessions/:id", (req, res) => {
+    if (plugin.sessionLog.remove(req.params.id)) {
+      res.json({ statusCode: 200, state: "COMPLETED" });
+    } else {
+      res.status(404).json({
+        statusCode: 404,
+        state: "FAILED",
+        message: "no such session",
+      });
+    }
+  });
+
   router.get("/ui-config", (req, res) => {
     // hasCustomIcon is derived (file existence), not a stored config key, so it
     // rides along on the projection here rather than in schema.js. coerceUiConfig

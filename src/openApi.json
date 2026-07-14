@@ -26,6 +26,10 @@
     {
       "name": "icon",
       "description": "Custom own-boat icon shown on the map"
+    },
+    {
+      "name": "sessions",
+      "description": "Anchoring session history"
     }
   ],
   "components": {
@@ -124,6 +128,47 @@
           },
           "message": {
             "type": "string"
+          }
+        }
+      },
+      "Session": {
+        "type": "object",
+        "required": ["id", "droppedAt", "position"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "droppedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "raisedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Absent while the anchor is still down."
+          },
+          "droppedAtEstimated": {
+            "type": "boolean",
+            "description": "True when droppedAt was reconstructed at plugin start rather than recorded at the actual drop."
+          },
+          "raisedAtEstimated": {
+            "type": "boolean",
+            "description": "True when raisedAt was reconstructed at plugin start rather than recorded at the actual raise."
+          },
+          "position": {
+            "type": "object",
+            "properties": {
+              "latitude": {
+                "type": "number"
+              },
+              "longitude": {
+                "type": "number"
+              }
+            }
+          },
+          "zone": {
+            "type": "object",
+            "description": "Watch zone config snapshot as of the last change during the session."
           }
         }
       }
@@ -419,16 +464,28 @@
             "description": "The custom icon image.",
             "content": {
               "image/png": {
-                "schema": { "type": "string", "format": "binary" }
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
               },
               "image/jpeg": {
-                "schema": { "type": "string", "format": "binary" }
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
               },
               "image/gif": {
-                "schema": { "type": "string", "format": "binary" }
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
               },
               "image/webp": {
-                "schema": { "type": "string", "format": "binary" }
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
               }
             }
           },
@@ -436,7 +493,9 @@
             "description": "No custom icon is set.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
                 "example": {
                   "statusCode": 404,
                   "state": "FAILED",
@@ -454,12 +513,30 @@
         "requestBody": {
           "required": true,
           "content": {
-            "image/png": { "schema": { "type": "string", "format": "binary" } },
-            "image/jpeg": {
-              "schema": { "type": "string", "format": "binary" }
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
             },
-            "image/gif": { "schema": { "type": "string", "format": "binary" } },
-            "image/webp": { "schema": { "type": "string", "format": "binary" } }
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/gif": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
           }
         },
         "responses": {
@@ -467,7 +544,9 @@
             "description": "Icon stored successfully.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
               }
             }
           },
@@ -475,7 +554,9 @@
             "description": "Empty upload.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
                 "example": {
                   "statusCode": 400,
                   "state": "FAILED",
@@ -488,7 +569,9 @@
             "description": "Image exceeds the 500 KB size limit.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
                 "example": {
                   "statusCode": 413,
                   "state": "FAILED",
@@ -501,7 +584,9 @@
             "description": "Body is not a recognized jpg/png/gif/webp image.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
                 "example": {
                   "statusCode": 415,
                   "state": "FAILED",
@@ -524,12 +609,79 @@
             "description": "Icon removed (or none was set).",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
               }
             }
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/sessions": {
+      "get": {
+        "tags": ["sessions"],
+        "summary": "List anchoring sessions",
+        "description": "Returns recorded anchoring sessions (one per drop..raise span), newest first. The open session (anchor still down) has no raisedAt. Sessions carry metadata only; the vessel track for a session is reconstructed by querying the server's History API (GET /signalk/v2/api/history/values) for navigation.position over the session's time window.",
+        "responses": {
+          "200": {
+            "description": "Session list returned successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sessions": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Session"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{id}": {
+      "delete": {
+        "tags": ["sessions"],
+        "summary": "Delete an anchoring session",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No session with that id.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }

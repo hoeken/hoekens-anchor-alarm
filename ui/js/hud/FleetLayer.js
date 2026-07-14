@@ -592,6 +592,12 @@ export class FleetLayer {
       const mmsi = match[1];
       const data = tracks[uri];
 
+      // A history-seeded own track (see seedOwnTrack) is a superset of the
+      // tracks plugin's in-memory buffer — don't let the shorter one clobber
+      // it. Live appends extend the seeded track either way.
+      if (this.isOwnTrack(mmsi) && this.ownTrackSeeded)
+        continue;
+
       const history = data.coordinates?.[0];
       if (!history || !history.length)
         continue;
@@ -645,6 +651,38 @@ export class FleetLayer {
       this.vesselTracks[mmsi] = this.createTrack(points, points.length, mmsi);
       this.trackPointCounts[mmsi] = this.vesselTracks[mmsi].getLatLngs().length;
     }
+  }
+
+  // Replace (or create) the own-boat scribble track from positions fetched
+  // off the server's History API — used at startup to rehydrate the current
+  // anchoring session's track, which the tracks plugin loses on a server
+  // restart. Positions are [{latitude, longitude}] oldest first. Applies the
+  // same synthetic-clock glitch filtering as the bulk /tracks load — but the
+  // clock must advance by the History API sampling interval the caller
+  // actually requested, or coarse samples from a long session would be
+  // judged at an artificially inflated speed and discarded. No radius
+  // filter: an anchor session's track is inherently local. Live deltas keep
+  // extending the seeded track through addPointToTrack.
+  seedOwnTrack(positions, sampleIntervalMs = TRACK_POINT_INTERVAL_MS) {
+    const glitchFilter = new GlitchFilter(this.glitchFilterSpeed);
+    const points = [];
+    let syntheticTime = 0;
+    for (const position of positions) {
+      syntheticTime += sampleIntervalMs;
+      if (!glitchFilter.check(position, syntheticTime).accepted)
+        continue;
+      points.push([position.latitude, position.longitude, points.length]);
+    }
+    if (!points.length)
+      return;
+
+    const mmsi = String(this.ownMmsi);
+    if (this.vesselTracks[mmsi])
+      this.map.removeLayer(this.vesselTracks[mmsi]);
+    this.vesselTracks[mmsi] = this.createTrack(points, points.length, mmsi);
+    this.trackPointCounts[mmsi] = this.vesselTracks[mmsi].getLatLngs().length;
+    this.ownTrackSeeded = true;
+    console.log(`Own track rehydrated from history: ${points.length} points`);
   }
 
   // Single entry point for extending any vessel track. Handles dedupe,

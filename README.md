@@ -26,6 +26,10 @@ I always forget to switch the alarm off before motoring away, so now I don't hav
 
 Historical tracks are color-coded (green for fresh, fading to red as they age) via the [@signalk/tracks-plugin](https://github.com/SignalK/tracks). Other AIS vessels show up too, with their own tracks and accurately-typed icons. Click a vessel for a detailed popup: name, MMSI, length, beam, distance, bearing, SOG, and COG.
 
+### 🕰️ Past anchorages
+
+If your server has a history provider plugin (e.g. [signalk-questdb](https://github.com/dirkwa/signalk-questdb)), the plugin logs every anchoring session (drop and raise times, anchor position, watch zone) and a clock button appears on the map. It opens a list of past anchorages; pick one and its full vessel track is reconstructed from the server's recorded position history and drawn on the map. The same mechanism rehydrates the live scribble track after a server restart mid-anchorage — the in-memory tracks plugin loses it, the history provider doesn't. Without a history provider everything behaves as before.
+
 ### 📊 Heads-up panels
 
 Compact HUD panels for wind (with a wind barb on the map), depth, tide state (plus the next two tides), and anchor status. They show and hide themselves based on what data is actually available, so you're never staring at a panel full of dashes.
@@ -86,6 +90,7 @@ Values are compared case-insensitively; anything other than `true` is treated as
 This app pairs well with some other software:
 
 - **[@signalk/tracks-plugin](https://github.com/SignalK/tracks)**: required for the historical tracks. I recommend a resolution of 1000ms and 86400 points, which gives you high-resolution data for the last 24 hours. If you've got the memory, you might as well use it.
+- **[signalk-questdb](https://github.com/dirkwa/signalk-questdb)** (or any v2 History API provider): enables the past-anchorages browser and makes the live scribble track survive server restarts.
 - **[signalk-tides](https://github.com/bkeepers/signalk-tides)**: feeds the scope calculator and tide panel.
 - **[signalk-autostate](https://github.com/meri-imperiumi/signalk-autostate)**: just by using the anchor app, the plugin can tell the difference between moored and anchored. Great for automating things like an anchor light.
 - **Node-RED + Pushbullet**: for push notifications to your phone. Really great for when you're off the boat, and handy on the boat too.

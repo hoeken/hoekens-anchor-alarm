@@ -179,6 +179,43 @@ describe("http-routes register()", () => {
     });
   });
 
+  describe("sessions routes", () => {
+    test("GET /sessions returns the log newest first", () => {
+      plugin.sessionLog = {
+        all: () => [{ id: "b" }, { id: "a" }],
+      };
+      wire();
+      const res = fakeRes();
+      router.handlers.get["/sessions"]({}, res);
+      assert.equal(res.statusCode, 200);
+      assert.deepEqual(res.body, { sessions: [{ id: "b" }, { id: "a" }] });
+    });
+
+    test("DELETE /sessions/:id returns 200 when removed", () => {
+      let removed;
+      plugin.sessionLog = {
+        remove: (id) => {
+          removed = id;
+          return true;
+        },
+      };
+      wire();
+      const res = fakeRes();
+      router.handlers.delete["/sessions/:id"]({ params: { id: "abc" } }, res);
+      assert.equal(removed, "abc");
+      assert.equal(res.statusCode, 200);
+    });
+
+    test("DELETE /sessions/:id returns 404 for an unknown id", () => {
+      plugin.sessionLog = { remove: () => false };
+      wire();
+      const res = fakeRes();
+      router.handlers.delete["/sessions/:id"]({ params: { id: "nope" } }, res);
+      assert.equal(res.statusCode, 404);
+      assert.equal(res.body.state, "FAILED");
+    });
+  });
+
   describe("GET /ui-config", () => {
     test("returns the whitelisted projection of the config", () => {
       plugin.configuration = {
