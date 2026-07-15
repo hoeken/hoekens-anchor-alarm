@@ -551,15 +551,27 @@ export default function (app) {
       return watchZoneFromConfig(existing);
     }
 
-    throw new ValidationError("zone required");
+    // No zone given and none configured: fall back to the default
+    // circle so `dropAnchor` with no zone (e.g. POST /dropAnchor {})
+    // still drops with a sensible watch radius.
+    return watchZoneFromConfig(null);
   };
 
-  plugin.dropAnchor = function ({ position, zone }) {
-    if (
-      !position ||
-      position.latitude == null ||
-      position.longitude == null
-    ) {
+  plugin.dropAnchor = function ({ position, zone } = {}) {
+    // Position is optional: drop at the vessel's current fix when the
+    // caller doesn't supply one, so `dropAnchor()` with no args (or a
+    // control that can't compose a lat/lon) drops here.
+    if (position == null) {
+      const vesselPosition = app.getSelfPath("navigation.position.value");
+      if (!vesselPosition) {
+        throw new StateError(
+          "no position given and no GPS fix — cannot drop anchor",
+        );
+      }
+      position = vesselPosition;
+    }
+
+    if (position.latitude == null || position.longitude == null) {
       throw new ValidationError("position with latitude and longitude required");
     }
 
@@ -690,17 +702,6 @@ export default function (app) {
     try {
       if (value == null) {
         plugin.raiseAnchor();
-      } else if (value === "here") {
-        // "here" sentinel: drop at the vessel's current fix, reusing the
-        // last-configured zone (radius). Lets a control that can't compose
-        // a lat/lon — e.g. a hardware helm button PUTting a fixed string —
-        // still drop. `zone: undefined` makes dropAnchor fall back to the
-        // existing zone config via resolveZone.
-        const vesselPosition = app.getSelfPath("navigation.position.value");
-        if (!vesselPosition) {
-          throw new StateError("no GPS fix — cannot drop at current position");
-        }
-        plugin.dropAnchor({ position: vesselPosition, zone: undefined });
       } else {
         plugin.dropAnchor({ position: value, zone: { type: "circle", radius: value.radius } });
       }
