@@ -690,6 +690,17 @@ export default function (app) {
     try {
       if (value == null) {
         plugin.raiseAnchor();
+      } else if (value === "here") {
+        // "here" sentinel: drop at the vessel's current fix, reusing the
+        // last-configured zone (radius). Lets a control that can't compose
+        // a lat/lon — e.g. a hardware helm button PUTting a fixed string —
+        // still drop. `zone: undefined` makes dropAnchor fall back to the
+        // existing zone config via resolveZone.
+        const vesselPosition = app.getSelfPath("navigation.position.value");
+        if (!vesselPosition) {
+          throw new StateError("no GPS fix — cannot drop at current position");
+        }
+        plugin.dropAnchor({ position: vesselPosition, zone: undefined });
       } else {
         plugin.dropAnchor({ position: value, zone: { type: "circle", radius: value.radius } });
       }
