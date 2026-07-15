@@ -54,6 +54,31 @@
           }
         }
       },
+      "PolygonVertices": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 24,
+        "description": "Polygon only: ordered list of vertices relative to the anchor. A shape with fewer than 3 vertices is treated as unfinished (an open zone that never alarms).",
+        "items": {
+          "type": "object",
+          "required": ["bearing", "distance"],
+          "properties": {
+            "bearing": {
+              "type": "number",
+              "format": "double",
+              "minimum": 0,
+              "maximum": 360,
+              "description": "Clockwise bearing in degrees (0 = true north) from the anchor to the vertex."
+            },
+            "distance": {
+              "type": "number",
+              "format": "double",
+              "exclusiveMinimum": 0,
+              "description": "Distance in meters from the anchor to the vertex."
+            }
+          }
+        }
+      },
       "SuccessResponse": {
         "type": "object",
         "required": ["statusCode", "state"],
@@ -229,13 +254,13 @@
                     "properties": {
                       "type": {
                         "type": "string",
-                        "enum": ["circle", "sector"]
+                        "enum": ["circle", "sector", "polygon"]
                       },
                       "radius": {
                         "type": "number",
                         "format": "double",
                         "minimum": 0,
-                        "description": "Alarm radius in meters. Used by both `circle` and `sector` shapes."
+                        "description": "Alarm radius in meters. Required for `circle` and `sector` shapes."
                       },
                       "startAngle": {
                         "type": "number",
@@ -250,6 +275,9 @@
                         "minimum": 0,
                         "maximum": 360,
                         "description": "Sector only: clockwise bearing in degrees (0 = true north) of the end of the safe arc. When `endAngle < startAngle` the arc wraps across 0°/360°."
+                      },
+                      "vertices": {
+                        "$ref": "#/components/schemas/PolygonVertices"
                       }
                     },
                     "description": "Watch zone configuration. If omitted, the previously configured zone is retained."
@@ -314,14 +342,14 @@
                     "properties": {
                       "type": {
                         "type": "string",
-                        "enum": ["circle", "sector"],
+                        "enum": ["circle", "sector", "polygon"],
                         "description": "Watch zone shape."
                       },
                       "radius": {
                         "type": "number",
                         "format": "double",
                         "minimum": 0,
-                        "description": "Alarm radius in meters. Used by both `circle` and `sector` shapes."
+                        "description": "Alarm radius in meters. Required for `circle` and `sector` shapes."
                       },
                       "startAngle": {
                         "type": "number",
@@ -336,6 +364,9 @@
                         "minimum": 0,
                         "maximum": 360,
                         "description": "Sector only: clockwise bearing in degrees (0 = true north) of the end of the safe arc. When `endAngle < startAngle` the arc wraps across 0°/360°."
+                      },
+                      "vertices": {
+                        "$ref": "#/components/schemas/PolygonVertices"
                       }
                     }
                   }
