@@ -124,18 +124,45 @@ curl -X POST http://[signalk-server]:[port]/plugins/hoekens-anchor-alarm/raiseAn
 
 #### Zone object
 
-The `zone` object passed to `dropAnchor` and `setZone`:
+The `zone` object passed to `dropAnchor` and `setZone` has a `type`
+discriminator and shape-specific parameters. All three watch-zone shapes are
+accepted:
 
-| Field        | Type   | Applies to     | Notes                                                                                                                                 |
-| ------------ | ------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `type`       | string | all            | `"circle"` or `"sector"`.                                                                                                             |
-| `radius`     | number | circle, sector | Alarm radius in meters.                                                                                                               |
-| `startAngle` | number | sector         | Clockwise bearing in degrees (0 = true north) of the start of the safe arc.                                                           |
-| `endAngle`   | number | sector         | Clockwise bearing in degrees (0 = true north) of the end of the safe arc. When `endAngle < startAngle`, the arc wraps across 0°/360°. |
+| `type`      | Required parameters                | Description                                                                                             |
+| ----------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `"circle"`  | `radius`                           | A circular zone of the given radius.                                                                    |
+| `"sector"`  | `radius`, `startAngle`, `endAngle` | A circular sector — a "pie slice" of the given radius spanning the arc from `startAngle` to `endAngle`. |
+| `"polygon"` | `vertices`                         | A free-form polygon defined by its vertices.                                                            |
 
-> The web UI can also draw free-form **polygon** zones. Polygons are set through
-> the UI (and stored/published on the tree); the `circle` and `sector` shapes
-> above are the ones accepted by these two HTTP endpoints.
+Parameters:
+
+| Field        | Type   | Applies to     | Notes                                                                                                                                                                                                                                                                              |
+| ------------ | ------ | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `radius`     | number | circle, sector | Alarm radius in meters.                                                                                                                                                                                                                                                            |
+| `startAngle` | number | sector         | Clockwise bearing in degrees (0 = true north) of the start of the safe arc.                                                                                                                                                                                                        |
+| `endAngle`   | number | sector         | Clockwise bearing in degrees (0 = true north) of the end of the safe arc. When `endAngle < startAngle`, the arc wraps across 0°/360°.                                                                                                                                              |
+| `vertices`   | array  | polygon        | Ordered list of vertices, each `{ "bearing": <deg>, "distance": <m> }` relative to the anchor — `bearing` is a clockwise bearing in degrees (0 = true north), `distance` is meters from the anchor. 3–24 vertices; a shape with fewer than 3 is treated as unfinished (open zone). |
+
+Examples:
+
+```json
+{ "type": "circle", "radius": 30 }
+```
+
+```json
+{ "type": "sector", "radius": 40, "startAngle": 300, "endAngle": 60 }
+```
+
+```json
+{
+  "type": "polygon",
+  "vertices": [
+    { "bearing": 0, "distance": 30 },
+    { "bearing": 120, "distance": 45 },
+    { "bearing": 240, "distance": 45 }
+  ]
+}
+```
 
 ### UI configuration
 
