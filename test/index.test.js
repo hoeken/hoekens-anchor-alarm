@@ -189,21 +189,44 @@ describe("resolveZone()", () => {
     assert.equal(plugin.resolveZone(null).getCircleRadius(), 60);
   });
 
-  test("throws when nothing is passed and nothing is saved", () => {
+  test("falls back to the default circle when nothing is passed or saved", () => {
     const { plugin } = setup();
     plugin.configuration = {};
-    assert.throws(() => plugin.resolveZone(null), ValidationError);
+    // No zone given and none configured now yields the default circle
+    // (so dropAnchor with no zone still works) rather than throwing.
+    const zone = plugin.resolveZone(null);
+    assert.equal(zone.getConfig().type, "circle");
   });
 });
 
 describe("dropAnchor()", () => {
-  test("rejects a missing position", () => {
+  test("drops at the current fix when no position is given", () => {
+    const { h, plugin } = setup();
+    plugin.configuration = {};
+    h.setSelfPath("navigation.position.value", ANCHOR);
+
+    plugin.dropAnchor({ zone: { type: "circle", radius: 60 } });
+
+    assert.equal(h.lastDelta("navigation.anchor.state"), "on");
+    assert.deepEqual(h.lastDelta("navigation.anchor.position"), ANCHOR);
+  });
+
+  test("drops here with a default zone when called with no args", () => {
+    const { h, plugin } = setup();
+    plugin.configuration = {};
+    h.setSelfPath("navigation.position.value", ANCHOR);
+
+    plugin.dropAnchor();
+
+    assert.equal(h.lastDelta("navigation.anchor.state"), "on");
+    assert.deepEqual(h.lastDelta("navigation.anchor.position"), ANCHOR);
+  });
+
+  test("rejects a drop with no position and no GPS fix", () => {
     const { plugin } = setup();
     plugin.configuration = {};
-    assert.throws(
-      () => plugin.dropAnchor({ zone: { type: "circle", radius: 60 } }),
-      ValidationError,
-    );
+    // no navigation.position staged
+    assert.throws(() => plugin.dropAnchor(), StateError);
   });
 
   test("rejects a non-numeric position", () => {
