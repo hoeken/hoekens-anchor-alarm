@@ -21,6 +21,7 @@ import { pickUiConfig, coerceUiConfig } from "./schema.js";
 
 const require = createRequire(import.meta.url);
 const openapi = require("./openApi.json");
+const packageJson = require("../package.json");
 
 // Custom own-boat icon upload (see /icon routes below). The image is stored in
 // the plugin data dir as a single `boat-icon.<ext>` file; the extension is
@@ -216,12 +217,18 @@ export function register(app, plugin, router) {
   });
 
   router.get("/ui-config", (req, res) => {
-    // hasCustomIcon is derived (file existence), not a stored config key, so it
-    // rides along on the projection here rather than in schema.js. coerceUiConfig
-    // ignores unknown keys, so a client echoing it back on POST is harmless.
+    // hasCustomIcon, selfId, and version are derived, not stored config keys,
+    // so they ride along on the projection here rather than in schema.js.
+    // coerceUiConfig ignores unknown keys, so a client echoing them back on
+    // POST is harmless. selfId (e.g. "urn:mrn:imo:mmsi:123456789") lets the
+    // UI pick its own entry out of the bulk /vessels payload instead of
+    // fetching the (potentially large) /vessels/self tree separately, and
+    // version saves it a /plugins/<id> round trip for the settings footer.
     res.json({
       ...pickUiConfig(plugin.configuration || {}),
       hasCustomIcon: iconPath(app) !== null,
+      selfId: app.selfId,
+      version: packageJson.version,
     });
   });
 

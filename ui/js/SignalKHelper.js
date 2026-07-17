@@ -144,8 +144,13 @@ export class SignalKHelper {
     return response.json();
   }
 
-  fetchSelf() {
-    return this.request("vessels/self");
+  // The server's identity for our own vessel (e.g.
+  // "vessels.urn:mrn:imo:mmsi:123456789"), used to pick our entry out of the
+  // bulk /vessels payload. Normally that identity arrives on ui-config
+  // (selfId); this tiny public endpoint is the fallback for anonymous
+  // sessions, which can't read ui-config.
+  fetchSelfId() {
+    return this.request("self");
   }
   fetchAllVessels() {
     return this.request("vessels");
@@ -253,11 +258,6 @@ export class SignalKHelper {
   saveConfig(config) {
     return this.pluginPost("ui-config", config);
   }
-  fetchPluginInfo() {
-    return fetch(`${this.baseUrl}/plugins/${this.pluginName}`)
-      .then(SignalKHelper._toJsonOrReject);
-  }
-
   // Walk a subtree by dot-separated path. An empty path returns the tree itself
   // so callers can pass a notification envelope and read its `.value` via value().
   static extract(tree, path = "") {

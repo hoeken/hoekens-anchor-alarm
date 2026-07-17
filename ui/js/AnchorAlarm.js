@@ -124,6 +124,9 @@ class AnchorAlarm {
     // delta to either own-boat state or the fleet layer once we subscribe to
     // both vessels.self and vessels.*.
     this.selfContext = null;
+    // Bumped on every websocket (re)connect so a fleet seed still in flight
+    // when its socket died can't subscribe on the next connection's behalf.
+    this._connectSeq = 0;
   }
 
   static startup() {
@@ -146,12 +149,26 @@ class AnchorAlarm {
     this.client.on("delta", (delta) => this.handleDeltas(delta));
     this.client.on("connect", () => {
       this.state.websocketSubscribe(this.client);
-      this.state.websocketSubscribeFleet(this.client);
       // The server drops every subscription when the socket closes, so replay
       // the per-vessel context subscriptions to keep static identity streaming
-      // after a reconnect. On the first connect this also sends any that
-      // subscribeVessel queued before the socket finished opening.
+      // after a reconnect. Before the seed below so the fresh subscriptions it
+      // sends for newly-seeded vessels aren't immediately re-sent.
       this.fleetLayer?.resubscribeVessels();
+      // Gate the vessels.* subscription on a fresh fleet seed: deltas from
+      // vessels the cache doesn't hold each fire a per-vessel static fetch,
+      // so an unseeded cache means one redundant request per boat in sight.
+      // The first connection rides the initial-load snapshot that seeded the
+      // cache just before the socket opened; reconnects re-fetch /vessels
+      // because the prune timer keeps evicting while the socket is down. The
+      // seed settles even on failure, so a bad snapshot delays fleet updates,
+      // never blocks them; the seq guard keeps a seed whose socket died
+      // mid-fetch from subscribing early on the next connection's fresh seed.
+      const seq = ++this._connectSeq;
+      const seeded = seq === 1 ? Promise.resolve() : this.fleetLayer.seedFleet();
+      seeded.then(() => {
+        if (seq === this._connectSeq)
+          this.state.websocketSubscribeFleet(this.client);
+      });
     });
     this.client.connect();
   }
@@ -252,14 +269,6 @@ class AnchorAlarm {
     if (!this.showAnchorControls)
       this.toolbar.hide();
 
-    this.signalK
-      .fetchPluginInfo()
-      .then((info) => {
-        this.version = info.version;
-        console.log(`Hoeken's Anchor Alarm v${this.version}`);
-      })
-      .catch(() => { });
-
     this.loadInitialData();
   }
 
@@ -290,15 +299,38 @@ class AnchorAlarm {
     handler.enable();
   }
 
-  // === Initial load (one /self call, broken into phases) ===========================
+  // === Initial load (one /vessels call, broken into phases) ========================
 
   loadInitialData() {
-    this.signalK
-      .fetchSelf()
-      .then(async (data) => {
+    // Config first: it carries selfId, which tells us which entry in the bulk
+    // /vessels payload is our own. /vessels is a superset of /vessels/self, so
+    // that one fetch covers both our own tree and the fleet's — fetching
+    // /vessels/self separately would transfer the (potentially large) own tree
+    // twice. Anonymous sessions can't read ui-config (loadConfig fell back to
+    // the defaults, which carry no selfId), so they learn the identity from
+    // the tiny public /self endpoint instead.
+    this.loadConfig()
+      .then(async () => {
+        console.log("UI Config:", this.config);
+
+        // The plugin version rides on ui-config too (for the settings
+        // footer), saving a separate /plugins/<id> request.
+        this.version = this.config.version;
+        if (this.version)
+          console.log(`Hoeken's Anchor Alarm v${this.version}`);
+
+        // Config is in hand before any state extraction, so the calculate
+        // below already runs with the configured scopes and glitch limit.
+        this.state.setScopeRatios(this.config.scopes);
+        this.state.setGlitchFilterSpeed(this.config.glitchFilterSpeed);
+
+        const selfId = this.config.selfId ?? (await this.signalK.fetchSelfId());
+        const vessels = await this.signalK.fetchAllVessels();
         this.statusBar.clear("initial-load");
 
-        this.state.extractAll(data);
+        const selfKey = String(selfId ?? "").replace(/^vessels\./, "");
+        this.selfContext = this.normalizeContext(selfKey);
+        this.state.extractAll(vessels[selfKey] ?? {});
         this.state.calculate();
         console.log("App State:", this.state);
 
@@ -308,17 +340,16 @@ class AnchorAlarm {
           return;
         }
 
-        await this.loadConfig();
-        console.log("UI Config:", this.config);
-
-        // Apply the configured scope ratios and recompute so the first render
-        // reflects them (state.calculate above ran with the defaults).
-        this.state.setScopeRatios(this.config.scopes);
-        this.state.calculateScopes();
-        this.state.setGlitchFilterSpeed(this.config.glitchFilterSpeed);
-
-        this.setupConnection();
+        // Everything below runs only once /vessels has resolved: buildMap
+        // constructs the FleetLayer (whose constructor starts the heavy
+        // /tracks fetch), and initAnchorageHistory probes the heavy History
+        // API — deliberately kept off the critical path of the bulk load.
+        // Seed the fleet cache from the snapshot we already hold, then open
+        // the websocket — the first connect subscribes vessels.* immediately
+        // against this seed (see setupWebsockets).
         this.buildMap();
+        this.fleetLayer.seedFleet(vessels);
+        this.setupConnection();
 
         this.anchorController.estimateAnchorPosition();
         this.updateMap();
