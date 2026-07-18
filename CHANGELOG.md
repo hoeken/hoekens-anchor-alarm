@@ -1,3 +1,30 @@
+# v2.9.0
+
+## Anchorage session log & past anchorages
+
+The plugin now keeps a history of where you've anchored:
+
+- **Every anchoring session is logged** — drop and raise timestamps, anchor position, and the watch zone are written to the plugin data dir and exposed via `GET /sessions` and `DELETE /sessions/:id`. Logging is no-throw and writes atomically, so bookkeeping can never block a drop or raise, and a reconcile step at plugin start heals sessions whose drop/raise events were lost to a crash (reconstructed timestamps are flagged as estimated)
+- **Past Anchorages dialog** — when the server has a v2 History API provider (e.g. signalk-questdb), a new dialog in the webapp lists past sessions and reconstructs any session's vessel track from recorded position history, drawing it on the map
+- **Tracks survive a server restart** — the same history mechanism rehydrates the live scribble track when the app loads mid-anchorage after a restart, which the in-memory track alone cannot survive. Without a history provider everything behaves as before
+
+## New features
+
+- **GPS glitch filter** — a new "GPS Glitch Filter Speed" setting (in the plugin config and the settings dialog, shown in your preferred speed unit; 0 = off, the default) rejects any fix whose implied speed from the last good fix exceeds the limit, conceding the movement is real after 5 consecutive rejections. On the plugin side, glitched fixes never reach the drag check, so a GPS jump can't trip the alarm — instead you get a warn-severity notification (never over an active drag alarm) that clears on the next good fix. In the webapp, a spike can't move your boat marker or pollute the track, other vessels get per-MMSI filters, and rejections show a status-bar error naming the vessel
+- **Drop the anchor with no position** — `POST /dropAnchor` with no body now drops at the vessel's current fix with the default watch zone, and a `"here"` string PUT to `navigation.anchor.position` does the same while reusing the last-configured zone. This lets a caller that can't compose a lat/lon — e.g. a hardware helm button PUTting a fixed value — still drop the anchor; both fail cleanly with no GPS fix (#29, thanks @dirkwa)
+- **Track visibility toggles** — new "Show My Boat Track" and "Show Other Boat Tracks" settings (both default on) hide vessel tracks on the map without losing them: hidden tracks keep accumulating points and redraw intact when re-enabled
+
+## Reliability & UX
+
+- **Layers no longer vanish at the 180° antimeridian** — panning across 180° (with worldCopyJump) stranded vector layers and markers in the old world copy, so tracks streaked across the map and boat markers, watch zones, the anchor rode, and popups vanished off the far side. Every layer type now wraps to the world copy nearest the map center and re-projects on pan, so anchoring near the dateline just works
+- **Smarter boat name labels** — labels were hidden wholesale below zoom 16 to avoid clutter, which also hid useful names when vessels were sparse. Per-label collision detection now runs at any zoom, greedily hiding only labels that would overlap a higher-priority (closer) one, with ties broken by MMSI so labels don't flicker; hidden labels reclaim their spot as soon as the crowding clears
+- **Two-column settings dialog on wide displays** — above a 640px breakpoint the dialog widens to 600px with checkbox toggles on the left and the other settings on the right; narrow screens and MFDs keep the single-column layout
+- **Leaner page load** — startup consolidates into `GET /ui-config` (which now also serves the self id and plugin version) plus a single bulk `/vessels` fetch that seeds both own-boat state and the fleet cache, instead of four overlapping requests that transferred the own-vessel tree twice. The first websocket connect subscribes immediately against that seed, and the first position calculation already runs with the configured scopes and glitch limit
+
+## Documentation
+
+- **The HTTP API and Signal K data model are now documented** — new [docs/API.md](docs/API.md) covers the drop/set-zone/raise endpoints, ui-config, the boat icon API, the published `navigation.anchor.*` deltas, and the `notifications.navigation.anchor` alarm, linked from the README. The drop/set-zone docs and openApi.json now also cover polygon watch zones (`{bearing, distance}` vertices, 3–24 of them), which the endpoints always accepted but never documented
+
 # v2.8.0
 
 ## Control toolbar redesign
