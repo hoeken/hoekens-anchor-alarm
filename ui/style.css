@@ -113,7 +113,8 @@ html.dark .leaflet-control-zoom-in,
 html.dark .leaflet-control-zoom-out,
 html.dark .leaflet-control-home,
 html.dark .leaflet-control-config,
-html.dark .leaflet-control-theme {
+html.dark .leaflet-control-theme,
+html.dark .leaflet-control-history {
   background-color: var(--surface-bg);
   color: var(--surface-fg);
   border-bottom-color: var(--divider);
@@ -123,7 +124,8 @@ html.dark .leaflet-control-zoom-in:hover,
 html.dark .leaflet-control-zoom-out:hover,
 html.dark .leaflet-control-home:hover,
 html.dark .leaflet-control-config:hover,
-html.dark .leaflet-control-theme:hover {
+html.dark .leaflet-control-theme:hover,
+html.dark .leaflet-control-history:hover {
   background-color: var(--surface-hover);
   color: var(--surface-fg);
 }

@@ -85,6 +85,7 @@ class AnchorAlarm {
       enableBoatLabels: true,
       enableOwnTrack: true,
       enableOtherTracks: true,
+      enableAnchorageHistory: true,
       enableChartLayers: true,
       enableSeascape: false,
       scopes: "7,5,4,3",
@@ -491,6 +492,7 @@ class AnchorAlarm {
     this.fleetLayer?.setShowOwnTrack(this.config.enableOwnTrack);
     this.fleetLayer?.setShowOtherTracks(this.config.enableOtherTracks);
     this.fleetLayer?.setGlitchFilterSpeed(this.config.glitchFilterSpeed);
+    this.setAnchorageHistoryEnabled(this.config.enableAnchorageHistory);
     this.updateMap();
     this.statusBar.clear("config-save");
     return this.signalK.saveConfig(newConfig).catch((error) => {
@@ -529,10 +531,22 @@ class AnchorAlarm {
   // control and — if we started mid-session, e.g. after a server restart —
   // rehydrate the live scribble track from recorded history, which the
   // in-memory tracks plugin has lost. Without a provider this is a silent
-  // no-op and the app behaves exactly as before.
+  // no-op and the app behaves exactly as before. The whole thing (probe
+  // included) is gated on config.enableAnchorageHistory; toggling the setting
+  // back on re-runs this, re-sending the probe (see setAnchorageHistoryEnabled).
   initAnchorageHistory() {
+    if (!this.config.enableAnchorageHistory || this.historyControl)
+      return;
     this.signalK.probeHistory().then((available) => {
-      if (!available || !this.map)
+      // Re-check the config and control: the setting may have been toggled
+      // (off, or off-and-on spawning a second probe) while the probe was in
+      // flight.
+      if (
+        !available ||
+        !this.map ||
+        !this.config.enableAnchorageHistory ||
+        this.historyControl
+      )
         return;
 
       this.historyControl = new AnchorageHistoryControl({
@@ -545,6 +559,18 @@ class AnchorAlarm {
       if (this.state.isAnchored())
         this.rehydrateOwnTrack();
     });
+  }
+
+  // Live toggle for the past-anchorages control (config.enableAnchorageHistory).
+  // Enabling re-runs the startup probe so the control appears without a reload;
+  // disabling removes the control (which also clears any displayed track).
+  setAnchorageHistoryEnabled(enabled) {
+    if (enabled) {
+      this.initAnchorageHistory();
+    } else if (this.historyControl) {
+      this.map.removeControl(this.historyControl);
+      this.historyControl = null;
+    }
   }
 
   // Replace the own-boat scribble track with the full current-session track

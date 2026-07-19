@@ -215,6 +215,13 @@ export function buildSchema(app) {
           "Draw other vessels' historical tracks on the map.",
         default: true,
       },
+      enableAnchorageHistory: {
+        type: "boolean",
+        title: "Show Past Anchorages",
+        description:
+          "Show the past-anchorages button on the map and query the server's History API for recorded anchoring sessions. Requires a history provider plugin (e.g. signalk-questdb); without one the button stays hidden regardless.",
+        default: true,
+      },
       enableChartLayers: {
         type: "boolean",
         title: "Use Chart Layers if Available",
@@ -348,6 +355,7 @@ export const UI_CONFIG_KEYS = [
   "enableBoatLabels",
   "enableOwnTrack",
   "enableOtherTracks",
+  "enableAnchorageHistory",
   "enableChartLayers",
   "enableSeascape",
   "scopes",
