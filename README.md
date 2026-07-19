@@ -99,8 +99,8 @@ Besides the web UI, the plugin exposes an HTTP API (drop/raise the anchor, set t
 
 This app pairs well with some other software:
 
-- **[@signalk/tracks-plugin](https://github.com/SignalK/tracks)**: required for the historical tracks. I recommend a resolution of 1000ms and 86400 points, which gives you high-resolution data for the last 24 hours. If you've got the memory, you might as well use it.
 - **[signalk-questdb](https://github.com/dirkwa/signalk-questdb)** (or any v2 History API provider): enables the past-anchorages browser and makes the live scribble track survive server restarts.
+- **[@signalk/tracks-plugin](https://github.com/SignalK/tracks)**: currently used for the historical tracks. I recommend a resolution of 1000ms and 86400 points, which gives you high-resolution data for the last 24 hours. **Note:** support for the tracks plugin will be dropped in a future release — use a history provider instead (signalk-questdb recommended).
 - **[signalk-tides](https://github.com/bkeepers/signalk-tides)**: feeds the scope calculator and tide panel.
 - **[signalk-autostate](https://github.com/meri-imperiumi/signalk-autostate)**: just by using the anchor app, the plugin can tell the difference between moored and anchored. Great for automating things like an anchor light.
 - **Node-RED + Pushbullet**: for push notifications to your phone. Really great for when you're off the boat, and handy on the boat too.

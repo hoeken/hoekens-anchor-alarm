@@ -49,7 +49,7 @@
       "signalk-tides",
       "signalk-navico-embedder",
       "@meri-imperiumi/signalk-autostate",
-      "@signalk/tracks-plugin"
+      "signalk-questdb"
     ]
   },
   "author": {
