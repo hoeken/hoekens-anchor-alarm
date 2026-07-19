@@ -315,6 +315,13 @@ export function buildSchema(app) {
           "Name this Signal K server advertises to TimeZero in the device list.",
         default: "SignalK",
       },
+      timeZeroUserId: {
+        type: "string",
+        title: "My TIMEZERO User ID (for non-NavNet networks)",
+        description:
+          "Leave blank on a Furuno NavNet (172.31.x.x) network. On an ordinary LAN, TimeZero only pairs with peers advertising the same My TIMEZERO user ID, so set it to the ID your TimeZero instances use and they will sync here too. TimeZero broadcasts this ID in the clear on UDP port 33000 — you can read it from a TimeZero machine's own beacon (field 5 of the semicolon-separated 'TZ Sync' message).",
+        default: "",
+      },
       zone: {
         type: "string",
         title: "Anchor Watch Zone (JSON)",

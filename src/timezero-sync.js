@@ -132,7 +132,12 @@ export function buildBeacon(state) {
     PROTOCOL,
     state.hostName,
     DEVICE_TYPE,
-    "", "", "",
+    "", // [3] layers token
+    // [4] My TIMEZERO user id. TimeZero grants sync to a peer advertising the
+    // same non-empty user id (plain string equality), which is what makes sync
+    // work off the NavNet subnet. Empty falls back to the NavNet-only path.
+    state.userId || "",
+    "", // [5] cloud token
     `${state.hostName}/${state.uuid}`,
     "10000000",
     "1", // [8] CanSync
@@ -160,6 +165,7 @@ export function parseBeacon(str, address) {
     address,
     name: f[1],
     deviceType: f[2],
+    userId: f[4] || "",
     uuid: f[6],
     canSync: f[8] === "1",
     anchorWatchTick: parseInt(f[F_ANCHOR_TICK], 10) || 0,
@@ -181,6 +187,10 @@ export class TimeZeroSync {
   constructor(app, options = {}) {
     this.app = app;
     this.hostName = options.hostName || "SignalK";
+    // My TIMEZERO user id, advertised in the beacon. When set (and matching the
+    // TimeZero instances'), TimeZero syncs with us on any network; when empty,
+    // sync is limited to the NavNet subnet. See onNavNet/canReachPeers.
+    this.userId = (options.userId || "").trim();
     this.uuid = makeUuid();
     this.socket = null;
     this.server = null;
@@ -196,7 +206,29 @@ export class TimeZeroSync {
     // Called when a TZ peer pushes an anchor to us: (anchor|null) => void.
     // anchor is {position, radius} to set, or null to raise.
     this.onRemoteAnchor = options.onRemoteAnchor || (() => {});
+    // Peers discovered via the beacon, keyed by source IP, used to decide who
+    // may talk to the sync endpoint when authorising by user id.
+    this.peers = new Map();
     this.started = false;
+  }
+
+  // Whether an address may use the sync endpoint.
+  //
+  // NavNet peers are always allowed: that is the subnet TimeZero itself trusts
+  // for account-free sync, and it's a dedicated instrument network.
+  //
+  // Off NavNet, an address is allowed only once we've seen it broadcast a
+  // beacon carrying our configured user id. That keeps the safety-critical
+  // endpoint closed to arbitrary LAN hosts — matching TimeZero's own rule,
+  // which pairs peers on user id rather than opening up to the whole network.
+  isTrustedPeer(address) {
+    if (!address)
+      return false;
+    if (address.startsWith("172.31."))
+      return true;
+    if (!this.userId)
+      return false;
+    return this.peers.get(address)?.userId === this.userId;
   }
 
   // True only when Signal K has a 172.31.x.x address — TZ's account-free LAN
@@ -266,14 +298,12 @@ export class TimeZeroSync {
   _startServer() {
     const server = http.createServer((req, res) => {
       try {
-        // Trust only NavNet (172.31.x.x) clients. TimeZero's anchor watch is
-        // safety-critical and the endpoint is unauthenticated plaintext HTTP
-        // (the protocol offers no auth), so source-IP is the access control:
-        // a GET discloses the boat's position and a POST can raise or move the
-        // anchor. Anything off NavNet is refused — matching the subnet TZ
-        // itself restricts account-free sync to (see _navNetBroadcasts).
+        // The endpoint is unauthenticated plaintext HTTP (the protocol offers
+        // no auth) and the anchor watch is safety-critical — a GET discloses
+        // the boat's position and a POST can move or raise the anchor — so
+        // every request is checked against the peers we trust.
         const remote = (req.socket.remoteAddress || "").replace(/^::ffff:/, "");
-        if (!remote.startsWith("172.31.")) {
+        if (!this.isTrustedPeer(remote)) {
           res.writeHead(403);
           res.end();
           return;
@@ -349,6 +379,22 @@ export class TimeZeroSync {
     socket.on("error", (err) => {
       this.app.error(`TimeZero sync discovery error: ${err.message}`);
     });
+    socket.on("message", (msg, rinfo) => {
+      try {
+        const peer = parseBeacon(msg.toString("utf8"), rinfo.address);
+        // Ignore our own beacon echoing back off the broadcast.
+        if (!peer || peer.uuid?.endsWith(this.uuid))
+          return;
+        const known = this.peers.get(rinfo.address);
+        this.peers.set(rinfo.address, peer);
+        if (!known)
+          this.app.debug(
+            `TimeZero peer ${peer.name} (${rinfo.address}) ${peer.deviceType}`,
+          );
+      } catch {
+        /* not a beacon we understand */
+      }
+    });
     socket.bind(DISCOVERY_PORT, () => {
       try {
         socket.setBroadcast(true);
@@ -371,6 +417,7 @@ export class TimeZeroSync {
       buildBeacon({
         hostName: this.hostName,
         uuid: this.uuid,
+        userId: this.userId,
         anchorWatchTick: this.anchorTick,
         currentTick: this.anchorTick,
         // High so we win TZ's master election and it pulls from us.
@@ -386,19 +433,27 @@ export class TimeZeroSync {
     }
   }
 
-  // Broadcast only onto NavNet (172.31.x.x): TZ's account-free trust check
-  // accepts a peer only if its source IP is in that subnet, so sending from
-  // any other interface would just be discovered-but-rejected.
+  // Where to send the beacon.
+  //
+  // Without a user id, TimeZero's account-free trust check accepts a peer only
+  // if its source IP is in 172.31.x.x, so broadcasting anywhere else would just
+  // be discovered-and-rejected — restrict to NavNet.
+  //
+  // With a user id, TimeZero matches on the id instead of the subnet, so we
+  // broadcast on every interface to reach peers on ordinary LANs.
   _navNetBroadcasts() {
     const out = new Set();
+    const navNetOnly = !this.userId;
     try {
       for (const list of Object.values(os.networkInterfaces())) {
         for (const ni of list) {
-          if (ni.family === "IPv4" && ni.address.startsWith("172.31.")) {
-            const ip = ni.address.split(".").map(Number);
-            const mask = ni.netmask.split(".").map(Number);
-            out.add(ip.map((o, i) => (o & mask[i]) | (~mask[i] & 255)).join("."));
-          }
+          if (ni.family !== "IPv4" || ni.internal)
+            continue;
+          if (navNetOnly && !ni.address.startsWith("172.31."))
+            continue;
+          const ip = ni.address.split(".").map(Number);
+          const mask = ni.netmask.split(".").map(Number);
+          out.add(ip.map((o, i) => (o & mask[i]) | (~mask[i] & 255)).join("."));
         }
       }
     } catch {
