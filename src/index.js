@@ -154,6 +154,10 @@ export default function (app) {
           if (timeZeroSync.onNavNet() || userId) {
             plugin.timeZeroSync = timeZeroSync;
             plugin.timeZeroSync.start();
+            if (!timeZeroSync.onNavNet())
+              app.debug(
+                "TimeZero sync pairing by My TIMEZERO user ID (experimental — no NavNet interface found)",
+              );
           } else {
             app.setPluginStatus(
               "TimeZero sync enabled but no NavNet interface and no user ID — not started",
