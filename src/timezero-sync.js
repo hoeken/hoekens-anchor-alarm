@@ -266,6 +266,18 @@ export class TimeZeroSync {
   _startServer() {
     const server = http.createServer((req, res) => {
       try {
+        // Trust only NavNet (172.31.x.x) clients. TimeZero's anchor watch is
+        // safety-critical and the endpoint is unauthenticated plaintext HTTP
+        // (the protocol offers no auth), so source-IP is the access control:
+        // a GET discloses the boat's position and a POST can raise or move the
+        // anchor. Anything off NavNet is refused — matching the subnet TZ
+        // itself restricts account-free sync to (see _navNetBroadcasts).
+        const remote = (req.socket.remoteAddress || "").replace(/^::ffff:/, "");
+        if (!remote.startsWith("172.31.")) {
+          res.writeHead(403);
+          res.end();
+          return;
+        }
         const path = (req.url || "").split("?")[0].replace(/\/+$/, "");
         const isAnchor = path.endsWith("/LanSynchronizationApi/AnchorWatch");
         if (isAnchor && req.method === "GET") {
@@ -313,10 +325,19 @@ export class TimeZeroSync {
   _applyRemote(body) {
     try {
       const dto = JSON.parse(body);
+      // Higher ChangeTick wins: ignore a stale/replayed push so a delayed peer
+      // can't clobber a newer local anchor. Adopt the peer's tick when we take
+      // its value, so our next beacon advertises the state we now hold.
+      if (typeof dto.ChangeTick === "number" && dto.ChangeTick <= this.anchorTick) {
+        this.app.debug(`TimeZero sync ignoring stale push tick=${dto.ChangeTick}`);
+        return;
+      }
       const anchor = parseValues(dto.Values);
       this.app.debug(
         `TimeZero sync received anchor tick=${dto.ChangeTick} ${anchor ? "set" : "raised"}`,
       );
+      if (typeof dto.ChangeTick === "number")
+        this.anchorTick = dto.ChangeTick;
       this.onRemoteAnchor(anchor);
     } catch (err) {
       this.app.error(`TimeZero sync bad remote anchor: ${err.message}`);

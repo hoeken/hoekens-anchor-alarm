@@ -9,7 +9,11 @@ import {
   parseValues,
   buildBeacon,
   parseBeacon,
+  TimeZeroSync,
 } from "../src/timezero-sync.js";
+
+// A minimal app stub: the sync engine only uses debug/error for logging.
+const stubApp = () => ({ debug() {}, error() {} });
 
 // Ground-truth samples captured from live TimeZero Professional hardware
 // (MASTERCABIN) over the LAN sync protocol. These pin the wire format so a
@@ -161,5 +165,55 @@ describe("discovery beacon", () => {
   test("ignores non-TimeZero UDP payloads", () => {
     assert.equal(parseBeacon("not a beacon", "1.2.3.4"), null);
     assert.equal(parseBeacon("", "1.2.3.4"), null);
+  });
+});
+
+describe("remote anchor apply (higher-tick-wins)", () => {
+  const remoteBody = (tick, values = "NULL,10,0,0") =>
+    JSON.stringify({ ChangeTick: tick, Values: values });
+
+  test("applies a push with a newer tick and adopts it", () => {
+    let applied = "none";
+    const sync = new TimeZeroSync(stubApp(), {
+      onRemoteAnchor: (a) => {
+        applied = a ? "set" : "raised";
+      },
+    });
+    sync.anchorTick = 5;
+    sync._applyRemote(remoteBody(10));
+    assert.equal(applied, "raised");
+    assert.equal(sync.anchorTick, 10); // adopted the peer's tick
+  });
+
+  test("ignores a stale push (tick <= ours) and keeps our state", () => {
+    let called = false;
+    const sync = new TimeZeroSync(stubApp(), {
+      onRemoteAnchor: () => {
+        called = true;
+      },
+    });
+    sync.anchorTick = 20;
+    sync._applyRemote(remoteBody(20)); // equal — stale
+    sync._applyRemote(remoteBody(3)); // older — stale
+    assert.equal(called, false);
+    assert.equal(sync.anchorTick, 20);
+  });
+
+  test("passes a decoded circle through to onRemoteAnchor", () => {
+    let anchor = null;
+    const sync = new TimeZeroSync(stubApp(), {
+      onRemoteAnchor: (a) => {
+        anchor = a;
+      },
+    });
+    sync.anchorTick = 1;
+    sync._applyRemote(remoteBody(2, "X'0400000000000000000000C350',10,0,0"));
+    assert.ok(anchor);
+    assert.equal(anchor.radius, 500); // 0xC350 = 50000 cm
+  });
+
+  test("a malformed body is swallowed, not thrown", () => {
+    const sync = new TimeZeroSync(stubApp(), {});
+    assert.doesNotThrow(() => sync._applyRemote("{not json"));
   });
 });

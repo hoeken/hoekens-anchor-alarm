@@ -140,12 +140,27 @@ export default function (app) {
       // sync failure must never affect the alarm, so start() is wrapped.
       if (plugin.configuration.enableTimeZeroSync) {
         try {
-          plugin.timeZeroSync = new TimeZeroSync(app, {
+          const timeZeroSync = new TimeZeroSync(app, {
             hostName: plugin.configuration.timeZeroHostName || "SignalK",
             anchorProvider: () => plugin.currentAnchorForSync(),
             onRemoteAnchor: (anchor) => plugin.applyRemoteAnchor(anchor),
           });
-          plugin.timeZeroSync.start();
+          // TimeZero only permits account-free LAN sync on a Furuno NavNet
+          // (172.31.x.x) interface, and that subnet is also what gates the
+          // unauthenticated sync endpoint's access control. Off NavNet there's
+          // nothing to sync with and starting would only open an unusable
+          // listener — so don't.
+          if (timeZeroSync.onNavNet()) {
+            plugin.timeZeroSync = timeZeroSync;
+            plugin.timeZeroSync.start();
+          } else {
+            app.setPluginStatus(
+              "TimeZero sync enabled but no NavNet (172.31.x.x) interface — not started",
+            );
+            app.debug(
+              "TimeZero sync requires a NavNet (172.31.x.x) interface; not started",
+            );
+          }
         } catch (e) {
           app.error(`TimeZero sync failed to start: ${e.message}`);
           plugin.timeZeroSync = null;
@@ -729,9 +744,17 @@ export default function (app) {
   // TIMEZERO LAN SYNC BRIDGE
   // ============================================================
 
+  // Set while applying an anchor pushed to us by TimeZero, so the drop/raise
+  // that applies it doesn't turn around and re-advertise it back to the peer
+  // (which would echo: peer pulls -> we re-notify -> peer pulls...).
+  plugin.applyingRemoteAnchor = false;
+
   // Tell the TimeZero sync engine our anchor changed, so its next beacon
-  // advertises a newer tick and TZ peers pull. No-op when sync is disabled.
+  // advertises a newer tick and TZ peers pull. No-op when sync is disabled or
+  // when the change originated from a TimeZero peer (avoids an echo loop).
   plugin.notifyTimeZero = function () {
+    if (plugin.applyingRemoteAnchor)
+      return;
     plugin.timeZeroSync?.notifyAnchorChanged();
   };
 
@@ -756,6 +779,10 @@ export default function (app) {
   // drop/raise/setZone paths so it emits deltas, logs the session, and
   // persists exactly like an operator action.
   plugin.applyRemoteAnchor = function (anchor) {
+    // Guard the drop/raise below from re-notifying TimeZero (see
+    // notifyTimeZero / applyingRemoteAnchor) so applying a peer's anchor
+    // doesn't echo it straight back.
+    plugin.applyingRemoteAnchor = true;
     try {
       if (anchor == null) {
         if (readZoneConfig(plugin.configuration)?.position)
@@ -769,6 +796,8 @@ export default function (app) {
       });
     } catch (err) {
       app.error(`TimeZero remote anchor apply failed: ${err.message}`);
+    } finally {
+      plugin.applyingRemoteAnchor = false;
     }
   };
 
