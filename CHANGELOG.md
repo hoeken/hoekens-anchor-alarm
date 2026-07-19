@@ -1,3 +1,25 @@
+# v2.10.0
+
+## TimeZero anchor watch sync
+
+The anchor watch can now synchronise bidirectionally with TimeZero (TZ Professional / TZ iBoat) instances on the local network:
+
+- **Sync over LAN** — dropping, reshaping, or raising the anchor in Signal K appears in TimeZero, and a TimeZero anchor change flows back into Signal K through the normal drop/raise paths. This speaks TimeZero's undocumented LAN sync protocol (a UDP 33000 discovery beacon plus an HTTP endpoint on TCP 32000), with the anchor circle serialised as TimeZero's 13-byte geometry blob, validated against live hardware and covered by unit tests with captured ground-truth samples. Opt-in via the new `enableTimeZeroSync` config option; since TimeZero's anchor watch is a circle, only circular watch zones sync. All sync I/O is best-effort and no-throw so it can never affect alarm operation (#30, thanks @dirkwa)
+- **Pairing off NavNet by My TIMEZERO user ID (experimental)** — sync originally required a Furuno NavNet (172.31.x.x) address, which TimeZero trusts without an account. A new `timeZeroUserId` option advertises your My TIMEZERO user ID (a GUID from a signed-in account) in the discovery beacon, so Signal K pairs with TimeZero on an ordinary LAN too. Access control stays strict either way: the unauthenticated sync endpoint accepts only NavNet addresses or hosts that have been seen broadcasting your user ID — a GET discloses the boat position and a POST can move or raise the anchor, so arbitrary LAN hosts get 403. Stale or replayed peer updates can't overwrite newer local anchor state, and applying a peer's change is never echoed back to it (#31, thanks @dirkwa)
+
+## New features
+
+- **Show Past Anchorages setting** — a new toggle (default on) in the plugin config and settings dialog controls the past-anchorages feature. When disabled, the History API probe (and the session fetch / own-track rehydration that ride on it) is never sent. Toggling works live: enabling re-runs the probe and adds the map control, disabling removes it and clears any displayed track. The past-anchorages button also now picks up the dark-mode theme like the other map controls
+
+## Bug fixes
+
+- **No more server log spam when an AIS vessel ages out** — the webapp sent a per-vessel unsubscribe frame that Signal K rejects (it only accepts the global form), logging an error each time. It now just drops the vessel from its resubscribe set; a silent vessel emits no deltas, and the server forgets the subscription when the socket closes
+- **No more warning when the tracks plugin isn't installed** — probing for @signalk/tracks-plugin no longer logs a warning on servers that don't have it
+
+## Documentation
+
+- **signalk-questdb is now the recommended history provider** — the recommended-plugins list swaps @signalk/tracks-plugin for signalk-questdb, and the README notes that tracks-plugin support will be dropped in a future release in favor of a history provider
+
 # v2.9.0
 
 ## Anchorage session log & past anchorages
