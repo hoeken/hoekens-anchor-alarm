@@ -1,3 +1,9 @@
+# v2.10.1
+
+## Bug fixes
+
+- **Own track loads on page reload even with past anchorages disabled** — restoring the current session's track from the History API lived inside the past-anchorages startup path, so turning off the Show Past Anchorages setting also stopped the live track from being rehydrated after a reload. The startup probe and track rehydration now always run; only the past-anchorages map control is gated on the setting
+
 # v2.10.0
 
 ## TimeZero anchor watch sync
