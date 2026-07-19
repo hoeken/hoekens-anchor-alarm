@@ -168,6 +168,61 @@ describe("discovery beacon", () => {
   });
 });
 
+describe("My TIMEZERO user id pairing", () => {
+  test("advertises the user id in beacon field 4", () => {
+    const f = buildBeacon({
+      hostName: "SK",
+      uuid: "u",
+      userId: "user-123",
+    }).split(";");
+    assert.equal(f[4], "user-123");
+  });
+
+  test("leaves field 4 empty when no user id is configured", () => {
+    const f = buildBeacon({ hostName: "SK", uuid: "u" }).split(";");
+    assert.equal(f[4], "");
+  });
+
+  test("parses a peer's user id out of its beacon", () => {
+    const raw =
+      "TZ Sync 1.0;NAV;TZ Professional;;user-123;;NAV/uuid;34944412;1;1;10;1;0;5;2;0;0";
+    assert.equal(parseBeacon(raw, "192.168.0.9").userId, "user-123");
+  });
+
+  describe("isTrustedPeer", () => {
+    const seenPeer = (sync, address, userId) =>
+      sync.peers.set(address, { address, userId });
+
+    test("always trusts NavNet addresses", () => {
+      const sync = new TimeZeroSync(stubApp(), {});
+      assert.equal(sync.isTrustedPeer("172.31.3.54"), true);
+    });
+
+    test("rejects off-NavNet addresses when no user id is configured", () => {
+      const sync = new TimeZeroSync(stubApp(), {});
+      assert.equal(sync.isTrustedPeer("192.168.0.9"), false);
+    });
+
+    test("trusts an off-NavNet peer that advertised our user id", () => {
+      const sync = new TimeZeroSync(stubApp(), { userId: "user-123" });
+      seenPeer(sync, "192.168.0.9", "user-123");
+      assert.equal(sync.isTrustedPeer("192.168.0.9"), true);
+    });
+
+    test("rejects an off-NavNet peer advertising a different user id", () => {
+      const sync = new TimeZeroSync(stubApp(), { userId: "user-123" });
+      seenPeer(sync, "192.168.0.9", "someone-else");
+      assert.equal(sync.isTrustedPeer("192.168.0.9"), false);
+    });
+
+    test("rejects an unknown address even with a user id configured", () => {
+      const sync = new TimeZeroSync(stubApp(), { userId: "user-123" });
+      assert.equal(sync.isTrustedPeer("192.168.0.99"), false);
+      assert.equal(sync.isTrustedPeer(""), false);
+    });
+  });
+});
+
 describe("remote anchor apply (higher-tick-wins)", () => {
   const remoteBody = (tick, values = "NULL,10,0,0") =>
     JSON.stringify({ ChangeTick: tick, Values: values });

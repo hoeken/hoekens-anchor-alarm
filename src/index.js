@@ -140,25 +140,30 @@ export default function (app) {
       // sync failure must never affect the alarm, so start() is wrapped.
       if (plugin.configuration.enableTimeZeroSync) {
         try {
+          const userId = (plugin.configuration.timeZeroUserId || "").trim();
           const timeZeroSync = new TimeZeroSync(app, {
             hostName: plugin.configuration.timeZeroHostName || "SignalK",
+            userId: userId,
             anchorProvider: () => plugin.currentAnchorForSync(),
             onRemoteAnchor: (anchor) => plugin.applyRemoteAnchor(anchor),
           });
-          // TimeZero only permits account-free LAN sync on a Furuno NavNet
-          // (172.31.x.x) interface, and that subnet is also what gates the
-          // unauthenticated sync endpoint's access control. Off NavNet there's
-          // nothing to sync with and starting would only open an unusable
-          // listener — so don't.
-          if (timeZeroSync.onNavNet()) {
+          // TimeZero pairs peers either by subnet — it syncs freely within a
+          // Furuno NavNet (172.31.x.x) — or by a shared My TIMEZERO user id.
+          // With neither there is nothing we can sync with, so starting would
+          // only open an unusable listener.
+          if (timeZeroSync.onNavNet() || userId) {
             plugin.timeZeroSync = timeZeroSync;
             plugin.timeZeroSync.start();
+            if (!timeZeroSync.onNavNet())
+              app.debug(
+                "TimeZero sync pairing by My TIMEZERO user ID (experimental — no NavNet interface found)",
+              );
           } else {
             app.setPluginStatus(
-              "TimeZero sync enabled but no NavNet (172.31.x.x) interface — not started",
+              "TimeZero sync enabled but no NavNet interface and no user ID — not started",
             );
             app.debug(
-              "TimeZero sync requires a NavNet (172.31.x.x) interface; not started",
+              "TimeZero sync needs a NavNet (172.31.x.x) interface or a My TIMEZERO user ID; not started",
             );
           }
         } catch (e) {
