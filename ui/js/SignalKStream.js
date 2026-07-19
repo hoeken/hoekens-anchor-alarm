@@ -97,11 +97,7 @@ export class SignalKStream {
     this.send(message);
   }
 
-  unsubscribe(message) {
-    this.send(message);
-  }
-
-  // Send a subscribe/unsubscribe frame if the socket is open. A frame sent while
+  // Send a subscribe frame if the socket is open. A frame sent while
   // reconnecting is silently dropped; callers re-issue their subscriptions on
   // the next "connect" event, so nothing is lost.
   send(message) {

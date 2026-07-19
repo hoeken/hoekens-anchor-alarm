@@ -498,18 +498,14 @@ export class FleetLayer {
       .catch(() => { }); // static stays at BoatConfig defaults; not worth surfacing
   }
 
-  // Drop a pruned vessel's context subscription so the set of live `*` streams
-  // stays bounded to vessels we've heard from recently. If it transmits again,
-  // vessels.* re-discovers it and subscribeVessel re-subscribes.
+  // Forget a pruned vessel so resubscribeVessels stops replaying it. The
+  // server-side subscription is left hanging: SignalK only accepts the global
+  // {context:"*"} unsubscribe form and errors on per-context ones. A silent
+  // vessel sends no deltas anyway, and the server drops the subscription with
+  // the socket. If it transmits again, vessels.* re-discovers it and
+  // subscribeVessel re-subscribes.
   unsubscribeVessel(mmsi) {
-    const key = String(mmsi);
-    if (!this._subscribedMmsis.has(key))
-      return;
-    this._subscribedMmsis.delete(key);
-    this.app.client?.unsubscribe({
-      context: this.contextForMmsi(key),
-      unsubscribe: [{ path: "*" }],
-    });
+    this._subscribedMmsis.delete(String(mmsi));
   }
 
   // Re-send every per-vessel context subscription. The server forgets our
