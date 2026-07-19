@@ -527,46 +527,47 @@ class AnchorAlarm {
 
   // Anchorage history rides on the server's v2 History API, which only
   // exists when a history provider plugin (e.g. signalk-questdb) is
-  // installed. Probe once at startup: when available, add the past-anchorages
-  // control and — if we started mid-session, e.g. after a server restart —
-  // rehydrate the live scribble track from recorded history, which the
-  // in-memory tracks plugin has lost. Without a provider this is a silent
-  // no-op and the app behaves exactly as before. The whole thing (probe
-  // included) is gated on config.enableAnchorageHistory; toggling the setting
-  // back on re-runs this, re-sending the probe (see setAnchorageHistoryEnabled).
+  // installed. Probe once at startup regardless of settings: if we started
+  // mid-session (e.g. after a server restart) the live scribble track is
+  // rehydrated from recorded history, which the in-memory tracks plugin has
+  // lost — that's current-session data, so it must not depend on the
+  // past-anchorages toggle. Only the past-anchorages control itself is gated
+  // on config.enableAnchorageHistory. Without a provider this is a silent
+  // no-op and the app behaves exactly as before.
   initAnchorageHistory() {
-    if (!this.config.enableAnchorageHistory || this.historyControl)
-      return;
     this.signalK.probeHistory().then((available) => {
-      // Re-check the config and control: the setting may have been toggled
-      // (off, or off-and-on spawning a second probe) while the probe was in
-      // flight.
-      if (
-        !available ||
-        !this.map ||
-        !this.config.enableAnchorageHistory ||
-        this.historyControl
-      )
+      this.historyAvailable = !!available;
+      if (!available || !this.map)
         return;
-
-      this.historyControl = new AnchorageHistoryControl({
-        signalK: this.signalK,
-        statusBar: this.statusBar,
-        getLoggedIn: () => this.state.loggedIn,
-      });
-      this.map.addControl(this.historyControl);
 
       if (this.state.isAnchored())
         this.rehydrateOwnTrack();
+
+      // Re-check the config here: the setting may have been toggled while
+      // the probe was in flight.
+      if (this.config.enableAnchorageHistory)
+        this.addAnchorageHistoryControl();
     });
   }
 
+  addAnchorageHistoryControl() {
+    if (!this.historyAvailable || !this.map || this.historyControl)
+      return;
+    this.historyControl = new AnchorageHistoryControl({
+      signalK: this.signalK,
+      statusBar: this.statusBar,
+      getLoggedIn: () => this.state.loggedIn,
+    });
+    this.map.addControl(this.historyControl);
+  }
+
   // Live toggle for the past-anchorages control (config.enableAnchorageHistory).
-  // Enabling re-runs the startup probe so the control appears without a reload;
-  // disabling removes the control (which also clears any displayed track).
+  // The availability probe already ran at startup, so enabling just adds the
+  // control (a no-op without a history provider); disabling removes it (which
+  // also clears any displayed track).
   setAnchorageHistoryEnabled(enabled) {
     if (enabled) {
-      this.initAnchorageHistory();
+      this.addAnchorageHistoryControl();
     } else if (this.historyControl) {
       this.map.removeControl(this.historyControl);
       this.historyControl = null;
