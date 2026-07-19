@@ -319,6 +319,12 @@ export class FleetLayer {
         );
       })
       .catch((err) => {
+        // A 404 just means the tracks plugin isn't installed — historical
+        // fleet tracks are an optional extra, not something to warn about.
+        if (err.status === 404) {
+          this.app.statusBar.clear("tracks-plugin");
+          return;
+        }
         const detail = err.statusText || err.message || "unknown error";
         this.app.statusBar.set(
           "tracks-plugin",
