@@ -21,6 +21,7 @@ import { Geo } from "../shared/geo.js";
 import { GlitchFilter } from "../shared/glitch-filter.js";
 import { SignalKBus } from "./signalk-bus.js";
 import { SessionLog } from "./session-log.js";
+import { TimeZeroSync } from "./timezero-sync.js";
 import { Utils } from "./utils.js";
 import { register as registerHttpRoutes } from "./http-routes.js";
 import { ValidationError, StateError } from "./errors.js";
@@ -57,6 +58,8 @@ export default function (app) {
 
   plugin.bus = new SignalKBus(app, plugin.id);
   plugin.sessionLog = new SessionLog(app);
+  // TimeZero LAN anchor sync — created only when enabled, in plugin.start.
+  plugin.timeZeroSync = null;
 
   // ============================================================
   // PLUGIN LIFECYCLE
@@ -132,6 +135,23 @@ export default function (app) {
         zone ? zone.getConfig() : undefined,
       );
 
+      // TimeZero LAN sync: broadcast our anchor to (and accept anchors from)
+      // TimeZero instances on the local network. Opt-in and best-effort — a
+      // sync failure must never affect the alarm, so start() is wrapped.
+      if (plugin.configuration.enableTimeZeroSync) {
+        try {
+          plugin.timeZeroSync = new TimeZeroSync(app, {
+            hostName: plugin.configuration.timeZeroHostName || "SignalK",
+            anchorProvider: () => plugin.currentAnchorForSync(),
+            onRemoteAnchor: (anchor) => plugin.applyRemoteAnchor(anchor),
+          });
+          plugin.timeZeroSync.start();
+        } catch (e) {
+          app.error(`TimeZero sync failed to start: ${e.message}`);
+          plugin.timeZeroSync = null;
+        }
+      }
+
       //OLD APIs - only here for backwards compatibility
       if (app.registerActionHandler) {
         app.registerActionHandler(
@@ -167,6 +187,11 @@ export default function (app) {
     });
 
     plugin.stopWatchingPosition();
+
+    if (plugin.timeZeroSync) {
+      plugin.timeZeroSync.stop();
+      plugin.timeZeroSync = null;
+    }
 
     app.setPluginStatus("Stopped");
   };
@@ -622,6 +647,8 @@ export default function (app) {
 
     plugin.startWatchingPosition();
     plugin.savePluginOptions();
+
+    plugin.notifyTimeZero();
   };
 
   plugin.setZone = function (zone) {
@@ -667,6 +694,8 @@ export default function (app) {
     });
     plugin.sessionLog.updateZone(resolvedZone.getConfig());
     plugin.savePluginOptions();
+
+    plugin.notifyTimeZero();
   };
 
   // Legacy shim: treats `radius` as a circle zone and routes through setZone.
@@ -692,6 +721,55 @@ export default function (app) {
     plugin.savePluginOptions();
 
     plugin.stopWatchingPosition();
+
+    plugin.notifyTimeZero();
+  };
+
+  // ============================================================
+  // TIMEZERO LAN SYNC BRIDGE
+  // ============================================================
+
+  // Tell the TimeZero sync engine our anchor changed, so its next beacon
+  // advertises a newer tick and TZ peers pull. No-op when sync is disabled.
+  plugin.notifyTimeZero = function () {
+    plugin.timeZeroSync?.notifyAnchorChanged();
+  };
+
+  // The current anchor as TimeZero needs it: { position, radius } for a circle
+  // watch, or null when no anchor is set (or the zone isn't a circle — TZ's
+  // anchor watch is a circle, so non-circle zones can't be represented and are
+  // reported as no-anchor rather than misrepresented).
+  plugin.currentAnchorForSync = function () {
+    const zoneConfig = readZoneConfig(plugin.configuration);
+    const position = zoneConfig?.position;
+    if (!position)
+      return null;
+    const zone = watchZoneFromConfig(zoneConfig);
+    const radius = zone?.getCircleRadius?.();
+    if (radius == null)
+      return null;
+    return { position, radius };
+  };
+
+  // Apply an anchor pushed to us by a TimeZero peer: drop at the given
+  // position/radius, or raise when null. Routed through the normal
+  // drop/raise/setZone paths so it emits deltas, logs the session, and
+  // persists exactly like an operator action.
+  plugin.applyRemoteAnchor = function (anchor) {
+    try {
+      if (anchor == null) {
+        if (readZoneConfig(plugin.configuration)?.position)
+          plugin.raiseAnchor();
+        return;
+      }
+      // dropAnchor handles both a fresh drop and re-dropping while anchored.
+      plugin.dropAnchor({
+        position: anchor.position,
+        zone: { type: "circle", radius: anchor.radius },
+      });
+    } catch (err) {
+      app.error(`TimeZero remote anchor apply failed: ${err.message}`);
+    }
   };
 
   // ============================================================

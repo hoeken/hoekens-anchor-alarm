@@ -38,6 +38,12 @@ Compact HUD panels for wind (with a wind barb on the map), depth, tide state (pl
 
 Logged-in users can tweak the UI without leaving for the plugin config page. A gear button opens a settings dialog (panel toggles, basemap, default zone shape, fleet radius, connection type) and most changes apply live.
 
+### 🔄 TimeZero anchor sync
+
+Optionally keep your anchor watch in sync with [TimeZero](https://mytimezero.com/) (TZ Professional / TZ iBoat) instances on the same network. Drop, reshape, or raise the anchor here and it appears in TimeZero; do it in TimeZero and it flows back into Signal K. Enable **"Sync Anchor with TimeZero (LAN)"** in the plugin config.
+
+TimeZero only allows account-free LAN sync on a Furuno NavNet (`172.31.x.x`) network, so this works when your Signal K server has an address on that subnet. Because TimeZero's anchor watch is always a circle, only circular watch zones are synced.
+
 ## Usage
 
 This plugin is meant to be used through the web interface on a phone or computer. Point your browser at:

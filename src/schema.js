@@ -294,6 +294,20 @@ export function buildSchema(app) {
           "Total length of the anchor chain/rode (in meters).  Used to flag scopes longer than your available chain.",
         default: 100,
       },
+      enableTimeZeroSync: {
+        type: "boolean",
+        title: "Sync Anchor with TimeZero (LAN)",
+        description:
+          "Broadcast this anchor to — and accept anchor changes from — TimeZero (TZ Professional / TZ iBoat) instances on the local network, so dropping or raising here shows up there and vice versa. Only works when Signal K is reachable on a Furuno NavNet (172.31.x.x) address, which TimeZero allows without a My TIMEZERO account. Note: TimeZero's anchor watch is a circle, so only circular watch zones sync.",
+        default: false,
+      },
+      timeZeroHostName: {
+        type: "string",
+        title: "TimeZero Sync Host Name",
+        description:
+          "Name this Signal K server advertises to TimeZero in the device list.",
+        default: "SignalK",
+      },
       zone: {
         type: "string",
         title: "Anchor Watch Zone (JSON)",
