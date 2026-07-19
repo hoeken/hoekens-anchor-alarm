@@ -45,7 +45,11 @@ Optionally keep your anchor watch in sync with [TimeZero](https://mytimezero.com
 TimeZero pairs peers in one of two ways:
 
 - **On a Furuno NavNet (`172.31.x.x`) network** it syncs without an account — just enable the option.
-- **On an ordinary LAN** it only pairs with peers advertising the same My TIMEZERO user ID. Set **"My TIMEZERO User ID"** to the ID your TimeZero instances use and they will sync here too. TimeZero broadcasts this ID in the clear on UDP port 33000, so you can read it from a TimeZero machine's own beacon (field 5 of the semicolon-separated `TZ Sync` message).
+- **On an ordinary LAN** it only pairs with peers advertising the same My TIMEZERO user ID, which requires your TimeZero instances to be signed in to a My TIMEZERO account. Set **"My TIMEZERO User ID"** to the ID they use and they will sync here too. It is a GUID (e.g. `d5ff170c-4a28-47e0-b54f-1f98bda46c1c`), not your email address. TimeZero broadcasts it in the clear on UDP port 33000, so you can read it from a signed-in TimeZero machine's own beacon — field 5 of the semicolon-separated `TZ Sync` message:
+
+  ```
+  tcpdump -i any -A udp port 33000
+  ```
 
 Because TimeZero's anchor watch is always a circle, only circular watch zones are synced.
 

@@ -319,7 +319,7 @@ export function buildSchema(app) {
         type: "string",
         title: "My TIMEZERO User ID (for non-NavNet networks)",
         description:
-          "Leave blank on a Furuno NavNet (172.31.x.x) network. On an ordinary LAN, TimeZero only pairs with peers advertising the same My TIMEZERO user ID, so set it to the ID your TimeZero instances use and they will sync here too. TimeZero broadcasts this ID in the clear on UDP port 33000 — you can read it from a TimeZero machine's own beacon (field 5 of the semicolon-separated 'TZ Sync' message).",
+          "Leave blank on a Furuno NavNet (172.31.x.x) network. On an ordinary LAN, TimeZero only pairs with peers advertising the same My TIMEZERO user ID, so set it to the ID your TimeZero instances use and they will sync here too. It is a GUID (e.g. d5ff170c-4a28-47e0-b54f-1f98bda46c1c), not your email address, and only appears once TimeZero is signed in to a My TIMEZERO account. TimeZero broadcasts it in the clear on UDP port 33000, so you can read it from a signed-in TimeZero machine's own beacon (field 5 of the semicolon-separated 'TZ Sync' message).",
         default: "",
       },
       zone: {
