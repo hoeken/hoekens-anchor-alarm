@@ -32,6 +32,8 @@ import os from "os";
 const DISCOVERY_PORT = 33000;
 const COMMAND_PORT = 32000;
 const BEACON_INTERVAL_MS = 1000;
+// How long a peer may hold the sync lock before we treat it as abandoned.
+const LOCK_TIMEOUT_MS = 30000;
 const PROTOCOL = "TZ Sync 1.0";
 const DEVICE_TYPE = "TZ iBoat"; // a legitimate sync-peer device type
 
@@ -220,9 +222,18 @@ export class TimeZeroSync {
     this.peers = new Map();
     // Guards against overlapping pulls; see _pullFrom.
     this.pulling = false;
-    // NetworkID of the peer currently holding our sync lock, if any.
+    // NetworkID of the peer currently holding our sync lock, and when it was
+    // taken. A peer that dies mid-sync never sends ReleaseLock, so the lock
+    // expires rather than blocking every other peer until a plugin restart.
     this.lockHolder = null;
+    this.lockTakenAt = 0;
     this.started = false;
+  }
+
+  // A held lock older than LOCK_TIMEOUT_MS is treated as abandoned. Peers hold
+  // it only for the few requests of one sync round, so this is generous.
+  _lockExpired() {
+    return Date.now() - this.lockTakenAt > LOCK_TIMEOUT_MS;
   }
 
   // Whether an address may use the sync endpoint.
@@ -290,8 +301,25 @@ export class TimeZeroSync {
   }
 
   // Bump our advertised anchor tick so the next beacon tells peers we changed.
+  //
+  // The tick is account-wide in TimeZero and already in the thousands, so it
+  // isn't enough to increment our own counter: after a plugin restart we would
+  // start again from 1 and every local anchor change would look older than
+  // TimeZero's current state, so no peer would ever pull it. Step past the
+  // highest tick any peer has advertised instead, which keeps a local change
+  // strictly newer than everything we've seen.
   notifyAnchorChanged() {
-    this.anchorTick += 1;
+    this.anchorTick = Math.max(this.anchorTick, this._highestPeerTick()) + 1;
+  }
+
+  // The highest anchor tick advertised by any peer we've heard from.
+  _highestPeerTick() {
+    let highest = 0;
+    for (const peer of this.peers.values()) {
+      if (peer.anchorWatchTick > highest)
+        highest = peer.anchorWatchTick;
+    }
+    return highest;
   }
 
   _currentSerialized() {
@@ -322,75 +350,74 @@ export class TimeZeroSync {
   // Handle one sync request. Split out from _startServer so the endpoint's
   // behaviour can be exercised directly in tests.
   _handle(req, res) {
-    {
-      try {
-        // The endpoint is unauthenticated plaintext HTTP (the protocol offers
-        // no auth) and the anchor watch is safety-critical — a GET discloses
-        // the boat's position and a POST can move or raise the anchor — so
-        // every request is checked against the peers we trust.
-        const remote = (req.socket.remoteAddress || "").replace(/^::ffff:/, "");
-        if (!this.isTrustedPeer(remote)) {
-          res.writeHead(403);
-          res.end();
-          return;
-        }
-        const path = (req.url || "").split("?")[0].replace(/\/+$/, "");
+    try {
+      // The endpoint is unauthenticated plaintext HTTP (the protocol offers
+      // no auth) and the anchor watch is safety-critical — a GET discloses
+      // the boat's position and a POST can move or raise the anchor — so
+      // every request is checked against the peers we trust.
+      const remote = (req.socket.remoteAddress || "").replace(/^::ffff:/, "");
+      if (!this.isTrustedPeer(remote)) {
+        res.writeHead(403);
+        res.end();
+        return;
+      }
+      const path = (req.url || "").split("?")[0].replace(/\/+$/, "");
 
-        // Advisory sync lock, as TimeZero peers use between themselves: 202
-        // when granted, 409 while someone else holds it. Re-requesting your own
-        // lock is idempotent so a peer that missed our reply can retry.
-        if (path.endsWith("/LanSynchronizationApi/GetLock")) {
-          const who = new URL(req.url, "http://x").searchParams.get("NetworkID");
-          if (this.lockHolder && this.lockHolder !== who) {
-            res.writeHead(409);
-          } else {
-            this.lockHolder = who;
-            res.writeHead(202);
-          }
-          res.end();
-          return;
+      // Advisory sync lock, as TimeZero peers use between themselves: 202
+      // when granted, 409 while someone else holds it. Re-requesting your own
+      // lock is idempotent so a peer that missed our reply can retry.
+      if (path.endsWith("/LanSynchronizationApi/GetLock")) {
+        const who = new URL(req.url, "http://x").searchParams.get("NetworkID");
+        if (this.lockHolder && this.lockHolder !== who && !this._lockExpired()) {
+          res.writeHead(409);
+        } else {
+          this.lockHolder = who;
+          this.lockTakenAt = Date.now();
+          res.writeHead(202);
         }
-        if (path.endsWith("/LanSynchronizationApi/ReleaseLock")) {
-          const who = new URL(req.url, "http://x").searchParams.get("NetworkID");
-          if (this.lockHolder === who)
-            this.lockHolder = null;
-          res.writeHead(200);
-          res.end();
-          return;
-        }
+        res.end();
+        return;
+      }
+      if (path.endsWith("/LanSynchronizationApi/ReleaseLock")) {
+        const who = new URL(req.url, "http://x").searchParams.get("NetworkID");
+        if (this.lockHolder === who)
+          this.lockHolder = null;
+        res.writeHead(200);
+        res.end();
+        return;
+      }
 
-        const isAnchor = path.endsWith("/LanSynchronizationApi/AnchorWatch");
-        if (isAnchor && req.method === "GET") {
-          res.writeHead(200, { "Content-Type": "application/json" });
-          res.end(JSON.stringify(this._currentSerialized()));
-          return;
-        }
-        if (isAnchor && req.method === "POST") {
-          let body = "";
-          req.on("data", (c) => {
-            body += c;
-            if (body.length > 1e6)
-              req.destroy(); // guard against a runaway upload
-          });
-          req.on("end", () => {
-            this._applyRemote(body);
-            res.writeHead(201);
-            res.end();
-          });
-          return;
-        }
-        // Answer 200 to TZ's reachability probe (bare GET /) and everything
-        // else so it treats us as a live peer.
+      const isAnchor = path.endsWith("/LanSynchronizationApi/AnchorWatch");
+      if (isAnchor && req.method === "GET") {
         res.writeHead(200, { "Content-Type": "application/json" });
-        res.end("{}");
-      } catch (err) {
-        this.app.error(`TimeZero sync request error: ${err.message}`);
-        try {
-          res.writeHead(500);
+        res.end(JSON.stringify(this._currentSerialized()));
+        return;
+      }
+      if (isAnchor && req.method === "POST") {
+        let body = "";
+        req.on("data", (c) => {
+          body += c;
+          if (body.length > 1e6)
+            req.destroy(); // guard against a runaway upload
+        });
+        req.on("end", () => {
+          this._applyRemote(body);
+          res.writeHead(201);
           res.end();
-        } catch {
-          /* response already gone */
-        }
+        });
+        return;
+      }
+      // Answer 200 to TZ's reachability probe (bare GET /) and everything
+      // else so it treats us as a live peer.
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end("{}");
+    } catch (err) {
+      this.app.error(`TimeZero sync request error: ${err.message}`);
+      try {
+        res.writeHead(500);
+        res.end();
+      } catch {
+        /* response already gone */
       }
     }
   }

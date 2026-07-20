@@ -354,6 +354,62 @@ describe("sync lock endpoint", () => {
     );
     assert.equal(await callServed(sync, `${lock}peerB`), 202, "freed for peerB");
   });
+
+  test("hands the lock to another peer once the holder's has expired", async () => {
+    const sync = new TimeZeroSync(stubApp(), {});
+    const lock = "/LanSynchronizationApi/GetLock?NetworkID=";
+    assert.equal(await callServed(sync, `${lock}peerA`), 202);
+    assert.equal(await callServed(sync, `${lock}peerB`), 409);
+    // peerA vanished without releasing.
+    sync.lockTakenAt = Date.now() - 31000;
+    assert.equal(await callServed(sync, `${lock}peerB`), 202);
+  });
+});
+
+describe("advertised anchor tick", () => {
+  // TimeZero's tick is account-wide and already in the thousands, so a local
+  // change has to step past whatever the peers are advertising. Counting up
+  // from our own starting value would leave us permanently "older" than
+  // TimeZero and nothing would ever pull from us.
+  test("steps past the highest tick any peer advertises", () => {
+    const sync = new TimeZeroSync(stubApp(), {});
+    sync.peers.set("192.168.1.108", { anchorWatchTick: 3151 });
+    sync.peers.set("192.168.1.175", { anchorWatchTick: 3150 });
+    sync.notifyAnchorChanged();
+    assert.equal(sync.anchorTick, 3152);
+  });
+
+  test("survives a restart: a local change still outranks TimeZero", () => {
+    // Fresh instance — anchorTick is back to its initial value.
+    const sync = new TimeZeroSync(stubApp(), {});
+    assert.ok(sync.anchorTick < 3151, "starts below TimeZero's tick");
+    sync.peers.set("192.168.1.108", { anchorWatchTick: 3151 });
+    sync.notifyAnchorChanged();
+    assert.ok(
+      sync.anchorTick > 3151,
+      "a local anchor change must look newer than TimeZero's state",
+    );
+  });
+
+  test("still advances when no peers are known", () => {
+    const sync = new TimeZeroSync(stubApp(), {});
+    const before = sync.anchorTick;
+    sync.notifyAnchorChanged();
+    assert.equal(sync.anchorTick, before + 1);
+  });
+});
+
+describe("sync lock expiry", () => {
+  test("a lock held by a vanished peer is reclaimed", () => {
+    const sync = new TimeZeroSync(stubApp(), {});
+    sync.lockHolder = "peerThatDied";
+    sync.lockTakenAt = Date.now();
+    assert.equal(sync._lockExpired(), false, "a fresh lock is honoured");
+    // The peer never sent ReleaseLock; without expiry every other peer would
+    // get 409 until the plugin restarted.
+    sync.lockTakenAt = Date.now() - 31000;
+    assert.equal(sync._lockExpired(), true);
+  });
 });
 
 describe("remote anchor apply (higher-tick-wins)", () => {
