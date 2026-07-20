@@ -133,9 +133,9 @@ describe("discovery beacon", () => {
     assert.equal(f[0], "TZ Sync 1.0");
     assert.equal(f[1], "SignalK");
     assert.equal(f[2], "TZ iBoat");
-    assert.equal(f[8], "1"); // CanSync
-    assert.equal(f[13], "7"); // anchorWatchTick
-    assert.equal(f[14], "99"); // visibleHosts (master election)
+    assert.equal(f[8], "99"); // visibleHosts (master election)
+    assert.equal(f[13], "22"); // schemaVersion, as TimeZero broadcasts
+    assert.equal(f[14], "7"); // anchorWatchTick
   });
 
   test("round-trips a beacon it built", () => {
@@ -152,14 +152,28 @@ describe("discovery beacon", () => {
     assert.equal(peer.address, "172.31.3.9");
   });
 
-  test("parses a real MASTERCABIN beacon", () => {
+  // A real beacon from a signed-in TZ Professional. The anchor tick lives in
+  // field 14 (3151, matching the ChangeTick its AnchorWatch endpoint returned);
+  // field 13 is the schema version and stays at 22 across anchor edits.
+  test("parses a real signed-in TZ Professional beacon", () => {
     const raw =
-      "TZ Sync 1.0;MASTERCABIN;TZ Professional;;;;MASTERCABIN/d5ff170c;34944412;1;1;31859;1;0;158;1601;0;22347062";
-    const peer = parseBeacon(raw, "172.31.3.54");
-    assert.equal(peer.name, "MASTERCABIN");
+      "TZ Sync 1.0;TZPRO-NAVPC;TZ Professional;;user-guid;Cloud;TZPRO-NAVPC/5425c908;35847804;4;1;205253;95;1007586792;22;3151;0;270720187";
+    const peer = parseBeacon(raw, "192.168.1.108");
+    assert.equal(peer.name, "TZPRO-NAVPC");
     assert.equal(peer.deviceType, "TZ Professional");
+    assert.equal(peer.userId, "user-guid");
     assert.equal(peer.canSync, true);
-    assert.equal(peer.anchorWatchTick, 158);
+    assert.equal(peer.visibleHosts, 4);
+    assert.equal(peer.anchorWatchTick, 3151);
+  });
+
+  // The anchor tick is what moves when the operator edits the anchor: across
+  // six edits field 14 stepped 3143..3148 while field 13 stayed at 22.
+  test("tracks the anchor tick across an edit, ignoring the static field 13", () => {
+    const at = (tick) =>
+      `TZ Sync 1.0;TZPRO-NAVPC;TZ Professional;;u;Cloud;TZPRO-NAVPC/x;35847804;4;1;205253;95;1007586792;22;${tick};0;0`;
+    assert.equal(parseBeacon(at(3143), "1.2.3.4").anchorWatchTick, 3143);
+    assert.equal(parseBeacon(at(3148), "1.2.3.4").anchorWatchTick, 3148);
   });
 
   test("ignores non-TimeZero UDP payloads", () => {
@@ -220,6 +234,125 @@ describe("My TIMEZERO user id pairing", () => {
       assert.equal(sync.isTrustedPeer("192.168.0.99"), false);
       assert.equal(sync.isTrustedPeer(""), false);
     });
+  });
+});
+
+describe("pulling from a peer that advertises a newer anchor", () => {
+  // Stand up a stub that answers like TimeZero does, so the pull can be
+  // exercised end to end: lock, fetch, release.
+  const startPeer = async (anchorValues) => {
+    const { createServer } = await import("node:http");
+    const seen = [];
+    const server = createServer((req, res) => {
+      seen.push(req.url.split("?")[0]);
+      if (req.url.includes("GetLock")) {
+        res.writeHead(202);
+        res.end();
+      } else if (req.url.includes("ReleaseLock")) {
+        res.writeHead(200);
+        res.end();
+      } else {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ChangeTick: 3152, Values: anchorValues }));
+      }
+    });
+    await new Promise((r) => server.listen(0, "127.0.0.1", r));
+    return { server, seen, port: server.address().port };
+  };
+
+  test("locks, fetches the anchor, then releases", async () => {
+    const peer = await startPeer("X'0400000000000000000000C350',10,0,0");
+    try {
+      let applied;
+      const sync = new TimeZeroSync(stubApp(), {
+        onRemoteAnchor: (a) => {
+          applied = a;
+        },
+      });
+      // Point the pull at the stub's port rather than TimeZero's fixed one.
+      sync._get = (address, path) =>
+        new Promise((resolve, reject) => {
+          import("node:http").then(({ get }) => {
+            const req = get(
+              { host: "127.0.0.1", port: peer.port, path },
+              (res) => {
+                let body = "";
+                res.on("data", (c) => (body += c));
+                res.on("end", () => resolve({ status: res.statusCode, body }));
+              },
+            );
+            req.on("error", reject);
+          });
+        });
+      sync.anchorTick = 1;
+      await sync._pullFrom(
+        { address: "127.0.0.1", name: "TZPRO", anchorWatchTick: 3152 },
+        1,
+      );
+      assert.deepEqual(peer.seen, [
+        "/LanSynchronizationApi/GetLock",
+        "/LanSynchronizationApi/AnchorWatch",
+        "/LanSynchronizationApi/ReleaseLock",
+      ]);
+      assert.ok(applied, "anchor should have been applied");
+      assert.equal(applied.radius, 500);
+      assert.equal(sync.anchorTick, 3152);
+    } finally {
+      peer.server.close();
+    }
+  });
+
+  test("gives up quietly when the peer's lock is held", async () => {
+    const sync = new TimeZeroSync(stubApp(), {
+      onRemoteAnchor: () => assert.fail("must not apply without the lock"),
+    });
+    sync._get = async (_a, path) =>
+      path.includes("GetLock")
+        ? { status: 409, body: "" }
+        : { status: 200, body: "{}" };
+    sync.anchorTick = 1;
+    await sync._pullFrom({ address: "1.2.3.4", name: "TZ", anchorWatchTick: 9 }, 1);
+    assert.equal(sync.anchorTick, 1); // unchanged
+  });
+});
+
+describe("sync lock endpoint", () => {
+  // Drive the real request handler over a loopback socket, so the lock
+  // behaviour a TimeZero peer would see is what's actually tested.
+  const callServed = async (sync, url) => {
+    const { createServer, get } = await import("node:http");
+    const server = createServer((req, res) => {
+      // Force the trust check to pass for loopback in this test.
+      Object.defineProperty(req.socket, "remoteAddress", {
+        value: "172.31.0.9",
+        configurable: true,
+      });
+      sync._handle(req, res);
+    });
+    await new Promise((r) => server.listen(0, "127.0.0.1", r));
+    const port = server.address().port;
+    const status = await new Promise((resolve, reject) => {
+      const req = get({ host: "127.0.0.1", port, path: url }, (res) => {
+        res.resume();
+        res.on("end", () => resolve(res.statusCode));
+      });
+      req.on("error", reject);
+    });
+    server.close();
+    return status;
+  };
+
+  test("grants the lock, refuses a second holder, and frees it on release", async () => {
+    const sync = new TimeZeroSync(stubApp(), {});
+    const lock = "/LanSynchronizationApi/GetLock?NetworkID=";
+    assert.equal(await callServed(sync, `${lock}peerA`), 202);
+    assert.equal(await callServed(sync, `${lock}peerB`), 409, "peerB is blocked");
+    assert.equal(await callServed(sync, `${lock}peerA`), 202, "peerA is idempotent");
+    assert.equal(
+      await callServed(sync, "/LanSynchronizationApi/ReleaseLock?NetworkID=peerA"),
+      200,
+    );
+    assert.equal(await callServed(sync, `${lock}peerB`), 202, "freed for peerB");
   });
 });
 
