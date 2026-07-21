@@ -128,6 +128,13 @@ class AnchorAlarm {
     // Bumped on every websocket (re)connect so a fleet seed still in flight
     // when its socket died can't subscribe on the next connection's behalf.
     this._connectSeq = 0;
+    // Resolved once the initial-load /vessels snapshot has seeded the fleet
+    // cache. The websocket opens in parallel with that fetch, so the first
+    // connection gates its vessels.* subscription on this instead of the
+    // socket-after-seed ordering the old serial startup guaranteed.
+    this._initialSeed = new Promise((resolve) => {
+      this._resolveInitialSeed = resolve;
+    });
   }
 
   static startup() {
@@ -158,14 +165,19 @@ class AnchorAlarm {
       // Gate the vessels.* subscription on a fresh fleet seed: deltas from
       // vessels the cache doesn't hold each fire a per-vessel static fetch,
       // so an unseeded cache means one redundant request per boat in sight.
-      // The first connection rides the initial-load snapshot that seeded the
-      // cache just before the socket opened; reconnects re-fetch /vessels
-      // because the prune timer keeps evicting while the socket is down. The
-      // seed settles even on failure, so a bad snapshot delays fleet updates,
-      // never blocks them; the seq guard keeps a seed whose socket died
-      // mid-fetch from subscribing early on the next connection's fresh seed.
+      // The first connection (and any reconnect while the initial load is
+      // still in flight — fleetLayer doesn't exist until it finishes) waits
+      // for the initial-load snapshot to seed the cache; later reconnects
+      // re-fetch /vessels because the prune timer keeps evicting while the
+      // socket is down. The seed settles even on failure, so a bad snapshot
+      // delays fleet updates, never blocks them; the seq guard keeps a seed
+      // whose socket died mid-fetch from subscribing early on the next
+      // connection's fresh seed.
       const seq = ++this._connectSeq;
-      const seeded = seq === 1 ? Promise.resolve() : this.fleetLayer.seedFleet();
+      const seeded =
+        seq === 1 || !this.fleetLayer
+          ? this._initialSeed
+          : this.fleetLayer.seedFleet();
       seeded.then(() => {
         if (seq === this._connectSeq)
           this.state.websocketSubscribeFleet(this.client);
@@ -270,6 +282,14 @@ class AnchorAlarm {
     if (!this.showAnchorControls)
       this.toolbar.hide();
 
+    // Open the websocket now, in parallel with the REST startup chain, so
+    // live self data (position, heading, wind) isn't gated behind the bulk
+    // /vessels fetch. The connect handler subscribes vessels.self right away;
+    // deltas accumulate in AppState until the initial load builds the map and
+    // starts the render timer. The vessels.* fleet subscription still waits
+    // for the /vessels seed (see setupWebsockets).
+    this.setupWebsockets();
+
     this.loadInitialData();
   }
 
@@ -345,12 +365,15 @@ class AnchorAlarm {
         // constructs the FleetLayer (whose constructor starts the heavy
         // /tracks fetch), and initAnchorageHistory probes the heavy History
         // API — deliberately kept off the critical path of the bulk load.
-        // Seed the fleet cache from the snapshot we already hold, then open
-        // the websocket — the first connect subscribes vessels.* immediately
-        // against this seed (see setupWebsockets).
+        // The websocket has been open since init(); seeding the fleet cache
+        // from the snapshot we already hold and resolving _initialSeed
+        // releases its vessels.* subscription (see setupWebsockets). Vessel
+        // subscriptions the seed sends before the socket finishes opening are
+        // replayed by the connect handler's resubscribeVessels.
         this.buildMap();
         this.fleetLayer.seedFleet(vessels);
-        this.setupConnection();
+        this._resolveInitialSeed();
+        this.startUpdateTimer();
 
         this.anchorController.estimateAnchorPosition();
         this.updateMap();
@@ -603,8 +626,10 @@ class AnchorAlarm {
       });
   }
 
-  setupConnection() {
-    this.setupWebsockets();
+  // Recompute/re-render on a fixed cadence. Started only after buildMap so
+  // update() never runs against a half-built control set; the websocket is
+  // opened separately, back in init() (see setupWebsockets).
+  startUpdateTimer() {
     this.updateTimer = setInterval(
       () => this.update(),
       UPDATE_INTERVAL_MS,

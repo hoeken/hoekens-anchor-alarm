@@ -185,11 +185,16 @@ export class AppState {
     return this.anchor?.state?.value === "on";
   }
 
-  extract(tree, path, fresh = true, maxAge = DEFAULT_FRESHNESS_SEC) {
+  // Pull one path's envelope out of a snapshot tree, merged against the
+  // envelope we already hold. The websocket opens before the /vessels
+  // snapshot resolves, so deltas may already carry a fresher value than the
+  // snapshot — the newer envelope wins (see _newest), and a missing or stale
+  // snapshot value keeps the current one.
+  extract(tree, path, current, fresh = true, maxAge = DEFAULT_FRESHNESS_SEC) {
     let data = SignalKHelper.extract(tree, path);
 
     if (!data)
-      return null;
+      return current ?? null;
 
     // check for freshness.
     if (fresh && !SignalKHelper.isFresh(data, maxAge)) {
@@ -200,48 +205,64 @@ export class AppState {
       SignalKHelper.errorHandler?.(msg);
       console.warn(msg);
       console.trace();
-      return null;
+      return current ?? null;
     }
 
-    return data;
+    return this._newest(data, current);
+  }
+
+  // Keep whichever envelope is newer so the snapshot can't roll a live value
+  // backwards. When the delta envelope wins but arrived without meta, graft
+  // the snapshot's meta on so displayUnits still land.
+  _newest(extracted, current) {
+    if (!current?.timestamp || !extracted.timestamp)
+      return extracted;
+    if (Date.parse(extracted.timestamp) >= Date.parse(current.timestamp))
+      return extracted;
+    if (extracted.meta && !current.meta)
+      current.meta = extracted.meta;
+    return current;
   }
 
   extractAll(data) {
     this.boatConfig = BoatConfig.extract(data);
 
-    this.currentCoordinates = this.extract(data, "navigation.position");
+    const position = this.extract(data, "navigation.position", this.currentCoordinates);
     // Seed the glitch filter with the snapshot fix so the first live delta is
-    // judged against it rather than accepted blind.
-    if (this.currentCoordinates?.value) {
-      const seedTime = Date.parse(this.currentCoordinates.timestamp);
+    // judged against it rather than accepted blind. Skipped when the delta
+    // stream already beat the snapshot — the filter's baseline is fresher.
+    if (position?.value && position !== this.currentCoordinates) {
+      const seedTime = Date.parse(position.timestamp);
       this.glitchFilter.check(
-        this.currentCoordinates.value,
+        position.value,
         Number.isFinite(seedTime) ? seedTime : Date.now(),
       );
     }
-    this.heading = this.extract(data, "navigation.headingTrue") ?? this.heading;
-    this.belowKeel =
-      this.extract(data, "environment.depth.belowKeel") ?? this.belowKeel;
-    this.belowSurface =
-      this.extract(data, "environment.depth.belowSurface") ?? this.belowSurface;
-    this.belowTransducer =
-      this.extract(data, "environment.depth.belowTransducer") ?? this.belowTransducer;
-    this.twa = this.extract(data, "environment.wind.directionTrue") ?? this.twa;
-    this.aws = this.extract(data, "environment.wind.speedApparent") ?? this.aws;
-    this.tide = this.extract(data, "environment.tide", false) ?? this.tide;
+    this.currentCoordinates = position;
+    this.heading = this.extract(data, "navigation.headingTrue", this.heading);
+    this.belowKeel = this.extract(data, "environment.depth.belowKeel", this.belowKeel);
+    this.belowSurface = this.extract(data, "environment.depth.belowSurface", this.belowSurface);
+    this.belowTransducer = this.extract(data, "environment.depth.belowTransducer", this.belowTransducer);
+    this.twa = this.extract(data, "environment.wind.directionTrue", this.twa);
+    this.aws = this.extract(data, "environment.wind.speedApparent", this.aws);
+    // The tide subtree is replaced wholesale when present — it's a tree of
+    // per-field envelopes with no timestamp of its own, so _newest always
+    // picks it. Tide moves hourly; a snapshot a few seconds behind the delta
+    // stream is harmless.
+    this.tide = this.extract(data, "environment.tide", this.tide, false);
 
     if (!this.anchor)
       this.anchor = {};
 
     if (!this._anchorSuppressed("state"))
-      this.anchor.state = this.extract(data, "navigation.anchor.state", false) ?? this.anchor.state;
+      this.anchor.state = this.extract(data, "navigation.anchor.state", this.anchor.state, false);
 
     // anchor.position is treated as a UI preference: the server clears it on raise,
     // but the toolbar/overlay want to keep the last set value so the next
     // drop has a sensible default.
     if (!this._anchorSuppressed("position")) {
-      let newAnchorPosition = this.extract(data, "navigation.anchor.position", false) ??
-        this.anchor.position;
+      let newAnchorPosition =
+        this.extract(data, "navigation.anchor.position", this.anchor.position, false);
       if (newAnchorPosition && newAnchorPosition.value == null && this.anchor.position?.value)
         newAnchorPosition.value = this.anchor.position.value;
       this.anchor.position = newAnchorPosition;
@@ -251,7 +272,8 @@ export class AppState {
     // but the toolbar/overlay want to keep the last set value so the next
     // drop has a sensible default.
     if (!this._anchorSuppressed("watchZone")) {
-      let newWatchZone = this.extract(data, "navigation.anchor.watchZone", false);
+      let newWatchZone =
+        this.extract(data, "navigation.anchor.watchZone", this.anchor.watchZone, false);
       //keep our old one if we have it.
       if (newWatchZone && newWatchZone.value == null && this.anchor.watchZone?.value)
         newWatchZone.value = this.anchor.watchZone.value;
@@ -259,8 +281,7 @@ export class AppState {
     }
 
     this.anchor.notification =
-      this.extract(data, "notifications.navigation.anchor", false) ??
-      this.anchor.notification;
+      this.extract(data, "notifications.navigation.anchor", this.anchor.notification, false);
   }
 
   handleDelta(timestamp, delta) {
