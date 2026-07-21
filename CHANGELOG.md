@@ -1,3 +1,21 @@
+# v2.10.2
+
+## Page-load performance
+
+A round of startup work aimed at lightweight hardware — a Raspberry Pi running the single-threaded Signal K server — where the webapp's request fan-out at load contended with itself and bogged everything down:
+
+- **The UI ships as a single inlined file** — the app's JS and CSS plus the five vendored Leaflet scripts and stylesheet are now minified and inlined into one `index.html` at build time, collapsing the asset fan-out into a single request. The app source map stays external so live debugging still works, but its 2.5 MB is only fetched when devtools is open
+- **Live data no longer waits on the REST startup chain** — the websocket now opens in parallel with the ui-config → self → vessels sequence instead of after it, so position, heading, and wind deltas start flowing immediately (previously they stalled for seconds on a crowded anchorage, or indefinitely if the `/vessels` fetch timed out and the load looped). Since the snapshot can now arrive after deltas are flowing, it merges per path and a stale snapshot value can never overwrite fresher stream data
+- **Heavy reads only happen when their feature is on** — the chart catalog fetch, the bulk fleet-tracks fetch, the History API probe, and the ~1 MB MapLibre stack for the Seascape overlay are each skipped unless the corresponding setting is enabled, and load lazily on first enable from the settings dialog. Own-track rehydration is now tracks-plugin-first, querying the History API only as a fallback. Side effect: the "Use Seascape Bathymetry" checkbox is now always visible since it gates the download, though enabling it remains a no-op on unsupported engines
+- **The heavy reads that do run take turns** — the chart catalog, fleet tracks, and position history fetches now go through a queue one at a time instead of hammering the server simultaneously; each request's timeout only starts once it actually runs, so queue time never counts against its deadline
+- **Common icons are preloaded** — the boat and control icons the map needs first are requested ahead of the rest of the page
+
+## Bug fixes
+
+- **TimeZero anchor positions now decode correctly away from the equator** — the Mercator conversion used the spherical Web Mercator approximation, but TimeZero encodes anchor geometry in true ellipsoidal WGS84 Mercator; the two diverge with latitude (about 20 km at 52°N), so a pulled anchor landed far from the boat and the watch-zone check rejected it. Both conversion directions now use the ellipsoidal projection, verified against a live capture at 51.85°N and locked in with round-trip and real-sample decode tests. Reported with a full diagnosis and captured evidence by seabits-steve
+- **An anchor set in TimeZero now actually reaches Signal K** — the anchor change tick was read from the wrong discovery-beacon field (the constant schema version) and written into one TimeZero doesn't read, and nothing ever pulled from a peer, so sync was effectively one-way. The plugin now uses the correct beacon field, watches each peer's beacon, and pulls a newer anchor the way TimeZero peers do between themselves (take the sync lock, GET the anchor, release — with locks held over 30s treated as abandoned). The advertised tick also steps past the highest tick any peer has announced, so a local change is always strictly newer than TimeZero's account-wide counter, even across plugin restarts (#32, #34, thanks @dirkwa)
+- **Tracks plugin errors no longer raise a status-bar warning** — a failed fleet-tracks fetch now just falls back to History API track rehydration silently
+
 # v2.10.1
 
 ## Bug fixes
