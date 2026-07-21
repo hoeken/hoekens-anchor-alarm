@@ -198,6 +198,10 @@ export class FleetLayer {
       return;
     this.showOwnTrack = next;
     this.applyTrackVisibility();
+    // If startup skipped the bulk history load (both toggles were off), the
+    // first enable triggers it now.
+    if (next && !this.tracksLoadStarted)
+      this.fetchAndLoadTracks();
   }
 
   // Flip other-vessel track visibility live (from the settings dialog).
@@ -207,6 +211,8 @@ export class FleetLayer {
       return;
     this.showOtherTracks = next;
     this.applyTrackVisibility();
+    if (next && !this.tracksLoadStarted)
+      this.fetchAndLoadTracks();
   }
 
   // Apply a new glitch-filter speed live (from the settings dialog): update
@@ -306,8 +312,15 @@ export class FleetLayer {
 
   // Fetch historical tracks for the current filter radius and draw them. Split
   // out of loadInitialData so setFilterRadius can re-run it on a radius change
-  // without re-arming the fleet timer.
+  // without re-arming the fleet timer. The /tracks read is heavy, so it's
+  // skipped entirely while both track toggles are off; the first toggle-on
+  // fetches it lazily (see setShowOwnTrack/setShowOtherTracks). When the
+  // tracks plugin can't supply the own-boat track, the History API rebuilds
+  // it instead (see rehydrateOwnTrackFallback).
   fetchAndLoadTracks() {
+    if (!this.showOwnTrack && !this.showOtherTracks)
+      return;
+    this.tracksLoadStarted = true;
     this.app.signalK
       .fetchTracks(this.filterRadius)
       .then((tracks) => {
@@ -317,21 +330,44 @@ export class FleetLayer {
           this.app.state.getPosition(),
           this.filterRadius,
         );
+        if (!this.hasOwnTrack(tracks))
+          this.rehydrateOwnTrackFallback();
       })
       .catch((err) => {
         // A 404 just means the tracks plugin isn't installed — historical
         // fleet tracks are an optional extra, not something to warn about.
         if (err.status === 404) {
           this.app.statusBar.clear("tracks-plugin");
-          return;
+        } else {
+          const detail = err.statusText || err.message || "unknown error";
+          this.app.statusBar.set(
+            "tracks-plugin",
+            `Tracks plugin not available: ${detail}`,
+            "warning",
+          );
         }
-        const detail = err.statusText || err.message || "unknown error";
-        this.app.statusBar.set(
-          "tracks-plugin",
-          `Tracks plugin not available: ${detail}`,
-          "warning",
-        );
+        this.rehydrateOwnTrackFallback();
       });
+  }
+
+  // Whether a /tracks payload carries any points for our own boat.
+  hasOwnTrack(tracks) {
+    for (const uri in tracks) {
+      const match = uri.match(/urn:mrn:imo:mmsi:(\d+)$/);
+      if (match && this.isOwnTrack(match[1]))
+        return (tracks[uri].coordinates?.[0]?.length ?? 0) > 0;
+    }
+    return false;
+  }
+
+  // The tracks plugin is the preferred (cheap, in-memory) source for the
+  // own-boat track; when it fails or comes back without one — plugin missing,
+  // errored, or its buffer lost to a server restart — fall back to rebuilding
+  // the current session's track from the (heavier) History API.
+  rehydrateOwnTrackFallback() {
+    if (!this.showOwnTrack || this.ownTrackSeeded)
+      return;
+    this.app.rehydrateOwnTrack();
   }
 
   // Apply a new fleet filter radius live (from the settings dialog). Re-fetch

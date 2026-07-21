@@ -28,7 +28,7 @@ Historical tracks are color-coded (green for fresh, fading to red as they age) v
 
 ### 🕰️ Past anchorages
 
-If your server has a history provider plugin (e.g. [signalk-questdb](https://github.com/dirkwa/signalk-questdb)), the plugin logs every anchoring session (drop and raise times, anchor position, watch zone) and a clock button appears on the map. It opens a list of past anchorages; pick one and its full vessel track is reconstructed from the server's recorded position history and drawn on the map. The same mechanism rehydrates the live scribble track after a server restart mid-anchorage — the in-memory tracks plugin loses it, the history provider doesn't. Without a history provider everything behaves as before.
+If your server has a history provider plugin (e.g. [signalk-questdb](https://github.com/dirkwa/signalk-questdb)), the plugin logs every anchoring session (drop and raise times, anchor position, watch zone) and a clock button appears on the map. It opens a list of past anchorages; pick one and its full vessel track is reconstructed from the server's recorded position history and drawn on the map. The same mechanism rebuilds the live scribble track when the tracks plugin can't supply it (not installed, or errored) — recorded position history survives where the in-memory track doesn't. Without a history provider everything behaves as before.
 
 ### 📊 Heads-up panels
 

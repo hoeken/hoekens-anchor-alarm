@@ -116,8 +116,9 @@ class AnchorAlarm {
     this.configPanel = undefined;
     this.themeControl = undefined;
     this.toolbar = undefined;
-    // Startup snapshot of the local raster charts (see addChartLayers). Every
-    // later add/remove works off this copy so we never re-fetch the catalog.
+    // One-time snapshot of the local raster charts, fetched when the feature
+    // is first enabled (see addChartLayers). Every later add/remove works off
+    // this copy so we never re-fetch the catalog.
     this.chartLayers = [];
     this.updateTimer = null;
     this._loginModal = null;
@@ -509,6 +510,7 @@ class AnchorAlarm {
     this.state.setGlitchFilterSpeed(this.config.glitchFilterSpeed);
     this.setBasemap(this.config.defaultBasemap);
     this.setSeascapeEnabled(this.config.enableSeascape);
+    this.setChartLayersEnabled(this.config.enableChartLayers);
     this.anchorController?.setDefaultShape(this.config.defaultShape);
     this.fleetLayer?.setFilterRadius(this.config.fleetFilterRadius);
     this.fleetLayer?.setShowLabels(this.config.enableBoatLabels);
@@ -550,25 +552,28 @@ class AnchorAlarm {
 
   // Anchorage history rides on the server's v2 History API, which only
   // exists when a history provider plugin (e.g. signalk-questdb) is
-  // installed. Probe once at startup regardless of settings: if we started
-  // mid-session (e.g. after a server restart) the live scribble track is
-  // rehydrated from recorded history, which the in-memory tracks plugin has
-  // lost — that's current-session data, so it must not depend on the
-  // past-anchorages toggle. Only the past-anchorages control itself is gated
-  // on config.enableAnchorageHistory. Without a provider this is a silent
-  // no-op and the app behaves exactly as before.
+  // installed. The availability probe is itself a history query, so it only
+  // runs when the past-anchorages feature is on — at startup here, or on the
+  // first enable from the settings dialog (see setAnchorageHistoryEnabled).
+  // Own-track rehydration doesn't ride on this probe: the fleet layer invokes
+  // it as a fallback of the /tracks load (see rehydrateOwnTrack), so it works
+  // with past anchorages off. Without a provider the probe resolves false and
+  // the control is never added.
   initAnchorageHistory() {
+    if (this.config.enableAnchorageHistory)
+      this.probeAnchorageHistory();
+  }
+
+  // One-shot availability probe for the past-anchorages control. Re-checks
+  // the config when it resolves so a toggle flipped while the probe was in
+  // flight still settles correctly.
+  probeAnchorageHistory() {
+    if (this.historyProbeStarted)
+      return;
+    this.historyProbeStarted = true;
     this.signalK.probeHistory().then((available) => {
       this.historyAvailable = !!available;
-      if (!available || !this.map)
-        return;
-
-      if (this.state.isAnchored())
-        this.rehydrateOwnTrack();
-
-      // Re-check the config here: the setting may have been toggled while
-      // the probe was in flight.
-      if (this.config.enableAnchorageHistory)
+      if (available && this.map && this.config.enableAnchorageHistory)
         this.addAnchorageHistoryControl();
     });
   }
@@ -585,12 +590,16 @@ class AnchorAlarm {
   }
 
   // Live toggle for the past-anchorages control (config.enableAnchorageHistory).
-  // The availability probe already ran at startup, so enabling just adds the
-  // control (a no-op without a history provider); disabling removes it (which
-  // also clears any displayed track).
+  // The first enable is what kicks off the availability probe when startup
+  // skipped it (feature off); once probed, enabling just adds the control (a
+  // no-op without a history provider) and disabling removes it (which also
+  // clears any displayed track).
   setAnchorageHistoryEnabled(enabled) {
     if (enabled) {
-      this.addAnchorageHistoryControl();
+      if (this.historyAvailable === undefined)
+        this.probeAnchorageHistory();
+      else
+        this.addAnchorageHistoryControl();
     } else if (this.historyControl) {
       this.map.removeControl(this.historyControl);
       this.historyControl = null;
@@ -598,9 +607,14 @@ class AnchorAlarm {
   }
 
   // Replace the own-boat scribble track with the full current-session track
-  // from the History API (droppedAt → now). Failures are non-fatal: the
-  // tracks-plugin buffer (however much survived) keeps being used.
+  // from the History API (droppedAt → now). Invoked by the fleet layer only
+  // as a fallback when the tracks plugin couldn't supply the own track (see
+  // FleetLayer.rehydrateOwnTrackFallback); only an open session has a track
+  // worth rebuilding, so it no-ops when the anchor is up. Failures are
+  // non-fatal: whatever track the fleet layer already has keeps being used.
   rehydrateOwnTrack() {
+    if (!this.state.isAnchored())
+      return;
     this.signalK
       .fetchSessions()
       .then(({ sessions }) => {
@@ -622,6 +636,10 @@ class AnchorAlarm {
           });
       })
       .catch((error) => {
+        // A 404/501 just means no history provider is installed — the
+        // fallback quietly has nothing to offer then.
+        if (error && (error.status === 404 || error.status === 501))
+          return;
         console.warn("Own-track rehydration from history failed", error);
       });
   }
@@ -677,7 +695,12 @@ class AnchorAlarm {
     // request burst unless the user enabled it (see addSeascapeLayer).
     if (this.config.enableSeascape)
       this.addSeascapeLayer();
-    this.addChartLayers();
+    // Local charts only when asked for, too: the catalog fetch — and the chart
+    // tiles the listed layers then pull off this same server — stays out of
+    // startup unless the feature is on (see setChartLayersEnabled for the
+    // lazy load on a later enable).
+    if (this.config.enableChartLayers)
+      this.addChartLayers();
 
     // Light/dark toggle. Unlike the settings gear it isn't login-gated — the
     // theme is a session-only preference anyone can flip (see hud/ThemeControl).
@@ -824,13 +847,17 @@ class AnchorAlarm {
   }
 
   // Local raster charts served by SignalK's resources API (see ChartLayers) are
-  // fetched once on startup and cached in this.chartLayers, keyed with the
-  // coverage bounds and native min-zoom read back off each Leaflet layer. Every
-  // later chart operation works off that snapshot instead of re-fetching. A
-  // missing charts plugin or a fetch error resolves to an empty list, making
-  // this a no-op then. updateChartLayers() populates the layer control for the
-  // current view.
+  // fetched once — at startup when the feature is on, else on its first
+  // enable — and cached in this.chartLayers, keyed with the coverage bounds
+  // and native min-zoom read back off each Leaflet layer. Every later chart
+  // operation works off that snapshot instead of re-fetching. A missing charts
+  // plugin or a fetch error resolves to an empty list, making this a no-op
+  // then. updateChartLayers() populates the layer control for the current view.
   addChartLayers() {
+    // Guard against repeated enables re-fetching the catalog.
+    if (this.chartLoadStarted)
+      return;
+    this.chartLoadStarted = true;
     loadChartLayers(this.signalK).then((charts) => {
       if (!this.map || !this.layersControl)
         return;
@@ -848,14 +875,18 @@ class AnchorAlarm {
   }
 
   // Re-derive which cached local charts belong in the layer control for the
-  // current view. A chart is listed (and, when the "Use Chart Layers" option is
-  // on, enabled by default) only while the map is zoomed in far enough to render
-  // its tiles — below a chart's native minzoom Leaflet draws nothing — and its
-  // coverage overlaps the visible area. Charts with no bounds/zoom metadata are
-  // treated as global and always shown. Panning or zooming a chart out of view
-  // removes it from both the map and the control; bringing it back re-adds it.
+  // current view. A chart is listed (and enabled by default) only while the
+  // map is zoomed in far enough to render its tiles — below a chart's native
+  // minzoom Leaflet draws nothing — and its coverage overlaps the visible
+  // area. Charts with no bounds/zoom metadata are treated as global and always
+  // shown. Panning or zooming a chart out of view removes it from both the map
+  // and the control; bringing it back re-adds it.
   updateChartLayers() {
     if (!this.map || !this.layersControl || !this.chartLayers.length)
+      return;
+    // Feature off: list nothing. A mid-session disable already delisted every
+    // chart (see setChartLayersEnabled); this keeps moveend from re-listing.
+    if (!this.config.enableChartLayers)
       return;
     const zoom = this.map.getZoom();
     const view = this.map.getBounds();
@@ -869,10 +900,7 @@ class AnchorAlarm {
       if (show) {
         // Add to the map before the control so the control renders the
         // overlay's checkbox already ticked (it reads map.hasLayer at build).
-        // With the option off, list it in the control but leave it off the map
-        // so its checkbox renders unticked, ready to enable by hand.
-        if (this.config.enableChartLayers)
-          chart.layer.addTo(this.map);
+        chart.layer.addTo(this.map);
         this.layersControl.addOverlay(chart.layer, chart.name);
       } else {
         this.map.removeLayer(chart.layer);
@@ -883,6 +911,32 @@ class AnchorAlarm {
     }
     // Programmatic add/remove doesn't fire overlayadd/overlayremove, so refresh
     // the attribution strip by hand when a chart's credit came or went.
+    if (changed)
+      this.updateAttribution();
+  }
+
+  // Live toggle for the local-charts feature (config.enableChartLayers). The
+  // first enable is what kicks off the catalog fetch when startup skipped it
+  // (feature off); afterwards enabling just re-lists the cached charts for
+  // the current view, and disabling pulls every listed chart off the map and
+  // out of the layer control.
+  setChartLayersEnabled(enabled) {
+    if (enabled) {
+      if (this.chartLoadStarted)
+        this.updateChartLayers();
+      else
+        this.addChartLayers();
+      return;
+    }
+    let changed = false;
+    for (const chart of this.chartLayers) {
+      if (!chart.listed)
+        continue;
+      this.map.removeLayer(chart.layer);
+      this.layersControl.removeLayer(chart.layer);
+      chart.listed = false;
+      changed = true;
+    }
     if (changed)
       this.updateAttribution();
   }
