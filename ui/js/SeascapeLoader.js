@@ -5,6 +5,9 @@
 // engines can't run (see supportsMaplibre). So MapLibre is vendored under
 // public/maplibre/ but kept out of index.html: we inject the scripts at runtime
 // and only on capable engines, keeping them entirely off the Chromium 69 path.
+// Callers additionally gate the load on the enableSeascape setting (see
+// AnchorAlarm.addSeascapeLayer), so on the single-threaded Pi-hosted server
+// these bytes are never fetched unless the user asked for the layer.
 //
 // loadSeascapeLayer resolves to a ready-to-add L.maplibreGL base layer, or null
 // when the engine is unsupported or a script fails to load. It never rejects, so

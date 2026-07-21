@@ -672,7 +672,11 @@ class AnchorAlarm {
     this.layersControl = L.control
       .layers(this.baseMaps, {}, { position: "topleft" })
       .addTo(this.map);
-    this.addSeascapeLayer();
+    // Seascape only when asked for: the MapLibre stack behind it is ~1 MB off
+    // this same single-threaded server, so it must stay out of the startup
+    // request burst unless the user enabled it (see addSeascapeLayer).
+    if (this.config.enableSeascape)
+      this.addSeascapeLayer();
     this.addChartLayers();
 
     // Light/dark toggle. Unlike the settings gear it isn't login-gated — the
@@ -770,12 +774,20 @@ class AnchorAlarm {
 
   // Seascape is a WebGL bathymetry chart (see SeascapeLoader) that shades the
   // water by depth and is transparent over land, so it belongs on top of a base
-  // map as an overlay rather than replacing one. It loads asynchronously (or
-  // never, on the Chromium 69 MFDs) and joins the layer control as a toggleable
-  // overlay once ready, switched on at startup when config.enableSeascape. If it
-  // can't load — offline or an unsupported engine — the selected base map simply
+  // map as an overlay rather than replacing one. Nothing is fetched until
+  // config.enableSeascape asks for it — at startup (see buildMap) or on the
+  // first enable from the settings dialog (see setSeascapeEnabled) — because
+  // the MapLibre stack is ~1 MB served off this same single-threaded server.
+  // Once loaded it joins the layer control as a toggleable overlay, switched on
+  // if config.enableSeascape still holds when the load resolves. If it can't
+  // load — offline or an unsupported engine — the selected base map simply
   // stays visible, so there's no fallback to handle.
   addSeascapeLayer() {
+    // loadSeascapeLayer memoizes the script load, but the control/listener
+    // wiring below must not run twice — guard against repeated enables.
+    if (this.seascapeLoadStarted)
+      return;
+    this.seascapeLoadStarted = true;
     loadSeascapeLayer().then((layer) => {
       if (!layer || !this.map)
         return;
@@ -794,10 +806,14 @@ class AnchorAlarm {
     });
   }
 
-  // Match the Seascape overlay to config.enableSeascape once it has loaded. A
-  // no-op before the async load resolves or on engines where it never does —
-  // addSeascapeLayer re-reads the flag when the layer finally arrives.
+  // Match the Seascape overlay to config.enableSeascape. The first enable is
+  // what kicks off the MapLibre load; addSeascapeLayer re-reads the flag when
+  // the layer arrives, so toggles that land mid-load still settle correctly.
   setSeascapeEnabled(enabled) {
+    if (enabled && !this.seascapeLayer) {
+      this.addSeascapeLayer();
+      return;
+    }
     const layer = this.seascapeLayer;
     if (!layer || !this.map)
       return;
