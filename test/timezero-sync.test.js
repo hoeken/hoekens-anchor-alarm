@@ -22,11 +22,19 @@ const stubApp = () => ({ debug() {}, error() {} });
 //   50 m anchor:  X'04758FC567F417EB1E00001388'
 //   86 m anchor:  X'04758FC567F417EB1E00002169'  (only radius bytes differ)
 //
-// Both decode to lat -17.658292, lon 177.179795 (Fiji).
+// Both decode to lat -17.769825, lon 177.179795 (Fiji) under the true
+// ellipsoidal WGS84 Mercator TimeZero uses.
 const LIVE_BLOB_50M = "04758FC567F417EB1E00001388";
 const LIVE_BLOB_86M = "04758FC567F417EB1E00002169";
-const LIVE_LAT = -17.658292;
+const LIVE_LAT = -17.769825;
 const LIVE_LON = 177.179795;
+
+// A real AnchorWatch blob captured at 51.85°N, where spherical vs ellipsoidal
+// Mercator differ by ~20 km. The boat's true position was 51.846085°N, and the
+// ellipsoidal decode lands within normal anchor-swing distance of it — the
+// spherical approximation put it 20 km south, tripping the watch-zone check.
+const HIGH_LAT_BLOB = "04AAEC47D2282A94B600001EF5";
+const HIGH_LAT_TRUE = 51.846085;
 
 describe("Mercator projection", () => {
   test("round-trips a position to within a millimetre", () => {
@@ -40,6 +48,15 @@ describe("Mercator projection", () => {
     // A pole would be y=Infinity; clamping keeps it finite.
     assert.ok(Number.isFinite(toMercator(90, 0).y));
     assert.ok(Number.isFinite(toMercator(-90, 0).y));
+  });
+
+  test("round-trips at high latitude, where the spherical error is large", () => {
+    // 51.85°N is where the spherical/ellipsoidal difference reaches ~20 km, so
+    // this is the case that guards against reintroducing spherical Mercator.
+    const merc = toMercator(HIGH_LAT_TRUE, -128.2215);
+    const back = fromMercator(merc.x, merc.y);
+    assert.ok(Math.abs(back.latitude - HIGH_LAT_TRUE) < 1e-6);
+    assert.ok(Math.abs(back.longitude - -128.2215) < 1e-6);
   });
 });
 
@@ -55,6 +72,14 @@ describe("geometry blob codec", () => {
   test("decodes the live 86 m blob (TimeZero stored 85.53 m)", () => {
     const decoded = decodeGeometry(Buffer.from(LIVE_BLOB_86M, "hex"));
     assert.equal(decoded.radius, 85.53);
+  });
+
+  test("decodes a real high-latitude blob near the boat's true position", () => {
+    // From a live TimeZero at 51.85°N. Must land within anchor-swing distance
+    // of the boat, not the ~20 km south the spherical formula produced.
+    const decoded = decodeGeometry(Buffer.from(HIGH_LAT_BLOB, "hex"));
+    const metersOff = Math.abs(decoded.position.latitude - HIGH_LAT_TRUE) * 111320;
+    assert.ok(metersOff < 100, `decoded ${metersOff.toFixed(0)} m from the boat`);
   });
 
   test("re-encoding the decoded position reproduces the live bytes", () => {

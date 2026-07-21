@@ -37,31 +37,50 @@ const LOCK_TIMEOUT_MS = 30000;
 const PROTOCOL = "TZ Sync 1.0";
 const DEVICE_TYPE = "TZ iBoat"; // a legitimate sync-peer device type
 
-// Spherical Mercator (EPSG:3857) earth radius. TZ stores anchor geometry as
-// projected metres; confirmed against live TZ hardware.
-const MERCATOR_R = 6378137.0;
+// TimeZero encodes anchor geometry in true ellipsoidal WGS84 Mercator, not the
+// spherical Web Mercator approximation. The two agree on longitude but diverge
+// in latitude away from the equator — the error reaches tens of kilometres at
+// high latitude — so the ellipsoid is required for the position to be usable.
+const WGS84_A = 6378137.0; // semi-major axis, metres
+const WGS84_E = 0.0818191908426; // first eccentricity
 
 // TZ / MaxSea timestamps are seconds since 1990-01-01 UTC, not the Unix epoch.
 const TZ_EPOCH_OFFSET = 631152000;
 
 // ---- pure geometry / blob codec (unit-testable, no I/O) --------------------
 
-// WGS84 lat/lon -> spherical Mercator metres. Latitude is clamped to the
+// WGS84 lat/lon -> ellipsoidal Mercator metres. Latitude is clamped to the
 // projection's valid band so a bad fix can't produce Infinity.
 export function toMercator(latitude, longitude) {
   const lat = Math.max(-85.05112878, Math.min(85.05112878, latitude));
+  const latRad = (lat * Math.PI) / 180;
+  const esin = WGS84_E * Math.sin(latRad);
   return {
-    x: MERCATOR_R * (longitude * Math.PI) / 180,
-    y: MERCATOR_R * Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 180 / 2)),
+    x: WGS84_A * ((longitude * Math.PI) / 180),
+    y:
+      WGS84_A *
+      Math.log(
+        Math.tan(Math.PI / 4 + latRad / 2) *
+          Math.pow((1 - esin) / (1 + esin), WGS84_E / 2),
+      ),
   };
 }
 
-// Spherical Mercator metres -> WGS84 lat/lon.
+// Ellipsoidal Mercator metres -> WGS84 lat/lon. The inverse latitude has no
+// closed form; iterate to convergence (a handful of steps is exact to well
+// under a millimetre).
 export function fromMercator(x, y) {
+  const t = Math.exp(-y / WGS84_A);
+  let phi = Math.PI / 2 - 2 * Math.atan(t);
+  for (let i = 0; i < 10; i++) {
+    const esin = WGS84_E * Math.sin(phi);
+    phi =
+      Math.PI / 2 -
+      2 * Math.atan(t * Math.pow((1 - esin) / (1 + esin), WGS84_E / 2));
+  }
   return {
-    longitude: (x / MERCATOR_R) * 180 / Math.PI,
-    latitude:
-      (2 * Math.atan(Math.exp(y / MERCATOR_R)) - Math.PI / 2) * 180 / Math.PI,
+    longitude: (x / WGS84_A) * (180 / Math.PI),
+    latitude: (phi * 180) / Math.PI,
   };
 }
 
