@@ -333,7 +333,7 @@ export class FleetLayer {
         if (!this.hasOwnTrack(tracks))
           this.rehydrateOwnTrackFallback();
       })
-      .catch((err) => {
+      .catch(() => {
         // // A 404 just means the tracks plugin isn't installed — historical
         // // fleet tracks are an optional extra, not something to warn about.
         // if (err.status === 404) {

@@ -1,41 +1,57 @@
 <!doctype html>
 <html>
-
-<head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <!-- Tints the mobile browser toolbar/status bar; matches theme_color in
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <!-- Tints the mobile browser toolbar/status bar; matches theme_color in
          site.webmanifest. -->
-  <meta name="theme-color" content="#000000" />
-  <title>Hoeken's Anchor Alarm</title>
+    <meta name="theme-color" content="#000000" />
+    <title>Hoeken's Anchor Alarm</title>
 
-  <!-- Add-to-home-screen launch behaviour. iOS Safari ignores the
+    <!-- Add-to-home-screen launch behaviour. iOS Safari ignores the
          manifest's `display: standalone`, so these meta tags are what make the
          home-screen icon open full-screen (no Safari chrome). Status bar style
          is `black` rather than `black-translucent`: translucent would extend
          the web view under the iOS clock and hide #controlToolbar (top: 10px),
          and black matches the manifest theme_color. -->
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="Anchor Alarm" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Anchor Alarm" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
 
-  <link rel="apple-touch-icon" sizes="180x180" href="favicons/apple-touch-icon.png" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicons/favicon-32x32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicons/favicon-16x16.png" />
-  <link rel="manifest" href="site.webmanifest" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="favicons/apple-touch-icon.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="favicons/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="favicons/favicon-16x16.png"
+    />
+    <link rel="manifest" href="site.webmanifest" />
 
-  <link rel="preload" href="icons/anchor.png" as="image" />
-  <link rel="preload" href="icons/crosshair.png" as="image" />
-  <link rel="preload" href="icons/anchor-transparent-100px.png" as="image" />
-  <link rel="preload" href="leaflet/images/layers.png" as="image" />
-  <link rel="preload" href="leaflet/images/layers-2x.png" as="image" />
-  <link rel="preload" href="icons/ships/png/catamaran.png" as="image" />
-  <link rel="preload" href="icons/ships/png/sailboat.png" as="image" />
-  <link rel="preload" href="icons/ships/png/pleasure.png" as="image" />
+    <link rel="preload" href="icons/anchor.png" as="image" />
+    <link rel="preload" href="icons/crosshair.png" as="image" />
+    <link rel="preload" href="icons/anchor-transparent-100px.png" as="image" />
+    <link rel="preload" href="leaflet/images/layers.png" as="image" />
+    <link rel="preload" href="leaflet/images/layers-2x.png" as="image" />
+    <link rel="preload" href="icons/ships/png/catamaran.png" as="image" />
+    <link rel="preload" href="icons/ships/png/sailboat.png" as="image" />
+    <link rel="preload" href="icons/ships/png/pleasure.png" as="image" />
 
-  <!--
+    <!--
       Theme selection, run synchronously before first paint (no flash).
       B&G / Navico MFDs load embedded web apps with a `?mode=night` or
       `?mode=day` query param instead of honoring prefers-color-scheme, so
@@ -44,38 +60,37 @@
       The runtime toggle (see js/Theme.js) just flips this class; the choice
       is intentionally not persisted, so each load re-derives it.
     -->
-  <script>
-    (function () {
-      var m = location.search.match(/[?&]mode=([^&]*)/);
-      var mode = m ? decodeURIComponent(m[1]) : null;
-      var theme = "dark";
-      if (mode !== null) {
-        theme = mode === "night" ? "dark" : "light";
-      } else if (
-        window.matchMedia &&
-        window.matchMedia("(prefers-color-scheme: light)").matches
-      ) {
-        theme = "light";
-      }
-      document.documentElement.className = theme;
-    })();
-  </script>
+    <script>
+      (function () {
+        var m = location.search.match(/[?&]mode=([^&]*)/);
+        var mode = m ? decodeURIComponent(m[1]) : null;
+        var theme = "dark";
+        if (mode !== null) {
+          theme = mode === "night" ? "dark" : "light";
+        } else if (
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: light)").matches
+        ) {
+          theme = "light";
+        }
+        document.documentElement.className = theme;
+      })();
+    </script>
 
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="leaflet/leaflet.css" />
-  <script src="leaflet/leaflet.js"></script>
-  <script src="leaflet/leaflet.antimeridian.js"></script>
-  <script src="leaflet/leaflet.BoatMarker.js"></script>
-  <script src="leaflet/leaflet.hotline.js"></script>
-  <script src="leaflet/leaflet.textpath.js"></script>
-  <script type="module" src="js/AnchorAlarm.js"></script>
-</head>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="leaflet/leaflet.css" />
+    <script src="leaflet/leaflet.js"></script>
+    <script src="leaflet/leaflet.antimeridian.js"></script>
+    <script src="leaflet/leaflet.BoatMarker.js"></script>
+    <script src="leaflet/leaflet.hotline.js"></script>
+    <script src="leaflet/leaflet.textpath.js"></script>
+    <script type="module" src="js/AnchorAlarm.js"></script>
+  </head>
 
-<body>
-  <div id="map_container">
-    <div id="map"></div>
-    <div id="mapAttribution"></div>
-  </div>
-</body>
-
+  <body>
+    <div id="map_container">
+      <div id="map"></div>
+      <div id="mapAttribution"></div>
+    </div>
+  </body>
 </html>
