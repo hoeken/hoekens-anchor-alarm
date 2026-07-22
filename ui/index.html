@@ -77,6 +77,24 @@
       })();
     </script>
 
+    <!--
+      Chromium 69 (Navico/B&G MFDs) predates Object.fromEntries (Chrome 73),
+      which vendored code in the app bundle calls during module evaluation.
+      The build lowers syntax to chrome69 (see vite.config.js) but does not
+      polyfill runtime APIs, so shim it here before the module script runs.
+    -->
+    <script>
+      if (!Object.fromEntries) {
+        Object.fromEntries = function (iterable) {
+          var obj = {};
+          Array.from(iterable).forEach(function (pair) {
+            obj[pair[0]] = pair[1];
+          });
+          return obj;
+        };
+      }
+    </script>
+
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="leaflet/leaflet.css" />
     <script src="leaflet/leaflet.js"></script>

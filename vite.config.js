@@ -6,6 +6,15 @@ import { fileURLToPath } from "url";
 
 const LEAFLET_DIR = fileURLToPath(new URL("./ui/public/leaflet/", import.meta.url));
 
+// Navico/B&G MFDs embed Chromium 69, which can't parse ES2020+ syntax
+// (?., ??, ??=). Every emitted script — the app bundle and the inlined
+// Leaflet vendor code — must be lowered to this target. It also caps the
+// minifiers, which otherwise synthesize newer operators (e.g. rewriting
+// `a = a || b` to `a ||= b`, Chrome 85+) even when the source has none.
+// Note this only covers syntax: runtime APIs newer than Chrome 69 still
+// need the polyfills in ui/index.html.
+const BROWSER_TARGET = "chrome69";
+
 // vite-plugin-singlefile inlines the app's own (module) JS and CSS into
 // index.html, but it deliberately skips classic <script src> tags — which is
 // how the vendored Leaflet core and its plugins load, since the app consumes
@@ -26,9 +35,11 @@ function inlineVendorAndFixSourcemap() {
   // Keep esbuild's default legalComments handling so vendored libraries'
   // @license/@preserve banners (e.g. Leaflet's BSD-2 notice) survive
   // minification — those licenses require retaining the copyright notice.
-  const minifyJs = (code) => transformSync(code, { minify: true }).code;
+  const minifyJs = (code) =>
+    transformSync(code, { minify: true, target: BROWSER_TARGET }).code;
   const minifyCss = (code) =>
-    transformSync(code, { loader: "css", minify: true }).code;
+    transformSync(code, { loader: "css", minify: true, target: BROWSER_TARGET })
+      .code;
 
   return {
     name: "inline-vendor-and-fix-sourcemap",
@@ -90,6 +101,7 @@ export default defineConfig({
   build: {
     outDir: "../public",
     emptyOutDir: true, // Cleans the libs folder before building
+    target: BROWSER_TARGET,
     minify: true,
     sourcemap: true,
     rollupOptions: {
