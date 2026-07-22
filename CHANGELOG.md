@@ -1,3 +1,9 @@
+# v2.10.3
+
+## Bug fixes
+
+- Fixed a regression that caused the webapp to not load on Navico / B&G displays running chrome69.
+
 # v2.10.2
 
 ## Page-load performance
