@@ -44,9 +44,10 @@ export class AnchorOverlay {
     this._zone = null;
 
     // The bow-to-anchor line. Its distance/bearing labels are HTML markers
-    // (see _ensureLineLabels), not SVG textpath: SVG text can't paint a
-    // background rect behind its rotated glyphs, and the per-letter halo it
-    // forced was hard to read.
+    // (see _ensureLineLabels), not SVG textpath: HTML text takes the same
+    // soft text-shadow halo as the boat name labels, while SVG text's only
+    // halo option is an opaque per-glyph stroke that paints over neighboring
+    // letters and was hard to read.
     this.anchorLine = L.polyline([this.anchorPosition, this.anchorPosition], {
       color: "grey",
       weight: 2,
@@ -226,7 +227,12 @@ export class AnchorOverlay {
     };
     let bowToAnchor = Geo.distance(bowPos, anchorPos);
     bowToAnchor = Math.round(bowToAnchor * 10) / 10;
-    const distanceText = DisplayUnit.formatValue(bowToAnchor, "depth");
+    // Glue the unit to the number ("50.8m", not "50.8 m") — with the halo'd
+    // text over map tiles, the gap breaks the short label apart visually.
+    const distanceText = DisplayUnit.formatValue(bowToAnchor, "depth").replace(
+      " ",
+      "",
+    );
 
     const bearing = Math.round(Geo.bearingTrue(bowPos, anchorPos));
     const bearingText = `${bearing}°`;
@@ -292,8 +298,9 @@ export class AnchorOverlay {
     if (!label)
       return;
     label.textContent = text;
-    // Order matters: center the pill on the marker point first, then rotate
-    // the reading direction, then push it out perpendicular to the line.
+    // Order matters: center the label box on the marker point first, then
+    // rotate the reading direction, then push it out perpendicular to the
+    // line.
     label.style.transform = `translate(-50%, -50%) rotate(${angle}deg) translateY(${offset}px)`;
   }
 

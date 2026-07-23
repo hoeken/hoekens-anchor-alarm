@@ -1,5 +1,11 @@
 # 2.11.0
 
+## Shared / Core
+
+- hide these elements when zoomed out far enough that they are not useful:
+  - anchor line / labels / icon
+  - zone outline / handles / etc
+
 ## HAA specific
 
 - large UI components -> bump up boat name label text size
