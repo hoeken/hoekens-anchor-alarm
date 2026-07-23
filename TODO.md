@@ -1,10 +1,5 @@
 # 2.11.0
 
-## Shared / Core
-
-- add 'Show Own Boat Name Label' UI config option. default true
-  - own boat label should always 'win' when competing against other boat name labels. possibly by drawing it first in the order?
-
 ## HAA specific
 
 - large UI components -> bump up boat name label text size

@@ -43,28 +43,21 @@ export class AnchorOverlay {
     this._zoneType = null;
     this._zone = null;
 
-    // Two overlapping polylines because leaflet.textpath only supports one
-    // label per polyline; one carries the distance label, the other
-    // (invisible) carries the bearing label.
+    // The bow-to-anchor line. Its distance/bearing labels are HTML markers
+    // (see _ensureLineLabels), not SVG textpath: SVG text can't paint a
+    // background rect behind its rotated glyphs, and the per-letter halo it
+    // forced was hard to read.
     this.anchorLine = L.polyline([this.anchorPosition, this.anchorPosition], {
       color: "grey",
       weight: 2,
     }).addTo(map);
 
-    this.anchorLineAngle = L.polyline(
-      [this.anchorPosition, this.anchorPosition],
-      {
-        color: "grey",
-        weight: 0,
-      },
-    ).addTo(map);
+    this.distanceLabel = null;
+    this.bearingLabel = null;
 
     this.anchorMarker = null;
     this.crosshairMarker = null;
 
-    this._cachedDistanceLabel = null;
-    this._cachedBearingLabel = null;
-    this._cachedFlip = null;
     this._cachedColor = null;
   }
 
@@ -225,12 +218,6 @@ export class AnchorOverlay {
     );
 
     this.anchorLine.setLatLngs([bow, this.anchorPosition]);
-    this.anchorLineAngle.setLatLngs([bow, this.anchorPosition]);
-
-    // textpath label flipping: if the anchor is west of the bow, the label
-    // reads upside-down without this flip. (Degenerate when bow and anchor
-    // sit on the same meridian.)
-    const flip = bow.lng > this.anchorPosition.lng;
 
     const bowPos = { latitude: bow.lat, longitude: bow.lng };
     const anchorPos = {
@@ -239,44 +226,75 @@ export class AnchorOverlay {
     };
     let bowToAnchor = Geo.distance(bowPos, anchorPos);
     bowToAnchor = Math.round(bowToAnchor * 10) / 10;
-    let distanceLabel = DisplayUnit.formatValue(bowToAnchor, "depth");
+    const distanceText = DisplayUnit.formatValue(bowToAnchor, "depth");
 
     const bearing = Math.round(Geo.bearingTrue(bowPos, anchorPos));
-    const bearingLabel = `${bearing}°`;
+    const bearingText = `${bearing}°`;
 
     // Rotate so the anchor's ring (top of icon, at iconAnchor [12,4]) faces
     // back toward the bow; the flukes trail away from the rode.
     this._updateAnchorRotation(bearing + 180);
 
-    // Skip textpath rebuilds when the rendered label hasn't changed. Leaflet
-    // re-runs _textRedraw on every _updatePath, so the labels still follow
-    // the moving line without an explicit setText here.
-    if (
-      distanceLabel === this._cachedDistanceLabel &&
-      bearingLabel === this._cachedBearingLabel &&
-      flip === this._cachedFlip
-    )
+    // Labels read along the line. Web Mercator is conformal, so the true
+    // bearing maps straight to a screen angle (CSS 0° = reading left→right =
+    // due east, hence the -90) and stays valid across zooms. When the line
+    // points westish the text would come out upside-down: spin it 180° and
+    // mirror the perpendicular offset so each label keeps to its own side of
+    // the line.
+    let angle = bearing - 90;
+    let side = 1;
+    const norm = ((angle % 360) + 360) % 360;
+    if (norm > 90 && norm < 270) {
+      angle -= 180;
+      side = -1;
+    }
+
+    // Midpoint by simple average — bow-to-anchor spans are far too short for
+    // geodesic error to show. (Degenerate across the antimeridian, but so is
+    // the polyline itself.)
+    const mid = L.latLng(
+      (bow.lat + this.anchorPosition.lat) / 2,
+      (bow.lng + this.anchorPosition.lng) / 2,
+    );
+
+    this._ensureLineLabels();
+    this._updateLineLabel(this.distanceLabel, distanceText, mid, angle, 10 * side);
+    this._updateLineLabel(this.bearingLabel, bearingText, mid, angle, -10 * side);
+  }
+
+  // The two line labels are created lazily on the first refresh with a known
+  // boat position, then live for the overlay's lifetime like the line itself.
+  _ensureLineLabels() {
+    if (this.distanceLabel)
       return;
+    this.distanceLabel = this._createLineLabel();
+    this.bearingLabel = this._createLineLabel();
+  }
 
-    this.anchorLine.setText("");
-    this.anchorLine.setText(distanceLabel, {
-      orientation: flip ? "flip" : 0,
-      offset: 12,
-      center: true,
-      attributes: { class: "anchorLineLabel" },
-    });
+  _createLineLabel() {
+    // DivIcon wrapper for the same reason as ANCHOR_ICON: Leaflet owns the
+    // outer element's transform for positioning, so ours must live on an
+    // inner element.
+    return L.marker(this.anchorPosition, {
+      icon: L.divIcon({
+        className: "",
+        html: '<div class="anchor-line-label"></div>',
+        iconSize: [0, 0],
+      }),
+      interactive: false,
+    }).addTo(this.map);
+  }
 
-    this.anchorLineAngle.setText("");
-    this.anchorLineAngle.setText(bearingLabel, {
-      orientation: flip ? "flip" : 0,
-      offset: -3,
-      center: true,
-      attributes: { class: "anchorLineLabel" },
-    });
-
-    this._cachedDistanceLabel = distanceLabel;
-    this._cachedBearingLabel = bearingLabel;
-    this._cachedFlip = flip;
+  _updateLineLabel(marker, text, latlng, angle, offset) {
+    marker.setLatLng(latlng);
+    const el = marker.getElement();
+    const label = el && el.firstChild;
+    if (!label)
+      return;
+    label.textContent = text;
+    // Order matters: center the pill on the marker point first, then rotate
+    // the reading direction, then push it out perpendicular to the line.
+    label.style.transform = `translate(-50%, -50%) rotate(${angle}deg) translateY(${offset}px)`;
   }
 
   _refreshColor() {

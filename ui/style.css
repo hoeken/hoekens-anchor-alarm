@@ -44,12 +44,11 @@
   /* wind barb in the wind panel */
   --barb-stroke: #000000;
   --barb-halo: rgba(255, 255, 255, 0.5);
-  --label-fg: #000000;
-  /* boat name labels over the map */
-  --label-halo: #ffffff;
-  --anchor-label-fill: #000000;
-  /* rode-length text on the anchor line */
-  --anchor-label-halo: rgba(255, 255, 255, 0.6);
+  /* Map text labels (boat names, anchor distance/bearing): text on a snug
+     pill with a soft glow around it. Day: black on white. */
+  --map-label-fg: #000000;
+  --map-label-bg: #ffffff;
+  --map-label-glow: rgba(255, 255, 255, 0.9);
   --zone-handle-bg: #ffffff;
   --zone-handle-border: #333333;
   --zone-handle-ghost-bg: rgba(255, 255, 255, 0.55);
@@ -92,10 +91,9 @@ html.dark {
   --barb-fill: #cdd1d6;
   --barb-stroke: #cdd1d6;
   --barb-halo: rgba(0, 0, 0, 0.55);
-  --label-fg: #cdd1d6;
-  --label-halo: #000000;
-  --anchor-label-fill: #cdd1d6;
-  --anchor-label-halo: rgba(0, 0, 0, 0.6);
+  --map-label-fg: #cdd1d6;
+  --map-label-bg: #232830;
+  --map-label-glow: rgba(0, 0, 0, 0.7);
   --zone-handle-bg: #2c323b;
   --zone-handle-border: #d0d3d8;
   --zone-handle-ghost-bg: rgba(44, 50, 59, 0.6);
@@ -1200,16 +1198,6 @@ html.largeControls .leaflet-touch .leaflet-control-layers-toggle {
   background-repeat: no-repeat !important;
 }
 
-.anchorLineLabel textPath {
-  fill: var(--anchor-label-fill);
-  /* or whatever text color you want */
-  paint-order: stroke;
-  stroke: var(--anchor-label-halo);
-  /* halo behind the text for contrast over the map */
-  stroke-width: 3px;
-  /* thickness of the background */
-}
-
 .zoneHandle {
   background: var(--zone-handle-bg);
   border: 3px solid var(--zone-handle-border);
@@ -1373,26 +1361,43 @@ table.vesselData td:nth-child(3) {
   padding-left: 12px;
 }
 
-/* Boat name label above each vessel marker. Strip the default tooltip box and
-   arrow, then use a white halo so the text stays legible over any map tile. */
-.boat-name-label.leaflet-tooltip {
-  background: transparent;
+/* Map text labels: boat names and the anchor line's distance/bearing share
+   one treatment — a snug pill (just 1px of padding beyond the letters) with
+   a soft glow around the rect. This replaces the old per-letter halos, which
+   were hard to read: each glyph's halo painted over neighboring glyphs, so
+   thickening it only made things worse. */
+.boat-name-label.leaflet-tooltip,
+.anchor-line-label {
+  background: var(--map-label-bg);
   border: none;
-  box-shadow: none;
-  padding: 0;
-  color: var(--label-fg);
+  border-radius: 3px;
+  box-shadow: 0 0 2px 2px var(--map-label-glow);
+  padding: 1px;
+  color: var(--map-label-fg);
   font-size: 12px;
   font-weight: 600;
+  /* Hug the letters vertically too. For Arial/Helvetica metrics, 0.8em is
+     almost exactly cap-height-to-baseline, leaving <1px of box above and
+     below the glyphs (labels are caps/digits, so descenders don't occur). */
+  line-height: 0.8;
   white-space: nowrap;
+}
+
+/* Boat name label above each vessel marker; the shared pill rule overrides
+   the default leaflet tooltip chrome. */
+.boat-name-label.leaflet-tooltip {
   cursor: pointer;
   /* AIS static reports usually carry names in caps already; uppercase the
      rest (e.g. the "Unknown" fallback) so every label reads consistent. */
   text-transform: uppercase;
-  text-shadow:
-    0 0 3px var(--label-halo),
-    0 0 3px var(--label-halo),
-    0 0 3px var(--label-halo),
-    0 0 2px var(--label-halo);
+}
+
+/* Anchor-line labels sit inside a 0×0 divIcon pinned to the line's midpoint;
+   AnchorOverlay sets a transform that centers the pill there, rotates it to
+   read along the line, and pushes it out to its side. Absolute so the box
+   shrink-wraps the text instead of collapsing to the parent's zero width. */
+.anchor-line-label {
+  position: absolute;
 }
 
 .boat-name-label.leaflet-tooltip-top::before {
