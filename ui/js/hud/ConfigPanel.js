@@ -64,15 +64,11 @@ const FIELDS = [
     label: "Fleet Filter Radius (m)",
     type: "number",
   },
-  // Stored in SignalK base units (m/s) but shown/edited in the user's display
-  // unit for the given category — the "unit" type converts both ways.
-  {
-    key: "glitchFilterSpeed",
-    label: "Glitch Filter Max Speed",
-    type: "unit",
-    category: "speed",
-    hint: "Ignore position jumps faster than this. 0 disables.",
-  },
+  // glitchFilterSpeed is deliberately absent: it's boat-level plugin config
+  // (it drives the server's own-position filter), set from the SignalK admin
+  // UI. The web app still reads it from /ui-config for fleet track filtering.
+  // The "unit" field type it used (base units stored, display units edited)
+  // remains available below for future fields.
   // Deliberately the last entry so it renders at the bottom of the settings
   // dialog (it's a checkbox, so it lands at the end of the checkbox column).
   { key: "enableLargeControls", label: "Use Large UI Controls", type: "checkbox" },

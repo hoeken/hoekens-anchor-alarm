@@ -166,31 +166,47 @@ Examples:
 
 ### UI configuration
 
+UI preferences are stored **per identity**: the username for user logins, the
+device clientId for device access tokens (MFDs etc. — both stable across token
+rotation), or a shared anonymous bucket when the request carries no principal.
+Each identity's preferences live in a sparse JSON file under the plugin data
+dir (`ui-config/`).
+
 #### `GET /ui-config`
 
-Returns the plugin configuration values the web UI needs at startup. Unset
-properties are omitted (the UI applies its own defaults). Public — no auth
-required.
+Returns the requesting identity's effective UI preferences: schema defaults,
+overlaid with the boat-wide baseline (migrated from pre-2.11 plugin config),
+overlaid with the identity's own saved keys. Every preference field is always
+present. Public — no auth required (anonymous callers get the defaults +
+boat baseline).
 
 Response fields:
 
-| Field               | Type    | Notes                                                                                           |
-| ------------------- | ------- | ----------------------------------------------------------------------------------------------- |
-| `defaultBasemap`    | string  | `"OpenStreetMap"`, `"Satellite"`, or `"Blank"`.                                                 |
-| `defaultShape`      | string  | `"circle"`, `"sector"`, or `"polygon"`. Default new-zone shape.                                 |
-| `fleetFilterRadius` | integer | Radius (meters) around own vessel for showing other vessels and tracks.                         |
-| `enableTidePanel`   | boolean | Show the tide panel while anchored.                                                             |
-| `enableWindPanel`   | boolean | Show the wind panel.                                                                            |
-| `enableScopePanel`  | boolean | Show the scope/depth calculator while the anchor is up.                                         |
-| `enableBoatLabels`  | boolean | Show other vessels' names as labels (when zoomed in enough).                                    |
-| `enableSeascape`    | boolean | Overlay Seascape bathymetry by default.                                                         |
-| `hasCustomIcon`     | boolean | **Read-only, derived.** Whether a custom own-boat icon has been uploaded. Not a stored setting. |
+| Field                    | Type    | Notes                                                                                                                                                                       |
+| ------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `defaultBasemap`         | string  | `"OpenStreetMap"`, `"Satellite"`, or `"Blank"`.                                                                                                                             |
+| `defaultShape`           | string  | `"circle"`, `"sector"`, or `"polygon"`. Default new-zone shape.                                                                                                             |
+| `fleetFilterRadius`      | integer | Radius (meters) around own vessel for showing other vessels and tracks.                                                                                                     |
+| `enableTidePanel`        | boolean | Show the tide panel while anchored.                                                                                                                                         |
+| `enableWindPanel`        | boolean | Show the wind panel.                                                                                                                                                        |
+| `enableScopePanel`       | boolean | Show the scope/depth calculator while the anchor is up.                                                                                                                     |
+| `enableBoatLabels`       | boolean | Show other vessels' names as labels (when zoomed in enough).                                                                                                                |
+| `enableOwnTrack`         | boolean | Draw your own vessel's historical track.                                                                                                                                    |
+| `enableOtherTracks`      | boolean | Draw other vessels' historical tracks.                                                                                                                                      |
+| `enableAnchorageHistory` | boolean | Show the past-anchorages button (needs a history provider plugin).                                                                                                          |
+| `enableChartLayers`      | boolean | Enable local raster chart overlays by default when available.                                                                                                               |
+| `enableSeascape`         | boolean | Overlay Seascape bathymetry by default.                                                                                                                                     |
+| `enableLargeControls`    | boolean | Draw the map control buttons at 1.5x size.                                                                                                                                  |
+| `scopes`                 | string  | Comma-separated scope ratios, e.g. `"7,5,4,3"`. Blank disables scope calculations.                                                                                          |
+| `glitchFilterSpeed`      | number  | **Read-only, boat-level.** Plugin config (drives the server's own-position filter); the UI reads it for fleet track filtering. Set it in the SignalK admin plugin settings. |
+| `hasCustomIcon`          | boolean | **Read-only, derived.** Whether a custom own-boat icon has been uploaded. Not a stored setting.                                                                             |
 
 #### `POST /ui-config`
 
-Persists UI-editable settings. Only the whitelisted keys above are accepted
-(`hasCustomIcon` is ignored on write); each is validated, written onto the live
-plugin configuration, and saved. Requires authentication.
+Persists UI-editable settings for the requesting identity. Only the writable
+keys above are accepted (read-only fields are ignored on write); each is
+validated and merged into that identity's preference file — other identities
+are unaffected. Requires authentication.
 
 ```bash
 curl -X POST http://[signalk-server]:[port]/plugins/hoekens-anchor-alarm/ui-config \

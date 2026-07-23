@@ -21,6 +21,7 @@ import { Geo } from "../shared/geo.js";
 import { GlitchFilter } from "../shared/glitch-filter.js";
 import { SignalKBus } from "./signalk-bus.js";
 import { SessionLog } from "./session-log.js";
+import { UiConfigStore } from "./ui-config.js";
 import { TimeZeroSync } from "./timezero-sync.js";
 import { Utils } from "./utils.js";
 import { register as registerHttpRoutes } from "./http-routes.js";
@@ -58,6 +59,7 @@ export default function (app) {
 
   plugin.bus = new SignalKBus(app, plugin.id);
   plugin.sessionLog = new SessionLog(app);
+  plugin.uiConfigStore = new UiConfigStore(app);
   // TimeZero LAN anchor sync — created only when enabled, in plugin.start.
   plugin.timeZeroSync = null;
 
@@ -72,6 +74,11 @@ export default function (app) {
     // v2.1 -> v2.2 upgrade: legacy `radius` becomes a `zone` config.
     // Persist immediately so the next restart sees the migrated shape.
     const migrated = migrateConfig(plugin.configuration);
+    // v2.11 upgrade: UI preferences move out of the plugin config into
+    // per-identity storage; any legacy keys become the boat-wide baseline.
+    const uiMigrated = plugin.uiConfigStore.migrateFromPluginConfig(
+      plugin.configuration,
+    );
     plugin.configuration = applyDefaults(app, plugin.configuration);
 
     // Load config before the first notification so enableNormalNotifications
@@ -82,8 +89,11 @@ export default function (app) {
     for (const [key, value] of Object.entries(metas))
       plugin.bus.queueMeta(key, value);
 
-    if (migrated) {
-      app.debug("migrated legacy radius config to zone shape");
+    if (migrated || uiMigrated) {
+      if (migrated)
+        app.debug("migrated legacy radius config to zone shape");
+      if (uiMigrated)
+        app.debug("migrated legacy UI preferences to per-identity storage");
       plugin.savePluginOptions();
     }
 
@@ -417,9 +427,7 @@ export default function (app) {
         plugin.positionWatchdogTimer.reset();
 
       // Glitch filter: a fix implying an impossible speed must not reach
-      // checkPosition, so a GPS jump can't trip the drag alarm. The limit is
-      // read live because /ui-config saves update the running configuration
-      // without restarting the plugin.
+      // checkPosition, so a GPS jump can't trip the drag alarm.
       plugin.glitchFilter.setMaxSpeed(plugin.configuration?.glitchFilterSpeed);
       const result = plugin.glitchFilter.check(
         vesselPosition,

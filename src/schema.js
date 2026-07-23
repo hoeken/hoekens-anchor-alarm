@@ -140,115 +140,125 @@ export const requiredPaths = [
   },
 ];
 
+// Per-user UI preference schema — the settings the web UI reads and writes
+// through /ui-config. These live in per-identity JSON files under the plugin
+// data dir (see ui-config.js), NOT in the plugin's saved options, so they are
+// deliberately absent from buildSchema below. This fragment is the single
+// source of truth for their types, enums, and defaults.
+export const uiSchemaProperties = {
+  defaultBasemap: {
+    type: "string",
+    title: "Default Basemap",
+    description:
+      "Which map layer to show on load; all remain switchable at runtime via the layer control. \"Blank\" draws no tiles — useful offline, on slow links, or when relying only on local charts.",
+    default: "Satellite",
+    enum: ["Blank", "OpenStreetMap", "Satellite"],
+  },
+  defaultShape: {
+    type: "string",
+    title: "Default Watch Zone Shape",
+    description:
+      "Shape used when estimating a new anchor position before it is dropped.",
+    default: "circle",
+    enum: ["circle", "sector", "polygon"],
+  },
+  fleetFilterRadius: {
+    type: "integer",
+    title: "Fleet Filter Radius (m)",
+    description:
+      "Radius around own vessel to display other vessels and historical tracks.",
+    default: 100000,
+  },
+  enableTidePanel: {
+    type: "boolean",
+    title: "Show Tide Box",
+    description:
+      "Show the tide chart panel while anchored (requires signalk-tides).",
+    default: true,
+  },
+  enableWindPanel: {
+    type: "boolean",
+    title: "Show Wind Box",
+    description:
+      "Show the wind speed/direction panel while anchored.",
+    default: true,
+  },
+  enableScopePanel: {
+    type: "boolean",
+    title: "Show Scope Box",
+    description:
+      "Show the scope/depth calculator panel while the anchor is up.",
+    default: true,
+  },
+  enableBoatLabels: {
+    type: "boolean",
+    title: "Show Boat Name Labels",
+    description:
+      "Show other vessels' names as labels on the map (only once zoomed in enough to be legible).",
+    default: true,
+  },
+  enableOwnTrack: {
+    type: "boolean",
+    title: "Show My Boat Track",
+    description:
+      "Draw your own vessel's historical track on the map.",
+    default: true,
+  },
+  enableOtherTracks: {
+    type: "boolean",
+    title: "Show Other Boat Tracks",
+    description:
+      "Draw other vessels' historical tracks on the map.",
+    default: true,
+  },
+  enableAnchorageHistory: {
+    type: "boolean",
+    title: "Show Past Anchorages",
+    description:
+      "Show the past-anchorages button on the map and query the server's History API for recorded anchoring sessions. Requires a history provider plugin (e.g. signalk-questdb); without one the button stays hidden regardless.",
+    default: true,
+  },
+  enableChartLayers: {
+    type: "boolean",
+    title: "Use Chart Layers if Available",
+    description:
+      "When local raster charts are available (via a charts plugin), enable them as map overlays by default. Turn off to keep them in the layer control but off until toggled on manually.",
+    default: true,
+  },
+  enableSeascape: {
+    type: "boolean",
+    title: "Use Seascape Bathymetry",
+    description:
+      "Overlay the Seascape bathymetry (water depth) chart on top of the base map by default. Needs an internet connection and a WebGL-capable browser; where either is missing the base map shows unchanged. Also toggleable at runtime in the layer control.",
+    default: false,
+  },
+  enableLargeControls: {
+    type: "boolean",
+    title: "Use Large UI Controls",
+    description:
+      "Draw the map control buttons (zoom, home, settings, theme, history, layers) at 1.5x size for easier touch targets. Turn off for the original smaller sizing.",
+    default: true,
+  },
+  scopes: {
+    type: "string",
+    title: "Scope Ratios",
+    description:
+      "Comma-separated scope ratios (1–10) to calculate and display, e.g. \"7,5,4,3\". Invalid entries are ignored. Leave the field blank to turn off the scope calculations entirely. Also editable live from the web UI.",
+    default: "7,5,4,3",
+  },
+};
+
 export function buildSchema(app) {
   const schemaData = {
     title: "Hoeken's Anchor Alarm",
     type: "object",
+    description:
+      "Display preferences (panels, basemap, tracks, scope ratios, …) are per-user and set from the web app's settings dialog, not here.",
     properties: {
       pathChecks: {
         title: "Path Checks",
         type: "object",
         properties: {},
-      },
-      defaultBasemap: {
-        type: "string",
-        title: "Default Basemap",
-        description:
-          "Which map layer to show on load; all remain switchable at runtime via the layer control. \"Blank\" draws no tiles — useful offline, on slow links, or when relying only on local charts.",
-        default: "Satellite",
-        enum: ["Blank", "OpenStreetMap", "Satellite"],
-      },
-      defaultShape: {
-        type: "string",
-        title: "Default Watch Zone Shape",
-        description:
-          "Shape used when estimating a new anchor position before it is dropped.",
-        default: "circle",
-        enum: ["circle", "sector", "polygon"],
-      },
-      fleetFilterRadius: {
-        type: "integer",
-        title: "Fleet Filter Radius (m)",
-        description:
-          "Radius around own vessel to display other vessels and historical tracks.",
-        default: 100000,
-      },
-      enableTidePanel: {
-        type: "boolean",
-        title: "Show Tide Box",
-        description:
-          "Show the tide chart panel while anchored (requires signalk-tides).",
-        default: true,
-      },
-      enableWindPanel: {
-        type: "boolean",
-        title: "Show Wind Box",
-        description:
-          "Show the wind speed/direction panel while anchored.",
-        default: true,
-      },
-      enableScopePanel: {
-        type: "boolean",
-        title: "Show Scope Box",
-        description:
-          "Show the scope/depth calculator panel while the anchor is up.",
-        default: true,
-      },
-      enableBoatLabels: {
-        type: "boolean",
-        title: "Show Boat Name Labels",
-        description:
-          "Show other vessels' names as labels on the map (only once zoomed in enough to be legible).",
-        default: true,
-      },
-      enableOwnTrack: {
-        type: "boolean",
-        title: "Show My Boat Track",
-        description:
-          "Draw your own vessel's historical track on the map.",
-        default: true,
-      },
-      enableOtherTracks: {
-        type: "boolean",
-        title: "Show Other Boat Tracks",
-        description:
-          "Draw other vessels' historical tracks on the map.",
-        default: true,
-      },
-      enableAnchorageHistory: {
-        type: "boolean",
-        title: "Show Past Anchorages",
-        description:
-          "Show the past-anchorages button on the map and query the server's History API for recorded anchoring sessions. Requires a history provider plugin (e.g. signalk-questdb); without one the button stays hidden regardless.",
-        default: true,
-      },
-      enableChartLayers: {
-        type: "boolean",
-        title: "Use Chart Layers if Available",
-        description:
-          "When local raster charts are available (via a charts plugin), enable them as map overlays by default. Turn off to keep them in the layer control but off until toggled on manually.",
-        default: true,
-      },
-      enableSeascape: {
-        type: "boolean",
-        title: "Use Seascape Bathymetry",
-        description:
-          "Overlay the Seascape bathymetry (water depth) chart on top of the base map by default. Needs an internet connection and a WebGL-capable browser; where either is missing the base map shows unchanged. Also toggleable at runtime in the layer control.",
-        default: false,
-      },
-      enableLargeControls: {
-        type: "boolean",
-        title: "Use Large UI Controls",
-        description:
-          "Draw the map control buttons (zoom, home, settings, theme, history, layers) at 1.5x size for easier touch targets. Turn off for the original smaller sizing.",
-        default: true,
-      },
-      scopes: {
-        type: "string",
-        title: "Scope Ratios",
-        description:
-          "Comma-separated scope ratios (1–10) to calculate and display, e.g. \"7,5,4,3\". Invalid entries are ignored. Leave the field blank to turn off the scope calculations entirely. Also editable live from the web UI.",
-        default: "7,5,4,3",
       },
       state: {
         title: "Alarm Severity",
@@ -353,35 +363,31 @@ export function buildSchema(app) {
   return schemaData;
 }
 
-// Plugin config keys the web UI is allowed to read and write through
-// /ui-config. This is the whitelist of *which* keys are exposed; their types,
-// enums, and defaults all come from buildSchema above, so there's one source
-// of truth. Anchor state (`zone`) and alarm internals are deliberately
-// excluded — those are owned by the anchor service, not the settings form.
-export const UI_CONFIG_KEYS = [
-  "defaultBasemap",
-  "defaultShape",
-  "fleetFilterRadius",
-  "glitchFilterSpeed",
-  "enableTidePanel",
-  "enableWindPanel",
-  "enableScopePanel",
-  "enableBoatLabels",
-  "enableOwnTrack",
-  "enableOtherTracks",
-  "enableAnchorageHistory",
-  "enableChartLayers",
-  "enableSeascape",
-  "enableLargeControls",
-  "scopes",
-];
+// The keys the web UI is allowed to read and write through /ui-config —
+// exactly the per-user preferences above. Anchor state (`zone`), alarm
+// internals, and boat-level settings like glitchFilterSpeed (which drives the
+// server's own-position filter) are deliberately excluded — those are owned
+// by the plugin config, not the settings form.
+export const UI_CONFIG_KEYS = Object.keys(uiSchemaProperties);
 
-// Project the UI-relevant subset out of a full plugin config (the /ui-config
-// GET response shape).
+// Fresh copy of the per-user preference defaults (the base layer every
+// /ui-config resolution starts from).
+export function defaultUiConfig() {
+  const out = {};
+  for (const [key, prop] of Object.entries(uiSchemaProperties))
+    out[key] = prop.default;
+  return out;
+}
+
+// Project the UI-relevant subset out of a config object — only whitelisted
+// keys that actually carry a value, so the result can be spread as an overlay
+// without undefineds clobbering lower layers.
 export function pickUiConfig(config = {}) {
   const out = {};
-  for (const key of UI_CONFIG_KEYS)
-    out[key] = config[key];
+  for (const key of UI_CONFIG_KEYS) {
+    if (config[key] !== undefined)
+      out[key] = config[key];
+  }
   return out;
 }
 
@@ -414,15 +420,15 @@ function coerceToSchema(key, prop, value) {
   }
 }
 
-// Validate an incoming /ui-config POST body against the plugin schema,
-// returning the coerced updates — only whitelisted keys that were present.
-export function coerceUiConfig(app, body = {}) {
-  const props = buildSchema(app).properties;
+// Validate an incoming /ui-config POST body against the UI preference
+// schema, returning the coerced updates — only whitelisted keys that were
+// present.
+export function coerceUiConfig(body = {}) {
   const updates = {};
   for (const key of UI_CONFIG_KEYS) {
     if (body[key] === undefined)
       continue;
-    updates[key] = coerceToSchema(key, props[key], body[key]);
+    updates[key] = coerceToSchema(key, uiSchemaProperties[key], body[key]);
   }
   return updates;
 }

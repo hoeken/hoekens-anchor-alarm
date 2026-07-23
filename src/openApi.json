@@ -95,7 +95,7 @@
       },
       "Config": {
         "type": "object",
-        "description": "UI-relevant plugin configuration. Properties are omitted when unset; the UI falls back to its own defaults.",
+        "description": "Per-user UI preferences. Stored per identity (username for user tokens, clientId for device tokens, a shared anonymous bucket otherwise); GET resolves defaults, then the boat-wide baseline migrated from pre-2.11 plugin config, then the identity's own saved keys.",
         "properties": {
           "defaultBasemap": {
             "type": "string",
@@ -128,6 +128,22 @@
             "type": "boolean",
             "description": "Show other vessels' names as labels on the map (only once zoomed in enough to be legible)."
           },
+          "enableOwnTrack": {
+            "type": "boolean",
+            "description": "Draw your own vessel's historical track on the map."
+          },
+          "enableOtherTracks": {
+            "type": "boolean",
+            "description": "Draw other vessels' historical tracks on the map."
+          },
+          "enableAnchorageHistory": {
+            "type": "boolean",
+            "description": "Show the past-anchorages button and query the server's History API for recorded anchoring sessions."
+          },
+          "enableChartLayers": {
+            "type": "boolean",
+            "description": "Enable local raster chart overlays by default when a charts plugin provides them."
+          },
           "enableSeascape": {
             "type": "boolean",
             "description": "Overlay the Seascape bathymetry (depth) chart on the base map by default. Requires internet + WebGL; toggleable at runtime in the layer control."
@@ -136,10 +152,29 @@
             "type": "boolean",
             "description": "Draw the map control buttons at 1.5x size for easier touch targets; off restores the original smaller sizing."
           },
+          "scopes": {
+            "type": "string",
+            "description": "Comma-separated scope ratios (1–10) to calculate and display, e.g. \"7,5,4,3\". Blank turns scope calculations off."
+          },
+          "glitchFilterSpeed": {
+            "type": "number",
+            "readOnly": true,
+            "description": "Boat-level plugin config (drives the server's own-position glitch filter), riding along read-only for the UI's fleet track filtering. Set it in the SignalK admin plugin settings; values POSTed here are ignored."
+          },
           "hasCustomIcon": {
             "type": "boolean",
             "readOnly": true,
             "description": "Derived (not stored): whether a custom own-boat icon has been uploaded via PUT /icon. The UI uses it to decide whether to render the custom icon and how to seed the settings preview."
+          },
+          "selfId": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Derived (not stored): the server's own vessel id, so the UI can pick its entry out of the bulk /vessels payload."
+          },
+          "version": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Derived (not stored): the plugin version, shown in the settings footer."
           }
         }
       },
@@ -433,11 +468,11 @@
     "/ui-config": {
       "get": {
         "tags": ["config"],
-        "summary": "Get UI-relevant plugin configuration",
-        "description": "Returns plugin configuration values that the web UI needs at startup. Unset properties are omitted; the UI applies its own defaults in that case.",
+        "summary": "Get the requesting identity's UI preferences",
+        "description": "Returns the effective UI preferences for the requesting identity (username for user tokens, device clientId for device tokens, a shared anonymous bucket otherwise): schema defaults, overlaid with the boat-wide baseline, overlaid with the identity's own saved keys. Every preference key is always present.",
         "responses": {
           "200": {
-            "description": "Plugin configuration returned successfully.",
+            "description": "Effective UI preferences returned successfully.",
             "content": {
               "application/json": {
                 "schema": {
@@ -453,8 +488,8 @@
       },
       "post": {
         "tags": ["config"],
-        "summary": "Update UI-relevant plugin configuration",
-        "description": "Persists UI-editable settings. Only whitelisted properties are accepted; each is validated, written onto the live plugin configuration, and saved. Requires authentication.",
+        "summary": "Update the requesting identity's UI preferences",
+        "description": "Persists UI-editable settings for the requesting identity. Only whitelisted properties are accepted; each is validated and merged into that identity's preference file — other identities are unaffected. Requires authentication.",
         "requestBody": {
           "required": true,
           "content": {

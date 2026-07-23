@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { EventEmitter } from "node:events";
 import { register } from "../src/http-routes.js";
+import { UiConfigStore } from "../src/ui-config.js";
 import { ValidationError, StateError } from "../src/errors.js";
 import { createMockApp } from "./mockApp.js";
 
@@ -76,6 +77,7 @@ describe("http-routes register()", () => {
       savePluginOptions() {
         this.saveCount++;
       },
+      uiConfigStore: new UiConfigStore(app),
     };
   });
 
@@ -217,18 +219,39 @@ describe("http-routes register()", () => {
   });
 
   describe("GET /ui-config", () => {
-    test("returns the whitelisted projection of the config", () => {
-      plugin.configuration = {
-        defaultBasemap: "Satellite",
-        zone: "secret",
-        state: "emergency",
-      };
+    // Requests carry identity the way SignalK's security middleware provides
+    // it: a principal whose identifier is the username / device clientId.
+    const asUser = (identifier) => ({ skPrincipal: { identifier } });
+
+    test("an anonymous request gets the full default preference set", () => {
       wire();
       const res = fakeRes();
       router.handlers.get["/ui-config"]({}, res);
       assert.equal(res.body.defaultBasemap, "Satellite");
+      assert.equal(res.body.enableTidePanel, true);
       assert.equal("zone" in res.body, false);
       assert.equal("state" in res.body, false);
+    });
+
+    test("resolves preferences per identity", () => {
+      plugin.uiConfigStore.save("bob", { defaultBasemap: "Blank" });
+      wire();
+
+      const bob = fakeRes();
+      router.handlers.get["/ui-config"](asUser("bob"), bob);
+      assert.equal(bob.body.defaultBasemap, "Blank");
+
+      const alice = fakeRes();
+      router.handlers.get["/ui-config"](asUser("alice"), alice);
+      assert.equal(alice.body.defaultBasemap, "Satellite");
+    });
+
+    test("glitchFilterSpeed rides along read-only from the plugin config", () => {
+      plugin.configuration = { glitchFilterSpeed: 3.5 };
+      wire();
+      const res = fakeRes();
+      router.handlers.get["/ui-config"]({}, res);
+      assert.equal(res.body.glitchFilterSpeed, 3.5);
     });
 
     test("tolerates a missing configuration", () => {
@@ -237,50 +260,83 @@ describe("http-routes register()", () => {
       const res = fakeRes();
       assert.doesNotThrow(() => router.handlers.get["/ui-config"]({}, res));
       assert.equal(res.statusCode, 200);
+      assert.equal(res.body.glitchFilterSpeed, 0);
     });
   });
 
   describe("POST /ui-config", () => {
-    test("coerces, assigns onto the config, saves, and echoes updates", () => {
-      plugin.configuration = {};
+    const asUser = (identifier, body) => ({
+      skPrincipal: { identifier },
+      body,
+    });
+
+    test("coerces, saves to the identity's store, and echoes updates", () => {
       wire();
       const res = fakeRes();
       router.handlers.post["/ui-config"](
-        { body: { defaultBasemap: "OpenStreetMap", fleetFilterRadius: "250" } },
+        asUser("bob", { defaultBasemap: "OpenStreetMap", fleetFilterRadius: "250" }),
         res,
       );
-      assert.equal(plugin.configuration.defaultBasemap, "OpenStreetMap");
-      assert.equal(plugin.configuration.fleetFilterRadius, 250);
-      assert.equal(plugin.saveCount, 1);
       assert.equal(res.statusCode, 200);
       assert.deepEqual(res.body.config, {
         defaultBasemap: "OpenStreetMap",
         fleetFilterRadius: 250,
       });
-    });
-
-    test("rejects an invalid value with 403 and does not save", () => {
-      plugin.configuration = {};
-      wire();
-      const res = fakeRes();
-      router.handlers.post["/ui-config"](
-        { body: { defaultBasemap: "CARRIER_PIGEON" } },
-        res,
+      assert.equal(
+        plugin.uiConfigStore.resolve("bob").fleetFilterRadius,
+        250,
       );
-      assert.equal(res.statusCode, 403);
+      // Preferences no longer touch the plugin config.
+      assert.equal(plugin.configuration.defaultBasemap, undefined);
       assert.equal(plugin.saveCount, 0);
     });
 
-    test("initializes configuration when it was undefined", () => {
-      plugin.configuration = undefined;
+    test("a save only affects the posting identity", () => {
+      wire();
+      router.handlers.post["/ui-config"](
+        asUser("bob", { enableTidePanel: false }),
+        fakeRes(),
+      );
+      assert.equal(plugin.uiConfigStore.resolve("bob").enableTidePanel, false);
+      assert.equal(plugin.uiConfigStore.resolve("alice").enableTidePanel, true);
+    });
+
+    test("boat-level keys in the body are ignored, not saved", () => {
       wire();
       const res = fakeRes();
       router.handlers.post["/ui-config"](
-        { body: { enableTidePanel: false } },
+        asUser("bob", { glitchFilterSpeed: 9, enableWindPanel: false }),
         res,
       );
-      assert.equal(plugin.configuration.enableTidePanel, false);
-      assert.equal(res.statusCode, 200);
+      assert.deepEqual(res.body.config, { enableWindPanel: false });
+      assert.equal(plugin.configuration.glitchFilterSpeed, undefined);
+    });
+
+    test("an anonymous save (security disabled) lands in the shared bucket", () => {
+      wire();
+      router.handlers.post["/ui-config"](
+        { body: { enableScopePanel: false } },
+        fakeRes(),
+      );
+      assert.equal(plugin.uiConfigStore.resolve(null).enableScopePanel, false);
+
+      const res = fakeRes();
+      router.handlers.get["/ui-config"]({}, res);
+      assert.equal(res.body.enableScopePanel, false);
+    });
+
+    test("rejects an invalid value with 403 and stores nothing", () => {
+      wire();
+      const res = fakeRes();
+      router.handlers.post["/ui-config"](
+        asUser("bob", { defaultBasemap: "CARRIER_PIGEON" }),
+        res,
+      );
+      assert.equal(res.statusCode, 403);
+      assert.equal(
+        fs.existsSync(path.join(harness.dataDir(), "ui-config")),
+        false,
+      );
     });
 
     test("reports hasCustomIcon=false when no icon file exists", () => {

@@ -17,7 +17,7 @@ import { createRequire } from "module";
 import fs from "fs";
 import path from "path";
 import { AnchorError } from "./errors.js";
-import { pickUiConfig, coerceUiConfig } from "./schema.js";
+import { coerceUiConfig } from "./schema.js";
 
 const require = createRequire(import.meta.url);
 const openapi = require("./openApi.json");
@@ -217,15 +217,21 @@ export function register(app, plugin, router) {
   });
 
   router.get("/ui-config", (req, res) => {
-    // hasCustomIcon, selfId, and version are derived, not stored config keys,
-    // so they ride along on the projection here rather than in schema.js.
-    // coerceUiConfig ignores unknown keys, so a client echoing them back on
-    // POST is harmless. selfId (e.g. "urn:mrn:imo:mmsi:123456789") lets the
-    // UI pick its own entry out of the bulk /vessels payload instead of
-    // fetching the (potentially large) /vessels/self tree separately, and
-    // version saves it a /plugins/<id> round trip for the settings footer.
+    // The preference set is resolved per identity (username / device
+    // clientId / anonymous — see UiConfigStore). The rest are read-only
+    // ride-alongs, not stored preference keys; coerceUiConfig ignores unknown
+    // keys, so a client echoing them back on POST is harmless.
+    // - glitchFilterSpeed is boat-level plugin config (it drives the server's
+    //   own-position filter) but the UI still reads it to filter glitches out
+    //   of displayed fleet tracks.
+    // - selfId (e.g. "urn:mrn:imo:mmsi:123456789") lets the UI pick its own
+    //   entry out of the bulk /vessels payload instead of fetching the
+    //   (potentially large) /vessels/self tree separately.
+    // - version saves a /plugins/<id> round trip for the settings footer.
+    const store = plugin.uiConfigStore;
     res.json({
-      ...pickUiConfig(plugin.configuration || {}),
+      ...store.resolve(store.identityFor(req)),
+      glitchFilterSpeed: plugin.configuration?.glitchFilterSpeed ?? 0,
       hasCustomIcon: iconPath(app) !== null,
       selfId: app.selfId,
       version: packageJson.version,
@@ -312,17 +318,18 @@ export function register(app, plugin, router) {
     }
   });
 
-  // Persist UI-editable settings. Only whitelisted keys are accepted; each is
-  // coerced/validated against the plugin schema, written onto the live
-  // plugin.configuration, and saved. SignalK gates POSTs to plugin routes
-  // behind authentication, so reaching here implies the caller is logged in.
+  // Persist UI-editable settings for the requesting identity. Only
+  // whitelisted keys are accepted; each is coerced/validated against the UI
+  // preference schema and merged into that identity's store file. SignalK
+  // gates POSTs to plugin routes behind authentication, so reaching here
+  // implies the caller is logged in (or security is disabled entirely, in
+  // which case everyone shares the anonymous bucket).
   router.post("/ui-config", (req, res) => {
     try {
-      const updates = coerceUiConfig(app, req.body || {});
+      const updates = coerceUiConfig(req.body || {});
 
-      plugin.configuration = plugin.configuration || {};
-      Object.assign(plugin.configuration, updates);
-      plugin.savePluginOptions();
+      const store = plugin.uiConfigStore;
+      store.save(store.identityFor(req), updates);
 
       res.json({ statusCode: 200, state: "COMPLETED", config: updates });
     } catch (err) {

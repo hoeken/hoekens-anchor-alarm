@@ -1,11 +1,9 @@
 # 2.11.0
 
-- move ui config to being stored in a .json file in plugin storage
-  - extract default config from plugin schema -> plugin member
-  - remove plugin UI defaults from plugin config schema
-  - each user can have their own separate UI config
-  - ui-config api should look up based on auth token / username
-    - same for saving
+- reduce the svg stroke on large UI component icons
+- add a small ui component styling to the anchor control bar to match the other small styles
+- add a small styling mode for the wind barbs
+- add a small styling mode for the tide graph
 
 # LONG TERM
 

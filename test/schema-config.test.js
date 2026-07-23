@@ -6,6 +6,9 @@ import {
   pickUiConfig,
   coerceUiConfig,
   applyDefaults,
+  buildSchema,
+  defaultUiConfig,
+  uiSchemaProperties,
   UI_CONFIG_KEYS,
 } from "../src/schema.js";
 import { ValidationError } from "../src/errors.js";
@@ -63,37 +66,65 @@ describe("readZoneConfig()", () => {
   });
 });
 
+describe("UI preference schema split", () => {
+  test("the whitelist is exactly the UI preference schema's keys", () => {
+    assert.deepEqual(UI_CONFIG_KEYS, Object.keys(uiSchemaProperties));
+  });
+
+  test("boat-level settings are not UI preferences", () => {
+    assert.equal(UI_CONFIG_KEYS.includes("glitchFilterSpeed"), false);
+    assert.equal(UI_CONFIG_KEYS.includes("zone"), false);
+    assert.equal(UI_CONFIG_KEYS.includes("state"), false);
+  });
+
+  test("the plugin schema no longer carries the UI preference keys", () => {
+    const props = buildSchema(APP).properties;
+    for (const key of UI_CONFIG_KEYS)
+      assert.equal(key in props, false, `${key} should be out of the plugin schema`);
+    // ...but boat-level settings remain.
+    assert.ok("glitchFilterSpeed" in props);
+    assert.ok("zone" in props);
+  });
+
+  test("defaultUiConfig() yields a fresh copy of every default", () => {
+    const defaults = defaultUiConfig();
+    assert.equal(defaults.defaultBasemap, "Satellite");
+    assert.equal(defaults.enableTidePanel, true);
+    assert.equal(defaults.scopes, "7,5,4,3");
+    assert.deepEqual(Object.keys(defaults), UI_CONFIG_KEYS);
+    defaults.defaultBasemap = "mutated";
+    assert.equal(defaultUiConfig().defaultBasemap, "Satellite");
+  });
+});
+
 describe("pickUiConfig()", () => {
-  test("projects exactly the whitelisted keys", () => {
+  test("projects only whitelisted keys that carry a value", () => {
     const picked = pickUiConfig({
       defaultBasemap: "Satellite",
       zone: "secret",
       state: "emergency",
     });
-    assert.deepEqual(Object.keys(picked).sort(), [...UI_CONFIG_KEYS].sort());
-    assert.equal(picked.defaultBasemap, "Satellite");
-    assert.equal("zone" in picked, false);
-    assert.equal("state" in picked, false);
+    assert.deepEqual(picked, { defaultBasemap: "Satellite" });
   });
 
-  test("fills undefined for keys absent from the source config", () => {
-    const picked = pickUiConfig({});
-    assert.equal(picked.defaultBasemap, undefined);
-    assert.equal("defaultBasemap" in picked, true);
+  test("omits keys absent from the source config", () => {
+    assert.deepEqual(pickUiConfig({}), {});
+    assert.deepEqual(pickUiConfig(), {});
   });
 });
 
 describe("coerceUiConfig()", () => {
   test("returns only the whitelisted keys that were present", () => {
-    const updates = coerceUiConfig(APP, {
+    const updates = coerceUiConfig({
       defaultBasemap: "OpenStreetMap",
       state: "alarm", // not a UI key — must be ignored
+      glitchFilterSpeed: 5, // boat-level — must be ignored too
     });
     assert.deepEqual(updates, { defaultBasemap: "OpenStreetMap" });
   });
 
   test("coerces integers (rounding) and booleans", () => {
-    const updates = coerceUiConfig(APP, {
+    const updates = coerceUiConfig({
       fleetFilterRadius: "512.7",
       enableTidePanel: 0,
     });
@@ -103,14 +134,14 @@ describe("coerceUiConfig()", () => {
 
   test("throws ValidationError on an enum violation", () => {
     assert.throws(
-      () => coerceUiConfig(APP, { defaultBasemap: "CARRIER_PIGEON" }),
+      () => coerceUiConfig({ defaultBasemap: "CARRIER_PIGEON" }),
       ValidationError,
     );
   });
 
   test("throws ValidationError when a string field gets a non-string", () => {
     assert.throws(
-      () => coerceUiConfig(APP, { defaultBasemap: 42 }),
+      () => coerceUiConfig({ defaultBasemap: 42 }),
       ValidationError,
     );
   });
@@ -120,19 +151,24 @@ describe("applyDefaults()", () => {
   test("fills schema defaults for unset keys", () => {
     const config = {};
     applyDefaults(APP, config);
-    assert.equal(config.defaultBasemap, "Satellite");
-    assert.equal(config.enableTidePanel, true);
-    assert.equal(config.enableBoatLabels, true);
-    assert.equal(config.enableChartLayers, true);
     assert.equal(config.anchorAlarmInterval, 60);
     assert.equal(config.allowZoneOutsideVessel, false);
-    assert.equal(config.scopes, "7,5,4,3");
+    assert.equal(config.glitchFilterSpeed, 0);
+    assert.equal(config.state, "emergency");
+  });
+
+  test("no longer materializes UI preference defaults into the plugin config", () => {
+    const config = {};
+    applyDefaults(APP, config);
+    assert.equal(config.defaultBasemap, undefined);
+    assert.equal(config.enableTidePanel, undefined);
+    assert.equal(config.scopes, undefined);
   });
 
   test("never overwrites a value the user already set", () => {
-    const config = { defaultBasemap: "OpenStreetMap", fleetFilterRadius: 999 };
+    const config = { anchorAlarmInterval: 5, glitchFilterSpeed: 9 };
     applyDefaults(APP, config);
-    assert.equal(config.defaultBasemap, "OpenStreetMap");
-    assert.equal(config.fleetFilterRadius, 999);
+    assert.equal(config.anchorAlarmInterval, 5);
+    assert.equal(config.glitchFilterSpeed, 9);
   });
 });
