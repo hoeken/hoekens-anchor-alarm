@@ -1,6 +1,5 @@
 # 2.11.0
 
-- add 'Reloading' + background greyout + spinner to StaleReloader.js
 - backport large control styling from ../caveman-chartplotter
 - add ui config option 'Use large UI controls'
   - toggles large/small UI control styling
