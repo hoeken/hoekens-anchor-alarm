@@ -332,11 +332,13 @@ body,
 .info.leaflet-bar a,
 .leaflet-touch .info.leaflet-bar a {
   display: inline;
-  width: auto;
-  height: auto;
+  /* `!important` so these resets outrank the enlarged 45px map-control button
+     rule further down, which is itself !important to beat leaflet.css. */
+  width: auto !important;
+  height: auto !important;
   padding: 0;
   margin: 0;
-  line-height: inherit;
+  line-height: inherit !important;
   background-color: transparent;
   border: none;
   border-radius: 0;
@@ -503,7 +505,10 @@ body,
   padding: 0;
   border: none;
   border-radius: 0;
-  /* Match Leaflet's zoom buttons (leaflet.css .leaflet-control-zoom-*). */
+  /* Match Leaflet's default zoom-button glyphs (leaflet.css
+     .leaflet-control-zoom-* at touch size). The map's own zoom buttons are
+     enlarged to 33px by the 1.5x map-control rules above; these steppers stay
+     at 22px because their 80px panel is already touch-sized. */
   font:
     bold 22px "Lucida Console",
     Monaco,
@@ -638,6 +643,43 @@ body,
    white one in dark mode since the fill can't be driven by a CSS variable. */
 html.dark #polygonControl select {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='white' d='M0 0l6 8 6-8z'/></svg>");
+}
+
+/* Map control buttons (zoom, home, config, theme, history) enlarged to 1.5x
+   Leaflet's default size for easier touch targets on the MFD (30px -> 45px).
+   leaflet.css loads after this file (see index.html) and sets the same sizes at
+   equal specificity, so `!important` is needed to win the tie — the same
+   pattern the layers-toggle and flex rules use. The `.leaflet-touch` selector
+   matches its `.leaflet-touch .leaflet-bar a` on touch devices; the plain
+   selector covers desktop. The glyphs inside scale to match in the rules below
+   and in the layers-toggle override further down, so all six controls stay
+   uniform at 45px boxes with 27px icons. */
+.leaflet-bar a,
+.leaflet-touch .leaflet-bar a {
+  width: 45px !important;
+  height: 45px !important;
+  line-height: 45px !important;
+}
+
+/* House/gear/sun-moon/clock glyphs: the inline SVGs are authored at 18px, so
+   size them in CSS (width/height on the element override the SVG's own
+   attributes) to grow with their button — 18px -> 27px. */
+.leaflet-control-home svg,
+.leaflet-control-config svg,
+.leaflet-control-theme svg,
+.leaflet-control-history svg {
+  width: 27px;
+  height: 27px;
+}
+
+/* Zoom +/- glyphs are text, not SVG; scale the font instead. Overrides both
+   leaflet.css's base rule and its `.leaflet-touch` bump (22px -> 33px);
+   `!important` for the same load-order reason as the button rule above. */
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out,
+.leaflet-touch .leaflet-control-zoom-in,
+.leaflet-touch .leaflet-control-zoom-out {
+  font-size: 33px !important;
 }
 
 .leaflet-control-home,
@@ -1103,10 +1145,15 @@ html.dark #polygonControl select {
   color: var(--attribution-link);
 }
 
+/* Layers toggle: leaflet.css ships it larger than our other controls (36px, or
+   44px on touch); pin it to the same enlarged 45px box with a 27px icon so all
+   six controls match at 1.5x size. Both selectors so touch and desktop agree;
+   !important beats leaflet's retina background-size rule. */
+.leaflet-control-layers-toggle,
 .leaflet-touch .leaflet-control-layers-toggle {
-  width: 30px !important;
-  height: 30px !important;
-  background-size: 18px 18px !important;
+  width: 45px !important;
+  height: 45px !important;
+  background-size: 27px 27px !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
 }
