@@ -73,6 +73,9 @@ const FIELDS = [
     category: "speed",
     hint: "Ignore position jumps faster than this. 0 disables.",
   },
+  // Deliberately the last entry so it renders at the bottom of the settings
+  // dialog (it's a checkbox, so it lands at the end of the checkbox column).
+  { key: "enableLargeControls", label: "Use Large UI Controls", type: "checkbox" },
 ];
 
 export const ConfigPanel = L.Control.extend({

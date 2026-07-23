@@ -88,6 +88,7 @@ class AnchorAlarm {
       enableAnchorageHistory: true,
       enableChartLayers: true,
       enableSeascape: false,
+      enableLargeControls: true,
       scopes: "7,5,4,3",
       glitchFilterSpeed: 0,
       hasCustomIcon: false,
@@ -356,6 +357,8 @@ class AnchorAlarm {
         // below already runs with the configured scopes and glitch limit.
         this.state.setScopeRatios(this.config.scopes);
         this.state.setGlitchFilterSpeed(this.config.glitchFilterSpeed);
+        // Before buildMap so the controls are born at the configured size.
+        this.setLargeControls(this.config.enableLargeControls);
 
         const selfId = this.config.selfId ?? (await this.signalK.fetchSelfId());
         const vessels = await this.signalK.fetchAllVessels();
@@ -529,6 +532,7 @@ class AnchorAlarm {
     this.fleetLayer?.setShowOtherTracks(this.config.enableOtherTracks);
     this.fleetLayer?.setGlitchFilterSpeed(this.config.glitchFilterSpeed);
     this.setAnchorageHistoryEnabled(this.config.enableAnchorageHistory);
+    this.setLargeControls(this.config.enableLargeControls);
     this.updateMap();
     this.statusBar.clear("config-save");
     return this.signalK.saveConfig(newConfig).catch((error) => {
@@ -855,6 +859,13 @@ class AnchorAlarm {
       layer.addTo(this.map);
     else if (!enabled && this.map.hasLayer(layer))
       this.map.removeLayer(layer);
+  }
+
+  // Match the map control sizing to config.enableLargeControls: the class on
+  // <html> (same pattern as the dark theme) selects the 1.5x control rules in
+  // style.css; without it the controls fall back to Leaflet's stock sizing.
+  setLargeControls(enabled) {
+    document.documentElement.classList.toggle("largeControls", Boolean(enabled));
   }
 
   // Local raster charts served by SignalK's resources API (see ChartLayers) are

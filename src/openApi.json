@@ -132,6 +132,10 @@
             "type": "boolean",
             "description": "Overlay the Seascape bathymetry (depth) chart on the base map by default. Requires internet + WebGL; toggleable at runtime in the layer control."
           },
+          "enableLargeControls": {
+            "type": "boolean",
+            "description": "Draw the map control buttons at 1.5x size for easier touch targets; off restores the original smaller sizing."
+          },
           "hasCustomIcon": {
             "type": "boolean",
             "readOnly": true,

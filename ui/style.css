@@ -506,9 +506,9 @@ body,
   border: none;
   border-radius: 0;
   /* Match Leaflet's default zoom-button glyphs (leaflet.css
-     .leaflet-control-zoom-* at touch size). The map's own zoom buttons are
-     enlarged to 33px by the 1.5x map-control rules above; these steppers stay
-     at 22px because their 80px panel is already touch-sized. */
+     .leaflet-control-zoom-* at touch size). The map's own zoom buttons grow to
+     33px in large-controls mode (the html.largeControls rules below); these
+     steppers stay at 22px because their 80px panel is already touch-sized. */
   font:
     bold 22px "Lucida Console",
     Monaco,
@@ -647,15 +647,20 @@ html.dark #polygonControl select {
 
 /* Map control buttons (zoom, home, config, theme, history) enlarged to 1.5x
    Leaflet's default size for easier touch targets on the MFD (30px -> 45px).
+   Gated behind html.largeControls, driven by the "Use Large UI Controls"
+   setting (see AnchorAlarm.setLargeControls — same class-on-<html> pattern as
+   the dark theme); without the class the controls keep Leaflet's stock sizing.
    leaflet.css loads after this file (see index.html) and sets the same sizes at
    equal specificity, so `!important` is needed to win the tie — the same
    pattern the layers-toggle and flex rules use. The `.leaflet-touch` selector
    matches its `.leaflet-touch .leaflet-bar a` on touch devices; the plain
    selector covers desktop. The glyphs inside scale to match in the rules below
    and in the layers-toggle override further down, so all six controls stay
-   uniform at 45px boxes with 27px icons. */
-.leaflet-bar a,
-.leaflet-touch .leaflet-bar a {
+   uniform at 45px boxes with 27px icons. The .info resets above still outrank
+   these: their touch variant carries three classes to this rule's two, and
+   their plain variant two classes to the desktop rule's one. */
+html.largeControls .leaflet-bar a,
+html.largeControls .leaflet-touch .leaflet-bar a {
   width: 45px !important;
   height: 45px !important;
   line-height: 45px !important;
@@ -664,10 +669,10 @@ html.dark #polygonControl select {
 /* House/gear/sun-moon/clock glyphs: the inline SVGs are authored at 18px, so
    size them in CSS (width/height on the element override the SVG's own
    attributes) to grow with their button — 18px -> 27px. */
-.leaflet-control-home svg,
-.leaflet-control-config svg,
-.leaflet-control-theme svg,
-.leaflet-control-history svg {
+html.largeControls .leaflet-control-home svg,
+html.largeControls .leaflet-control-config svg,
+html.largeControls .leaflet-control-theme svg,
+html.largeControls .leaflet-control-history svg {
   width: 27px;
   height: 27px;
 }
@@ -675,10 +680,10 @@ html.dark #polygonControl select {
 /* Zoom +/- glyphs are text, not SVG; scale the font instead. Overrides both
    leaflet.css's base rule and its `.leaflet-touch` bump (22px -> 33px);
    `!important` for the same load-order reason as the button rule above. */
-.leaflet-control-zoom-in,
-.leaflet-control-zoom-out,
-.leaflet-touch .leaflet-control-zoom-in,
-.leaflet-touch .leaflet-control-zoom-out {
+html.largeControls .leaflet-control-zoom-in,
+html.largeControls .leaflet-control-zoom-out,
+html.largeControls .leaflet-touch .leaflet-control-zoom-in,
+html.largeControls .leaflet-touch .leaflet-control-zoom-out {
   font-size: 33px !important;
 }
 
@@ -1146,11 +1151,22 @@ html.dark #polygonControl select {
 }
 
 /* Layers toggle: leaflet.css ships it larger than our other controls (36px, or
-   44px on touch); pin it to the same enlarged 45px box with a 27px icon so all
-   six controls match at 1.5x size. Both selectors so touch and desktop agree;
-   !important beats leaflet's retina background-size rule. */
-.leaflet-control-layers-toggle,
+   44px on touch); pin the touch size to the same 30px box / 18px icon as the
+   stock controls. !important beats leaflet's retina background-size rule. */
 .leaflet-touch .leaflet-control-layers-toggle {
+  width: 30px !important;
+  height: 30px !important;
+  background-size: 18px 18px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Large-controls mode: pin it to the enlarged 45px box with a 27px icon so all
+   six controls match at 1.5x size (see the html.largeControls rules further
+   up). Both selectors so touch and desktop agree; the touch variant's three
+   classes outrank the two-class small rule above. */
+html.largeControls .leaflet-control-layers-toggle,
+html.largeControls .leaflet-touch .leaflet-control-layers-toggle {
   width: 45px !important;
   height: 45px !important;
   background-size: 27px 27px !important;

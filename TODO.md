@@ -1,8 +1,5 @@
 # 2.11.0
 
-- add ui config option 'Use large UI controls'
-  - toggles large/small UI control styling
-
 - move ui config to being stored in a .json file in plugin storage
   - extract default config from plugin schema -> plugin member
   - remove plugin UI defaults from plugin config schema
