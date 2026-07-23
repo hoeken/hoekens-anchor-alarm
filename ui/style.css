@@ -677,14 +677,36 @@ html.largeControls .leaflet-control-history svg {
   height: 27px;
 }
 
+/* The house and gear glyphs carry a thin stroke on top of their fill to beef
+   up their outlines (the home SVG's own stroke-width attribute, and the config
+   rule further down). Stroke widths are in viewBox units, so at 27px they
+   render 1.5x thicker than at 18px and the icons look heavier than the
+   stroke-free theme glyph. Divide by the 1.5 scale to keep the visual weight
+   constant; CSS stroke-width outranks the SVG presentation attribute. */
+html.largeControls .leaflet-control-home svg {
+  stroke-width: 0.5;
+}
+
+html.largeControls .leaflet-control-config svg path {
+  stroke-width: 0.17;
+}
+
 /* Zoom +/- glyphs are text, not SVG; scale the font instead. Overrides both
    leaflet.css's base rule and its `.leaflet-touch` bump (22px -> 33px);
-   `!important` for the same load-order reason as the button rule above. */
+   `!important` for the same load-order reason as the button rule above.
+   leaflet.css's `font` shorthand also makes the glyphs bold, which reads too
+   heavy at 33px next to the thin-stroked SVG icons — drop to normal weight.
+   Plain normal is too thin on the MFD though (stems collapse to a single
+   pixel on its 1x screen), and intermediate font-weights snap to regular or
+   bold on its fallback monospace font, so thicken fractionally with a text
+   stroke instead. */
 html.largeControls .leaflet-control-zoom-in,
 html.largeControls .leaflet-control-zoom-out,
 html.largeControls .leaflet-touch .leaflet-control-zoom-in,
 html.largeControls .leaflet-touch .leaflet-control-zoom-out {
   font-size: 33px !important;
+  font-weight: normal !important;
+  -webkit-text-stroke: 0.5px currentColor;
 }
 
 .leaflet-control-home,
@@ -696,9 +718,13 @@ html.largeControls .leaflet-touch .leaflet-control-zoom-out {
   justify-content: center;
 }
 
+/* Thicken the gear outline slightly — the bare bi-gear fill reads thinner than
+   the other control glyphs. Kept subtle: the width is in viewBox units so it
+   scales with the icon, and the largeControls rule above shrinks it at 27px to
+   hold the same visual weight. */
 .leaflet-control-config svg path {
   stroke: currentColor;
-  stroke-width: 0.5;
+  stroke-width: 0.25;
 }
 
 /* Reusable modal dialog (see ui/js/hud/Modal.js). Fixed full-viewport backdrop
