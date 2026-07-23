@@ -197,6 +197,13 @@ export const uiSchemaProperties = {
       "Show other vessels' names as labels on the map (only once zoomed in enough to be legible).",
     default: true,
   },
+  enableOwnBoatLabel: {
+    type: "boolean",
+    title: "Show Own Boat Name Label",
+    description:
+      "Show your own vessel's name as a label on the map. Independent of the other-vessel labels switch; when labels crowd, your own always wins.",
+    default: true,
+  },
   enableOwnTrack: {
     type: "boolean",
     title: "Show My Boat Track",

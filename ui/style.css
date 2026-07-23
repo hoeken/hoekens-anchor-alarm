@@ -1385,6 +1385,9 @@ table.vesselData td:nth-child(3) {
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
+  /* AIS static reports usually carry names in caps already; uppercase the
+     rest (e.g. the "Unknown" fallback) so every label reads consistent. */
+  text-transform: uppercase;
   text-shadow:
     0 0 3px var(--label-halo),
     0 0 3px var(--label-halo),
@@ -1405,7 +1408,14 @@ table.vesselData td:nth-child(3) {
    stays correct — and, crucially, so a collision-hidden label's box can still
    be measured by updateLabelCollisions to decide when it may reappear — while
    still blocking pointer events. */
-.hide-boat-labels .boat-name-label,
+.hide-boat-labels .boat-name-label:not(.boat-name-label-own),
+.hide-own-boat-label .boat-name-label-own,
 .boat-name-label.label-collision-hidden {
   visibility: hidden;
+}
+
+/* The own-boat label isn't interactive (no popup to open), so don't advertise
+   a click with the pointer cursor the shared rule above sets. */
+.boat-name-label.boat-name-label-own {
+  cursor: default;
 }

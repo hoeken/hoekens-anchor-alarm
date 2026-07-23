@@ -128,6 +128,10 @@
             "type": "boolean",
             "description": "Show other vessels' names as labels on the map (only once zoomed in enough to be legible)."
           },
+          "enableOwnBoatLabel": {
+            "type": "boolean",
+            "description": "Show your own vessel's name as a label on the map. Independent of enableBoatLabels; the own label always wins a label collision."
+          },
           "enableOwnTrack": {
             "type": "boolean",
             "description": "Draw your own vessel's historical track on the map."

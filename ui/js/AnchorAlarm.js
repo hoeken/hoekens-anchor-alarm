@@ -83,6 +83,7 @@ class AnchorAlarm {
       enableWindPanel: true,
       enableScopePanel: true,
       enableBoatLabels: true,
+      enableOwnBoatLabel: true,
       enableOwnTrack: true,
       enableOtherTracks: true,
       enableAnchorageHistory: true,
@@ -528,6 +529,7 @@ class AnchorAlarm {
     this.anchorController?.setDefaultShape(this.config.defaultShape);
     this.fleetLayer?.setFilterRadius(this.config.fleetFilterRadius);
     this.fleetLayer?.setShowLabels(this.config.enableBoatLabels);
+    this.fleetLayer?.setShowOwnLabel(this.config.enableOwnBoatLabel);
     this.fleetLayer?.setShowOwnTrack(this.config.enableOwnTrack);
     this.fleetLayer?.setShowOtherTracks(this.config.enableOtherTracks);
     this.fleetLayer?.setGlitchFilterSpeed(this.config.glitchFilterSpeed);
@@ -788,6 +790,7 @@ class AnchorAlarm {
       ownMmsi: this.state.boatConfig.mmsi,
       filterRadius: this.config.fleetFilterRadius,
       showLabels: this.config.enableBoatLabels,
+      showOwnLabel: this.config.enableOwnBoatLabel,
       showOwnTrack: this.config.enableOwnTrack,
       showOtherTracks: this.config.enableOtherTracks,
       glitchFilterSpeed: this.config.glitchFilterSpeed,

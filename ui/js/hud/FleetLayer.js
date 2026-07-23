@@ -40,9 +40,10 @@ const DEFAULT_FILTER_RADIUS = 500;
 // Name labels are hidden only when they'd collide with a higher-priority
 // label rather than by a blanket zoom cutoff — a sparse, far-off vessel keeps
 // its name at any zoom, while a crowded anchorage sheds overlapping labels.
-// The closest vessel to us wins a collision; ties resolve by MMSI so the
-// choice is stable frame-to-frame (no flicker). This gap (in CSS px) is added
-// around each label's box so kept labels never quite touch.
+// Our own boat's label outranks every AIS label; among the rest the closest
+// vessel to us wins a collision, with ties resolved by MMSI so the choice is
+// stable frame-to-frame (no flicker). This gap (in CSS px) is added around
+// each label's box so kept labels never quite touch.
 const LABEL_COLLISION_PADDING = 3;
 const SIMPLIFY_TOLERANCE_SELF = 0.000002;
 const SIMPLIFY_TOLERANCE_OTHERS = 0.00001;
@@ -74,7 +75,7 @@ const GPS_ANTENNA_ICON = L.divIcon({
   iconAnchor: [6, 6],
 });
 export class FleetLayer {
-  constructor({ app, map, ownMmsi, filterRadius, showLabels, showOwnTrack, showOtherTracks, glitchFilterSpeed }) {
+  constructor({ app, map, ownMmsi, filterRadius, showLabels, showOwnLabel, showOwnTrack, showOtherTracks, glitchFilterSpeed }) {
     this.app = app;
     this.map = map;
     this.ownMmsi = ownMmsi;
@@ -82,8 +83,11 @@ export class FleetLayer {
     // that keep GPS spikes out of the cache and the tracks.
     this.glitchFilterSpeed = glitchFilterSpeed ?? 0;
     this.glitchFilters = {}; // mmsi -> GlitchFilter for live position deltas
-    // Master on/off for name labels, layered on top of the zoom gate below.
+    // Master on/off for AIS-vessel name labels, layered on top of the
+    // per-label collision hiding below.
     this.showLabels = showLabels ?? true;
+    // Own-boat name label, switched independently of the master above.
+    this.showOwnLabel = showOwnLabel ?? true;
     // Per-track visibility toggles: own boat vs everyone else. Hidden tracks
     // stay in this.vesselTracks (points keep accumulating); only their map
     // membership is toggled, so flipping back on redraws the full path.
@@ -131,13 +135,15 @@ export class FleetLayer {
     this.loadInitialData();
   }
 
-  // The master on/off switch, applied as a single container class so one CSS
-  // rule blanks every label at once. Per-label collision hiding is layered on
-  // top by updateLabelCollisions, which this defers to once the switch is on.
+  // The label switches, each applied as a container class so one CSS rule
+  // blanks its labels at once: the master switch covers every AIS label, the
+  // own-boat switch just ours (see style.css — the master rule excludes the
+  // own label so the two stay independent). Per-label collision hiding is
+  // layered on top by updateLabelCollisions.
   updateLabelVisibility() {
-    this.map
-      .getContainer()
-      .classList.toggle("hide-boat-labels", !this.showLabels);
+    const classes = this.map.getContainer().classList;
+    classes.toggle("hide-boat-labels", !this.showLabels);
+    classes.toggle("hide-own-boat-label", !this.showOwnLabel);
     this.updateLabelCollisions();
   }
 
@@ -149,12 +155,29 @@ export class FleetLayer {
   // layout box (visibility:hidden, not display:none), so it stays measurable
   // and can reclaim its spot on a later pass once the crowding clears.
   updateLabelCollisions() {
-    // The master switch already blanks every label via the container class;
-    // skip the per-label work (and its layout reads) while it's off.
+    // The master switch already blanks every AIS label via the container
+    // class; skip the per-label work (and its layout reads) while it's off.
+    // The own label may still be showing, but alone it has nothing to collide
+    // with — and it never loses a collision, so it can't be left stale-hidden.
     if (!this.showLabels)
       return;
 
     const labels = [];
+    // Our own label always wins a collision — -Infinity sorts it ahead of
+    // every AIS label, so overlapping neighbours hide rather than ours. When
+    // its switch is off it must not compete at all: an invisible label
+    // shouldn't knock out a visible neighbour's name.
+    const ownEl = this.showOwnLabel
+      ? this.ownVessel?.getTooltip()?.getElement()
+      : null;
+    if (ownEl) {
+      labels.push({
+        el: ownEl,
+        rect: ownEl.getBoundingClientRect(),
+        distance: -Infinity,
+        mmsi: "",
+      });
+    }
     for (const mmsi in this.vessels) {
       const el = this.vessels[mmsi].getTooltip()?.getElement();
       if (!el)
@@ -188,6 +211,15 @@ export class FleetLayer {
     if (next === this.showLabels)
       return;
     this.showLabels = next;
+    this.updateLabelVisibility();
+  }
+
+  // Flip the own-boat name label live (from the settings dialog).
+  setShowOwnLabel(show) {
+    const next = show ?? true;
+    if (next === this.showOwnLabel)
+      return;
+    this.showOwnLabel = next;
     this.updateLabelVisibility();
   }
 
@@ -624,6 +656,16 @@ export class FleetLayer {
     // Hovering our own boat highlights its track, mirroring AIS vessels.
     this.ownVessel.on("mouseover", () => this.setHoveredTrack(this.ownMmsi));
     this.ownVessel.on("mouseout", () => this.setHoveredTrack(null));
+
+    // Own-boat name label, styled like the AIS labels but carrying its own
+    // class so the "Show Own Boat Name Label" switch gates it independently
+    // of the master label switch (see updateLabelVisibility). Not interactive:
+    // AIS label clicks open the vessel popup, and our marker has none.
+    this.ownVessel.bindTooltip(boatConfig.name, {
+      permanent: true,
+      direction: "top",
+      className: "boat-name-label boat-name-label-own",
+    });
 
     this.ownAntenna = L.marker(coords, {
       icon: GPS_ANTENNA_ICON,

@@ -17,6 +17,7 @@ const FIELDS = [
   { key: "enableWindPanel", label: "Show Wind Panel", type: "checkbox" },
   { key: "enableScopePanel", label: "Show Scope Panel", type: "checkbox" },
   { key: "enableBoatLabels", label: "Show Boat Name Labels", type: "checkbox" },
+  { key: "enableOwnBoatLabel", label: "Show Own Boat Name Label", type: "checkbox" },
   { key: "enableOwnTrack", label: "Show My Boat Track", type: "checkbox" },
   { key: "enableOtherTracks", label: "Show Other Boat Tracks", type: "checkbox" },
   { key: "enableAnchorageHistory", label: "Show Past Anchorages", type: "checkbox" },
