@@ -204,6 +204,21 @@ textarea {
   font-family: inherit;
 }
 
+/* Every image here is UI chrome (toolbar icons, marker icons, map tiles), so a
+   long-press should never open the browser's save/inspect-image sheet. On iOS
+   WebKit (Safari and iOS Chrome alike) that callout ignores user-select and is
+   disabled only by -webkit-touch-callout; it also leaves Leaflet's touch state
+   stuck mid-gesture once dismissed. The drag/select suppression mirrors what
+   leaflet.css does for its own markers, extended to our non-Leaflet <img>s
+   (toolbar buttons, divIcon contents). Blink engines have no touch-callout;
+   they get the contextmenu guard in AnchorAlarm.init() instead. */
+img {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 html,
 body,
 #map {

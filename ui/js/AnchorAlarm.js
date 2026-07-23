@@ -218,6 +218,17 @@ class AnchorAlarm {
   init() {
     new StaleReloader({ staleThresholdMs: 5 * 60 * 1000 }).start();
 
+    // A long-press on any icon or map tile opens the browser's image context
+    // menu (save/inspect image), which also strands Leaflet's touch handling
+    // mid-gesture. iOS WebKit is handled by -webkit-touch-callout in style.css;
+    // this covers Blink (Android Chrome, MFDs), where long-press fires
+    // contextmenu instead. Only image targets are blocked so long-press still
+    // works on real links (e.g. map attribution).
+    document.addEventListener("contextmenu", (e) => {
+      if (e.target instanceof HTMLImageElement)
+        e.preventDefault();
+    });
+
     this.satelliteLayer = L.tileLayer(
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
       {
