@@ -1414,7 +1414,20 @@ table.vesselData td:nth-child(3) {
    still blocking pointer events. */
 .hide-boat-labels .boat-name-label:not(.boat-name-label-own),
 .hide-own-boat-label .boat-name-label-own,
-.boat-name-label.label-collision-hidden {
+.boat-name-label.label-collision-hidden,
+.anchor-line-label.label-collision-hidden {
+  visibility: hidden;
+}
+
+/* Zoom declutter: AnchorOverlay toggles this container class once the anchor
+   cluster (watch zone + bow-to-anchor line) projects too small on screen to
+   be useful. Every anchor-related layer carries .anchor-overlay-part — line,
+   labels, anchor icon, zone shape and its drag handles — except the
+   raised-state crosshair, a fixed-size drag control that stays useful at any
+   zoom. visibility (not display) for the reposition-while-hidden reason
+   above, and because it also blocks pointer events so hidden zone handles
+   can't grab a drag aimed at the boat. */
+.hide-anchor-overlay .anchor-overlay-part {
   visibility: hidden;
 }
 

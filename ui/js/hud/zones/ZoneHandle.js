@@ -2,8 +2,11 @@
 // render a small dot at a LatLng and forward Leaflet drag events. The owning
 // overlay decides what dragging means (radius, angle, etc.).
 
+// anchor-overlay-part opts every handle into AnchorOverlay's zoomed-too-small
+// hiding (see hide-anchor-overlay in style.css) — the rule also swallows
+// pointer events, so a hidden handle can't be dragged.
 const HANDLE_ICON = L.divIcon({
-  className: "zoneHandle",
+  className: "zoneHandle anchor-overlay-part",
   iconSize: [20, 20],
   iconAnchor: [10, 10],
 });
@@ -11,7 +14,7 @@ const HANDLE_ICON = L.divIcon({
 // Smaller, lighter handle used for "ghost" insertion points (edge midpoints on
 // the polygon overlay). Behaves identically — only the look differs.
 const GHOST_HANDLE_ICON = L.divIcon({
-  className: "zoneHandle zoneHandleGhost",
+  className: "zoneHandle zoneHandleGhost anchor-overlay-part",
   iconSize: [18, 18],
   iconAnchor: [9, 9],
 });

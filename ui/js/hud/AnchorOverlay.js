@@ -4,17 +4,32 @@
 // watch-zone overlay. The host drives it with drop/raise transitions and
 // per-tick boat updates; alarm color is recomputed internally on any state
 // or position change. The zone layer is delegated to a zone-specific class
-// in ./zones/ — to add a new shape, register it there.
+// in ./zones/ — to add a new shape, register it there. The visualization
+// also declutters itself: everything but the crosshair hides once it
+// projects too small on screen (see MIN_ONSCREEN_SIZE_PX), and the line
+// labels hide when they'd overlap the boat icon.
 
 import { Geo } from "../../../shared/geo.js";
 import { GeoMath } from "../GeoMath.js";
 import { DisplayUnit } from "../DisplayUnit.js";
 import { createZoneOverlay } from "./zones/index.js";
+import { rectsOverlap } from "./FleetLayer.js";
+
+// Hide the anchor visualization once its whole on-screen footprint (watch
+// zone or bow-to-anchor line, whichever is larger) shrinks below this many
+// pixels. Zoomed out that far the zone paints as a blob buried under the
+// boat icon (32px minimum) and the 20px zone handles — a pixel measure adapts
+// to the zone's real size where a fixed zoom cutoff wouldn't. Everything
+// anchor-related carries the anchor-overlay-part class and is hidden by one
+// container class (see hide-anchor-overlay in style.css); the raised-state
+// crosshair is exempt because a fixed-size drag control stays useful at any
+// zoom.
+const MIN_ONSCREEN_SIZE_PX = 48;
 
 // DivIcon (not L.icon) so we can rotate the inner <img> via CSS transform
 // without clobbering the translate3d that Leaflet sets on the marker element.
 const ANCHOR_ICON = L.divIcon({
-  className: "",
+  className: "anchor-overlay-part",
   html: '<img src="icons/anchor.png" width="24" height="24" style="transform-origin: 12px 4px;" />',
   iconSize: [24, 24],
   iconAnchor: [12, 4],
@@ -27,9 +42,12 @@ const CROSSHAIR_ICON = L.icon({
 });
 
 export class AnchorOverlay {
-  constructor({ state, map, onZoneChange, onZoneInput }) {
+  constructor({ state, map, getBoatIcon, onZoneChange, onZoneInput }) {
     this.state = state;
     this.map = map;
+    // Returns the own-boat icon's <img> (owned by FleetLayer) so the line
+    // labels can hide themselves when they'd paint across the hull.
+    this._getBoatIcon = getBoatIcon;
     this._onZoneChange = onZoneChange;
     this._onZoneInput = onZoneInput;
     this.dropped = false;
@@ -51,6 +69,7 @@ export class AnchorOverlay {
     this.anchorLine = L.polyline([this.anchorPosition, this.anchorPosition], {
       color: "grey",
       weight: 2,
+      className: "anchor-overlay-part",
     }).addTo(map);
 
     this.distanceLabel = null;
@@ -60,6 +79,16 @@ export class AnchorOverlay {
     this.crosshairMarker = null;
 
     this._cachedColor = null;
+
+    // The two pixel-space decisions — the cluster's on-screen footprint and
+    // the labels' overlap with the boat icon — change with scale, not just
+    // with data ticks. Re-evaluate as soon as a zoom lands instead of waiting
+    // up to a full update tick (by zoomend the BoatMarker has already resized
+    // itself via its own "zoom" listener, so the measurement is fresh).
+    map.on("zoomend", () => {
+      this._refreshLine();
+      this._refreshVisibility();
+    });
   }
 
   getCrosshairPosition() {
@@ -118,6 +147,7 @@ export class AnchorOverlay {
     }
 
     this._refreshColor();
+    this._refreshVisibility();
     return this;
   }
 
@@ -132,6 +162,7 @@ export class AnchorOverlay {
       this.crosshairMarker.setLatLng(latlng);
     this._refreshLine();
     this._refreshColor();
+    this._refreshVisibility();
     return this;
   }
 
@@ -192,6 +223,9 @@ export class AnchorOverlay {
         this.zoneOverlay.update({ anchorPosition: this.anchorPosition });
       this._refreshLine();
       this._refreshColor();
+      // Dragging the crosshair stretches the line: an overlay hidden as
+      // too-small can become useful again mid-drag (and vice versa).
+      this._refreshVisibility();
     });
 
     if (this.zoneOverlay)
@@ -266,6 +300,53 @@ export class AnchorOverlay {
     this._ensureLineLabels();
     this._updateLineLabel(this.distanceLabel, distanceText, mid, angle, 10 * side);
     this._updateLineLabel(this.bearingLabel, bearingText, mid, angle, -10 * side);
+    this._refreshLabelCollisions();
+  }
+
+  // The labels ride the line's midpoint, which lands on the hull whenever the
+  // boat hangs close over its anchor — hide whichever label would overlap the
+  // boat icon rather than paint text across it. Rect-vs-rect like FleetLayer's
+  // name-label collisions: both getBoundingClientRects are post-transform, so
+  // the label's reading rotation and the hull's heading are accounted for.
+  _refreshLabelCollisions() {
+    const boatIcon = this._getBoatIcon ? this._getBoatIcon() : null;
+    if (!boatIcon)
+      return;
+    const boatRect = boatIcon.getBoundingClientRect();
+    for (const marker of [this.distanceLabel, this.bearingLabel]) {
+      const label = marker.getElement()?.firstChild;
+      if (!label)
+        continue;
+      label.classList.toggle(
+        "label-collision-hidden",
+        rectsOverlap(label.getBoundingClientRect(), boatRect),
+      );
+    }
+  }
+
+  // Toggle the whole overlay (line, labels, anchor icon, zone outline and
+  // handles — everything tagged anchor-overlay-part) off once its on-screen
+  // footprint is too small to be useful, via one container class so a single
+  // CSS rule covers layers spread across Leaflet's panes. visibility:hidden
+  // also swallows pointer events, so buried zone handles can't grab a drag
+  // aimed at the boat.
+  _refreshVisibility() {
+    let sizePx = 0;
+    if (this.zoneOverlay) {
+      const bounds = this.zoneOverlay.getBounds();
+      const nw = this.map.latLngToContainerPoint(bounds.getNorthWest());
+      const se = this.map.latLngToContainerPoint(bounds.getSouthEast());
+      sizePx = Math.max(Math.abs(se.x - nw.x), Math.abs(se.y - nw.y));
+    }
+    const [lineStart, lineEnd] = this.anchorLine.getLatLngs();
+    if (lineStart && lineEnd) {
+      const a = this.map.latLngToContainerPoint(lineStart);
+      const b = this.map.latLngToContainerPoint(lineEnd);
+      sizePx = Math.max(sizePx, a.distanceTo(b));
+    }
+    this.map
+      .getContainer()
+      .classList.toggle("hide-anchor-overlay", sizePx < MIN_ONSCREEN_SIZE_PX);
   }
 
   // The two line labels are created lazily on the first refresh with a known
@@ -283,7 +364,7 @@ export class AnchorOverlay {
     // inner element.
     return L.marker(this.anchorPosition, {
       icon: L.divIcon({
-        className: "",
+        className: "anchor-overlay-part",
         html: '<div class="anchor-line-label"></div>',
         iconSize: [0, 0],
       }),

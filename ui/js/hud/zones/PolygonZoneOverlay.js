@@ -78,8 +78,11 @@ export class PolygonZoneOverlay {
     // users; reapplied after every _buildHandles since that recreates them.
     this._handlesVisible = true;
 
+    // anchor-overlay-part opts the painted polygon into AnchorOverlay's
+    // zoomed-too-small hiding (see hide-anchor-overlay in style.css).
     this._layer = L.polygon(this._renderLatLngs(), {
       color: this._color,
+      className: "anchor-overlay-part",
     }).addTo(map);
 
     this._vertexHandles = [];

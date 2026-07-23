@@ -34,8 +34,11 @@ export class CircleZoneOverlay {
     this._color = "blue";
     this._dragging = false;
 
+    // anchor-overlay-part opts the painted circle into AnchorOverlay's
+    // zoomed-too-small hiding (see hide-anchor-overlay in style.css).
     this._layer = L.circle(anchorPosition, this._renderRadius(), {
       color: this._color,
+      className: "anchor-overlay-part",
     }).addTo(map);
 
     this._handle = new ZoneHandle({

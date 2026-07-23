@@ -46,8 +46,11 @@ export class SectorZoneOverlay {
     this._color = "blue";
     this._draggingHandle = null;
 
+    // anchor-overlay-part opts the painted sector into AnchorOverlay's
+    // zoomed-too-small hiding (see hide-anchor-overlay in style.css).
     this._layer = L.polygon(this._polygonPoints(), {
       color: this._color,
+      className: "anchor-overlay-part",
     }).addTo(map);
 
     const positions = this._handlePositions();

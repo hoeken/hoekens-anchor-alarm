@@ -2,9 +2,7 @@
 
 ## Shared / Core
 
-- hide these elements when zoomed out far enough that they are not useful:
-  - anchor line / labels / icon
-  - zone outline / handles / etc
+- add 'Distance: {distance to anchor}' to info box above depth.  fixes #26
 
 ## HAA specific
 

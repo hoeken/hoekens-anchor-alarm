@@ -799,6 +799,7 @@ class AnchorAlarm {
     this.anchorOverlay = new AnchorOverlay({
       state: this.state,
       map: this.map,
+      getBoatIcon: () => this.fleetLayer.ownBoatIconElement(),
       onZoneChange: (zoneConfig) => this.anchorController.setZone(zoneConfig),
       onZoneInput: (zoneConfig) => this.anchorController.previewZone(zoneConfig),
     });
@@ -1016,8 +1017,12 @@ class AnchorAlarm {
 
     this.toolbar.update(this.state);
     this.statusBar.update(this.state);
-    this.anchorOverlay.update(this.state);
+    // Fleet before anchor overlay: the fleet layer moves the own-boat marker,
+    // whose screen box the overlay then measures to hide line labels that
+    // would overlap the hull — this order keeps that test on current-tick
+    // geometry instead of last tick's.
     this.fleetLayer.update(this.state);
+    this.anchorOverlay.update(this.state);
 
     // In embedded mode every HUD panel stays hidden so the map reads clean
     // inside a host dashboard; bail before the per-panel logic below.

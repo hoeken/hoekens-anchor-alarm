@@ -679,6 +679,14 @@ export class FleetLayer {
     this.ownAntenna.setLatLng(coords);
   }
 
+  // The own-boat icon's <img>, for screen-space overlap tests by other layers
+  // (AnchorOverlay hides its line labels when they'd sit on the hull). The
+  // img, not the marker's outer div: heading rotation lives on the img's CSS
+  // transform, so only its bounding rect tracks the hull's real extent.
+  ownBoatIconElement() {
+    return this.ownVessel?.getElement()?.querySelector("img") ?? null;
+  }
+
   // Swap the own-boat marker image live from the settings dialog. A url (a
   // cache-busted /icon URL) applies a custom icon; null reverts to the
   // ship-type icon derived from the boat config.
@@ -1136,8 +1144,9 @@ export class FleetLayer {
 
 // Axis-aligned overlap test for two label boxes (viewport-space DOMRects),
 // each grown by LABEL_COLLISION_PADDING so kept labels keep a small gap rather
-// than merely not touching.
-function rectsOverlap(a, b) {
+// than merely not touching. Exported for AnchorOverlay, which runs the same
+// test between its line labels and the own-boat icon.
+export function rectsOverlap(a, b) {
   const gap = LABEL_COLLISION_PADDING;
   return (
     a.left - gap < b.right + gap &&
