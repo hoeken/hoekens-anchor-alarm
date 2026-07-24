@@ -224,11 +224,43 @@ body,
   position: relative;
 }
 
+/* Nothing here scrolls (the map pans, modals scroll internally), so lock the
+   document: iOS Safari otherwise lets the page rubber-band and can leave it
+   scrolled/misaligned after a portrait/landscape rotation. The background
+   matches the map surround (leaflet's tile-loading grey, or the dark override
+   below) so anything iOS paints outside the layout — rotation transitions,
+   overscroll, the viewport-fit=cover safe areas — doesn't flash white.
+   overscroll-behavior is unsupported on older iOS/Safari and simply dropped
+   there; the overflow lock does the real work. */
+html,
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+html {
+  background-color: #ddd;
+}
+
+html.dark {
+  background-color: #1a1d21;
+}
+
+/* Pinned to the viewport with `fixed` rather than sized with `height: 100%`:
+   the percentage chain re-derives from body layout, which iOS Safari leaves
+   stale/offset after rotating between portrait and landscape, showing bars of
+   bare page background. A fixed box tracks the viewport directly, so rotation
+   always re-fills the window (and Leaflet's trackResize picks up the new
+   size). */
 #map_container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   height: 100%;
   width: 100%;
   z-index: 1;
-  position: relative;
 }
 
 /* Anchor toolbar sizing follows the Use Large UI Controls setting, same
@@ -238,7 +270,13 @@ body,
    90px squares. */
 #controlToolbar {
   position: absolute;
+  /* Keep 10px of breathing room from the safe-area edge: on notched iPhones
+     with viewport-fit=cover the inset clears the clock/notch (standalone
+     portrait), and collapses to 0 everywhere else — including Navico MFDs,
+     whose Chromium 69 supports env() and resolves the 0px fallback. The plain
+     line before it covers engines without env() at all. */
   top: 10px;
+  top: calc(10px + env(safe-area-inset-top, 0px));
   left: 50%;
   transform: translateX(-50%);
   z-index: 99;
@@ -1240,6 +1278,11 @@ html.largeControls .leaflet-touch .leaflet-control-zoom-out {
   left: 0;
   right: 0;
   z-index: 1000;
+  /* Deliberately no safe-area padding (unlike the toolbar and Leaflet corner
+     containers): growing the strip to clear the home indicator wasted a tall
+     band of map at the bottom of the screen. The text may tuck under the
+     home indicator / landscape notch corner; it's non-interactive, so that's
+     an acceptable trade for the map space. */
   padding: 2px 6px;
   background: var(--attribution-bg);
   text-align: right;
@@ -1412,9 +1455,22 @@ html.largeControls .windBarbControl {
   line-height: 1.2;
 }
 
+/* With viewport-fit=cover the page runs under the iPhone notch and home
+   indicator. Only the top control container shifts into the safe area (the
+   inset is 0 on regular screens, including the Navico MFDs): iPhones report
+   ~47px side insets in landscape, but honoring them costs a band of map on
+   each edge, so the left/right insets are deliberately ignored — leaflet.css's
+   `left: 0` / `right: 0` stand, and controls riding slightly under the notch
+   or corner curve are the accepted trade for a full-width map. */
+.leaflet-top {
+  top: env(safe-area-inset-top, 0px);
+}
+
 /* Lift bottom controls above the attribution strip. --attributionHeight is
    measured and set in JS (AnchorAlarm.updateAttribution) since the strip's
-   height varies with content wrapping. */
+   height varies with content wrapping. No safe-area-inset-bottom here, to
+   match the strip itself (see #mapAttribution): controls sit right on the
+   strip rather than floating above it by the home-indicator inset. */
 .leaflet-bottom {
   bottom: var(--attributionHeight, 0px);
 }

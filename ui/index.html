@@ -3,9 +3,13 @@
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- viewport-fit=cover lets the page extend edge-to-edge on notched
+         iPhones; without it, landscape is letterboxed with blank bars beside
+         the notch and home indicator. Edge-anchored chrome keeps clear of
+         those areas via env(safe-area-inset-*) rules in style.css. -->
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
     />
     <!-- Tints the mobile browser toolbar/status bar; matches theme_color in
          site.webmanifest. -->
@@ -15,13 +19,20 @@
     <!-- Add-to-home-screen launch behaviour. iOS Safari ignores the
          manifest's `display: standalone`, so these meta tags are what make the
          home-screen icon open full-screen (no Safari chrome). Status bar style
-         is `black` rather than `black-translucent`: translucent would extend
-         the web view under the iOS clock and hide #controlToolbar (top: 10px),
-         and black matches the manifest theme_color. -->
+         is `black-translucent` so the web view owns the entire window: with
+         `black`, iOS frames the web view below the status bar and misplaces
+         that frame after portrait/landscape rotation (white bars, offset touch
+         targets — WebKit bug 191872). Translucent + viewport-fit=cover above
+         sidesteps the framing entirely; #controlToolbar and the other
+         edge-anchored chrome stay clear of the clock/notch via the
+         env(safe-area-inset-*) rules in style.css. -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Anchor Alarm" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
 
     <link
       rel="apple-touch-icon"

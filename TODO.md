@@ -1,10 +1,10 @@
 # 2.11.0
 
-- on iOS mobile, when a user switches from portrait to landscape mode, the page shows white bars and is misaligned
-
 - lets homogenize these so the heights match for better UI (from chrome webdev inspect:)
   - #tidesUI: 164x79
   - #infoUI: 164 x 76.38
+
+- in the 'Use Large UI' mode, increase the font size on the #radius input
 
 # LONG TERM
 
