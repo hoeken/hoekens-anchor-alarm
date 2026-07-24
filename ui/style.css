@@ -321,7 +321,11 @@ body,
 
 .info {
   padding: 5px;
-  width: 150px;
+  /* min-width, not width: Navico MFDs (Chromium 69 at 1x) render text wider
+     than desktop, so a fixed box clips the values. Let it grow to content.
+     Requires the table (not the td) to carry width:100% — a percentage td
+     inflates a shrink-to-fit float to the full map width. */
+  min-width: 150px;
   font-size: 11pt;
   line-height: 1.1;
   background-color: var(--surface-bg);
@@ -359,10 +363,17 @@ body,
   color: var(--link-hover);
 }
 
+.info table {
+  width: 100%;
+}
+
 .info td,
 .scope td {
-  width: 100%;
   text-align: right;
+}
+
+.scope td {
+  width: 100%;
 }
 
 .scope th {
