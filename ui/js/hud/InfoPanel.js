@@ -5,6 +5,7 @@
 
 import { DisplayUnit } from "../DisplayUnit.js";
 import { setTitle } from "../BrowserSupport.js";
+import { GeoMath } from "../GeoMath.js";
 
 export const InfoPanel = L.Control.extend({
   options: { position: "bottomright" },
@@ -17,6 +18,10 @@ export const InfoPanel = L.Control.extend({
     container.innerHTML = `
         <table>
           <tr>
+            <th>Distance:</th>
+            <td><span id='distanceValue'>~</span></td>
+          </tr>
+          <tr>
             <th>Depth:</th>
             <td><span id='depthValue'>~</span></td>
           </tr>
@@ -27,6 +32,8 @@ export const InfoPanel = L.Control.extend({
         </table>
     `;
     this._container = container;
+    this._distanceValue = container.querySelector("#distanceValue");
+    setTitle(this._distanceValue, "Distance to Anchor");
     this._depthValue = container.querySelector("#depthValue");
     setTitle(this._depthValue, "Depth");
     this._pluginStatus = container.querySelector("#pluginStatus");
@@ -36,6 +43,7 @@ export const InfoPanel = L.Control.extend({
   update: function (state) {
     this.show();
 
+    this.setDistanceValue(this._bowToAnchor(state));
     if (state.belowSurface)
       this.setDepthValue(state.belowSurface);
     else if (state.belowKeel)
@@ -45,6 +53,26 @@ export const InfoPanel = L.Control.extend({
     else
       this.setDepthValue(null);
     this.setStatus(state.anchor);
+  },
+
+  // Bow-to-anchor distance via the same GeoMath helper AnchorOverlay uses for
+  // the rode line, so the info box always agrees with the map's label.
+  _bowToAnchor: function (state) {
+    if (!state.isAnchored() || !state.currentCoordinates || !state.anchor.position?.value)
+      return null;
+    return GeoMath.bowToAnchor(
+      state.getPosition(),
+      state.boatConfig.heading,
+      state.boatConfig.gpsOffset,
+      state.getAnchorPosition(),
+    ).distance;
+  },
+
+  setDistanceValue: function (distance) {
+    if (distance != null)
+      this._distanceValue.textContent = DisplayUnit.formatValue(distance, "depth");
+    else
+      this._distanceValue.textContent = "~";
   },
 
   setDepthValue: function (depth) {

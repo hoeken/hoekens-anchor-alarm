@@ -9,7 +9,6 @@
 // projects too small on screen (see MIN_ONSCREEN_SIZE_PX), and the line
 // labels hide when they'd overlap the boat icon.
 
-import { Geo } from "../../../shared/geo.js";
 import { GeoMath } from "../GeoMath.js";
 import { DisplayUnit } from "../DisplayUnit.js";
 import { createZoneOverlay } from "./zones/index.js";
@@ -245,22 +244,16 @@ export class AnchorOverlay {
     if (!this.boatPosition)
       return;
 
-    const bow = GeoMath.calculateBowCoordinates(
+    const { bow, distance, bearing: bearingTrue } = GeoMath.bowToAnchor(
       this.boatPosition,
       this.heading,
-      this.gpsOffsets.x,
-      this.gpsOffsets.y,
+      this.gpsOffsets,
+      this.anchorPosition,
     );
 
     this.anchorLine.setLatLngs([bow, this.anchorPosition]);
 
-    const bowPos = { latitude: bow.lat, longitude: bow.lng };
-    const anchorPos = {
-      latitude: this.anchorPosition.lat,
-      longitude: this.anchorPosition.lng,
-    };
-    let bowToAnchor = Geo.distance(bowPos, anchorPos);
-    bowToAnchor = Math.round(bowToAnchor * 10) / 10;
+    const bowToAnchor = Math.round(distance * 10) / 10;
     // Glue the unit to the number ("50.8m", not "50.8 m") — with the halo'd
     // text over map tiles, the gap breaks the short label apart visually.
     const distanceText = DisplayUnit.formatValue(bowToAnchor, "depth").replace(
@@ -268,7 +261,7 @@ export class AnchorOverlay {
       "",
     );
 
-    const bearing = Math.round(Geo.bearingTrue(bowPos, anchorPos));
+    const bearing = Math.round(bearingTrue);
     const bearingText = `${bearing}°`;
 
     // Rotate so the anchor's ring (top of icon, at iconAnchor [12,4]) faces

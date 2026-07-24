@@ -15,6 +15,29 @@ export class GeoMath {
     return L.latLng(latitude, longitude);
   }
 
+  // Bow→anchor geometry for Leaflet consumers: translates the GPS fix to the
+  // bow, then measures to the anchor. Returns the bow L.latLng plus distance
+  // (meters) and true bearing (degrees) so the map's rode line, its labels,
+  // and the info panel all read the same numbers.
+  static bowToAnchor(boatPosition, heading, gpsOffsets, anchorPosition) {
+    const bow = GeoMath.calculateBowCoordinates(
+      boatPosition,
+      heading,
+      gpsOffsets.x,
+      gpsOffsets.y,
+    );
+    const bowPos = { latitude: bow.lat, longitude: bow.lng };
+    const anchorPos = {
+      latitude: anchorPosition.lat,
+      longitude: anchorPosition.lng,
+    };
+    return {
+      bow,
+      distance: Geo.distance(bowPos, anchorPos),
+      bearing: Geo.bearingTrue(bowPos, anchorPos),
+    };
+  }
+
   /**
    * Estimate current tide height with sinusoidal easing
    *
