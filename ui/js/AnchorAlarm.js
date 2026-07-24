@@ -91,6 +91,9 @@ class AnchorAlarm {
       enableSeascape: false,
       enableLargeControls: true,
       scopes: "7,5,4,3",
+      // Per-chart show/hide choices keyed by chart id; no entry = enabled
+      // (see isChartEnabled).
+      charts: {},
       glitchFilterSpeed: 0,
       hasCustomIcon: false,
     };
@@ -122,6 +125,11 @@ class AnchorAlarm {
     // is first enabled (see addChartLayers). Every later add/remove works off
     // this copy so we never re-fetch the catalog.
     this.chartLayers = [];
+    // True while updateChartLayers/setChartLayersEnabled add or remove chart
+    // layers themselves: Leaflet fires overlayadd/overlayremove for
+    // programmatic changes to control-registered layers too, and those must
+    // not be persisted as user choices (see onChartToggled).
+    this._chartMutation = false;
     this.updateTimer = null;
     this._loginModal = null;
     // Own-boat stream context, learned from the hello frame. Used to route each
@@ -744,8 +752,16 @@ class AnchorAlarm {
     this.map.on("baselayerchange", () => this.updateAttribution());
     // Toggling a chart overlay fires overlayadd/overlayremove (not
     // baselayerchange), so refresh here too or a chart's credit wouldn't appear.
-    this.map.on("overlayadd", () => this.updateAttribution());
-    this.map.on("overlayremove", () => this.updateAttribution());
+    // The same events persist a user's chart show/hide choice per identity
+    // (see onChartToggled for how programmatic changes are filtered out).
+    this.map.on("overlayadd", (e) => {
+      this.updateAttribution();
+      this.onChartToggled(e.layer, true);
+    });
+    this.map.on("overlayremove", (e) => {
+      this.updateAttribution();
+      this.onChartToggled(e.layer, false);
+    });
     // Panning or zooming re-derives which local charts belong in the layer
     // control for the new view (moveend also fires after a zoom completes).
     this.map.on("moveend", () => this.updateChartLayers());
@@ -909,7 +925,8 @@ class AnchorAlarm {
     loadChartLayers(this.signalK).then((charts) => {
       if (!this.map || !this.layersControl)
         return;
-      this.chartLayers = charts.map(({ name, layer }) => ({
+      this.chartLayers = charts.map(({ id, name, layer }) => ({
+        id,
         name,
         layer,
         bounds: Array.isArray(layer.options.bounds)
@@ -922,13 +939,20 @@ class AnchorAlarm {
     });
   }
 
+  // A chart's per-user show/hide choice (config.charts, keyed by chart id,
+  // saved via onChartToggled). No entry means enabled.
+  isChartEnabled(chart) {
+    return (this.config.charts || {})[chart.id] !== false;
+  }
+
   // Re-derive which cached local charts belong in the layer control for the
   // current view. A chart is listed (and enabled by default) only while the
   // map is zoomed in far enough to render its tiles — below a chart's native
   // minzoom Leaflet draws nothing — and its coverage overlaps the visible
   // area. Charts with no bounds/zoom metadata are treated as global and always
   // shown. Panning or zooming a chart out of view removes it from both the map
-  // and the control; bringing it back re-adds it.
+  // and the control; bringing it back re-adds it, honoring the user's saved
+  // show/hide choice (see isChartEnabled).
   updateChartLayers() {
     if (!this.map || !this.layersControl || !this.chartLayers.length)
       return;
@@ -939,26 +963,35 @@ class AnchorAlarm {
     const zoom = this.map.getZoom();
     const view = this.map.getBounds();
     let changed = false;
-    for (const chart of this.chartLayers) {
-      const show =
-        (!Number.isFinite(chart.minZoom) || zoom >= chart.minZoom) &&
-        (!chart.bounds || chart.bounds.intersects(view));
-      if (show === chart.listed)
-        continue;
-      if (show) {
-        // Add to the map before the control so the control renders the
-        // overlay's checkbox already ticked (it reads map.hasLayer at build).
-        chart.layer.addTo(this.map);
-        this.layersControl.addOverlay(chart.layer, chart.name);
-      } else {
-        this.map.removeLayer(chart.layer);
-        this.layersControl.removeLayer(chart.layer);
+    this._chartMutation = true;
+    try {
+      for (const chart of this.chartLayers) {
+        const show =
+          (!Number.isFinite(chart.minZoom) || zoom >= chart.minZoom) &&
+          (!chart.bounds || chart.bounds.intersects(view));
+        if (show === chart.listed)
+          continue;
+        if (show) {
+          // Add to the map before the control so the control renders the
+          // overlay's checkbox already ticked (it reads map.hasLayer at
+          // build) — unless the user switched this chart off, in which case
+          // it's listed unticked.
+          if (this.isChartEnabled(chart))
+            chart.layer.addTo(this.map);
+          this.layersControl.addOverlay(chart.layer, chart.name);
+        } else {
+          this.map.removeLayer(chart.layer);
+          this.layersControl.removeLayer(chart.layer);
+        }
+        chart.listed = show;
+        changed = true;
       }
-      chart.listed = show;
-      changed = true;
+    } finally {
+      this._chartMutation = false;
     }
-    // Programmatic add/remove doesn't fire overlayadd/overlayremove, so refresh
-    // the attribution strip by hand when a chart's credit came or went.
+    // Programmatic adds here don't fire overlayadd (the layer joins the map
+    // before it's registered with the control), so refresh the attribution
+    // strip by hand when a chart's credit came or went.
     if (changed)
       this.updateAttribution();
   }
@@ -977,16 +1010,47 @@ class AnchorAlarm {
       return;
     }
     let changed = false;
-    for (const chart of this.chartLayers) {
-      if (!chart.listed)
-        continue;
-      this.map.removeLayer(chart.layer);
-      this.layersControl.removeLayer(chart.layer);
-      chart.listed = false;
-      changed = true;
+    this._chartMutation = true;
+    try {
+      for (const chart of this.chartLayers) {
+        if (!chart.listed)
+          continue;
+        this.map.removeLayer(chart.layer);
+        this.layersControl.removeLayer(chart.layer);
+        chart.listed = false;
+        changed = true;
+      }
+    } finally {
+      this._chartMutation = false;
     }
     if (changed)
       this.updateAttribution();
+  }
+
+  // Persist a chart checkbox toggle from the layer control. Wired to the
+  // map's overlayadd/overlayremove events, which Leaflet also fires for
+  // programmatic add/removes of control-registered layers (updateChartLayers
+  // delisting a chart that scrolled out of view, setChartLayersEnabled
+  // sweeping them off) — _chartMutation squelches those so only genuine user
+  // clicks are saved. Non-chart overlays (Seascape) match no chartLayers
+  // entry and fall through. The choice lands in the per-identity `charts`
+  // ui-config map via its own route (one chart per call — see
+  // SignalKHelper.saveChartEnabled); no entry defaults to enabled. Logged-out
+  // sessions can't write ui-config, so for them the choice stays local to
+  // the page (and skipping the POST avoids popping the login modal on a
+  // 401 for a mere checkbox click).
+  onChartToggled(layer, enabled) {
+    if (this._chartMutation)
+      return;
+    const chart = this.chartLayers.find((c) => c.layer === layer);
+    if (!chart || this.isChartEnabled(chart) === enabled)
+      return;
+    this.config.charts = { ...this.config.charts, [chart.id]: enabled };
+    if (!this.state.loggedIn)
+      return;
+    this.signalK.saveChartEnabled(chart.id, enabled).catch((error) => {
+      console.error("Failed to save chart visibility", error);
+    });
   }
 
   // Swap the active base layer to the named basemap (falling back to satellite

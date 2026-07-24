@@ -347,6 +347,93 @@ describe("http-routes register()", () => {
     });
   });
 
+  describe("POST /ui-config/charts", () => {
+    const asUser = (identifier, body) => ({
+      skPrincipal: { identifier },
+      body,
+    });
+
+    test("saves one chart's choice for the posting identity only", () => {
+      wire();
+      const res = fakeRes();
+      router.handlers.post["/ui-config/charts"](
+        asUser("bob", { identifier: "Fiji_Nanuku-Passage", enabled: false }),
+        res,
+      );
+      assert.equal(res.statusCode, 200);
+      assert.deepEqual(res.body, { statusCode: 200, state: "COMPLETED" });
+      assert.deepEqual(plugin.uiConfigStore.resolve("bob").charts, {
+        "Fiji_Nanuku-Passage": false,
+      });
+      assert.deepEqual(plugin.uiConfigStore.resolve("alice").charts, {});
+    });
+
+    test("a second chart merges instead of clobbering the first", () => {
+      wire();
+      router.handlers.post["/ui-config/charts"](
+        asUser("bob", { identifier: "chart-a", enabled: false }),
+        fakeRes(),
+      );
+      router.handlers.post["/ui-config/charts"](
+        asUser("bob", { identifier: "chart-b", enabled: true }),
+        fakeRes(),
+      );
+      assert.deepEqual(plugin.uiConfigStore.resolve("bob").charts, {
+        "chart-a": false,
+        "chart-b": true,
+      });
+    });
+
+    test("the saved map rides along on GET /ui-config", () => {
+      wire();
+      router.handlers.post["/ui-config/charts"](
+        asUser("bob", { identifier: "chart-a", enabled: false }),
+        fakeRes(),
+      );
+      const res = fakeRes();
+      router.handlers.get["/ui-config"](
+        { skPrincipal: { identifier: "bob" } },
+        res,
+      );
+      assert.deepEqual(res.body.charts, { "chart-a": false });
+    });
+
+    test("an anonymous save (security disabled) lands in the shared bucket", () => {
+      wire();
+      router.handlers.post["/ui-config/charts"](
+        { body: { identifier: "chart-a", enabled: false } },
+        fakeRes(),
+      );
+      assert.deepEqual(plugin.uiConfigStore.resolve(null).charts, {
+        "chart-a": false,
+      });
+    });
+
+    test("rejects a missing or empty identifier with 403 and stores nothing", () => {
+      wire();
+      for (const body of [{}, { identifier: "", enabled: true }, { identifier: 7, enabled: true }, undefined]) {
+        const res = fakeRes();
+        router.handlers.post["/ui-config/charts"]({ body }, res);
+        assert.equal(res.statusCode, 403);
+      }
+      assert.equal(
+        fs.existsSync(path.join(harness.dataDir(), "ui-config")),
+        false,
+      );
+    });
+
+    test("rejects a non-boolean enabled with 403", () => {
+      wire();
+      const res = fakeRes();
+      router.handlers.post["/ui-config/charts"](
+        asUser("bob", { identifier: "chart-a", enabled: "yes" }),
+        res,
+      );
+      assert.equal(res.statusCode, 403);
+      assert.deepEqual(plugin.uiConfigStore.resolve("bob").charts, {});
+    });
+  });
+
   describe("boat icon /icon", () => {
     // The PUT/GET/DELETE handlers do file I/O against harness.dataDir().
     // readBodyBytes accepts a pre-buffered Buffer as req.body, so tests pass

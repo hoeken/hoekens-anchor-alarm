@@ -91,9 +91,14 @@ describe("UI preference schema split", () => {
     assert.equal(defaults.defaultBasemap, "Satellite");
     assert.equal(defaults.enableTidePanel, true);
     assert.equal(defaults.scopes, "7,5,4,3");
+    assert.deepEqual(defaults.charts, {});
     assert.deepEqual(Object.keys(defaults), UI_CONFIG_KEYS);
     defaults.defaultBasemap = "mutated";
     assert.equal(defaultUiConfig().defaultBasemap, "Satellite");
+    // Object defaults must be cloned — mutating a resolved config must not
+    // poison the schema fragment for the next call.
+    defaults.charts.someChart = false;
+    assert.deepEqual(defaultUiConfig().charts, {});
   });
 });
 
@@ -144,6 +149,22 @@ describe("coerceUiConfig()", () => {
       () => coerceUiConfig({ defaultBasemap: 42 }),
       ValidationError,
     );
+  });
+
+  test("coerces the charts map's values to booleans, keeping its keys", () => {
+    const updates = coerceUiConfig({
+      charts: { "Fiji_Nanuku-Passage": 0, "NZ614 Marlborough Sounds": true },
+    });
+    assert.deepEqual(updates.charts, {
+      "Fiji_Nanuku-Passage": false,
+      "NZ614 Marlborough Sounds": true,
+    });
+  });
+
+  test("throws ValidationError when charts is not an object", () => {
+    for (const charts of ["yes", 42, null, ["chart-a"]]) {
+      assert.throws(() => coerceUiConfig({ charts }), ValidationError);
+    }
   });
 });
 

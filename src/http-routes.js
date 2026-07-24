@@ -16,7 +16,7 @@
 import { createRequire } from "module";
 import fs from "fs";
 import path from "path";
-import { AnchorError } from "./errors.js";
+import { AnchorError, ValidationError } from "./errors.js";
 import { coerceUiConfig } from "./schema.js";
 
 const require = createRequire(import.meta.url);
@@ -332,6 +332,30 @@ export function register(app, plugin, router) {
       store.save(store.identityFor(req), updates);
 
       res.json({ statusCode: 200, state: "COMPLETED", config: updates });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  // Persist one chart overlay's show/hide choice for the requesting identity
+  // (the chart checkboxes in the map's layer control — see the `charts`
+  // ui-config key; a chart with no entry defaults to enabled). A dedicated
+  // route rather than a POST /ui-config body because the charts map is keyed
+  // by dynamic chart identifiers: the client would have to echo the whole
+  // map back (racing other tabs), while here it names just the one chart it
+  // toggled. Auth-gated by SignalK like every other plugin-route write.
+  router.post("/ui-config/charts", (req, res) => {
+    try {
+      const { identifier, enabled } = req.body || {};
+      if (typeof identifier !== "string" || identifier.length === 0)
+        throw new ValidationError("identifier must be a non-empty string");
+      if (typeof enabled !== "boolean")
+        throw new ValidationError("enabled must be a boolean");
+
+      const store = plugin.uiConfigStore;
+      store.saveChartEnabled(store.identityFor(req), identifier, enabled);
+
+      res.json({ statusCode: 200, state: "COMPLETED" });
     } catch (err) {
       fail(res, err);
     }

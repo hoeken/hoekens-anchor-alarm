@@ -83,6 +83,19 @@ describe("chartToLayerSpec", () => {
     });
   });
 
+  describe("id (the per-user show/hide preference key)", () => {
+    test("is the catalog identifier even when a display name exists", () => {
+      const spec = chartToLayerSpec({ ...FIJI, name: "Nanuku Passage" });
+      assert.equal(spec.id, "Fiji_Nanuku-Passage");
+    });
+
+    test("falls back to the label when the identifier is absent", () => {
+      const chart = { ...FIJI, name: "Nanuku Passage" };
+      delete chart.identifier;
+      assert.equal(chartToLayerSpec(chart).id, "Nanuku Passage");
+    });
+  });
+
   describe("unsupported charts return null", () => {
     test("WMS charts", () => {
       assert.equal(chartToLayerSpec({ ...FIJI, type: "WMS" }), null);

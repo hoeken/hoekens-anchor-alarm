@@ -160,6 +160,13 @@
             "type": "string",
             "description": "Comma-separated scope ratios (1–10) to calculate and display, e.g. \"7,5,4,3\". Blank turns scope calculations off."
           },
+          "charts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "description": "Per-chart show/hide choices for SignalK-provided chart overlays, keyed by chart identifier. A chart with no entry defaults to enabled. Usually updated one chart at a time via POST /ui-config/charts as the user ticks layer-control checkboxes."
+          },
           "glitchFilterSpeed": {
             "type": "number",
             "readOnly": true,
@@ -511,6 +518,56 @@
         "responses": {
           "200": {
             "description": "Configuration saved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/AnchorError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/ui-config/charts": {
+      "post": {
+        "tags": ["config"],
+        "summary": "Set one chart overlay's show/hide preference",
+        "description": "Persists a single SignalK-provided chart overlay's enabled/disabled choice into the requesting identity's `charts` preference map, leaving the identity's other chart choices untouched. Charts are dynamic (only those covering the current view are listed), so the client names just the one chart it toggled instead of echoing the whole map. A chart with no entry defaults to enabled. Requires authentication.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["identifier", "enabled"],
+                "properties": {
+                  "identifier": {
+                    "type": "string",
+                    "description": "The chart's identifier from the SignalK charts catalog."
+                  },
+                  "enabled": {
+                    "type": "boolean",
+                    "description": "Whether the chart overlay should be shown on the map."
+                  }
+                }
+              },
+              "example": {
+                "identifier": "Fiji_Nanuku-Passage",
+                "enabled": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Preference saved successfully.",
             "content": {
               "application/json": {
                 "schema": {

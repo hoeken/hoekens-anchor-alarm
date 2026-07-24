@@ -291,6 +291,13 @@ export class SignalKHelper {
   saveConfig(config) {
     return this.pluginPost("ui-config", config);
   }
+  // Persist one chart overlay's show/hide choice (a layer-control checkbox
+  // toggle) for the current identity. A dedicated route rather than
+  // saveConfig so the client never has to echo — and race other tabs over —
+  // the whole per-chart map.
+  saveChartEnabled(identifier, enabled) {
+    return this.pluginPost("ui-config/charts", { identifier, enabled });
+  }
   // Walk a subtree by dot-separated path. An empty path returns the tree itself
   // so callers can pass a notification envelope and read its `.value` via value().
   static extract(tree, path = "") {

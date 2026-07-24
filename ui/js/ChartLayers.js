@@ -37,9 +37,11 @@ function chartLabel(chart) {
 }
 
 // Convert a v2 charts catalog entry into a Leaflet tile-layer spec
-// ({ name, url, options }), or null when the chart isn't an XYZ raster layer we
-// can render. Kept free of any `L` reference so it's unit-testable without
-// Leaflet.
+// ({ id, name, url, options }), or null when the chart isn't an XYZ raster
+// layer we can render. `id` is the catalog identifier (falling back to the
+// label), the stable key the per-user show/hide preference is stored under
+// (the `charts` ui-config map). Kept free of any `L` reference so it's
+// unit-testable without Leaflet.
 export function chartToLayerSpec(chart) {
   if (!chart || typeof chart !== "object")
     return null;
@@ -73,11 +75,16 @@ export function chartToLayerSpec(chart) {
   if (typeof chart.attribution === "string" && chart.attribution)
     options.attribution = chart.attribution;
 
-  return { name: chartLabel(chart), url, options };
+  const name = chartLabel(chart);
+  const id =
+    typeof chart.identifier === "string" && chart.identifier
+      ? chart.identifier
+      : name;
+  return { id, name, url, options };
 }
 
 // Fetch the chart catalog and build a Leaflet tile layer for each raster chart.
-// Resolves to an array of { name, layer }; never rejects.
+// Resolves to an array of { id, name, layer }; never rejects.
 export function loadChartLayers(signalK) {
   return signalK
     .fetchCharts()
@@ -89,7 +96,11 @@ export function loadChartLayers(signalK) {
         const spec = chartToLayerSpec(chart);
         if (!spec)
           continue;
-        layers.push({ name: spec.name, layer: L.tileLayer(spec.url, spec.options) });
+        layers.push({
+          id: spec.id,
+          name: spec.name,
+          layer: L.tileLayer(spec.url, spec.options),
+        });
       }
       return layers;
     })

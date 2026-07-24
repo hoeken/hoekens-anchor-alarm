@@ -100,6 +100,20 @@ export class UiConfigStore {
     this.writeFile(file, { ...this.readFile(file), ...updates });
   }
 
+  // Merge one chart's show/hide choice into the identity's saved charts map
+  // (the per-chart layer-control preference — see the `charts` ui-config
+  // key). The map is read-modify-written here rather than through save(),
+  // which merges at the top level only: handing it a one-chart map would
+  // wipe the identity's other chart choices.
+  saveChartEnabled(identity, identifier, enabled) {
+    const file = this.fileFor(identity);
+    const saved = this.readFile(file);
+    this.writeFile(file, {
+      ...saved,
+      charts: { ...saved.charts, [identifier]: Boolean(enabled) },
+    });
+  }
+
   // One-shot upgrade for pre-2.11 installs, where UI preferences lived in the
   // plugin config: lift them into boat-defaults.json (unless an earlier run
   // already wrote it) and strip them from the config so they can't linger

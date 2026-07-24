@@ -123,6 +123,35 @@ describe("UiConfigStore", () => {
     });
   });
 
+  describe("saveChartEnabled()", () => {
+    test("stores one chart's flag without touching other charts or keys", () => {
+      store.save("bob", { defaultBasemap: "Blank" });
+      store.saveChartEnabled("bob", "Fiji_Nanuku-Passage", false);
+      store.saveChartEnabled("bob", "NZ614", true);
+      assert.deepEqual(readRaw(store.fileFor("bob")).config, {
+        defaultBasemap: "Blank",
+        charts: { "Fiji_Nanuku-Passage": false, NZ614: true },
+      });
+    });
+
+    test("re-toggling a chart overwrites its previous flag", () => {
+      store.saveChartEnabled("bob", "Fiji_Nanuku-Passage", false);
+      store.saveChartEnabled("bob", "Fiji_Nanuku-Passage", true);
+      assert.deepEqual(store.resolve("bob").charts, {
+        "Fiji_Nanuku-Passage": true,
+      });
+    });
+
+    test("chart choices are per identity, defaulting to an empty map", () => {
+      store.saveChartEnabled("bob", "Fiji_Nanuku-Passage", false);
+      assert.deepEqual(store.resolve("bob").charts, {
+        "Fiji_Nanuku-Passage": false,
+      });
+      assert.deepEqual(store.resolve("alice").charts, {});
+      assert.deepEqual(store.resolve(null).charts, {});
+    });
+  });
+
   describe("migrateFromPluginConfig()", () => {
     test("reports no change when the plugin config carries no UI keys", () => {
       const config = { zone: "", state: "emergency", glitchFilterSpeed: 2 };
