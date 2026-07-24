@@ -6,7 +6,8 @@
 // Element IDs are preserved for CSS hooks in style.css;
 // do not rename without updating it.
 //
-// Layout: the three controls sit in one horizontal row, each 90px tall.
+// Layout: the three controls sit in one horizontal row of squares, sized by
+// style.css per the Use Large UI Controls setting (60px, or 90px large).
 // Visual order (left→right) is shape picker, radius panel, raise/drop button.
 
 import {

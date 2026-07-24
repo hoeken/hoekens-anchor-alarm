@@ -231,6 +231,11 @@ body,
   position: relative;
 }
 
+/* Anchor toolbar sizing follows the Use Large UI Controls setting, same
+   base-plus-override scheme as the map controls and the wind barb: the base
+   rules here are the small-UI sizing (60px squares), and the
+   html.largeControls block after the toolbar section scales everything up to
+   90px squares. */
 #controlToolbar {
   position: absolute;
   top: 10px;
@@ -243,7 +248,7 @@ body,
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  font-size: 20px;
+  font-size: 15px;
 }
 
 /* Flexbox `gap` is unsupported before Chromium 84, so on Navico MFDs (Chromium
@@ -300,14 +305,17 @@ body,
   background-clip: padding-box;
 }
 
-/* The three raise/drop/radius/shape controls are one 80px-tall row. */
+/* The three raise/drop/radius/shape controls are one square row. This rule
+   owns the square size for both modes (60px here, 90px in the largeControls
+   block) — don't re-declare width on the individual controls below or the
+   override loses. */
 #anchorDown button,
 #anchorUp button,
 #radiusControl,
 #polygonControl,
 #zoneShapeButton {
-  height: 80px;
-  width: 80px;
+  height: 60px;
+  width: 60px;
   box-sizing: border-box;
 }
 
@@ -413,43 +421,43 @@ body,
   display: none;
 }
 
-/* Raise/Drop: an anchor glyph stacked over a short label, centered, in a
-   80×80 square. */
+/* Raise/Drop: an anchor glyph stacked over a short label, centered in the
+   square button. */
 #anchorDown button,
 #anchorUp button {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 80px;
   padding: 0;
   line-height: 1.1;
 }
 
 .anchorBtnIcon {
-  /* Scaled down from the 100px source so the glyph + label fit the 90px
-     square button. */
+  /* Scaled down from the 100px source so the glyph + label fit the square
+     button. */
   display: block;
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
 }
 
 .anchorBtnLabel {
   margin-top: 4px;
-  font-size: 18px;
+  font-size: 14px;
 }
 
 #loginPrompt button {
-  font-size: 18px;
-  width: 80px;
-  height: 30px;
+  font-size: 14px;
+  width: 60px;
+  height: 24px;
   box-sizing: border-box;
   /* Drop the UA's default button padding, which on Chromium 69 (Navico MFDs)
      pushes the text down and clips the descender of "Login". A line-height that
-     fills the button's content box then centers the label vertically. Keeping
-     the button as the default inline-block lets the parent center it. */
+     fills the button's content box (height minus the 2px borders) then centers
+     the label vertically. Keeping the button as the default inline-block lets
+     the parent center it. */
   padding: 0;
-  line-height: 26px;
+  line-height: 20px;
 }
 
 /* Radius panel: a single bordered box (see the shared border rule above) split
@@ -458,7 +466,6 @@ body,
 #radiusControl {
   display: flex;
   flex-direction: column;
-  width: 80px;
   background-color: var(--surface-bg);
   /* Clip the borderless inner buttons to the panel's rounded corners. */
   overflow: hidden;
@@ -466,7 +473,7 @@ body,
 
 /* Top row: the radius value; click to type an exact value. Sized smaller than
    the toolbar default, and kept on one line, so a 3-digit value with a wider
-   unit (e.g. "333 ft") fits the 90px square without wrapping or clipping. */
+   unit (e.g. "333 ft") fits the square without wrapping or clipping. */
 #setRadius {
   display: flex;
   flex: 1 1 0;
@@ -474,7 +481,7 @@ body,
   justify-content: center;
   min-height: 0;
   padding: 0 6px;
-  font-size: 14px;
+  font-size: 11px;
   white-space: nowrap;
   /* Drop the UA button border so only the panel's outer border and the single
      inner divider below show — otherwise they double up. */
@@ -501,12 +508,11 @@ body,
   padding: 0;
   border: none;
   border-radius: 0;
-  /* Match Leaflet's default zoom-button glyphs (leaflet.css
-     .leaflet-control-zoom-* at touch size). The map's own zoom buttons grow to
-     33px in large-controls mode (the html.largeControls rules below); these
-     steppers stay at 22px because their 80px panel is already touch-sized. */
+  /* Leaflet's zoom-button glyph typeface (leaflet.css .leaflet-control-zoom-*),
+     sized to the panel: 18px in the 60px small-mode square, 22px (Leaflet's
+     touch size) in the 90px large-mode square via the largeControls block. */
   font:
-    bold 22px "Lucida Console",
+    bold 18px "Lucida Console",
     Monaco,
     monospace;
 }
@@ -523,7 +529,7 @@ body,
   flex-direction: column;
   background-color: var(--surface-bg);
   overflow: hidden;
-  font-size: 18px;
+  font-size: 14px;
 }
 
 /* Bottom row: the sides selector. */
@@ -541,12 +547,12 @@ body,
   background-color: var(--surface-bg);
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='black' d='M0 0l6 8 6-8z'/></svg>");
   background-repeat: no-repeat;
-  background-position: right 10px center;
+  background-position: right 6px center;
   background-size: 12px 8px;
   color: var(--surface-fg);
   font-family: inherit;
   font-size: inherit;
-  padding: 0 28px 0 12px;
+  padding: 0 20px 0 8px;
 }
 
 /* Top row: the radius value (tap to type). The shared #setRadius rule supplies
@@ -567,13 +573,12 @@ body,
 }
 
 /* Match the raise/drop buttons: the current shape's glyph stacked over a short
-   label, centered in the 80×80 square. */
+   label, centered in the square. */
 #zoneShapeButton {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 80px;
   padding: 0;
   line-height: 1.1;
 }
@@ -612,7 +617,7 @@ body,
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 56px;
+  height: 42px;
   border: none;
   border-radius: 0;
 }
@@ -633,12 +638,76 @@ body,
 
 .zoneShapeGlyph {
   color: var(--surface-fg);
+  /* Overrides the SVG's baked-in width/height attributes so the glyph tracks
+     the UI mode (attributes lose to any CSS size). */
+  width: 30px;
+  height: 30px;
 }
 
 /* The dropdown arrow is a baked-in data URI (fill='black'); swap it for a
    white one in dark mode since the fill can't be driven by a CSS variable. */
 html.dark #polygonControl select {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='white' d='M0 0l6 8 6-8z'/></svg>");
+}
+
+/* Anchor toolbar at large-controls size: 90px squares (a step up from the
+   80px this bar used before it followed the setting), with fonts and glyphs
+   scaled to match. Mirrors the html.largeControls map-control block below;
+   the base rules above carry the small-UI sizing. */
+html.largeControls #controlToolbar {
+  font-size: 22px;
+}
+
+html.largeControls #anchorDown button,
+html.largeControls #anchorUp button,
+html.largeControls #radiusControl,
+html.largeControls #polygonControl,
+html.largeControls #zoneShapeButton {
+  height: 90px;
+  width: 90px;
+}
+
+html.largeControls .anchorBtnIcon {
+  width: 45px;
+  height: 45px;
+}
+
+html.largeControls .anchorBtnLabel {
+  font-size: 20px;
+}
+
+html.largeControls #loginPrompt button {
+  font-size: 20px;
+  width: 90px;
+  height: 34px;
+  line-height: 30px;
+}
+
+html.largeControls #setRadius {
+  font-size: 16px;
+}
+
+html.largeControls #decreaseRadius,
+html.largeControls #increaseRadius {
+  font-size: 22px;
+}
+
+html.largeControls #polygonControl {
+  font-size: 20px;
+}
+
+html.largeControls #polygonControl select {
+  background-position: right 10px center;
+  padding: 0 28px 0 12px;
+}
+
+html.largeControls .zoneShapeOption {
+  height: 63px;
+}
+
+html.largeControls .zoneShapeGlyph {
+  width: 45px;
+  height: 45px;
 }
 
 /* Map control buttons (zoom, home, config, theme, history) enlarged to 1.5x
@@ -1242,8 +1311,17 @@ html.largeControls .leaflet-touch .leaflet-control-layers-toggle {
   filter: drop-shadow(0px 0px 1px var(--barb-halo));
 }
 
+/* Small-UI mode (Use Large UI Controls off): shrunken barb glyph, same
+   text. The bumped stroke-width (SVG user units, so it scales with the
+   glyph) keeps the smaller barb legible on 1x MFD screens. */
 #windBarbContainer .wind-barb {
+  width: 15px;
+  stroke-width: 6;
+}
+
+html.largeControls #windBarbContainer .wind-barb {
   width: 24px;
+  stroke-width: 4;
 }
 
 .windBarbControl {
@@ -1253,6 +1331,10 @@ html.largeControls .leaflet-touch .leaflet-control-layers-toggle {
   background-color: var(--surface-bg);
   color: var(--surface-fg);
   text-align: center;
+  width: 55px;
+}
+
+html.largeControls .windBarbControl {
   width: 70px;
 }
 
