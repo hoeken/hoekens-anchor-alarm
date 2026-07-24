@@ -739,7 +739,9 @@ html.largeControls #loginPrompt button {
 }
 
 html.largeControls #setRadius {
-  font-size: 16px;
+  /* Match the 20px labels elsewhere in the large toolbar; a 4-digit value with
+     the wide unit ("1001 ft") still fits the 90px square without clipping. */
+  font-size: 20px;
 }
 
 html.largeControls #decreaseRadius,
