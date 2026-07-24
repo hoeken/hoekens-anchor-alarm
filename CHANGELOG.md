@@ -1,3 +1,35 @@
+# v2.11.0
+
+## Touch-friendly controls
+
+A sizing pass over the whole UI for touchscreens and MFDs, gated by a new **"Use Large UI Controls"** setting:
+
+- **Map controls at 1.5x** — the zoom, home, config, theme, history, and layers controls grow from a 30px box / 18px icon to 45px / 27px in large mode (the default), with the home and gear glyph stroke weights compensated so they don't also render 1.5x thicker, and the zoom +/- text weight tuned to stay legible on a 1x MFD screen. Turning the setting off restores the stock compact sizing
+- **The anchor toolbar and wind box follow the setting** — the raise/drop, radius, polygon, and shape-picker squares were a fixed 80px regardless; they now scale between 60px squares in small mode and 90px in large mode with matching fonts and glyphs (including the radius value text), and the wind box slims its barb and width in small mode
+
+## Per-user preferences
+
+- **UI preferences are now saved per user** — basemap, panels, tracks, scope ratios, and the rest move out of the plugin config into sparse JSON files under the plugin data dir, keyed by the logged-in username (or the device's clientId), with a shared anonymous bucket when no one is logged in. Saving a setting touches only your own file instead of racing other users over the shared plugin config, and a one-shot migration lifts preferences from pre-2.11 installs into the boat-wide defaults so nothing is lost. `glitchFilterSpeed` stays boat-level plugin config and is no longer settable from the web UI
+- **Chart show/hide choices persist across reloads** — ticking a chart on or off in the layer control is now remembered per user, which also fixes an unchecked chart silently re-enabling itself when it scrolled back into view after panning or zooming
+
+## Map labels
+
+- **One halo treatment for all map labels** — boat names and the anchor distance/bearing labels now share a denser, wider text-shadow halo, themed for day and dark mode. The anchor line labels are rotated HTML markers now instead of SVG textpath glyphs (dropping the leaflet.textpath.js vendor plugin), and the anchor distance label glues its unit on ("50.8m") so the halo can't visually split the label apart
+- **New "Show Own Boat Name Label" setting** — the own boat can now show its name label (default on), independent of the other-vessel "Show Boat Name Labels" switch. It always wins the label collision pass against AIS names, and drops out of the pass entirely when off so an invisible label can't hide a neighbour's name
+
+## New features
+
+- **Bow-to-anchor distance in the info box** — a Distance row above Depth, computed with the same shared helper the map's rode line uses so the panel and the map labels can never drift apart (#26)
+- **The anchor overlay declutters itself** — the line, labels, anchor icon, and zone shape hide once their on-screen footprint drops below 48px when zoomed out — measured in pixels, so a big swing zone survives further out than a small one — and a line label hides whenever it would overlap the own-boat icon. The raised-state crosshair always stays, since a fixed-size drag control is useful at any zoom
+- **A reloading overlay instead of a frozen frame** — returning from a long background suspension or the bfcache forces a refresh; that now shows a spinner scrim with a "Reloading" label instead of leaving stale data on screen with no feedback
+
+## Bug fixes
+
+- **iOS rotation no longer letterboxes the page** — rotating between portrait and landscape left white bars and offset touch targets (a WebKit standalone web-view framing bug plus notch insets). The app now claims the entire window, keeps the map full-bleed, and re-measures the attribution strip and map size once the rotated layout actually settles, so the bottom controls and the home button's re-centering stay correct
+- **Long-pressing a marker icon no longer opens the image sheet** — on iOS WebKit (and Android/MFD Chromium) a long press on the anchor, crosshair, ship, or toolbar icons opened the save/inspect-image callout and stranded the touch gesture mid-drag; real links keep their long-press behavior
+- **The info box grows instead of clipping** — Navico MFDs render text wider than desktop, so the fixed 150px width cut values off; the box now expands to fit its content
+- **The tide and info panels line up** — both bottom panels now share the same 160×80 box so their corners align, with the info panel still allowed to grow for larger MFD text
+
 # v2.10.3
 
 ## Bug fixes
