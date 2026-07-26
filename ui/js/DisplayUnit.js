@@ -259,6 +259,11 @@ export class DisplayUnit {
   }
 
   static formatFinal(converted, symbol, format, decimals) {
+    // NaN/Infinity would render as literal "NaN m" — treat them as missing
+    // (same "" contract as a null value) so callers show their placeholder.
+    if (typeof converted === "number" && !Number.isFinite(converted))
+      return "";
+
     let text;
     if (format && typeof converted === "number") {
       if (decimals === false)

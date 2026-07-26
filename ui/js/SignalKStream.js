@@ -11,6 +11,14 @@
 // every (re)connection, so the caller's connect handler re-subscribes after a
 // reconnect without any extra bookkeeping here.
 //
+// sendMeta=all makes the server precede the first value delta of each path
+// (per connection) with a meta update — an `updates[].meta` array instead of
+// `values` — carrying units and displayUnits. The connection query param is
+// the only thing the server honors for this; a `sendMeta` field inside the
+// subscribe message is ignored. Without it, an envelope built purely from
+// deltas (a source that was offline when the REST snapshot loaded) never
+// learns its display units and can't be formatted.
+//
 // The very first frame the server sends is a "hello" carrying the `self`
 // identity (e.g. "vessels.urn:mrn:imo:mmsi:123456789"). It has no `updates`, so
 // it isn't a delta; we surface it via the "hello" event and stash it on `.self`
@@ -47,7 +55,7 @@ export class SignalKStream {
   connect() {
     this._closed = false;
     const proto = this.useTLS ? "wss" : "ws";
-    const url = `${proto}://${this.hostname}:${this.port}/signalk/v1/stream?subscribe=none`;
+    const url = `${proto}://${this.hostname}:${this.port}/signalk/v1/stream?subscribe=none&sendMeta=all`;
     const ws = new WebSocket(url);
     this.ws = ws;
 

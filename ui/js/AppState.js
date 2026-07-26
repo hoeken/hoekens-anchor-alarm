@@ -35,6 +35,10 @@ export class AppState {
     this.scopes = [];
     this._anchorSuppressUntil = { position: 0, state: 0, watchZone: 0 };
     this._lastRadius = 0;
+    // Last meta seen per path, from the stream's meta updates (see handleMeta).
+    // Grafted onto envelopes that were created from bare value deltas so they
+    // can still be formatted with the right display units.
+    this._pathMeta = {};
     // Own-position glitch filter (speed configured from the plugin config via
     // setGlitchFilterSpeed). While the latest fix stands rejected,
     // positionGlitch holds { speed } (m/s) for the status bar; a good fix
@@ -224,6 +228,11 @@ export class AppState {
       SignalKHelper.errorHandler?.(msg);
       console.warn(msg);
       console.trace();
+      // The snapshot value is too old to trust, but its meta (units,
+      // displayUnits) is not time-sensitive — graft it so an envelope the
+      // delta stream built from bare values can still be formatted.
+      if (current && !current.meta && data.meta)
+        current.meta = data.meta;
       return current ?? null;
     }
 
@@ -308,16 +317,23 @@ export class AppState {
 
     // Mutate the existing envelope so meta/$source/pgn/values populated by
     // extractAll survive delta updates. Only create a new envelope the first
-    // time we see a path.
+    // time we see a path, grafting on any meta the stream already delivered
+    // (see handleMeta) so it can be formatted from birth.
     const apply = (current) => {
       if (current) {
         current.value = delta.value;
         current.timestamp = timestamp;
         if (delta.meta)
           current.meta = delta.meta;
+        else if (!current.meta && this._pathMeta[path])
+          current.meta = this._pathMeta[path];
         return current;
       }
-      return { value: delta.value, timestamp };
+      const envelope = { value: delta.value, timestamp };
+      const meta = delta.meta ?? this._pathMeta[path];
+      if (meta)
+        envelope.meta = meta;
+      return envelope;
     };
 
     if (path == "navigation.position") {
@@ -384,6 +400,53 @@ export class AppState {
       this.anchor.notification = apply(this.anchor.notification);
     // else if (!path.startsWith("notifications"))
     //   console.log(`[websocket] Ignoring: ${path}`);
+  }
+
+  // Meta arrives on the stream in its own updates (an `updates[].meta` array,
+  // no `values`) — once per path per connection, because SignalKStream opens
+  // the socket with sendMeta=all. Without this, an envelope created purely
+  // from deltas (its source was offline when the /vessels snapshot loaded, or
+  // the snapshot value was dropped as stale) never gets meta.displayUnits,
+  // DisplayUnit.formatDelta returns "", and the panel fields render blank.
+  // Stash each path's meta for envelopes yet to be born (see apply in
+  // handleDelta) and refresh any envelope we already hold so a units-
+  // preference change propagates without waiting for the next value delta.
+  handleMeta(path, meta) {
+    if (!path || !meta)
+      return;
+    this._pathMeta[path] = meta;
+    const envelope = this._envelopeFor(path);
+    if (envelope)
+      envelope.meta = meta;
+  }
+
+  // The live envelope currently holding a path's value, or null for paths we
+  // don't track (or haven't seen yet). Mirrors handleDelta's routing.
+  _envelopeFor(path) {
+    switch (path) {
+      case "navigation.position":
+        return this.currentCoordinates;
+      case "navigation.headingTrue":
+        return this.heading;
+      case "environment.depth.belowKeel":
+        return this.belowKeel;
+      case "environment.depth.belowSurface":
+        return this.belowSurface;
+      case "environment.depth.belowTransducer":
+        return this.belowTransducer;
+      case "environment.wind.directionTrue":
+        return this.twa;
+      case "environment.wind.speedApparent":
+        return this.aws;
+      case "environment.tide.heightHigh":
+        return this.tide?.heightHigh;
+      case "environment.tide.heightLow":
+        return this.tide?.heightLow;
+      case "environment.tide.heightNow":
+        return this.tide?.heightNow;
+      default:
+        return null;
+    }
   }
 
   // Client-initiated optimistic write into the anchor envelopes.
@@ -467,19 +530,29 @@ export class AppState {
 
   // SignalK's units-preferences plugin is sometimes buggy for me.
   // this is a workaround since we know these parameters should
-  // always have these categories
+  // always have these categories. It also guarantees these envelopes can
+  // always be formatted: when meta never arrived at all (a delta-built
+  // envelope on a server that sent none), the displayUnits scaffolding is
+  // created here so DisplayUnit.formatDelta doesn't return "" and blank the
+  // panel fields.
   cleanDisplayUnits() {
-    const override = (envelope, from, to) => {
-      const du = envelope?.meta?.displayUnits;
-      if (du?.category === from)
-        du.category = to;
+    const ensureDepth = (envelope) => {
+      if (!envelope)
+        return;
+      if (!envelope.meta)
+        envelope.meta = {};
+      if (!envelope.meta.displayUnits)
+        envelope.meta.displayUnits = {};
+      const du = envelope.meta.displayUnits;
+      if (!du.category || du.category === "distance")
+        du.category = "depth";
     };
-    override(this.belowSurface, "distance", "depth");
-    override(this.belowKeel, "distance", "depth");
-    override(this.belowTransducer, "distance", "depth");
-    override(this.tide?.heightLow, "distance", "depth");
-    override(this.tide?.heightHigh, "distance", "depth");
-    override(this.tide?.heightNow, "distance", "depth");
+    ensureDepth(this.belowSurface);
+    ensureDepth(this.belowKeel);
+    ensureDepth(this.belowTransducer);
+    ensureDepth(this.tide?.heightLow);
+    ensureDepth(this.tide?.heightHigh);
+    ensureDepth(this.tide?.heightNow);
   }
 
   calculateTides() {
@@ -520,7 +593,10 @@ export class AppState {
   }
 
   calculateScope(scope) {
-    if (!this.belowSurface || !this.boatConfig)
+    // A null value is a real occurrence (a sounder that lost bottom lock
+    // publishes value:null) — without the finite check it would coerce to 0
+    // and yield a confidently wrong rode length instead of no length.
+    if (!Number.isFinite(this.belowSurface?.value) || !this.boatConfig)
       return 0;
     let maxHeight = this.belowSurface.value;
     maxHeight += this.boatConfig.anchorRollerHeight; // height of the bow roller

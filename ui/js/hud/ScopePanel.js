@@ -5,6 +5,7 @@
 
 import { DisplayUnit } from "../DisplayUnit.js";
 import { formatScopeRatio } from "../../../shared/scopes.js";
+import { setFieldText } from "./missingField.js";
 
 export const ScopePanel = L.Control.extend({
   options: { position: "bottomright" },
@@ -19,19 +20,19 @@ export const ScopePanel = L.Control.extend({
           <tbody id="scopeDepthTable">
             <tr>
               <th>Surface&nbsp;Depth</th>
-              <td><span id='scopeDepth'>~</span></td>
+              <td><span id='scopeDepth'></span></td>
             </tr>
             <tr id="bowHeightRow">
               <th>Bow&nbsp;Height</th>
-              <td>+ <span id='bowHeight'>~</span></td>
+              <td>+ <span id='bowHeight'></span></td>
             </tr>
             <tr id="tidalRiseRow">
               <th>Tidal&nbsp;Rise</th>
-              <td>+ <span id='tidalRise'>~</span></td>
+              <td>+ <span id='tidalRise'></span></td>
             </tr>
             <tr id="scopeTotalRow">
               <th>Total</th>
-              <td>= <span id='scopeTotal'>~</span></td>
+              <td>= <span id='scopeTotal'></span></td>
             </tr>
             <tr>
               <th colspan="2">&nbsp;</th>
@@ -45,15 +46,15 @@ export const ScopePanel = L.Control.extend({
           <tbody id="minimumDepthTable">
             <tr id="belowKeelRow">
               <th>Below&nbsp;Keel</th>
-              <td><span id='belowKeel'>~</span></td>
+              <td><span id='belowKeel'></span></td>
             </tr>
             <tr id="tidalFallRow">
               <th>Tidal&nbsp;Fall</th>
-              <td>- <span id='tidalFall'>~</span></td>
+              <td>- <span id='tidalFall'></span></td>
             </tr>
             <tr id="minimumDepthRow">
               <th>Minimum&nbsp;Depth</th>
-              <td>= <span id='minimumDepth'>~</span></td>
+              <td>= <span id='minimumDepth'></span></td>
             </tr>
           </tbody>
         </table>
@@ -77,6 +78,17 @@ export const ScopePanel = L.Control.extend({
       scopeDepthTable: container.querySelector("#scopeDepthTable"),
       minimumDepthTable: container.querySelector("#minimumDepthTable"),
     };
+    // Value fields start as the missing placeholder until update() lands.
+    for (const key of [
+      "scopeDepth",
+      "bowHeight",
+      "tidalRise",
+      "scopeTotal",
+      "belowKeel",
+      "tidalFall",
+      "minimumDepth",
+    ])
+      setFieldText(this._refs[key], "");
     // Dynamically-built scope-ratio rows, kept in sync with state.scopes by
     // _syncScopeRows. `_scopeSig` is the ratio list that produced the current
     // rows, so we only rebuild the DOM when the configured ratios change.
@@ -105,7 +117,7 @@ export const ScopePanel = L.Control.extend({
       th.innerHTML = `${formatScopeRatio(ratio)}:1&nbsp;Scope`;
       const td = document.createElement("td");
       const value = document.createElement("span");
-      value.textContent = "~";
+      setFieldText(value, "");
       td.appendChild(value);
       row.appendChild(th);
       row.appendChild(td);
@@ -120,6 +132,12 @@ export const ScopePanel = L.Control.extend({
 
   // Render a whole scope snapshot. Caller does the math; this is pure rendering
   // plus the green/orange/red warning on the minimum-depth row.
+  //
+  // Sections show/hide on envelope *presence* (a boat with no depth path never
+  // grows the panel), but the values inside gate on the value actually being a
+  // number: a sounder that loses bottom lock publishes value:null, and letting
+  // that coerce (null + rise = rise) would render confidently wrong totals.
+  // Anything unformattable renders as a grayed n/a (see setFieldText).
   update: function (state) {
 
     //if we have none of the required parameters, dont even show.
@@ -130,14 +148,17 @@ export const ScopePanel = L.Control.extend({
 
     //scope depth calculation - only belowSurface is actually required
     if (state.belowSurface) {
-      let maxHeight = state.belowSurface.value;
+      // Seed with NaN when the reading is missing so the Total (and anything
+      // else derived from it) formats as n/a instead of a bogus number.
+      const surfaceOk = Number.isFinite(state.belowSurface.value);
+      let maxHeight = surfaceOk ? state.belowSurface.value : NaN;
       let showTotal = false;
 
       //do we also have tide?
       if (state.tide) {
         maxHeight += state.tidalRise;
         showTotal = true;
-        this._refs.tidalRise.innerHTML = DisplayUnit.formatValue(state.tidalRise, "depth");
+        setFieldText(this._refs.tidalRise, DisplayUnit.formatValue(state.tidalRise, "depth"));
         this._refs.tidalRiseRow.style.display = "";
       } else {
         this._refs.tidalRiseRow.style.display = "none";
@@ -147,16 +168,16 @@ export const ScopePanel = L.Control.extend({
       if (state.boatConfig.anchorRollerHeight) {
         maxHeight += state.boatConfig.anchorRollerHeight;
         showTotal = true;
-        this._refs.bowHeight.innerHTML = DisplayUnit.formatValue(state.boatConfig.anchorRollerHeight, "depth");
+        setFieldText(this._refs.bowHeight, DisplayUnit.formatValue(state.boatConfig.anchorRollerHeight, "depth"));
         this._refs.bowHeightRow.style.display = "";
       }
       else
         this._refs.bowHeightRow.style.display = "none";
 
-      this._refs.scopeDepth.innerHTML = DisplayUnit.formatDelta(state.belowSurface);
+      setFieldText(this._refs.scopeDepth, DisplayUnit.formatDelta(state.belowSurface));
 
       if (showTotal) {
-        this._refs.scopeTotal.innerHTML = DisplayUnit.formatValue(maxHeight, "depth");
+        setFieldText(this._refs.scopeTotal, DisplayUnit.formatValue(maxHeight, "depth"));
         this._refs.scopeTotalRow.style.display = "";
       }
       else
@@ -164,7 +185,9 @@ export const ScopePanel = L.Control.extend({
 
       // Render one row per configured scope ratio, rebuilding the rows only
       // when the ratio list itself changes. Flag any scope whose rode length
-      // exceeds the chain we actually carry.
+      // exceeds the chain we actually carry. The lengths come from
+      // calculateScope, which yields 0 when the surface depth is missing —
+      // show n/a rather than a meaningless "0.0 m".
       const scopes = state.scopes || [];
       this._syncScopeRows(scopes);
       const chainLength = state.boatConfig?.totalAnchorChainLength;
@@ -172,8 +195,12 @@ export const ScopePanel = L.Control.extend({
         const ref = this._scopeRows[i];
         if (!ref)
           return;
-        ref.value.innerHTML = DisplayUnit.formatValue(length, "depth");
-        ref.row.style.color = chainLength && length > chainLength ? "red" : "";
+        setFieldText(
+          ref.value,
+          surfaceOk ? DisplayUnit.formatValue(length, "depth") : "",
+        );
+        ref.row.style.color =
+          surfaceOk && chainLength && length > chainLength ? "red" : "";
       });
 
       this._refs.scopeDepthTable.style.display = "";
@@ -184,15 +211,17 @@ export const ScopePanel = L.Control.extend({
     //minimum depth calculation - tide and belowKeel are both required
     if (state.tide && state.belowKeel) {
 
-      this._refs.belowKeel.innerHTML = DisplayUnit.formatDelta(state.belowKeel);
-      this._refs.tidalFall.innerHTML = DisplayUnit.formatValue(state.tidalFall, "depth");
+      setFieldText(this._refs.belowKeel, DisplayUnit.formatDelta(state.belowKeel));
+      setFieldText(this._refs.tidalFall, DisplayUnit.formatValue(state.tidalFall, "depth"));
 
-      let minimumDepth = state.belowKeel.value;
-      if (state.tide)
-        minimumDepth -= state.tidalFall;
-      this._refs.minimumDepth.innerHTML = DisplayUnit.formatValue(minimumDepth, "depth");
+      let minimumDepth = Number.isFinite(state.belowKeel.value)
+        ? state.belowKeel.value - state.tidalFall
+        : NaN;
+      setFieldText(this._refs.minimumDepth, DisplayUnit.formatValue(minimumDepth, "depth"));
 
-      if (minimumDepth > 1) {
+      if (!Number.isFinite(minimumDepth)) {
+        this._refs.minimumDepthRow.style.color = "";
+      } else if (minimumDepth > 1) {
         this._refs.minimumDepthRow.style.color = "green";
       } else if (minimumDepth > 0) {
         this._refs.minimumDepthRow.style.color = "orange";

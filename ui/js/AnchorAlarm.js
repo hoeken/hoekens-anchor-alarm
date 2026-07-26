@@ -213,6 +213,15 @@ class AnchorAlarm {
       return;
     const isSelf = !delta.context || delta.context === this.selfContext;
     for (const update of delta.updates) {
+      // Meta rides in its own updates (a `meta` array, usually no `values`),
+      // sent once per path per connection because the stream is opened with
+      // sendMeta=all. AppState keeps it so an envelope built purely from
+      // deltas still learns its displayUnits (see AppState.handleMeta). Fleet
+      // vessels never format values, so only own-boat meta is kept.
+      if (isSelf && Array.isArray(update.meta)) {
+        for (const entry of update.meta)
+          this.state.handleMeta(entry.path, entry.value);
+      }
       if (!update.values)
         continue;
       const timestamp = update.timestamp;

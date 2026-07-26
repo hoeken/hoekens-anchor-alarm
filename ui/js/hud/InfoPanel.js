@@ -6,6 +6,7 @@
 import { DisplayUnit } from "../DisplayUnit.js";
 import { setTitle } from "../BrowserSupport.js";
 import { GeoMath } from "../GeoMath.js";
+import { setFieldText } from "./missingField.js";
 
 export const InfoPanel = L.Control.extend({
   options: { position: "bottomright" },
@@ -19,11 +20,11 @@ export const InfoPanel = L.Control.extend({
         <table>
           <tr>
             <th>Distance:</th>
-            <td><span id='distanceValue'>~</span></td>
+            <td><span id='distanceValue'></span></td>
           </tr>
           <tr>
             <th>Depth:</th>
-            <td><span id='depthValue'>~</span></td>
+            <td><span id='depthValue'></span></td>
           </tr>
           <tr>
             <th>Status:</th>
@@ -37,6 +38,9 @@ export const InfoPanel = L.Control.extend({
     this._depthValue = container.querySelector("#depthValue");
     setTitle(this._depthValue, "Depth");
     this._pluginStatus = container.querySelector("#pluginStatus");
+    // Value fields start as the missing placeholder until update() lands.
+    setFieldText(this._distanceValue, "");
+    setFieldText(this._depthValue, "");
     return container;
   },
 
@@ -44,14 +48,12 @@ export const InfoPanel = L.Control.extend({
     this.show();
 
     this.setDistanceValue(this._bowToAnchor(state));
-    if (state.belowSurface)
-      this.setDepthValue(state.belowSurface);
-    else if (state.belowKeel)
-      this.setDepthValue(state.belowKeel);
-    else if (state.belowTransducer)
-      this.setDepthValue(state.belowTransducer);
-    else
-      this.setDepthValue(null);
+    // First depth source actually holding a number: an envelope whose value
+    // went null (a sounder that lost bottom lock publishes value:null) must
+    // not shadow a sibling path that still has a reading.
+    const depth = [state.belowSurface, state.belowKeel, state.belowTransducer]
+      .find((d) => Number.isFinite(d?.value));
+    this.setDepthValue(depth ?? null);
     this.setStatus(state.anchor);
   },
 
@@ -69,17 +71,14 @@ export const InfoPanel = L.Control.extend({
   },
 
   setDistanceValue: function (distance) {
-    if (distance != null)
-      this._distanceValue.textContent = DisplayUnit.formatValue(distance, "depth");
-    else
-      this._distanceValue.textContent = "~";
+    setFieldText(
+      this._distanceValue,
+      distance != null ? DisplayUnit.formatValue(distance, "depth") : "",
+    );
   },
 
   setDepthValue: function (depth) {
-    if (depth)
-      this._depthValue.textContent = DisplayUnit.formatDelta(depth);
-    else
-      this._depthValue.textContent = "~";
+    setFieldText(this._depthValue, depth ? DisplayUnit.formatDelta(depth) : "");
   },
 
   setStatus: function (anchor) {

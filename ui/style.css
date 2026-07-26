@@ -453,6 +453,13 @@ html.dark {
   margin-top: 10px;
 }
 
+/* Missing-data placeholder in HUD panel value fields (see missingField.js).
+   Opacity rather than a fixed gray so it reads as muted against both the
+   light and dark panel surfaces. */
+.missing {
+  opacity: 0.5;
+}
+
 .normal {
   color: green;
 }

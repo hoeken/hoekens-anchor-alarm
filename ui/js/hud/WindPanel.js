@@ -6,6 +6,7 @@
 import { radiansToDegrees } from "@turf/turf";
 import { DisplayUnit } from "../DisplayUnit.js";
 import { getWindBarb } from "../WindBarb.js";
+import { setFieldText } from "./missingField.js";
 
 export const WindPanel = L.Control.extend({
   options: { position: "bottomleft" },
@@ -18,16 +19,27 @@ export const WindPanel = L.Control.extend({
     container.innerHTML = `
       <div><b>Wind</b></div>
       <div id="windBarbContainer"></div>
-      <div id="awsValue">~</div>
+      <div id="awsValue"></div>
     `;
     this._container = container;
     this._aws = container.querySelector("#awsValue");
     this._barb = container.querySelector("#windBarbContainer");
-    this._lastAwsText = "~";
+    // The readout starts as the missing placeholder until data lands.
+    this._lastAwsText = null;
+    this._setAwsText("");
     this._lastBarbIcon = null;
     this._barbSvg = null;
     this._lastTransform = null;
     return container;
+  },
+
+  // Render the AWS readout via the shared missing-field treatment, skipping
+  // the DOM write when the text hasn't changed (this runs every update tick).
+  _setAwsText: function (text) {
+    if (text === this._lastAwsText)
+      return;
+    setFieldText(this._aws, text);
+    this._lastAwsText = text;
   },
 
   // Renders the AWS readout AND a fresh barb SVG. The SVG's rotation is set
@@ -35,18 +47,11 @@ export const WindPanel = L.Control.extend({
   // the barb in the right direction.
   setSpeed: function (aws, twa) {
     if (!aws) {
-      if (this._lastAwsText !== "~") {
-        this._aws.innerHTML = "~";
-        this._lastAwsText = "~";
-      }
+      this._setAwsText("");
       return;
     }
 
-    const awsText = DisplayUnit.formatDelta(aws, 0);
-    if (awsText !== this._lastAwsText) {
-      this._aws.innerHTML = awsText;
-      this._lastAwsText = awsText;
-    }
+    this._setAwsText(DisplayUnit.formatDelta(aws, 0));
 
     const windBarbIcon = getWindBarb(aws.value);
     if (windBarbIcon !== this._lastBarbIcon) {
@@ -91,10 +96,7 @@ export const WindPanel = L.Control.extend({
   },
 
   clearSpeed: function () {
-    if (this._lastAwsText !== "~") {
-      this._aws.innerHTML = "~";
-      this._lastAwsText = "~";
-    }
+    this._setAwsText("");
   },
 
   show: function () {

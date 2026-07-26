@@ -81,6 +81,12 @@ describe("DisplayUnit.formatFinal()", () => {
   test("returns a bare string when there is no symbol", () => {
     assert.equal(DisplayUnit.formatFinal(12.3, "", "0.0", false), "12.3");
   });
+
+  test("treats non-finite numbers as missing, not literal NaN text", () => {
+    assert.equal(DisplayUnit.formatFinal(NaN, "kn", "0.0", false), "");
+    assert.equal(DisplayUnit.formatFinal(Infinity, "kn", "0.0", false), "");
+    assert.equal(DisplayUnit.formatFinal(-Infinity, "kn", "0.0", false), "");
+  });
 });
 
 describe("DisplayUnit.formatValue()", () => {
@@ -95,6 +101,11 @@ describe("DisplayUnit.formatValue()", () => {
 
   test("returns empty string for an unknown category", () => {
     assert.equal(DisplayUnit.formatValue(10, "nonsense"), "");
+  });
+
+  test("returns empty string for non-finite values", () => {
+    assert.equal(DisplayUnit.formatValue(NaN, "speed"), "");
+    assert.equal(DisplayUnit.formatValue(Infinity, "speed"), "");
   });
 });
 
