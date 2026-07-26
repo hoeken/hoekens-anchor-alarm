@@ -1,3 +1,19 @@
+# v2.11.1
+
+## Improvements
+
+- Panel values from a feed that has stopped updating now dim instead of looking live
+- Missing values show a grayed-out "~" instead of a blank cell
+- The boat icon no longer freezes when heading data goes stale — it falls back to wind angle or anchor bearing (#37)
+- AIS vessels with no heading data follow your own heading instead of all pointing north
+
+## Bug fixes
+
+- Depth panels no longer go permanently blank after a data outage
+- Class B vessels over 24m keep their broadcast dimensions instead of being reset to defaults
+- The tide panel is no longer clickable on Navico MFDs, which can't open the tides webapp (#38)
+- The plugin no longer disrupts master election between real TimeZero peers on the network (#36)
+
 # v2.11.0
 
 ## Touch-friendly controls
