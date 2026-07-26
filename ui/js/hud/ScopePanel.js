@@ -137,7 +137,10 @@ export const ScopePanel = L.Control.extend({
   // grows the panel), but the values inside gate on the value actually being a
   // number: a sounder that loses bottom lock publishes value:null, and letting
   // that coerce (null + rise = rise) would render confidently wrong totals.
-  // Anything unformattable renders as a grayed n/a (see setFieldText).
+  // Anything unformattable renders as a grayed placeholder, and fields backed
+  // by a sounder reading dim when that reading goes stale (see setFieldText).
+  // Tidal rise/fall are predictions and bow height is config — neither ages,
+  // so they never dim.
   update: function (state) {
 
     //if we have none of the required parameters, dont even show.
@@ -174,10 +177,10 @@ export const ScopePanel = L.Control.extend({
       else
         this._refs.bowHeightRow.style.display = "none";
 
-      setFieldText(this._refs.scopeDepth, DisplayUnit.formatDelta(state.belowSurface));
+      setFieldText(this._refs.scopeDepth, DisplayUnit.formatDelta(state.belowSurface), state.belowSurface);
 
       if (showTotal) {
-        setFieldText(this._refs.scopeTotal, DisplayUnit.formatValue(maxHeight, "depth"));
+        setFieldText(this._refs.scopeTotal, DisplayUnit.formatValue(maxHeight, "depth"), state.belowSurface);
         this._refs.scopeTotalRow.style.display = "";
       }
       else
@@ -198,6 +201,7 @@ export const ScopePanel = L.Control.extend({
         setFieldText(
           ref.value,
           surfaceOk ? DisplayUnit.formatValue(length, "depth") : "",
+          state.belowSurface,
         );
         ref.row.style.color =
           surfaceOk && chainLength && length > chainLength ? "red" : "";
@@ -211,13 +215,13 @@ export const ScopePanel = L.Control.extend({
     //minimum depth calculation - tide and belowKeel are both required
     if (state.tide && state.belowKeel) {
 
-      setFieldText(this._refs.belowKeel, DisplayUnit.formatDelta(state.belowKeel));
+      setFieldText(this._refs.belowKeel, DisplayUnit.formatDelta(state.belowKeel), state.belowKeel);
       setFieldText(this._refs.tidalFall, DisplayUnit.formatValue(state.tidalFall, "depth"));
 
       let minimumDepth = Number.isFinite(state.belowKeel.value)
         ? state.belowKeel.value - state.tidalFall
         : NaN;
-      setFieldText(this._refs.minimumDepth, DisplayUnit.formatValue(minimumDepth, "depth"));
+      setFieldText(this._refs.minimumDepth, DisplayUnit.formatValue(minimumDepth, "depth"), state.belowKeel);
 
       if (!Number.isFinite(minimumDepth)) {
         this._refs.minimumDepthRow.style.color = "";

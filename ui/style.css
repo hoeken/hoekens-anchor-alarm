@@ -453,10 +453,12 @@ html.dark {
   margin-top: 10px;
 }
 
-/* Missing-data placeholder in HUD panel value fields (see missingField.js).
-   Opacity rather than a fixed gray so it reads as muted against both the
-   light and dark panel surfaces. */
-.missing {
+/* HUD panel value fields (see missingField.js): the missing-data placeholder
+   and stale last-known values share one muted treatment. Opacity rather than
+   a fixed gray so it reads as muted against both the light and dark panel
+   surfaces. */
+.missing,
+.stale {
   opacity: 0.5;
 }
 

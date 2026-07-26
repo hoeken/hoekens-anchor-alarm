@@ -6,7 +6,7 @@
 import { radiansToDegrees } from "@turf/turf";
 import { DisplayUnit } from "../DisplayUnit.js";
 import { getWindBarb } from "../WindBarb.js";
-import { setFieldText } from "./missingField.js";
+import { setFieldText, fieldIsStale } from "./missingField.js";
 
 export const WindPanel = L.Control.extend({
   options: { position: "bottomleft" },
@@ -26,6 +26,7 @@ export const WindPanel = L.Control.extend({
     this._barb = container.querySelector("#windBarbContainer");
     // The readout starts as the missing placeholder until data lands.
     this._lastAwsText = null;
+    this._lastAwsStale = null;
     this._setAwsText("");
     this._lastBarbIcon = null;
     this._barbSvg = null;
@@ -34,12 +35,16 @@ export const WindPanel = L.Control.extend({
   },
 
   // Render the AWS readout via the shared missing-field treatment, skipping
-  // the DOM write when the text hasn't changed (this runs every update tick).
-  _setAwsText: function (text) {
-    if (text === this._lastAwsText)
+  // the DOM write when nothing changed (this runs every update tick). The
+  // skip key must include staleness, not just the text: a stalled feed is
+  // exactly the case where the text stops changing while the dim state flips.
+  _setAwsText: function (text, aws = null) {
+    const stale = Boolean(text) && fieldIsStale(aws);
+    if (text === this._lastAwsText && stale === this._lastAwsStale)
       return;
-    setFieldText(this._aws, text);
+    setFieldText(this._aws, text, aws);
     this._lastAwsText = text;
+    this._lastAwsStale = stale;
   },
 
   // Renders the AWS readout AND a fresh barb SVG. The SVG's rotation is set
@@ -51,7 +56,7 @@ export const WindPanel = L.Control.extend({
       return;
     }
 
-    this._setAwsText(DisplayUnit.formatDelta(aws, 0));
+    this._setAwsText(DisplayUnit.formatDelta(aws, 0), aws);
 
     const windBarbIcon = getWindBarb(aws.value);
     if (windBarbIcon !== this._lastBarbIcon) {

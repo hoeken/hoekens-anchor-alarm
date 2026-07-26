@@ -6,7 +6,7 @@
 import { DisplayUnit } from "../DisplayUnit.js";
 import { setTitle } from "../BrowserSupport.js";
 import { GeoMath } from "../GeoMath.js";
-import { setFieldText } from "./missingField.js";
+import { setFieldText, fieldIsStale } from "./missingField.js";
 
 export const InfoPanel = L.Control.extend({
   options: { position: "bottomright" },
@@ -47,13 +47,17 @@ export const InfoPanel = L.Control.extend({
   update: function (state) {
     this.show();
 
-    this.setDistanceValue(this._bowToAnchor(state));
-    // First depth source actually holding a number: an envelope whose value
-    // went null (a sounder that lost bottom lock publishes value:null) must
-    // not shadow a sibling path that still has a reading.
-    const depth = [state.belowSurface, state.belowKeel, state.belowTransducer]
-      .find((d) => Number.isFinite(d?.value));
-    this.setDepthValue(depth ?? null);
+    this.setDistanceValue(this._bowToAnchor(state), state.currentCoordinates);
+    // Depth sources actually holding a number: an envelope whose value went
+    // null (a sounder that lost bottom lock publishes value:null) must not
+    // shadow a sibling path that still has a reading. Among those, prefer one
+    // that's still updating — a dead feed shouldn't shadow a live sibling —
+    // and only fall back to a stale reading (rendered dimmed) when every
+    // source has gone quiet.
+    const usable = [state.belowSurface, state.belowKeel, state.belowTransducer]
+      .filter((d) => Number.isFinite(d?.value));
+    const depth = usable.find((d) => !fieldIsStale(d)) ?? usable[0] ?? null;
+    this.setDepthValue(depth);
     this.setStatus(state.anchor);
   },
 
@@ -70,15 +74,22 @@ export const InfoPanel = L.Control.extend({
     ).distance;
   },
 
-  setDistanceValue: function (distance) {
+  // Distance dims when the GPS fix backing it has gone stale — the anchor end
+  // of the line is a fixed point, so the fix is the live input.
+  setDistanceValue: function (distance, position) {
     setFieldText(
       this._distanceValue,
       distance != null ? DisplayUnit.formatValue(distance, "depth") : "",
+      position,
     );
   },
 
   setDepthValue: function (depth) {
-    setFieldText(this._depthValue, depth ? DisplayUnit.formatDelta(depth) : "");
+    setFieldText(
+      this._depthValue,
+      depth ? DisplayUnit.formatDelta(depth) : "",
+      depth,
+    );
   },
 
   setStatus: function (anchor) {
