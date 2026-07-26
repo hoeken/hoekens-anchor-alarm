@@ -30,21 +30,6 @@ const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 const positiveOr = (value, fallback) =>
   Number.isFinite(value) && value > 0 ? value : fallback;
 
-// Class B AIS transponders are the recreational tier; SOLAS carriage rules put
-// vessels 24m and over onto Class A. So a sailing (36) or pleasure (37) craft
-// broadcasting Class B with an LOA past this threshold is almost certainly a
-// misconfigured transponder (a common failure mode is a garbage or leftover
-// dimension field). Left alone those bogus dimensions draw an absurdly large
-// hull and anchor overlay that can dominate the map, so we discard them and
-// fall back to defaults.
-const CLASS_B_MISCONFIG_LOA_M = 24;
-const CLASS_B_RECREATIONAL_TYPES = [36, 37];
-
-const isMisconfiguredClassB = (data, aisShipType, loa) =>
-  SignalKHelper.value(data, "sensors.ais.class") === "B" &&
-  CLASS_B_RECREATIONAL_TYPES.includes(Number(aisShipType)) &&
-  loa > CLASS_B_MISCONFIG_LOA_M;
-
 export class BoatConfig {
   constructor({
     name,
@@ -92,14 +77,6 @@ export class BoatConfig {
     config.aisShipType =
       SignalKHelper.value(data, "design.aisShipType")?.id ??
       DEFAULTS.aisShipType;
-
-    // Sanitize misconfigured Class B dimensions (see the constants above)
-    // before loa/beam feed the GPS-offset defaults and clamps below, the icon
-    // scaling, and the drawn hull.
-    if (isMisconfiguredClassB(data, config.aisShipType, config.loa)) {
-      config.loa = DEFAULTS.loa;
-      config.beam = DEFAULTS.beam;
-    }
 
     config.anchorRollerHeight =
       SignalKHelper.value(data, "design.bowAnchorRollerHeight") ??
