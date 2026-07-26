@@ -6,7 +6,7 @@
 import * as d3 from "d3";
 import { DisplayUnit } from "../DisplayUnit.js";
 import { GeoMath } from "../GeoMath.js";
-import { setTitle } from "../BrowserSupport.js";
+import { setTitle, isNavicoMfd } from "../BrowserSupport.js";
 
 const TIDES_HREF = "/signalk-tides/";
 const HOURS_BEFORE_NOW = 1;
@@ -33,11 +33,13 @@ export const TidePanel = L.Control.extend({
     L.DomEvent.disableClickPropagation(container);
     container.id = "tidesUI";
     setTitle(container, "View tides");
-    container.style.cursor = "pointer";
     container.style.display = "none";
-    L.DomEvent.on(container, "click", () => {
-      window.location.href = TIDES_HREF;
-    });
+    if (!isNavicoMfd()) {
+      container.style.cursor = "pointer";
+      L.DomEvent.on(container, "click", () => {
+        window.location.href = TIDES_HREF;
+      });
+    }
 
     this._container = container;
     this._svg = d3.select(container).append("svg").attr("class", "tides-svg");
