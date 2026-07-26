@@ -629,7 +629,10 @@ export class FleetLayer {
   }
 
   update(state) {
-    this.updateOwnPosition(state.getPosition(), state.boatConfig.heading);
+    // getHeading() rather than boatConfig.heading: the accessor falls back to
+    // TWA / bearing-to-anchor when the compass feed goes stale, so the icon
+    // keeps pointing somewhere sensible instead of freezing.
+    this.updateOwnPosition(state.getPosition(), state.getHeading());
     const pos = state.getPosition();
     this.addPointToTrack(this.ownMmsi, pos.lat, pos.lng);
   }
@@ -895,8 +898,11 @@ export class FleetLayer {
     this.updateLabelCollisions();
   }
 
-  // Heading preference: true heading > COG (only if moving) > observer's TWA > 0.
+  // Heading preference: true heading > COG (only if moving) > observer's TWA >
+  // own vessel's heading (via AppState.getHeading's fallback chain).
   // COG is wonky at low speed, so we gate it on SOG > 1 knot.
+  // The last resort assumes neighbors lie to the wind/current like we do —
+  // a better guess than pointing them all north.
   deriveVesselHeading(vessel, twa) {
     const sogVal = SignalKHelper.value(vessel, "navigation.speedOverGround");
 
@@ -908,9 +914,9 @@ export class FleetLayer {
     if (cog !== undefined && sogVal > 0.5)
       return radiansToDegrees(cog);
 
-    if (twa)
+    if (SignalKHelper.isFresh(twa))
       return radiansToDegrees(twa.value);
-    return 0;
+    return this.app.state.getHeading();
   }
 
   updateExistingVessel(vessel, position, heading, distance, bearing) {

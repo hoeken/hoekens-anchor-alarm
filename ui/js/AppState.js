@@ -171,6 +171,25 @@ export class AppState {
       return L.latLng(0, 0);
   }
 
+  // Own-vessel heading for display, in degrees — mirrors getPosition() as a
+  // read-time accessor with a safe fallback. Unlike computeOwnHeading, each
+  // source is gated on freshness so a dead compass feed can't freeze the
+  // boat icon:
+  // headingTrue > TWA > bearing-to-anchor > 0
+  getHeading() {
+    if (SignalKHelper.isFresh(this.heading))
+      return radiansToDegrees(this.heading.value);
+
+    if (SignalKHelper.isFresh(this.twa))
+      return radiansToDegrees(this.twa.value);
+
+    const bearing = this._bearingToAnchor();
+    if (bearing !== null)
+      return bearing;
+
+    return 0;
+  }
+
   getAnchorPosition() {
     if (this.anchor.position && this.anchor.position.value)
       return L.latLng(
@@ -561,30 +580,34 @@ export class AppState {
     if (this.heading)
       return radiansToDegrees(this.heading.value);
 
-    if (
-      this.anchor.position &&
-      this.anchor.position.value &&
-      this.currentCoordinates
-    ) {
-      return Math.round(
-        bearingToAzimuth(
-          turfBearing(
-            point([
-              this.currentCoordinates.value.longitude,
-              this.currentCoordinates.value.latitude,
-            ]),
-            point([
-              this.anchor.position.value.longitude,
-              this.anchor.position.value.latitude,
-            ]),
-          ),
-        ),
-      );
-    }
+    const bearing = this._bearingToAnchor();
+    if (bearing !== null)
+      return bearing;
 
     if (this.twa)
       return radiansToDegrees(this.twa.value);
 
     return 0;
+  }
+
+  // Degrees from our GPS position to the anchor, or null when either end is
+  // unknown.
+  _bearingToAnchor() {
+    if (!this.anchor.position?.value || !this.currentCoordinates)
+      return null;
+    return Math.round(
+      bearingToAzimuth(
+        turfBearing(
+          point([
+            this.currentCoordinates.value.longitude,
+            this.currentCoordinates.value.latitude,
+          ]),
+          point([
+            this.anchor.position.value.longitude,
+            this.anchor.position.value.latitude,
+          ]),
+        ),
+      ),
+    );
   }
 }
