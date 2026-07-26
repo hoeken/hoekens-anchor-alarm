@@ -32,8 +32,18 @@ import os from "os";
 const DISCOVERY_PORT = 33000;
 const COMMAND_PORT = 32000;
 const BEACON_INTERVAL_MS = 1000;
+// A peer whose last beacon is older than this is treated as gone. Beacons come
+// every second, so a few missed ones is a generous "no longer on the network".
+const PEER_STALE_MS = 5000;
 // How long a peer may hold the sync lock before we treat it as abandoned.
 const LOCK_TIMEOUT_MS = 30000;
+// visibleHosts we advertise when no other TZ peer is on the network: high so TZ
+// elects us master and pulls the anchor from us (its only path to a plugin-side
+// raise/drop). When real TZ peers are present we advertise LOW instead, so we
+// don't hijack the master election they run among themselves to sync
+// routes/marks — our own pull path doesn't depend on this field. See issue #36.
+const VISIBLE_HOSTS_SOLE = 99;
+const VISIBLE_HOSTS_DEFERRED = 1;
 const PROTOCOL = "TZ Sync 1.0";
 const DEVICE_TYPE = "TZ iBoat"; // a legitimate sync-peer device type
 
@@ -331,6 +341,34 @@ export class TimeZeroSync {
     this.anchorTick = Math.max(this.anchorTick, this._highestPeerTick()) + 1;
   }
 
+  // The visibleHosts count to advertise in our beacon.
+  //
+  // TZ elects the peer advertising the highest count as sync master and pulls
+  // from it, so a high value is how a plugin-side anchor raise/drop reaches TZ
+  // (the plugin never pushes to TZ; TZ has to pull). But when two real TZ
+  // instances are on the network they run that same election between themselves
+  // to sync routes/marks — a flat high value from us wins it and stalls their
+  // sync (issue #36). So advertise high only when we're the sole TZ authority,
+  // and step aside otherwise. Our own TZ->plugin pull is gated on the anchor
+  // tick and isTrustedPeer, not on this field, so it keeps working either way.
+  _advertisedVisibleHosts() {
+    return this._otherTzPeerPresent() ? VISIBLE_HOSTS_DEFERRED : VISIBLE_HOSTS_SOLE;
+  }
+
+  // Whether another real TimeZero instance is currently on the network. A peer
+  // counts only if it broadcast recently (stale beacons mean it's gone) and
+  // looks like a TZ sync peer rather than an unrelated host.
+  _otherTzPeerPresent() {
+    const now = Date.now();
+    for (const peer of this.peers.values()) {
+      if (now - (peer.lastSeen ?? 0) > PEER_STALE_MS)
+        continue;
+      if (peer.canSync && (peer.deviceType || "").startsWith("TZ"))
+        return true;
+    }
+    return false;
+  }
+
   // The highest anchor tick advertised by any peer we've heard from.
   _highestPeerTick() {
     let highest = 0;
@@ -538,6 +576,7 @@ export class TimeZeroSync {
         if (!peer || peer.uuid?.endsWith(this.uuid))
           return;
         const known = this.peers.get(rinfo.address);
+        peer.lastSeen = Date.now();
         this.peers.set(rinfo.address, peer);
         if (!known)
           this.app.debug(
@@ -576,8 +615,7 @@ export class TimeZeroSync {
         userId: this.userId,
         anchorWatchTick: this.anchorTick,
         currentTick: this.anchorTick,
-        // High so we win TZ's master election and it pulls from us.
-        visibleHosts: 99,
+        visibleHosts: this._advertisedVisibleHosts(),
       }),
       "utf8",
     );

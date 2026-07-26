@@ -207,6 +207,60 @@ describe("discovery beacon", () => {
   });
 });
 
+// Regression for issue #36: a flat visibleHosts: 99 hijacked the master
+// election two real TZ Professional peers run between themselves to sync
+// routes/marks. We advertise high only when no other TZ peer is visible, and
+// step aside otherwise; our own TZ->plugin pull doesn't depend on the field.
+describe("advertised visibleHosts (master-election deference)", () => {
+  const recent = (extra) => ({
+    canSync: true,
+    deviceType: "TZ Professional",
+    lastSeen: Date.now(),
+    ...extra,
+  });
+
+  test("advertises a high count when we're the only TZ peer", () => {
+    const sync = new TimeZeroSync(stubApp(), {});
+    assert.equal(sync._advertisedVisibleHosts(), 99);
+  });
+
+  test("steps aside when another real TZ peer is visible", () => {
+    const sync = new TimeZeroSync(stubApp(), {});
+    sync.peers.set("192.168.1.108", recent({ name: "TZPRO-NAVPC" }));
+    assert.equal(sync._advertisedVisibleHosts(), 1);
+  });
+
+  test("ignores a TZ peer whose beacon has gone stale", () => {
+    const sync = new TimeZeroSync(stubApp(), {});
+    sync.peers.set(
+      "192.168.1.108",
+      recent({ name: "TZPRO-NAVPC", lastSeen: Date.now() - 60000 }),
+    );
+    assert.equal(sync._advertisedVisibleHosts(), 99);
+  });
+
+  test("ignores a non-TZ host that happens to be on the network", () => {
+    const sync = new TimeZeroSync(stubApp(), {});
+    sync.peers.set(
+      "192.168.1.50",
+      recent({ deviceType: "SomeOtherDevice" }),
+    );
+    assert.equal(sync._advertisedVisibleHosts(), 99);
+  });
+
+  test("the beacon carries the deferred count when a TZ peer is present", () => {
+    const sync = new TimeZeroSync(stubApp(), {});
+    sync.peers.set("192.168.1.108", recent({ name: "TZPRO-NAVPC" }));
+    const beacon = buildBeacon({
+      hostName: "SignalK",
+      uuid: "x",
+      anchorWatchTick: 7,
+      visibleHosts: sync._advertisedVisibleHosts(),
+    });
+    assert.equal(beacon.split(";")[8], "1");
+  });
+});
+
 describe("My TIMEZERO user id pairing", () => {
   test("advertises the user id in beacon field 4", () => {
     const f = buildBeacon({
