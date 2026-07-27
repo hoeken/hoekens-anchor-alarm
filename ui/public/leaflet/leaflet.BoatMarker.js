@@ -124,6 +124,28 @@ L.BoatMarker = L.Marker.extend({
     );
   },
 
+  // The tip of the drawn bow as a LatLng. Icons are drawn pointing up, so in
+  // the unrotated icon frame the bow tip sits at top-center, (wPx/2, 0);
+  // rotate the antenna→bow vector by the current heading about the antenna
+  // (the marker's anchor), same math as getBoatCenter. This is the *drawn*
+  // bow, not the real one: below the minimum-size clamp in _update the icon
+  // renders larger than physical scale, so the drawn tip lands further from
+  // the antenna than the boat's actual bow — AnchorOverlay starts the rode
+  // line here so it meets the hull image at any zoom.
+  getBowLatLng() {
+    if (!this._map || this._wPx === undefined) return null;
+
+    const anchor = this._map.latLngToLayerPoint(this.getLatLng());
+    const dx = this._wPx / 2 - this._oX;
+    const dy = -this._oY;
+    const rad = (this.options.heading * Math.PI) / 180;
+    const sin = Math.sin(rad);
+    const cos = Math.cos(rad);
+    return this._map.layerPointToLatLng(
+      L.point(anchor.x + dx * cos - dy * sin, anchor.y + dx * sin + dy * cos),
+    );
+  },
+
   // Bind the name label, then place it correctly straight away. The marker's
   // geometry is computed by _update() during onAdd, so by the time a tooltip
   // is bound the dimensions needed to position it are already available.

@@ -48,12 +48,17 @@ const CROSSHAIR_ICON = L.icon({
 });
 
 export class AnchorOverlay {
-  constructor({ state, map, getBoatIcon, onZoneChange, onZoneInput }) {
+  constructor({ state, map, getBoatIcon, getBoatBow, onZoneChange, onZoneInput }) {
     this.state = state;
     this.map = map;
     // Returns the own-boat icon's <img> (owned by FleetLayer) so the line
     // labels can hide themselves when they'd paint across the hull.
     this._getBoatIcon = getBoatIcon;
+    // Returns the icon's drawn bow tip (null until the marker has geometry).
+    // Once BoatMarker's minimum-size clamp kicks in the icon is larger than
+    // physical scale, so the line must start at the drawn bow — the
+    // geographic bow would land amidships on the oversized hull image.
+    this._getBoatBow = getBoatBow;
     this._onZoneChange = onZoneChange;
     this._onZoneInput = onZoneInput;
     this.dropped = false;
@@ -258,7 +263,14 @@ export class AnchorOverlay {
       this.anchorPosition,
     );
 
-    this.anchorLine.setLatLngs([bow, this.anchorPosition]);
+    // Draw from the icon's bow tip, not the geographic bow: they coincide
+    // while the icon is at physical scale, but once BoatMarker's minimum-size
+    // clamp kicks in the geographic bow lands amidships on the oversized hull
+    // image. Only the drawn geometry uses it — the distance/bearing numbers
+    // stay geographic, matching the info panel.
+    const drawnBow = (this._getBoatBow && this._getBoatBow()) || bow;
+
+    this.anchorLine.setLatLngs([drawnBow, this.anchorPosition]);
 
     const bowToAnchor = Math.round(distance * 10) / 10;
     // Glue the unit to the number ("50.8m", not "50.8 m") — with the halo'd
@@ -268,20 +280,26 @@ export class AnchorOverlay {
       "",
     );
 
-    const bearing = Math.round(bearingTrue);
-    const bearingText = `${bearing}°`;
+    const bearingText = `${Math.round(bearingTrue)}°`;
+
+    // Everything visual aligns to the drawn line, whose direction drifts
+    // from the true bearing when the clamp displaces the drawn bow along the
+    // heading axis — so take its angle from the projected endpoints (compass
+    // convention: 0° = up/north, x east, y down).
+    const bowPt = this.map.latLngToLayerPoint(drawnBow);
+    const anchorPt = this.map.latLngToLayerPoint(this.anchorPosition);
+    const lineAngle =
+      (Math.atan2(anchorPt.x - bowPt.x, bowPt.y - anchorPt.y) * 180) / Math.PI;
 
     // Rotate so the anchor's ring (top of icon, at iconAnchor [12,4]) faces
     // back toward the bow; the flukes trail away from the rode.
-    this._updateAnchorRotation(bearing + 180);
+    this._updateAnchorRotation(lineAngle + 180);
 
-    // Labels read along the line. Web Mercator is conformal, so the true
-    // bearing maps straight to a screen angle (CSS 0° = reading left→right =
-    // due east, hence the -90) and stays valid across zooms. When the line
-    // points westish the text would come out upside-down: spin it 180° and
-    // mirror the perpendicular offset so each label keeps to its own side of
-    // the line.
-    let angle = bearing - 90;
+    // Labels read along the line (CSS 0° = reading left→right = due east,
+    // hence the -90). When the line points westish the text would come out
+    // upside-down: spin it 180° and mirror the perpendicular offset so each
+    // label keeps to its own side of the line.
+    let angle = lineAngle - 90;
     let side = 1;
     const norm = ((angle % 360) + 360) % 360;
     if (norm > 90 && norm < 270) {
@@ -293,8 +311,8 @@ export class AnchorOverlay {
     // geodesic error to show. (Degenerate across the antimeridian, but so is
     // the polyline itself.)
     const mid = L.latLng(
-      (bow.lat + this.anchorPosition.lat) / 2,
-      (bow.lng + this.anchorPosition.lng) / 2,
+      (drawnBow.lat + this.anchorPosition.lat) / 2,
+      (drawnBow.lng + this.anchorPosition.lng) / 2,
     );
 
     this._ensureLineLabels();

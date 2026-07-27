@@ -690,6 +690,14 @@ export class FleetLayer {
     return this.ownVessel?.getElement()?.querySelector("img") ?? null;
   }
 
+  // The drawn bow tip of the own-boat icon, for AnchorOverlay's rode line.
+  // Distinct from the geographic bow (GeoMath): below BoatMarker's
+  // minimum-size clamp the icon renders larger than physical scale, so the
+  // real bow position sits well inside the hull image.
+  ownBoatBowLatLng() {
+    return this.ownVessel?.getBowLatLng() ?? null;
+  }
+
   // Swap the own-boat marker image live from the settings dialog. A url (a
   // cache-busted /icon URL) applies a custom icon; null reverts to the
   // ship-type icon derived from the boat config.

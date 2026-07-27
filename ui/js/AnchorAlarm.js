@@ -847,6 +847,7 @@ class AnchorAlarm {
       state: this.state,
       map: this.map,
       getBoatIcon: () => this.fleetLayer.ownBoatIconElement(),
+      getBoatBow: () => this.fleetLayer.ownBoatBowLatLng(),
       onZoneChange: (zoneConfig) => this.anchorController.setZone(zoneConfig),
       onZoneInput: (zoneConfig) => this.anchorController.previewZone(zoneConfig),
     });
