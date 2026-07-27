@@ -103,9 +103,9 @@ session instead of logging a new one.
 
 Request body:
 
-| Field      | Type   | Required | Notes                                                                                              |
-| ---------- | ------ | -------- | --------------------------------------------------------------------------------------------------- |
-| `zone`     | object | yes      | Watch zone (see [Zone object](#zone-object)).                                                      |
+| Field      | Type   | Required | Notes                                                                                                                                      |
+| ---------- | ------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `zone`     | object | yes      | Watch zone (see [Zone object](#zone-object)).                                                                                              |
 | `position` | object | no       | New anchor location, `{ "latitude": <number>, "longitude": <number> }`, decimal degrees (WGS84). If omitted, the anchor stays where it is. |
 
 ```bash

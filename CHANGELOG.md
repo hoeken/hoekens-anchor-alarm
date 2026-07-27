@@ -1,3 +1,15 @@
+# v2.12.0
+
+## New features
+
+- Drag the anchor to move it, even while anchored — the move previews as you drag and takes effect when you let go
+- The REST API's set-zone request accepts an optional `position` to move the anchor without starting a new anchoring session
+
+## Bug fixes
+
+- The anchor line now starts at the boat icon's bow tip, so it no longer looks like it begins amidships when zoomed out
+- Anchor line labels no longer vanish when a corner of the label barely grazes the boat icon
+
 # v2.11.1
 
 ## Improvements
