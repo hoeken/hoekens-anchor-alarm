@@ -95,15 +95,18 @@ immediately. (This guard is skipped when there is no GPS fix, or when the
 
 #### `POST /setZone`
 
-Updates the watch zone for the currently dropped anchor without moving the
-anchor position. Requires that an anchor has already been dropped and that a GPS
-position is available.
+Updates the watch zone for the currently dropped anchor, and optionally moves
+the anchor position in the same update. Requires that an anchor has already
+been dropped and that a GPS position is available. Unlike re-dropping via
+`dropAnchor`, moving the anchor this way continues the current anchoring
+session instead of logging a new one.
 
 Request body:
 
-| Field  | Type   | Required | Notes                                         |
-| ------ | ------ | -------- | --------------------------------------------- |
-| `zone` | object | yes      | Watch zone (see [Zone object](#zone-object)). |
+| Field      | Type   | Required | Notes                                                                                              |
+| ---------- | ------ | -------- | --------------------------------------------------------------------------------------------------- |
+| `zone`     | object | yes      | Watch zone (see [Zone object](#zone-object)).                                                      |
+| `position` | object | no       | New anchor location, `{ "latitude": <number>, "longitude": <number> }`, decimal degrees (WGS84). If omitted, the anchor stays where it is. |
 
 ```bash
 curl -X POST http://[signalk-server]:[port]/plugins/hoekens-anchor-alarm/setZone \
@@ -111,8 +114,9 @@ curl -X POST http://[signalk-server]:[port]/plugins/hoekens-anchor-alarm/setZone
   -d '{ "zone": { "type": "circle", "radius": 45 } }'
 ```
 
-Like `dropAnchor`, this is rejected (`403`) if the new zone would no longer
-contain the boat (unless `allowZoneOutsideVessel` is enabled).
+Like `dropAnchor`, this is rejected (`403`) if the new zone (around the new
+position, when one is given) would no longer contain the boat (unless
+`allowZoneOutsideVessel` is enabled).
 
 #### `POST /raiseAnchor`
 

@@ -36,7 +36,7 @@ export class AnchorController {
     if (this._appState.isAnchored() || this._pending)
       return;
 
-    const pos = this._overlay.getCrosshairPosition();
+    const pos = this._overlay.getAnchorPosition();
     if (!pos)
       return;
 
@@ -115,6 +115,37 @@ export class AnchorController {
     this._onChange();
   }
 
+  // Commit a dragged anchor position while anchored (AnchorOverlay's
+  // onAnchorMove, fired only on drag end — the drag itself is previewed
+  // locally by the overlay). Posted as a setZone carrying the moved position:
+  // a re-drop via dropAnchor would log a new anchoring session, while a move
+  // continues the current one. Like setZone, doesn't take _pending itself —
+  // discrete drag-end commits don't overlap in practice — but bails while a
+  // drop/raise is in flight.
+  moveAnchor(latlng) {
+    if (!this._appState.isAnchored() || this._pending)
+      return;
+
+    const zoneConfig = this._currentZoneConfig();
+    if (!zoneConfig)
+      return;
+
+    const anchorPos = { latitude: latlng.lat, longitude: latlng.lng };
+    const snapshot = this._appState.snapshotAnchorState();
+    this._appState.applyClientAnchorState({ position: anchorPos });
+    this._onChange();
+
+    this._signalK
+      .setZone(zoneConfig, anchorPos)
+      .then(() => this._statusBar.clear("anchor-move"))
+      .catch((err) => {
+        this._appState.restoreAnchorState(snapshot);
+        const detail = err?.message || err?.statusText || "unknown error";
+        this._statusBar.set("anchor-move", `Error: ${detail}`, "error");
+        this._onChange();
+      });
+  }
+
   // Zone changes don't take _pending themselves: the +/- buttons should feel
   // responsive even if a previous setZone is still posting, and the
   // suppression window keeps stale server responses from clobbering us. They
@@ -179,7 +210,7 @@ export class AnchorController {
       { units: "meters" },
     );
     const [guessLon, guessLat] = guess.geometry.coordinates;
-    this._overlay.setCrosshairPosition(L.latLng(guessLat, guessLon));
+    this._overlay.setAnchorPosition(L.latLng(guessLat, guessLon));
     this._onChange();
   }
 }

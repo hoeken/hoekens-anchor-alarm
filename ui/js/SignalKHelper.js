@@ -95,8 +95,11 @@ export class SignalKHelper {
     return this.pluginPost("dropAnchor", { position, zone });
   }
 
-  setZone(zone) {
-    return this.pluginPost("setZone", { zone });
+  // `position` optionally moves the anchor in the same update. Moves go
+  // through setZone rather than dropAnchor because a re-drop starts a new
+  // entry in the plugin's session log.
+  setZone(zone, position) {
+    return this.pluginPost("setZone", { zone, position });
   }
 
   pluginPost(action, data) {

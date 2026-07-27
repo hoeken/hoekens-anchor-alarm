@@ -143,15 +143,21 @@ describe("http-routes register()", () => {
   });
 
   describe("POST /setZone", () => {
-    test("forwards the zone and returns 200", () => {
+    test("forwards the zone and optional position and returns 200", () => {
       let received;
-      plugin.setZone = (zone) => {
-        received = zone;
+      plugin.setZone = (zone, position) => {
+        received = { zone, position };
       };
       wire();
       const res = fakeRes();
-      router.handlers.post["/setZone"]({ body: { zone: { type: "sector" } } }, res);
-      assert.deepEqual(received, { type: "sector" });
+      router.handlers.post["/setZone"](
+        { body: { zone: { type: "sector" }, position: { latitude: 1, longitude: 2 } } },
+        res,
+      );
+      assert.deepEqual(received, {
+        zone: { type: "sector" },
+        position: { latitude: 1, longitude: 2 },
+      });
       assert.equal(res.statusCode, 200);
     });
 

@@ -91,13 +91,17 @@ export class SessionLog {
     }
   }
 
-  // Keep the open session's zone in sync when the operator reshapes it.
-  updateZone(zoneConfig) {
+  // Keep the open session's zone in sync when the operator reshapes it, and
+  // its anchor position when they drag the anchor — a move continues the
+  // session rather than starting a new one, so it must not go through start().
+  updateZone(zoneConfig, position = null) {
     try {
       const open = this.current();
       if (!open)
         return;
       open.zone = zoneConfig;
+      if (position)
+        open.position = position;
       this.save();
     } catch (err) {
       this.app.error(`anchor session log update failed: ${err.message}`);

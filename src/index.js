@@ -679,16 +679,35 @@ export default function (app) {
     plugin.notifyTimeZero();
   };
 
-  plugin.setZone = function (zone) {
+  plugin.setZone = function (zone, position) {
     if (zone == null) {
       throw new ValidationError("zone required");
     }
 
     const existingZoneConfig = readZoneConfig(plugin.configuration);
-    const anchorPosition = existingZoneConfig?.position;
-    if (!anchorPosition) {
+    if (!existingZoneConfig?.position) {
       throw new StateError("no anchor is currently dropped");
     }
+
+    // Optional move: the UI's drag-the-anchor gesture updates the position
+    // through here rather than re-dropping, because dropAnchor starts a new
+    // entry in the session log — a moved anchor is still the same anchoring
+    // session. The moved position takes over for the containment guard, the
+    // position delta, and persistence.
+    let movedPosition = null;
+    if (position != null) {
+      if (position.latitude == null || position.longitude == null) {
+        throw new ValidationError("position with latitude and longitude required");
+      }
+      movedPosition = {
+        latitude: parseFloat(position.latitude),
+        longitude: parseFloat(position.longitude),
+      };
+      if (isNaN(movedPosition.latitude) || isNaN(movedPosition.longitude)) {
+        throw new ValidationError("position latitude and longitude must be numeric");
+      }
+    }
+    const anchorPosition = movedPosition ?? existingZoneConfig.position;
 
     const vesselPosition = app.getSelfPath("navigation.position.value");
     if (!vesselPosition) {
@@ -712,6 +731,7 @@ export default function (app) {
     app.debug("set anchor zone: " + JSON.stringify(resolvedZone.getConfig()));
 
     plugin.updateAnchorState({
+      anchorPosition: movedPosition, // null → position delta not re-emitted
       zone: resolvedZone,
       isSet: true,
     });
@@ -720,7 +740,7 @@ export default function (app) {
       ...resolvedZone.getConfig(),
       position: anchorPosition,
     });
-    plugin.sessionLog.updateZone(resolvedZone.getConfig());
+    plugin.sessionLog.updateZone(resolvedZone.getConfig(), movedPosition);
     plugin.savePluginOptions();
 
     plugin.notifyTimeZero();

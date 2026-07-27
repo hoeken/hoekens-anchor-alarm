@@ -850,6 +850,7 @@ class AnchorAlarm {
       getBoatBow: () => this.fleetLayer.ownBoatBowLatLng(),
       onZoneChange: (zoneConfig) => this.anchorController.setZone(zoneConfig),
       onZoneInput: (zoneConfig) => this.anchorController.previewZone(zoneConfig),
+      onAnchorMove: (latlng) => this.anchorController.moveAnchor(latlng),
     });
 
     this.anchorController = new AnchorController({

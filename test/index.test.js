@@ -331,6 +331,61 @@ describe("setZone()", () => {
     assert.deepEqual(saved.position, { latitude: 37.8, longitude: -122.4 });
     assert.ok(h.calls.savePluginOptions.length >= 1);
   });
+
+  test("a given position moves the anchor and emits the position delta", () => {
+    const { h, plugin } = setup();
+    plugin.configuration = { zone: droppedZone(), state: "emergency" };
+    h.setSelfPath("navigation.position.value", vesselAt(ANCHOR, 10, 0));
+    const moved = vesselAt(ANCHOR, 30, 90);
+    plugin.setZone({ type: "circle", radius: 60 }, moved);
+
+    assert.deepEqual(h.lastDelta("navigation.anchor.position"), moved);
+    assert.deepEqual(JSON.parse(plugin.configuration.zone).position, moved);
+  });
+
+  test("a move updates the open session instead of starting a new one", () => {
+    const { h, plugin } = setup();
+    plugin.configuration = { state: "emergency" };
+    h.setSelfPath("navigation.position.value", vesselAt(ANCHOR, 10, 0));
+    plugin.dropAnchor({ position: ANCHOR, zone: { type: "circle", radius: 60 } });
+    const moved = vesselAt(ANCHOR, 20, 90);
+    plugin.setZone({ type: "circle", radius: 60 }, moved);
+
+    const sessions = plugin.sessionLog.all();
+    assert.equal(sessions.length, 1);
+    assert.deepEqual(sessions[0].position, moved);
+    assert.equal(sessions[0].raisedAt, undefined);
+  });
+
+  test("rejects a non-numeric move position", () => {
+    const { h, plugin } = setup();
+    plugin.configuration = { zone: droppedZone(), state: "emergency" };
+    h.setSelfPath("navigation.position.value", vesselAt(ANCHOR, 10, 0));
+    assert.throws(
+      () => plugin.setZone({ type: "circle", radius: 60 }, { latitude: "abc", longitude: 1 }),
+      ValidationError,
+    );
+  });
+
+  test("rejects a move position missing a coordinate", () => {
+    const { h, plugin } = setup();
+    plugin.configuration = { zone: droppedZone(), state: "emergency" };
+    h.setSelfPath("navigation.position.value", vesselAt(ANCHOR, 10, 0));
+    assert.throws(
+      () => plugin.setZone({ type: "circle", radius: 60 }, { latitude: 12.5 }),
+      ValidationError,
+    );
+  });
+
+  test("refuses a move that leaves the boat outside the zone", () => {
+    const { h, plugin } = setup();
+    plugin.configuration = { zone: droppedZone(), state: "emergency" };
+    h.setSelfPath("navigation.position.value", vesselAt(ANCHOR, 10, 0));
+    assert.throws(
+      () => plugin.setZone({ type: "circle", radius: 60 }, vesselAt(ANCHOR, 200, 90)),
+      StateError,
+    );
+  });
 });
 
 describe("setRadius() (legacy shim)", () => {

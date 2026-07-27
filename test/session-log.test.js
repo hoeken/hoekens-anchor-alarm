@@ -67,6 +67,14 @@ describe("SessionLog", () => {
     assert.equal(log.all()[0].zone.radius, 80);
   });
 
+  test("updateZone with a position moves the open session's anchor", () => {
+    log.start(POSITION, ZONE);
+    const moved = { latitude: 12.6, longitude: -61.5 };
+    log.updateZone({ type: "circle", radius: 80 }, moved);
+    assert.deepEqual(log.current().position, moved);
+    assert.equal(log.current().zone.radius, 80);
+  });
+
   test("persists across instances (survives a plugin restart)", () => {
     log.start(POSITION, ZONE);
     const reloaded = new SessionLog(mock.app);

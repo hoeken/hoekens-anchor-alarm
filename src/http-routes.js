@@ -180,7 +180,7 @@ export function register(app, plugin, router) {
 
   router.post("/setZone", (req, res) => {
     try {
-      plugin.setZone(req.body.zone);
+      plugin.setZone(req.body.zone, req.body.position);
       res.json({ statusCode: 200, state: "COMPLETED" });
     } catch (err) {
       fail(res, err);

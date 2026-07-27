@@ -1348,6 +1348,17 @@ html.largeControls .leaflet-touch .leaflet-control-layers-toggle {
   cursor: grabbing;
 }
 
+/* Drag-disabled presentation of a handle (anonymous users' anchor-position
+   marker, which stays visible since it doubles as the anchor marker): a
+   small solid dot, filled with the zone color inline by
+   ZoneHandle._applyColor. pointer-events lets clicks and drags fall through
+   to the map — it's a marker, not a control. */
+.zoneHandleSolid {
+  background: var(--zone-handle-border);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
 .zoneHandleGhost {
   background: var(--zone-handle-ghost-bg);
   border-width: 2px;
@@ -1591,11 +1602,10 @@ table.vesselData td:nth-child(3) {
 /* Zoom declutter: AnchorOverlay toggles this container class once the anchor
    cluster (watch zone + bow-to-anchor line) projects too small on screen to
    be useful. Every anchor-related layer carries .anchor-overlay-part — line,
-   labels, anchor icon, zone shape and its drag handles — except the
-   raised-state crosshair, a fixed-size drag control that stays useful at any
-   zoom. visibility (not display) for the reposition-while-hidden reason
-   above, and because it also blocks pointer events so hidden zone handles
-   can't grab a drag aimed at the boat. */
+   labels, anchor-position handle, zone shape and its drag handles.
+   visibility (not display) for the reposition-while-hidden reason above,
+   and because it also blocks pointer events so hidden handles can't grab a
+   drag aimed at the boat. */
 .hide-anchor-overlay .anchor-overlay-part {
   visibility: hidden;
 }
