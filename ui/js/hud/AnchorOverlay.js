@@ -12,7 +12,6 @@
 import { GeoMath } from "../GeoMath.js";
 import { DisplayUnit } from "../DisplayUnit.js";
 import { createZoneOverlay } from "./zones/index.js";
-import { rectsOverlap } from "./FleetLayer.js";
 
 // Hide the anchor visualization once its whole on-screen footprint (watch
 // zone or bow-to-anchor line, whichever is larger) shrinks below this many
@@ -24,6 +23,14 @@ import { rectsOverlap } from "./FleetLayer.js";
 // crosshair is exempt because a fixed-size drag control stays useful at any
 // zoom.
 const MIN_ONSCREEN_SIZE_PX = 48;
+
+// Minimum incursion, in px on both axes, between a line label's box and the
+// boat icon's box before the label hides. Both boxes are post-transform AABBs
+// of rotated content — the hull image's corners are transparent pixels and a
+// rotated label's box is mostly empty space — so touching corners rarely
+// means touching ink. Requiring a real two-axis overlap keeps labels visible
+// through corner grazes and shallow contact along the hull's edge.
+const LABEL_HIDE_MIN_OVERLAP_PX = 5;
 
 // DivIcon (not L.icon) so we can rotate the inner <img> via CSS transform
 // without clobbering the translate3d that Leaflet sets on the marker element.
@@ -298,9 +305,12 @@ export class AnchorOverlay {
 
   // The labels ride the line's midpoint, which lands on the hull whenever the
   // boat hangs close over its anchor — hide whichever label would overlap the
-  // boat icon rather than paint text across it. Rect-vs-rect like FleetLayer's
-  // name-label collisions: both getBoundingClientRects are post-transform, so
-  // the label's reading rotation and the hull's heading are accounted for.
+  // boat icon rather than paint text across it. Rect-vs-rect on
+  // getBoundingClientRects (post-transform, so the label's reading rotation
+  // and the hull's heading are accounted for), but unlike FleetLayer's
+  // any-touch name-label test, a label only hides once the boxes interpenetrate
+  // by LABEL_HIDE_MIN_OVERLAP_PX on both axes — see that constant for why
+  // merely touching boxes rarely means touching ink.
   _refreshLabelCollisions() {
     const boatIcon = this._getBoatIcon ? this._getBoatIcon() : null;
     if (!boatIcon)
@@ -310,9 +320,15 @@ export class AnchorOverlay {
       const label = marker.getElement()?.firstChild;
       if (!label)
         continue;
+      const rect = label.getBoundingClientRect();
+      const overlapX =
+        Math.min(rect.right, boatRect.right) - Math.max(rect.left, boatRect.left);
+      const overlapY =
+        Math.min(rect.bottom, boatRect.bottom) - Math.max(rect.top, boatRect.top);
       label.classList.toggle(
         "label-collision-hidden",
-        rectsOverlap(label.getBoundingClientRect(), boatRect),
+        overlapX >= LABEL_HIDE_MIN_OVERLAP_PX &&
+          overlapY >= LABEL_HIDE_MIN_OVERLAP_PX,
       );
     }
   }

@@ -1150,9 +1150,8 @@ export class FleetLayer {
 
 // Axis-aligned overlap test for two label boxes (viewport-space DOMRects),
 // each grown by LABEL_COLLISION_PADDING so kept labels keep a small gap rather
-// than merely not touching. Exported for AnchorOverlay, which runs the same
-// test between its line labels and the own-boat icon.
-export function rectsOverlap(a, b) {
+// than merely not touching.
+function rectsOverlap(a, b) {
   const gap = LABEL_COLLISION_PADDING;
   return (
     a.left - gap < b.right + gap &&
