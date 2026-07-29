@@ -82,6 +82,17 @@
         ) {
           theme = "light";
         }
+        // Tag iPads so style.css can restyle the attribution footer around
+        // the letterbox band iPadOS paints below standalone web apps (see the
+        // display-mode:standalone block in style.css). iPadOS 13+ reports
+        // itself as macOS; the touch-point count tells them apart. Theme.js
+        // preserves this class across theme toggles.
+        if (
+          /iPad/.test(navigator.userAgent) ||
+          (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform))
+        ) {
+          theme += " ipados";
+        }
         document.documentElement.className = theme;
       })();
     </script>

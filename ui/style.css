@@ -1615,3 +1615,72 @@ table.vesselData td:nth-child(3) {
 .boat-name-label.boat-name-label-own {
   cursor: default;
 }
+
+/* iOS 26 home-screen (standalone) viewport bugs. Two distinct failure modes,
+   both leaving bottom-anchored UI wrong:
+   - iPhone: 100% on a fixed container can fall short of the screen (bare page
+     background showed below the attribution) while 100vh overshoots past it —
+     no CSS length reliably equals the true screen height. So let the map
+     backdrop overshoot (only map tiles render in the overhang) and re-anchor
+     the bottom-edge UI to the layout viewport with position: fixed, whose
+     base bottom/left/right offsets then resolve against the viewport instead
+     of the overshooting container.
+   - iPadOS windowed web apps: content is hard-clipped at the layout viewport
+     and iOS paints the leftover band with the page background color. Nothing
+     can render there, so recolor it to read as part of the attribution footer
+     instead of a stray grey block (html.dark's near-black already blends).
+   Where standalone viewports are computed correctly (iOS 26.1+, Android) the
+   viewport and the container coincide and all of this is geometrically a
+   no-op. Deliberately not applied in-browser (display-mode: browser), where
+   the shorter layout viewport is real and 100vh would spill past the visible
+   page.
+
+   MUST STAY AT THE END OF THIS FILE: the base #mapAttribution rule earlier in
+   the file has equal specificity, so this block only wins the cascade by
+   coming after it. (#map .leaflet-bottom out-specifies leaflet.css's
+   .leaflet-bottom regardless of stylesheet order, which varies between dev
+   and the built bundle.) */
+@media (display-mode: standalone) {
+  #map_container {
+    height: 100vh;
+  }
+
+  #mapAttribution,
+  #map .leaflet-bottom {
+    position: fixed;
+  }
+
+  html {
+    background-color: #ffffff;
+  }
+
+  /* iPadOS windowed web apps hard-clip content at the layout viewport (see
+     above), so the recolored band below the attribution can't be removed. A
+     translucent strip over map tiles reads darker than that solid band, so on
+     iPads make the strip opaque in the band's exact colors — strip and band
+     merge into one uniform footer. html.ipados is set by the theme inline
+     script in index.html. The dark value matches html.dark's page background,
+     which still wins over the html rule above (higher specificity). */
+  html.ipados #mapAttribution {
+    background: #ffffff;
+  }
+
+  html.ipados.dark #mapAttribution {
+    background: #1a1d21;
+  }
+
+  /* .modalBackdrop keeps its inset-0 box (a 100vh backdrop would re-center
+     dialogs into the overshoot and let .modalDialog's 100%-based max-height
+     run past the visible bottom); the dim is instead extended over the
+     overhang by this strip hanging below the backdrop. Wherever the viewport
+     is computed correctly, it lies entirely off-screen. */
+  .modalBackdrop::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 25vh;
+    background-color: var(--backdrop);
+  }
+}
