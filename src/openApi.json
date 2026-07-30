@@ -177,11 +177,6 @@
             "readOnly": true,
             "description": "Derived (not stored): whether a custom own-boat icon has been uploaded via PUT /icon. The UI uses it to decide whether to render the custom icon and how to seed the settings preview."
           },
-          "selfId": {
-            "type": "string",
-            "readOnly": true,
-            "description": "Derived (not stored): the server's own vessel id, so the UI can pick its entry out of the bulk /vessels payload."
-          },
           "version": {
             "type": "string",
             "readOnly": true,

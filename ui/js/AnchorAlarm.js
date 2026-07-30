@@ -287,12 +287,12 @@ class AnchorAlarm {
     if (!this.showAnchorControls)
       this.toolbar.hide();
 
-    // Open the websocket now, in parallel with the REST startup chain, so
-    // live self data (position, heading, wind) isn't gated behind the bulk
-    // /vessels fetch. The connect handler subscribes vessels.self right away;
-    // deltas accumulate in AppState until the initial load builds the map and
-    // starts the render timer. The vessels.* fleet subscription still waits
-    // for the /vessels seed (see setupWebsockets).
+    // Open the websocket now, in parallel with the REST startup chain, so live
+    // self data (position, heading, wind) isn't gated behind the config and
+    // /vessels/self fetches. The connect handler subscribes vessels.self right
+    // away; deltas accumulate in AppState until the initial load builds the map
+    // and starts the render timer. The vessels.* fleet subscription waits for
+    // the FleetLayer to exist (see setupWebsockets).
     this.setupWebsockets();
 
     this.loadInitialData();
@@ -325,16 +325,14 @@ class AnchorAlarm {
     handler.enable();
   }
 
-  // === Initial load (one /vessels call, broken into phases) ========================
+  // === Initial load (one /vessels/self call, broken into phases) ==================
 
   loadInitialData() {
-    // Config first: it carries selfId, which tells us which entry in the bulk
-    // /vessels payload is our own. /vessels is a superset of /vessels/self, so
-    // that one fetch covers both our own tree and the fleet's — fetching
-    // /vessels/self separately would transfer the (potentially large) own tree
-    // twice. Anonymous sessions can't read ui-config (loadConfig fell back to
-    // the defaults, which carry no selfId), so they learn the identity from
-    // the tiny public /self endpoint instead.
+    // Config first: the scope ratios, glitch limit and control size it carries
+    // have to be in place before the state extraction and buildMap below. Our
+    // own vessel tree then comes from /vessels/self — every other vessel is
+    // streamed over the vessels.* subscription, so there's nothing left in the
+    // bulk /vessels tree that we need.
     this.loadConfig()
       .then(async () => {
         console.log("UI Config:", this.config);
@@ -352,13 +350,10 @@ class AnchorAlarm {
         // Before buildMap so the controls are born at the configured size.
         this.setLargeControls(this.config.enableLargeControls);
 
-        const selfId = this.config.selfId ?? (await this.signalK.fetchSelfId());
-        const vessels = await this.signalK.fetchAllVessels();
+        const vessel = await this.signalK.fetchSelfVessel();
         this.statusBar.clear("initial-load");
 
-        const selfKey = String(selfId ?? "").replace(/^vessels\./, "");
-        this.selfContext = this.normalizeContext(selfKey);
-        this.state.extractAll(vessels[selfKey] ?? {});
+        this.state.extractAll(vessel ?? {});
         this.state.calculate();
         console.log("App State:", this.state);
 
@@ -368,7 +363,7 @@ class AnchorAlarm {
           return;
         }
 
-        // Everything below runs only once /vessels has resolved: buildMap
+        // Everything below runs only once /vessels/self has resolved: buildMap
         // constructs the FleetLayer (whose constructor starts the heavy
         // /tracks fetch), and initAnchorageHistory probes the heavy History
         // API — deliberately kept off the critical path of the bulk load.

@@ -219,7 +219,7 @@ export class AppState {
   }
 
   // Pull one path's envelope out of a snapshot tree, merged against the
-  // envelope we already hold. The websocket opens before the /vessels
+  // envelope we already hold. The websocket opens before the /vessels/self
   // snapshot resolves, so deltas may already carry a fresher value than the
   // snapshot — the newer envelope wins (see _newest), and a missing or stale
   // snapshot value keeps the current one.
@@ -415,9 +415,10 @@ export class AppState {
   // Meta arrives on the stream in its own updates (an `updates[].meta` array,
   // no `values`) — once per path per connection, because SignalKStream opens
   // the socket with sendMeta=all. Without this, an envelope created purely
-  // from deltas (its source was offline when the /vessels snapshot loaded, or
-  // the snapshot value was dropped as stale) never gets meta.displayUnits,
-  // DisplayUnit.formatDelta returns "", and the panel fields render blank.
+  // from deltas (its source was offline when the /vessels/self snapshot
+  // loaded, or the snapshot value was dropped as stale) never gets
+  // meta.displayUnits, DisplayUnit.formatDelta returns "", and the panel
+  // fields render blank.
   // Stash each path's meta for envelopes yet to be born (see apply in
   // handleDelta) and refresh any envelope we already hold so a units-
   // preference change propagates without waiting for the next value delta.

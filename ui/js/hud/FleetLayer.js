@@ -94,9 +94,9 @@ export class FleetLayer {
     this.ownAntenna = undefined;
     this.ownBoatConfig = undefined;
     this.fleetTimer = null;
-    // mmsi -> vessel tree, shaped like a /vessels payload entry and built from
-    // deltas + a one-shot /vessels seed. Each entry carries a numeric _lastSeen
-    // for TTL pruning.
+    // mmsi -> vessel tree, shaped like a /vessels payload entry but built
+    // entirely from the vessels.* delta stream. Each entry carries a numeric
+    // _lastSeen for TTL pruning.
     this.vesselCache = {};
     this.filterRadius = filterRadius ?? DEFAULT_FILTER_RADIUS;
     this.selectedMmsi = null; // mmsi of the vessel whose popup is open, or null
@@ -319,7 +319,7 @@ export class FleetLayer {
   }
 
   loadInitialData() {
-    // Runs at construction, which the host sequences after the bulk /vessels
+    // Runs at construction, which the host sequences after the /vessels/self
     // fetch has succeeded — the heavy /tracks request must not compete with
     // the initial load (see AnchorAlarm.loadInitialData).
     this.fetchAndLoadTracks();
@@ -695,7 +695,7 @@ export class FleetLayer {
     this.trackPointCounts[mmsi] = simplified.length;
   }
 
-  // Reconcile other-vessel markers and tracks against a fresh /vessels payload.
+  // Reconcile other-vessel markers and tracks against the delta-built cache.
   syncOtherVessels(vessels, { ownLatLng, filterRadius, twa }) {
     const detected = [];
 

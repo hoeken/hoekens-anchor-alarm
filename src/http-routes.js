@@ -224,16 +224,12 @@ export function register(app, plugin, router) {
     // - glitchFilterSpeed is boat-level plugin config (it drives the server's
     //   own-position filter) but the UI still reads it to filter glitches out
     //   of displayed fleet tracks.
-    // - selfId (e.g. "urn:mrn:imo:mmsi:123456789") lets the UI pick its own
-    //   entry out of the bulk /vessels payload instead of fetching the
-    //   (potentially large) /vessels/self tree separately.
     // - version saves a /plugins/<id> round trip for the settings footer.
     const store = plugin.uiConfigStore;
     res.json({
       ...store.resolve(store.identityFor(req)),
       glitchFilterSpeed: plugin.configuration?.glitchFilterSpeed ?? 0,
       hasCustomIcon: iconPath(app) !== null,
-      selfId: app.selfId,
       version: packageJson.version,
     });
   });
