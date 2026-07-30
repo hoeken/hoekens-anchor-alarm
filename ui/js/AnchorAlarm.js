@@ -169,14 +169,9 @@ class AnchorAlarm {
     this.client.on("delta", (delta) => this.handleDeltas(delta));
     this.client.on("connect", () => {
       this.state.websocketSubscribe(this.client);
-      // The server drops every subscription when the socket closes, so replay
-      // the per-vessel context subscriptions to keep static identity streaming
-      // after a reconnect. Before the seed below so the fresh subscriptions it
-      // sends for newly-seeded vessels aren't immediately re-sent.
-      this.fleetLayer?.resubscribeVessels();
-      // Gate the vessels.* subscription on a fresh fleet seed: deltas from
-      // vessels the cache doesn't hold each fire a per-vessel static fetch,
-      // so an unseeded cache means one redundant request per boat in sight.
+      // Gate the vessels.* subscription on a fresh fleet seed so known
+      // vessels re-enter the cache with their static identity (and seeded
+      // glitch filters) before deltas re-discover them as blank targets.
       // The first connection (and any reconnect while the initial load is
       // still in flight — fleetLayer doesn't exist until it finishes) waits
       // for the initial-load snapshot to seed the cache; later reconnects
@@ -401,9 +396,7 @@ class AnchorAlarm {
         // API — deliberately kept off the critical path of the bulk load.
         // The websocket has been open since init(); seeding the fleet cache
         // from the snapshot we already hold and resolving _initialSeed
-        // releases its vessels.* subscription (see setupWebsockets). Vessel
-        // subscriptions the seed sends before the socket finishes opening are
-        // replayed by the connect handler's resubscribeVessels.
+        // releases its vessels.* subscription (see setupWebsockets).
         this.buildMap();
         this.fleetLayer.seedFleet(vessels);
         this._resolveInitialSeed();

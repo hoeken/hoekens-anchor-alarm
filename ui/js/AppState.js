@@ -145,14 +145,15 @@ export class AppState {
     );
   }
 
-  // Fleet discovery + live motion for every *other* vessel, keyed by each
-  // message's `context`. This shared vessels.* subscription only carries the
-  // dynamic nav paths that place a boat on the map; it deliberately omits the
-  // static identity/geometry paths because SignalK won't deliver `name` except
-  // under a `*` path, and there's no "other vessels" context to target one at.
-  // FleetLayer instead subscribes to each newly-sighted vessel's own context
-  // with a `*` path (FleetLayer.subscribeVessel) so its name/type/dimensions
-  // stream in as the (infrequent) AIS static reports arrive.
+  // Fleet discovery + live state for every *other* vessel, keyed by each
+  // message's `context`. One shared vessels.* subscription carries both the
+  // dynamic nav paths that place a boat on the map and the static
+  // identity/geometry paths BoatConfig renders (name, type, dimensions,
+  // antenna offsets). Root attributes (name, mmsi) arrive as empty-path
+  // deltas — see FleetLayer.ingestVesselDelta. Requires a server that
+  // resolves explicit paths under a wildcard context (unreleased as of this
+  // branch); older servers deliver only the navigation.* paths here, so
+  // vessels render with default name/geometry.
   websocketSubscribeFleet(client) {
     client.subscribe({
       context: "vessels.*",
@@ -161,6 +162,15 @@ export class AppState {
         { path: "navigation.headingTrue", policy: "instant" },
         { path: "navigation.courseOverGroundTrue", policy: "instant" },
         { path: "navigation.speedOverGround", policy: "instant" },
+        { path: "name", policy: "instant" },
+        { path: "mmsi", policy: "instant" },
+        { path: "design.length", policy: "instant" },
+        { path: "design.beam", policy: "instant" },
+        { path: "design.aisShipType", policy: "instant" },
+        { path: "sensors.gps.fromBow", policy: "instant" },
+        { path: "sensors.gps.fromCenter", policy: "instant" },
+        { path: "sensors.ais.fromBow", policy: "instant" },
+        { path: "sensors.ais.fromCenter", policy: "instant" },
       ],
     });
   }
