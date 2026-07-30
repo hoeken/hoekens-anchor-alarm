@@ -1336,6 +1336,32 @@ html.largeControls .leaflet-touch .leaflet-control-layers-toggle {
   background-repeat: no-repeat !important;
 }
 
+/* "Base Layer" / "Charts + Overlays" section headers inside the expanded
+   layer control (added by hud/LayersControl.js). Bold text with a rule
+   filling the rest of the row, vertically centered on the text via flex;
+   margin-left on the ::after instead of flex gap, which the Chromium-69-era
+   MFD browsers lack. The right bleed (-10px) runs the rule to the control's
+   edge, matching how leaflet.css bleeds its own separator. */
+.leaflet-control-layers-section {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  margin: 4px -10px 2px 0;
+}
+
+.leaflet-control-layers-section::after {
+  content: "";
+  flex: 1 1 0;
+  margin-left: 6px;
+  border-top: 1px solid #ddd; /* leaflet.css's separator color */
+}
+
+/* In dark mode the #ddd rule would glow against the dark panel; dim it to the
+   themed divider color. */
+html.dark .leaflet-control-layers-section::after {
+  border-top-color: var(--divider);
+}
+
 .zoneHandle {
   background: var(--zone-handle-bg);
   border: 3px solid var(--zone-handle-border);

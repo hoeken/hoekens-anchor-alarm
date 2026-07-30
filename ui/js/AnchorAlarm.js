@@ -20,6 +20,7 @@ import { AnchorOverlay } from "./hud/AnchorOverlay.js";
 import { AnchorController } from "./AnchorController.js";
 import { ControlToolbar } from "./hud/ControlToolbar.js";
 import { AnchorageHistoryControl } from "./hud/AnchorageHistoryControl.js";
+import { LayersControl } from "./hud/LayersControl.js";
 import { ConfigPanel } from "./hud/ConfigPanel.js";
 import { ThemeControl } from "./hud/ThemeControl.js";
 import { Modal } from "./hud/Modal.js";
@@ -721,9 +722,13 @@ class AnchorAlarm {
       this.map.addControl(this.configPanel);
     }
 
-    this.layersControl = L.control
-      .layers(this.baseMaps, {}, { position: "topleft" })
-      .addTo(this.map);
+    // LayersControl (not the stock L.control.layers): adds the Base Layer/
+    // Charts + Overlays section headers and keeps the overlays sorted.
+    this.layersControl = new LayersControl(
+      this.baseMaps,
+      {},
+      { position: "topleft" },
+    ).addTo(this.map);
     // Seascape only when asked for: the MapLibre stack behind it is ~1 MB off
     // this same single-threaded server, so it must stay out of the startup
     // request burst unless the user enabled it (see addSeascapeLayer).
