@@ -137,16 +137,6 @@ class AnchorAlarm {
     // delta to either own-boat state or the fleet layer once we subscribe to
     // both vessels.self and vessels.*.
     this.selfContext = null;
-    // Bumped on every websocket (re)connect so a fleet seed still in flight
-    // when its socket died can't subscribe on the next connection's behalf.
-    this._connectSeq = 0;
-    // Resolved once the initial-load /vessels snapshot has seeded the fleet
-    // cache. The websocket opens in parallel with that fetch, so the first
-    // connection gates its vessels.* subscription on this instead of the
-    // socket-after-seed ordering the old serial startup guaranteed.
-    this._initialSeed = new Promise((resolve) => {
-      this._resolveInitialSeed = resolve;
-    });
   }
 
   static startup() {
@@ -169,26 +159,14 @@ class AnchorAlarm {
     this.client.on("delta", (delta) => this.handleDeltas(delta));
     this.client.on("connect", () => {
       this.state.websocketSubscribe(this.client);
-      // Gate the vessels.* subscription on a fresh fleet seed so known
-      // vessels re-enter the cache with their static identity (and seeded
-      // glitch filters) before deltas re-discover them as blank targets.
-      // The first connection (and any reconnect while the initial load is
-      // still in flight — fleetLayer doesn't exist until it finishes) waits
-      // for the initial-load snapshot to seed the cache; later reconnects
-      // re-fetch /vessels because the prune timer keeps evicting while the
-      // socket is down. The seed settles even on failure, so a bad snapshot
-      // delays fleet updates, never blocks them; the seq guard keeps a seed
-      // whose socket died mid-fetch from subscribing early on the next
-      // connection's fresh seed.
-      const seq = ++this._connectSeq;
-      const seeded =
-        seq === 1 || !this.fleetLayer
-          ? this._initialSeed
-          : this.fleetLayer.seedFleet();
-      seeded.then(() => {
-        if (seq === this._connectSeq)
-          this.state.websocketSubscribeFleet(this.client);
-      });
+      // The server replays every matching cached value the moment we
+      // subscribe (its bootstrap snapshot), and handleDeltas drops fleet
+      // deltas until the FleetLayer exists — so the vessels.* subscription
+      // waits for it. First connection: loadInitialData subscribes right
+      // after buildMap. Reconnects: the layer is already there, subscribe
+      // now and the replay repopulates the anchorage in one burst.
+      if (this.fleetLayer)
+        this.state.websocketSubscribeFleet(this.client);
     });
     this.client.connect();
   }
@@ -394,12 +372,13 @@ class AnchorAlarm {
         // constructs the FleetLayer (whose constructor starts the heavy
         // /tracks fetch), and initAnchorageHistory probes the heavy History
         // API — deliberately kept off the critical path of the bulk load.
-        // The websocket has been open since init(); seeding the fleet cache
-        // from the snapshot we already hold and resolving _initialSeed
-        // releases its vessels.* subscription (see setupWebsockets).
         this.buildMap();
-        this.fleetLayer.seedFleet(vessels);
-        this._resolveInitialSeed();
+        // With the FleetLayer now able to receive them, subscribe vessels.*:
+        // the server's bootstrap snapshot replays the whole known fleet
+        // (positions + static identity) in one delta burst at subscribe
+        // time. If the socket isn't open yet this frame is dropped and the
+        // connect handler sends it instead (fleetLayer exists from here on).
+        this.state.websocketSubscribeFleet(this.client);
         this.startUpdateTimer();
 
         this.anchorController.estimateAnchorPosition();

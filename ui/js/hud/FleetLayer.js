@@ -4,17 +4,15 @@
 // other vessels. Out-of-range AIS vessels are removed on each sync; the own
 // boat is never auto-removed (its mmsi key never appears in the AIS list).
 //
-// The other-vessel feed seeds a per-vessel cache from /vessels, then keeps it
-// live from the shared vessels.* delta subscription (ingestVesselDelta), which
-// carries the static identity paths — name, ship type, dimensions — alongside
-// the dynamic nav paths (see AppState.websocketSubscribeFleet). The host seeds
-// the cache from a bulk /vessels snapshot before each vessels.* subscription —
-// the initial load's own fetch first, a fresh one on every reconnect (see
-// AnchorAlarm.setupWebsockets) — so already-known vessels have their identity
-// in hand before their markers render. A slow timer
-// prunes vessels that have gone silent and re-renders the cache through
-// syncOtherVessels, which reconciles markers/tracks against a
-// { key -> vessel-tree } dict.
+// The other-vessel feed is the shared vessels.* delta subscription alone
+// (ingestVesselDelta), which carries the static identity paths — name, ship
+// type, dimensions — alongside the dynamic nav paths (see
+// AppState.websocketSubscribeFleet). There is no REST snapshot seeding: the
+// server replays every matching cached value at subscribe time, so the known
+// fleet arrives in one delta burst on each (re)subscription and live deltas
+// take over from there. A slow timer prunes vessels that have gone silent
+// and re-renders the cache through syncOtherVessels, which reconciles
+// markers/tracks against a { key -> vessel-tree } dict.
 
 import simplify from "simplify-js";
 import { bearing, distance, point, radiansToDegrees } from "@turf/turf";
@@ -326,10 +324,9 @@ export class FleetLayer {
     // the initial load (see AnchorAlarm.loadInitialData).
     this.fetchAndLoadTracks();
 
-    // The vessel cache seeds via seedFleet — from the initial-load /vessels
-    // snapshot right after construction, and again on every websocket
-    // reconnect (see AnchorAlarm.setupWebsockets); deltas then keep it live.
-    // The timer prunes silent vessels and re-renders from the cache.
+    // The vessel cache fills purely from the vessels.* delta stream
+    // (ingestVesselDelta). The timer prunes silent vessels and re-renders
+    // from the cache.
     this.fleetTimer = setInterval(
       () => this.renderFromCache(),
       CACHE_SYNC_INTERVAL_MS,
@@ -409,59 +406,13 @@ export class FleetLayer {
     this.renderFromCache();
   }
 
-  // Seed the vessel cache from a bulk /vessels snapshot so BoatConfig has
-  // real names/dimensions for already-known targets before the delta stream
-  // takes over keeping them (and newly-sighted vessels) current. On initial
-  // load the host passes the snapshot it already fetched for own-boat state;
-  // on reconnects it calls with no argument and a fresh one is fetched.
-  // Either way the vessels.* subscription is gated on the returned promise,
-  // which settles once the cache is seeded (resolving even on failure —
-  // errors go to the status bar).
-  seedFleet(vessels) {
-    if (vessels) {
-      this.applyFleetSnapshot(vessels);
-      return Promise.resolve();
-    }
-    return this.app.signalK
-      .fetchAllVessels()
-      .then((fetched) => {
-        this.app.statusBar.clear("fleet-poll");
-        this.applyFleetSnapshot(fetched);
-      })
-      .catch((error) => this.reportFleetError(error));
-  }
-
-  // Fold a /vessels payload into the cache (own vessel excluded) and render.
-  applyFleetSnapshot(vessels) {
-    const now = Date.now();
-    for (const key in vessels) {
-      const vessel = vessels[key];
-      if (!vessel || vessel.mmsi == this.ownMmsi)
-        continue;
-      const mmsi = vessel.mmsi ?? this.mmsiFromContext(key);
-      if (!mmsi)
-        continue;
-      vessel._lastSeen = now;
-      this.vesselCache[String(mmsi)] = vessel;
-      // Seed the vessel's glitch filter from the snapshot fix so its first
-      // live delta is judged against it rather than accepted blind. The
-      // envelope's own timestamp keeps the implied speed honest when the
-      // snapshot is minutes old.
-      const fix = vessel.navigation?.position;
-      const fixTime = fix ? Date.parse(fix.timestamp) : NaN;
-      if (fix?.value && Number.isFinite(fixTime))
-        this.glitchFilterFor(mmsi).check(fix.value, fixTime);
-    }
-    this.renderFromCache();
-  }
-
   // Fold one context's deltas into the cache. A vessel seen for the first time
   // is created from its context mmsi; its static identity — name, design,
-  // sensors — streams in over the same vessels.* subscription as the server
-  // learns it. Deltas only flow once the current connection's /vessels seed
-  // has landed (see AnchorAlarm.setupWebsockets), so this discovery path is
-  // reserved for vessels genuinely first heard over the stream — the server
-  // knows no more about them than the deltas have already carried.
+  // sensors — streams in over the same vessels.* subscription. The delta
+  // stream is the sole source: the subscribe-time cache replay delivers
+  // already-known vessels (original timestamps intact, so the glitch filter
+  // and TTL judge them honestly), and genuinely new ones appear as they
+  // first transmit.
   ingestVesselDelta(context, timestamp, values) {
     const mmsi = this.mmsiFromContext(context);
     if (!mmsi || mmsi == this.ownMmsi)
@@ -525,14 +476,6 @@ export class FleetLayer {
   mmsiFromContext(context) {
     const match = String(context).match(/urn:mrn:imo:mmsi:(\d+)/);
     return match ? match[1] : null;
-  }
-
-  reportFleetError(error) {
-    const detail = error.statusText || error.message || "unknown error";
-    const status = error.status ? `${error.status} ` : "";
-    const msg = `Fleet update failed: ${status}${detail}`;
-    this.app.statusBar.set("fleet-poll", msg, "warning");
-    console.error(msg, error);
   }
 
   update(state) {
