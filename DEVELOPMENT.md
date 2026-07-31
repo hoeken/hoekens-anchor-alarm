@@ -13,6 +13,24 @@ This runs `vite build` (see [vite.config.js](vite.config.js)) and outputs to
 `public/`. The app icons are committed to git (see below), so the build no
 longer generates them and does not need the `sharp`/`png-to-ico` toolchain.
 
+### Brotli sidecars
+
+The build also writes a pre-compressed `.br` sidecar next to every text asset
+over 1 kB — HTML, JS, CSS, SVG, JSON, sourcemaps and the manifest — via
+[`vite-plugin-compression2`](https://github.com/nonzzz/vite-compression-plugin).
+Across the whole output that is roughly 8.4 MB of text down to 2.1 MB, with the
+single `index.html` (everything is inlined into it) going 772 kB → 185 kB.
+
+The originals are always kept, so a server that doesn't know about the sidecars
+serves the plain files exactly as before. A server that does can send the
+pre-compressed bytes straight from disk instead of compressing on every
+request — which is the point, since the usual host is a single-threaded
+Raspberry Pi where that CPU is better spent on boat data.
+
+Compression is Brotli only; gzip would double the number of files for a
+fallback none of the browsers we target need (even Chromium 69 on Navico MFDs
+supports `br`).
+
 ## Icons
 
 Every app and web icon is derived from a single master,

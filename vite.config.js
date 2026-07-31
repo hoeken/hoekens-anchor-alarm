@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
+import { compression } from "vite-plugin-compression2";
 import { transformSync } from "esbuild";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
@@ -97,6 +98,24 @@ export default defineConfig({
   plugins: [
     viteSingleFile({ removeViteModuleLoader: true }),
     inlineVendorAndFixSourcemap(),
+    // Emit a Brotli `.br` sidecar next to every text asset, so a server can
+    // send pre-compressed bytes instead of compressing on each request. That
+    // matters here: everything above collapses into one ~770 kB index.html,
+    // and it is typically served by a Signal K server on a single-threaded
+    // Raspberry Pi, where on-the-fly compression competes with the actual
+    // boat data. Originals are kept, so anything that doesn't understand the
+    // sidecars keeps working unchanged.
+    compression({
+      // Brotli only — gzip would be a second set of files for a fallback no
+      // browser we target still needs (Chromium 69 on Navico MFDs has `br`).
+      algorithms: ["brotliCompress"],
+      // The default list, plus the sourcemaps (`.map`, the single largest
+      // output at ~2.5 MB) and the PWA manifest.
+      include: /\.(html|xml|css|json|js|mjs|svg|map|webmanifest)$/,
+      // Under a kilobyte the extra request/encoding overhead outweighs the
+      // savings, and the sidecar is just clutter in the tarball.
+      threshold: 1024,
+    }),
   ],
   build: {
     outDir: "../public",
