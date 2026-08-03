@@ -29,10 +29,17 @@ export function createMockApp(overrides = {}) {
       tempDataDirs.add(dataDir);
       if (!exitHookInstalled) {
         exitHookInstalled = true;
-        // exit handlers must be synchronous; rmSync is.
+        // exit handlers must be synchronous; rmSync is. One undeletable dir
+        // must not strand the rest, so each removal stands alone — and a
+        // failure here should never fail an otherwise green run.
         process.on("exit", () => {
-          for (const dir of [...tempDataDirs])
-            removeTempDataDir(dir);
+          for (const dir of [...tempDataDirs]) {
+            try {
+              removeTempDataDir(dir);
+            } catch {
+              tempDataDirs.delete(dir);
+            }
+          }
         });
       }
     }
