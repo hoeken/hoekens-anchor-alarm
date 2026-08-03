@@ -2,6 +2,18 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 
+// Every temp dir handed out by getDataDirPath(), so none survive the run.
+// Tests that want the dir gone mid-run still call cleanupDataDir(); this is
+// the backstop for the ones that don't (and on some platforms os.tmpdir() is
+// a RAM-backed tmpfs, so leaked dirs cost memory until reboot).
+const tempDataDirs = new Set();
+let exitHookInstalled = false;
+
+function removeTempDataDir(dir) {
+  fs.rmSync(dir, { recursive: true, force: true });
+  tempDataDirs.delete(dir);
+}
+
 // A fake SignalK `app` for driving the plugin in tests. Every method the
 // plugin touches is a recorder; assertions read back from `calls` and the
 // delta helpers. getSelfPath reads a settable map so tests can stage a GPS
@@ -9,11 +21,21 @@ import path from "path";
 export function createMockApp(overrides = {}) {
   // Lazily-created per-app temp data dir, mirroring app.getDataDirPath() in the
   // real server. Only tests that touch it (e.g. the icon routes) pay for it;
-  // they should call cleanupDataDir() when done.
+  // whatever isn't cleaned up explicitly is swept on process exit.
   let dataDir = null;
   const getDataDirPath = () => {
-    if (!dataDir)
+    if (!dataDir) {
       dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "aa-plugin-"));
+      tempDataDirs.add(dataDir);
+      if (!exitHookInstalled) {
+        exitHookInstalled = true;
+        // exit handlers must be synchronous; rmSync is.
+        process.on("exit", () => {
+          for (const dir of [...tempDataDirs])
+            removeTempDataDir(dir);
+        });
+      }
+    }
     return dataDir;
   };
   const calls = {
@@ -74,7 +96,7 @@ export function createMockApp(overrides = {}) {
     dataDir: getDataDirPath,
     cleanupDataDir: () => {
       if (dataDir)
-        fs.rmSync(dataDir, { recursive: true, force: true });
+        removeTempDataDir(dataDir);
       dataDir = null;
     },
     // Forget everything recorded so far — handy between phases of one test.
