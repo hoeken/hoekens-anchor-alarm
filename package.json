@@ -66,6 +66,7 @@
     "@turf/turf": "^7.3.5",
     "d3": "^7.9.0",
     "mathjs": "^15.2.0",
+    "semver": "^7.8.5",
     "simplify-js": "^1.2.4"
   },
   "repository": {

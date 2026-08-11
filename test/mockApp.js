@@ -59,6 +59,9 @@ export function createMockApp(overrides = {}) {
   const selfPaths = new Map();
 
   const app = {
+    // A server new enough for start()'s minimum-version gate; override with
+    // `createMockApp({ config: { version: "2.30.0" } })` to test the refusal.
+    config: { version: "2.31.0" },
     setPluginStatus: (s) => calls.status.push(s),
     setPluginError: (s) => calls.pluginError.push(s),
     setProviderError: (e) => calls.providerError.push(e),

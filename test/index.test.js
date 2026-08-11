@@ -703,6 +703,47 @@ describe("start()", () => {
     plugin.start({ noPositionAlarmTime: 0, enableNormalNotifications: false });
     assert.equal(h.lastDelta("notifications.navigation.anchor"), null);
   });
+
+  test("refuses to start on a server older than the minimum", () => {
+    const h = createMockApp({ config: { version: "2.30.0" } });
+    const plugin = createPlugin(h.app);
+    plugin.start({ zone: droppedZone(), noPositionAlarmTime: 0, state: "emergency" });
+
+    assert.equal(plugin.started, false);
+    assert.equal(h.calls.pluginError.length, 1);
+    assert.match(h.calls.pluginError[0], /v2\.31\.0 or newer.*v2\.30\.0/);
+    assert.equal(h.calls.errors.length, 1);
+    // Nothing else ran: no deltas, no subscription, no action handlers.
+    assert.equal(h.deltas().length, 0);
+    assert.equal(h.calls.subscriptions.length, 0);
+    assert.equal(h.calls.actionHandlers.length, 0);
+    assert.equal(h.calls.status.length, 0);
+
+    // ...and the stop() that follows leaves the error status in place.
+    plugin.stop();
+    assert.equal(h.deltas().length, 0);
+    assert.equal(h.calls.status.length, 0);
+  });
+
+  test("starts on a newer server", () => {
+    const h = createMockApp({ config: { version: "2.42.1" } });
+    const plugin = createPlugin(h.app);
+    plugin.start({ noPositionAlarmTime: 0 });
+
+    assert.equal(plugin.started, true);
+    assert.equal(h.calls.pluginError.length, 0);
+    assert.equal(h.calls.status[0], "Started");
+  });
+
+  test("starts when the server version is unreadable", () => {
+    const h = createMockApp({ config: {} });
+    const plugin = createPlugin(h.app);
+    plugin.start({ noPositionAlarmTime: 0 });
+
+    assert.equal(plugin.started, true);
+    assert.equal(h.calls.pluginError.length, 0);
+    assert.equal(h.calls.status[0], "Started");
+  });
 });
 
 describe("stop()", () => {

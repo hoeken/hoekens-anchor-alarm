@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+import semver from "semver";
+
 export class Utils {
   static checkEngineState(app) {
     const propulsion = app.getSelfPath("propulsion");
@@ -47,5 +49,16 @@ export class Utils {
     const date = new Date(data.timestamp);
     const ageInSecs = (Date.now() - date) / 1000;
     return ageInSecs <= max_age;
+  }
+
+  // Whether `version` is at least `minimum`, or null when it isn't a version
+  // we can read at all (a nightly tag, a tarball path, undefined) so callers
+  // can tell "too old" from "can't tell". Coerced rather than compared
+  // strictly, so a prerelease like "2.31.0-beta.1" counts as 2.31.0.
+  static meetsMinimumVersion(version, minimum) {
+    const actual = semver.coerce(version);
+    if (!actual)
+      return null;
+    return semver.gte(actual, semver.coerce(minimum));
   }
 }
