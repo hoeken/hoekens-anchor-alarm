@@ -8,24 +8,33 @@ import { UiConfigStore } from "../src/ui-config.js";
 import { ValidationError, StateError } from "../src/errors.js";
 import { createMockApp } from "./mockApp.js";
 
-// Router stub that captures handlers by method + path so tests can invoke them.
+// Router stub that captures handlers by method + path so tests can invoke
+// them. `access(level)` mirrors the signalk-server plugin router: it returns a
+// chainable registrar whose routes land in the same handler map, with the
+// declared access level recorded in `permissions` ("admin" for routes
+// registered straight on the router, which is the server's default).
 function fakeRouter() {
   const handlers = { post: {}, get: {}, put: {}, delete: {} };
-  return {
-    handlers,
-    post: (path, fn) => {
-      handlers.post[path] = fn;
-    },
-    get: (path, fn) => {
-      handlers.get[path] = fn;
-    },
-    put: (path, fn) => {
-      handlers.put[path] = fn;
-    },
-    delete: (path, fn) => {
-      handlers.delete[path] = fn;
-    },
+  const permissions = {};
+  const record = (level) => {
+    const registrar = {};
+    for (const method of Object.keys(handlers)) {
+      registrar[method] = (path, fn) => {
+        handlers[method][path] = fn;
+        permissions[`${method.toUpperCase()} ${path}`] = level;
+        return registrar;
+      };
+    }
+    return registrar;
   };
+  return { handlers, permissions, ...record("admin"), access: record };
+}
+
+// A pre-2.31 server's router: a plain Express router with no access().
+function legacyFakeRouter() {
+  const router = fakeRouter();
+  delete router.access;
+  return router;
 }
 
 // Minimal Express-style response recorder. `set` records headers; `send`
@@ -93,6 +102,41 @@ describe("http-routes register()", () => {
     wire();
     assert.equal(typeof plugin.getOpenApi, "function");
     assert.ok(plugin.getOpenApi());
+  });
+
+  // Locks down who can reach each route: anchor actions and preference writes
+  // are readwrite, reads are readonly, and changing the boat icon is admin.
+  test("declares an access level for every route", () => {
+    wire();
+    assert.deepEqual(router.permissions, {
+      "POST /dropAnchor": "readwrite",
+      "POST /setZone": "readwrite",
+      "POST /raiseAnchor": "readwrite",
+      "GET /sessions": "readonly",
+      "DELETE /sessions/:id": "readwrite",
+      "GET /ui-config": "readonly",
+      "POST /ui-config": "readwrite",
+      "POST /ui-config/charts": "readwrite",
+      "GET /icon": "readonly",
+      "PUT /icon": "admin",
+      "DELETE /icon": "admin",
+    });
+  });
+
+  // A server without access() must still get every route — registration is
+  // what mounts the router, so throwing here would cost the plugin its own
+  // admin config screen. Every route lands admin-only, the pre-2.31 behavior.
+  test("registers every route on a server that has no access()", () => {
+    const legacy = legacyFakeRouter();
+    register(app, plugin, legacy);
+
+    wire(); // the 2.31 router, for the route list to compare against
+    assert.deepEqual(
+      Object.keys(legacy.permissions).sort(),
+      Object.keys(router.permissions).sort(),
+    );
+    for (const [route, level] of Object.entries(legacy.permissions))
+      assert.equal(level, "admin", `${route} should fall back to admin`);
   });
 
   describe("POST /dropAnchor", () => {

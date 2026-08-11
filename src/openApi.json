@@ -281,7 +281,7 @@
       "post": {
         "tags": ["anchor"],
         "summary": "Drop the anchor at a given position",
-        "description": "Records the supplied position as the anchor location and (optionally) sets the alarm radius. Starts the anchor watch.",
+        "description": "Records the supplied position as the anchor location and (optionally) sets the alarm radius. Starts the anchor watch. Requires readwrite permission.",
         "requestBody": {
           "required": true,
           "content": {
@@ -372,7 +372,7 @@
       "post": {
         "tags": ["anchor"],
         "summary": "Set the anchor watch zone",
-        "description": "Updates the watch zone (shape + parameters) for the currently dropped anchor. The anchor position is unchanged. Requires that an anchor has been dropped and that a GPS position is available.",
+        "description": "Updates the watch zone (shape + parameters) for the currently dropped anchor. The anchor position is unchanged. Requires that an anchor has been dropped and that a GPS position is available. Requires readwrite permission.",
         "requestBody": {
           "required": true,
           "content": {
@@ -450,7 +450,7 @@
       "post": {
         "tags": ["anchor"],
         "summary": "Raise the anchor",
-        "description": "Clears the anchor position and radius and stops the anchor watch.",
+        "description": "Clears the anchor position and radius and stops the anchor watch. Requires readwrite permission.",
         "responses": {
           "200": {
             "description": "Anchor raised successfully.",
@@ -475,7 +475,7 @@
       "get": {
         "tags": ["config"],
         "summary": "Get the requesting identity's UI preferences",
-        "description": "Returns the effective UI preferences for the requesting identity (username for user tokens, device clientId for device tokens, a shared anonymous bucket otherwise): schema defaults, overlaid with the boat-wide baseline, overlaid with the identity's own saved keys. Every preference key is always present.",
+        "description": "Returns the effective UI preferences for the requesting identity (username for user tokens, device clientId for device tokens, a shared anonymous bucket otherwise): schema defaults, overlaid with the boat-wide baseline, overlaid with the identity's own saved keys. Every preference key is always present. Requires readonly permission.",
         "responses": {
           "200": {
             "description": "Effective UI preferences returned successfully.",
@@ -495,7 +495,7 @@
       "post": {
         "tags": ["config"],
         "summary": "Update the requesting identity's UI preferences",
-        "description": "Persists UI-editable settings for the requesting identity. Only whitelisted properties are accepted; each is validated and merged into that identity's preference file — other identities are unaffected. Requires authentication.",
+        "description": "Persists UI-editable settings for the requesting identity. Only whitelisted properties are accepted; each is validated and merged into that identity's preference file — other identities are unaffected. Requires readwrite permission.",
         "requestBody": {
           "required": true,
           "content": {
@@ -534,7 +534,7 @@
       "post": {
         "tags": ["config"],
         "summary": "Set one chart overlay's show/hide preference",
-        "description": "Persists a single SignalK-provided chart overlay's enabled/disabled choice into the requesting identity's `charts` preference map, leaving the identity's other chart choices untouched. Charts are dynamic (only those covering the current view are listed), so the client names just the one chart it toggled instead of echoing the whole map. A chart with no entry defaults to enabled. Requires authentication.",
+        "description": "Persists a single SignalK-provided chart overlay's enabled/disabled choice into the requesting identity's `charts` preference map, leaving the identity's other chart choices untouched. Charts are dynamic (only those covering the current view are listed), so the client names just the one chart it toggled instead of echoing the whole map. A chart with no entry defaults to enabled. Requires readwrite permission.",
         "requestBody": {
           "required": true,
           "content": {
@@ -584,7 +584,7 @@
       "get": {
         "tags": ["icon"],
         "summary": "Get the custom own-boat icon",
-        "description": "Serves the uploaded own-boat icon image. Returns 404 when no custom icon has been set.",
+        "description": "Serves the uploaded own-boat icon image. Returns 404 when no custom icon has been set. Requires readonly permission.",
         "responses": {
           "200": {
             "description": "The custom icon image.",
@@ -635,7 +635,7 @@
       "put": {
         "tags": ["icon"],
         "summary": "Upload (or replace) the custom own-boat icon",
-        "description": "Stores the request body as the own-boat icon, overwriting any existing one. The body is the raw image bytes; the type is detected from the file's magic bytes (the Content-Type header is not trusted). Accepts jpg, png, gif, or webp up to 500 KB. Requires authentication.",
+        "description": "Stores the request body as the own-boat icon, overwriting any existing one. The body is the raw image bytes; the type is detected from the file's magic bytes (the Content-Type header is not trusted). Accepts jpg, png, gif, or webp up to 500 KB. Requires admin permission.",
         "requestBody": {
           "required": true,
           "content": {
@@ -729,7 +729,7 @@
       "delete": {
         "tags": ["icon"],
         "summary": "Delete the custom own-boat icon",
-        "description": "Removes any stored own-boat icon. Idempotent — succeeds whether or not an icon was set. The map reverts to the AIS ship-type icon. Requires authentication.",
+        "description": "Removes any stored own-boat icon. Idempotent — succeeds whether or not an icon was set. The map reverts to the AIS ship-type icon. Requires admin permission.",
         "responses": {
           "200": {
             "description": "Icon removed (or none was set).",
@@ -751,7 +751,7 @@
       "get": {
         "tags": ["sessions"],
         "summary": "List anchoring sessions",
-        "description": "Returns recorded anchoring sessions (one per drop..raise span), newest first. The open session (anchor still down) has no raisedAt. Sessions carry metadata only; the vessel track for a session is reconstructed by querying the server's History API (GET /signalk/v2/api/history/values) for navigation.position over the session's time window.",
+        "description": "Returns recorded anchoring sessions (one per drop..raise span), newest first. The open session (anchor still down) has no raisedAt. Sessions carry metadata only; the vessel track for a session is reconstructed by querying the server's History API (GET /signalk/v2/api/history/values) for navigation.position over the session's time window. Requires readonly permission.",
         "responses": {
           "200": {
             "description": "Session list returned successfully.",
@@ -778,6 +778,7 @@
       "delete": {
         "tags": ["sessions"],
         "summary": "Delete an anchoring session",
+        "description": "Removes one recorded anchoring session from the log. Returns 404 when no session has that id. Requires readwrite permission.",
         "parameters": [
           {
             "name": "id",

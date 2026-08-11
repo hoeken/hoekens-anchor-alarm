@@ -32,10 +32,19 @@ POST http://[signalk-server]:[port]/plugins/hoekens-anchor-alarm/dropAnchor
 
 ### Authentication
 
-Write operations (dropping/raising the anchor, changing the zone, saving
-settings, uploading/deleting the icon) require you to be authenticated with the
-Signal K server, which gates write methods on plugin routes. Read operations
-(`GET /ui-config`, `GET /icon`) are public.
+Every route declares the Signal K permission level it needs, so an ordinary
+crew login can work the anchor watch without admin rights:
+
+| Level       | Who                                               | Routes                                                                                                                         |
+| ----------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `readonly`  | any authenticated user (or device token)          | `GET /ui-config`, `GET /icon`, `GET /sessions`                                                                                 |
+| `readwrite` | users with write access — the anchor watch itself | `POST /dropAnchor`, `POST /setZone`, `POST /raiseAnchor`, `POST /ui-config`, `POST /ui-config/charts`, `DELETE /sessions/{id}` |
+| `admin`     | server admins only                                | `PUT /icon`, `DELETE /icon`                                                                                                    |
+
+A caller without the required level gets the server's own
+`401 {"error": "Permission Denied"}`, not the plugin's error envelope. When
+server security is disabled entirely, every route is reachable (and all callers
+share the anonymous preference bucket).
 
 If you are calling the API from a script rather than a logged-in browser
 session, authenticate with the server first and send the resulting token — see
@@ -181,8 +190,8 @@ dir (`ui-config/`).
 Returns the requesting identity's effective UI preferences: schema defaults,
 overlaid with the boat-wide baseline (migrated from pre-2.11 plugin config),
 overlaid with the identity's own saved keys. Every preference field is always
-present. Public — no auth required (anonymous callers get the defaults +
-boat baseline).
+present. `readonly` (with security disabled, callers share the anonymous
+bucket and get the defaults + boat baseline).
 
 Response fields:
 
@@ -210,7 +219,7 @@ Response fields:
 Persists UI-editable settings for the requesting identity. Only the writable
 keys above are accepted (read-only fields are ignored on write); each is
 validated and merged into that identity's preference file — other identities
-are unaffected. Requires authentication.
+are unaffected. `readwrite`.
 
 ```bash
 curl -X POST http://[signalk-server]:[port]/plugins/hoekens-anchor-alarm/ui-config \
@@ -237,12 +246,12 @@ the `Content-Type` header is not trusted.
 #### `GET /icon`
 
 Serves the uploaded icon with its detected image content type. Returns `404`
-(`"no custom boat icon set"`) when none is set. Public.
+(`"no custom boat icon set"`) when none is set. `readonly`.
 
 #### `PUT /icon`
 
 Uploads (or replaces) the icon. The body is the **raw image bytes**. Accepts
-`jpg`, `png`, `gif`, or `webp`, up to **500 KB**. Requires authentication.
+`jpg`, `png`, `gif`, or `webp`, up to **500 KB**. `admin` only.
 
 ```bash
 curl -X PUT http://[signalk-server]:[port]/plugins/hoekens-anchor-alarm/icon \
@@ -260,7 +269,7 @@ Errors specific to this route:
 #### `DELETE /icon`
 
 Removes any stored icon; the map reverts to the AIS ship-type icon. Idempotent —
-succeeds whether or not an icon was set. Requires authentication.
+succeeds whether or not an icon was set. `admin` only.
 
 ---
 
