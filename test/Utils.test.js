@@ -32,46 +32,6 @@ describe("Utils.isFresh()", () => {
   });
 });
 
-describe("Utils.meetsMinimumVersion()", () => {
-  test("true at or above the minimum", () => {
-    assert.equal(Utils.meetsMinimumVersion("2.31.0", "2.31.0"), true);
-    assert.equal(Utils.meetsMinimumVersion("2.31.1", "2.31.0"), true);
-    assert.equal(Utils.meetsMinimumVersion("2.42.0", "2.31.0"), true);
-    assert.equal(Utils.meetsMinimumVersion("3.0.0", "2.31.0"), true);
-    assert.equal(Utils.meetsMinimumVersion("v2.31.0", "2.31.0"), true);
-  });
-
-  test("false below the minimum", () => {
-    assert.equal(Utils.meetsMinimumVersion("2.30.0", "2.31.0"), false);
-    assert.equal(Utils.meetsMinimumVersion("2.9.0", "2.31.0"), false);
-    assert.equal(Utils.meetsMinimumVersion("1.99.99", "2.31.0"), false);
-    assert.equal(Utils.meetsMinimumVersion("2.31.0", "2.31.1"), false);
-  });
-
-  test("compares numerically, not lexically", () => {
-    assert.equal(Utils.meetsMinimumVersion("2.100.0", "2.31.0"), true);
-    assert.equal(Utils.meetsMinimumVersion("10.0.0", "9.0.0"), true);
-  });
-
-  test("ignores prerelease and build suffixes", () => {
-    assert.equal(Utils.meetsMinimumVersion("2.31.0-beta.1", "2.31.0"), true);
-    assert.equal(Utils.meetsMinimumVersion("2.30.0-beta.1", "2.31.0"), false);
-  });
-
-  test("treats missing components as zero", () => {
-    assert.equal(Utils.meetsMinimumVersion("2.31", "2.31.0"), true);
-    assert.equal(Utils.meetsMinimumVersion("2.31", "2.31.1"), false);
-    assert.equal(Utils.meetsMinimumVersion("3", "2.31.0"), true);
-  });
-
-  test("null when the version can't be parsed", () => {
-    assert.equal(Utils.meetsMinimumVersion(undefined, "2.31.0"), null);
-    assert.equal(Utils.meetsMinimumVersion("", "2.31.0"), null);
-    assert.equal(Utils.meetsMinimumVersion("master", "2.31.0"), null);
-    assert.equal(Utils.meetsMinimumVersion("file:signalk-server.tgz", "2.31.0"), null);
-  });
-});
-
 describe("Utils.checkEngineState()", () => {
   test("false when there is no propulsion data at all", () => {
     assert.equal(Utils.checkEngineState(appWith(undefined)), false);

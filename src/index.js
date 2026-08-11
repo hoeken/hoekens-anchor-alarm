@@ -14,6 +14,7 @@
  */
 
 import { degreesToRadians, distance, point, radiansToDegrees } from "@turf/turf";
+import semver from "semver";
 import { Watchdog } from "./watchdog.js";
 import { metas, buildSchema, applyDefaults, migrateConfig, readZoneConfig } from "./schema.js";
 import { watchZoneFromConfig } from "../shared/watch-zones/index.js";
@@ -29,8 +30,9 @@ import { ValidationError, StateError } from "./errors.js";
 
 // Oldest Signal K server this plugin supports. Older servers lack APIs it
 // depends on and would fail in confusing ways mid-watch, so start() refuses
-// to run rather than half-working.
-const MIN_SERVER_VERSION = "2.31.0";
+// to run rather than half-working. The "-0" floor admits the 2.31.0 betas,
+// which sort below 2.31.0 and would otherwise be turned away.
+const MIN_SERVER_VERSION = ">=2.31.0-0";
 
 export default function (app) {
   const plugin = {};
@@ -77,22 +79,12 @@ export default function (app) {
     // notifications — so an unsupported server gets one clear error instead of
     // a partly-running alarm.
     const serverVersion = app.config?.version;
-    const supported = Utils.meetsMinimumVersion(serverVersion, MIN_SERVER_VERSION);
-    if (supported === false) {
-      const message = `Requires Signal K server v${MIN_SERVER_VERSION} or newer — this server is v${serverVersion}. Plugin not started; please upgrade the server.`;
+    if (!semver.satisfies(serverVersion, MIN_SERVER_VERSION, { includePrerelease: true })) {
       plugin.started = false;
-      plugin.serverUnsupported = true;
+      const message = `Requires signalk-server ${MIN_SERVER_VERSION}, running ${serverVersion}`;
       app.error(message);
       app.setPluginError(message);
       return;
-    }
-    plugin.serverUnsupported = false;
-    if (supported === null) {
-      // Unrecognizable version string (custom or nightly build). We can't prove
-      // it's too old, so warn and carry on rather than block a working server.
-      app.debug(
-        `could not read the Signal K server version (${serverVersion}); assuming it is at least v${MIN_SERVER_VERSION}`,
-      );
     }
 
     plugin.started = true;
@@ -235,9 +227,9 @@ export default function (app) {
   };
 
   plugin.stop = function () {
-    // A start refused for an unsupported server touched nothing, so there is
-    // nothing to tear down — and clearing the error status would hide why.
-    if (plugin.serverUnsupported)
+    // A start that never ran touched nothing, so there is nothing to tear
+    // down — and clearing the error status would hide why.
+    if (!plugin.started)
       return;
 
     if (plugin.alarm_state != "normal") {

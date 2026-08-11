@@ -711,7 +711,7 @@ describe("start()", () => {
 
     assert.equal(plugin.started, false);
     assert.equal(h.calls.pluginError.length, 1);
-    assert.match(h.calls.pluginError[0], /v2\.31\.0 or newer.*v2\.30\.0/);
+    assert.match(h.calls.pluginError[0], /Requires signalk-server >=2\.31\.0-0, running 2\.30\.0/);
     assert.equal(h.calls.errors.length, 1);
     // Nothing else ran: no deltas, no subscription, no action handlers.
     assert.equal(h.deltas().length, 0);
@@ -725,24 +725,26 @@ describe("start()", () => {
     assert.equal(h.calls.status.length, 0);
   });
 
-  test("starts on a newer server", () => {
-    const h = createMockApp({ config: { version: "2.42.1" } });
-    const plugin = createPlugin(h.app);
-    plugin.start({ noPositionAlarmTime: 0 });
-
-    assert.equal(plugin.started, true);
-    assert.equal(h.calls.pluginError.length, 0);
-    assert.equal(h.calls.status[0], "Started");
-  });
-
-  test("starts when the server version is unreadable", () => {
+  test("refuses to start when the server version is unreadable", () => {
     const h = createMockApp({ config: {} });
     const plugin = createPlugin(h.app);
     plugin.start({ noPositionAlarmTime: 0 });
 
-    assert.equal(plugin.started, true);
-    assert.equal(h.calls.pluginError.length, 0);
-    assert.equal(h.calls.status[0], "Started");
+    assert.equal(plugin.started, false);
+    assert.equal(h.calls.pluginError.length, 1);
+    assert.equal(h.calls.status.length, 0);
+  });
+
+  test("starts on a supported server, including its prereleases", () => {
+    for (const version of ["2.31.0", "2.42.1", "2.31.0-beta.2", "2.32.0-beta.1"]) {
+      const h = createMockApp({ config: { version } });
+      const plugin = createPlugin(h.app);
+      plugin.start({ noPositionAlarmTime: 0 });
+
+      assert.equal(plugin.started, true, version);
+      assert.equal(h.calls.pluginError.length, 0, version);
+      assert.equal(h.calls.status[0], "Started", version);
+    }
   });
 });
 
