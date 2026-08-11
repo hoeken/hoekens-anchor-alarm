@@ -760,4 +760,68 @@ describe("stop()", () => {
     assert.equal(h.lastDelta("navigation.anchor.state"), "off");
     assert.equal(h.lastStatus(), "Stopped");
   });
+
+  test("clears a stale notification even when nothing was alarming", () => {
+    const { h, plugin } = setup();
+    plugin.start({ zone: droppedZone(), noPositionAlarmTime: 0, state: "emergency" });
+    h.reset();
+    plugin.stop();
+
+    assert.deepEqual(h.lastDelta("notifications.navigation.anchor"), {
+      state: "normal",
+      method: ["visual"],
+      message: "Stopped",
+    });
+  });
+
+  test("releases the watch and discards the watchdog", () => {
+    const { plugin } = setup();
+    plugin.start({ zone: droppedZone(), noPositionAlarmTime: 60, state: "emergency" });
+    assert.equal(plugin.onStop.length, 1);
+    assert.ok(plugin.rebroadcastTimer);
+    assert.ok(plugin.positionWatchdogTimer.timer);
+
+    plugin.stop();
+    assert.equal(plugin.onStop.length, 0);
+    assert.equal(plugin.rebroadcastTimer, null);
+    // Dropped entirely, so a restart with the watchdog disabled can't re-arm it.
+    assert.equal(plugin.positionWatchdogTimer, false);
+  });
+
+  test("tears down a start that threw partway through", () => {
+    const { h, plugin } = setup();
+    // reconcile() runs right after the watch is wired up, so a throw here
+    // leaves a live subscription, rebroadcast interval and watchdog behind.
+    plugin.sessionLog = {
+      reconcile: () => {
+        throw new Error("boom");
+      },
+    };
+    const err = plugin.start({ zone: droppedZone(), noPositionAlarmTime: 60, state: "emergency" });
+
+    assert.ok(err instanceof Error);
+    assert.equal(plugin.onStop.length, 1);
+    assert.ok(plugin.positionWatchdogTimer.timer);
+
+    h.reset();
+    plugin.stop();
+
+    assert.equal(plugin.onStop.length, 0);
+    assert.equal(plugin.rebroadcastTimer, null);
+    assert.equal(plugin.positionWatchdogTimer, false);
+    // The partial start did reach the tree, so stop() still clears it.
+    assert.equal(h.lastDelta("navigation.anchor.state"), "off");
+    assert.equal(h.lastStatus(), "Stopped");
+  });
+
+  test("is idempotent — a second stop is a no-op", () => {
+    const { h, plugin } = setup();
+    plugin.start({ zone: droppedZone(), noPositionAlarmTime: 60, state: "emergency" });
+    plugin.stop();
+    h.reset();
+    plugin.stop();
+
+    assert.equal(h.deltas().length, 0);
+    assert.equal(h.calls.status.length, 0);
+  });
 });

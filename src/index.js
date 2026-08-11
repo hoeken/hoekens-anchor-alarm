@@ -87,6 +87,9 @@ export default function (app) {
       return;
     }
 
+    // Past the gate: from here on start() writes to the tree and takes
+    // resources, so stop() has real work to do. Stays set if a later step
+    // throws — a half-finished start still owns whatever it managed to set up.
     plugin.started = true;
     app.setPluginStatus("Started");
 
@@ -217,7 +220,6 @@ export default function (app) {
         );
       }
     } catch (e) {
-      plugin.started = false;
       app.error("error: " + e);
       console.error(e.stack);
       return e;
@@ -227,28 +229,40 @@ export default function (app) {
   };
 
   plugin.stop = function () {
-    // A start that never ran touched nothing, so there is nothing to tear
-    // down — and clearing the error status would hide why.
-    if (!plugin.started)
-      return;
-
-    if (plugin.alarm_state != "normal") {
-      plugin.alarm_state = "normal";
-      plugin.updateAnchorAlarm(plugin.alarm_state, "Stopped", ["visual"]);
-    }
-
-    plugin.updateAnchorState({
-      isSet: false,
-    });
-
-    plugin.stopWatchingPosition();
+    // Release resources unconditionally. Each of these is a no-op when there
+    // is nothing to release, so they are safe after a refused start, and they
+    // must run after a start() that threw partway — that start can still own
+    // a live subscription, interval, watchdog or socket.
+    plugin.releaseWatchResources();
+    // Discard the watchdog itself (unlike stopWatchingPosition, which keeps it
+    // for the next drop) so the next start() rebuilds it from the config it is
+    // given, rather than re-arming one the operator may have since disabled.
+    plugin.positionWatchdogTimer = false;
 
     if (plugin.timeZeroSync) {
       plugin.timeZeroSync.stop();
       plugin.timeZeroSync = null;
     }
 
+    // Everything below writes to the Signal K tree or the plugin status, so it
+    // only applies when start() actually got that far. A start refused on the
+    // server version left the tree untouched, and overwriting its error with
+    // "Stopped" would hide why the plugin isn't running.
+    if (!plugin.started)
+      return;
+
+    // Sent unconditionally: the last notification may be a stale "Watching" or
+    // a live drag alarm, and either way the plugin is no longer watching.
+    plugin.alarm_state = "normal";
+    plugin.updateAnchorAlarm(plugin.alarm_state, "Stopped", ["visual"]);
+
+    plugin.updateAnchorState({
+      isSet: false,
+    });
+
     app.setPluginStatus("Stopped");
+
+    plugin.started = false;
   };
 
   // ============================================================
@@ -496,17 +510,26 @@ export default function (app) {
     }
   };
 
+  // Release everything a watch owns: the position subscription, the
+  // rebroadcast interval and the no-position watchdog. Pure teardown — it
+  // writes nothing to the tree and sets no status, so it is safe to call
+  // when no watch is running, twice in a row, or from a start() that threw
+  // before it finished wiring things up.
+  plugin.releaseWatchResources = function () {
+    if (plugin.positionWatchdogTimer)
+      plugin.positionWatchdogTimer.stop();
+
+    plugin.onStop.forEach((f) => f());
+    plugin.onStop = [];
+  };
+
   plugin.stopWatchingPosition = function () {
     plugin.alarm_state = "normal";
     plugin.updateAnchorAlarm(plugin.alarm_state, "Off", ["visual"]);
 
-    if (plugin.positionWatchdogTimer)
-      plugin.positionWatchdogTimer.stop();
-
     app.setPluginStatus("Off");
 
-    plugin.onStop.forEach((f) => f());
-    plugin.onStop = [];
+    plugin.releaseWatchResources();
   };
 
   // Bow-referenced anchor geometry, matching what the UI draws on the map.
