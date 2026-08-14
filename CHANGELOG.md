@@ -1,3 +1,29 @@
+# v2.13.0
+
+## Requires Signal K server v2.31
+
+This release relies on features added in Signal K server v2.31 and refuses to start on anything older. Stay on v2.12.0 if you can't upgrade your server yet.
+
+## Permissions
+
+- Crew with a read/write login can now drop and raise the anchor and save their own display preferences — no admin account needed
+- The UI now matches your actual access level, so a read-only login gets a view-only display instead of controls whose actions would fail
+- Replacing the boat icon still requires an admin login
+- The settings dialog opens for everyone. A read-only or logged-out session can rearrange the display for as long as the page is open; only saving is skipped, and the dialog says so
+- The settings dialog footer shows which account you're using, with a log out link (or a log in link when you can't save)
+
+## Improvements
+
+- Boat names and dimensions for nearby vessels now arrive over the live data stream, so the fleet fills in faster and with far less load on the server
+- Startup makes fewer requests before the map appears
+- The webapp now ships pre-compressed, so servers that support it stop re-compressing the app on every page load — a noticeable saving on a Raspberry Pi
+
+## Bug fixes
+
+- Disabling or restarting the plugin now shuts everything down properly, even if startup failed partway — no more leftover position watch, alarm watchdog, or TimeZero connections
+- Restarting the plugin no longer resurrects a watchdog you had disabled
+- Disabling the plugin now always reports "Stopped"
+
 # v2.12.0
 
 ## New features
