@@ -1,9 +1,12 @@
 // Leaflet map overlay control: a gear button that toggles a settings dialog
-// for the UI-editable plugin config. Only added to the map when the user is
-// logged in (see AnchorAlarm.buildMap). Each field change immediately saves
-// the whole form back through the onChange callback; the host is responsible
-// for persisting to the backend. Element IDs/classes are CSS hooks in
-// style.css; do not rename without updating the stylesheet.
+// for the UI-editable plugin config. Every setting here applies live to the
+// running UI, so the dialog is open to everyone — a read-only session can still
+// arrange the display to taste for as long as the page lives; it just can't
+// store the result (the host skips the auth-gated save, and the footer offers a
+// Log in link — see getIdentity below). Each field change immediately saves the
+// whole form back through the onChange callback; the host is responsible for
+// persisting to the backend. Element IDs/classes are CSS hooks in style.css; do
+// not rename without updating the stylesheet.
 
 // Form layout. Order is display order. Every setting here applies live — the
 // host's onChange pushes each change into the running UI, so none of them
@@ -11,6 +14,37 @@
 import { setTitle } from "../BrowserSupport.js";
 import { DisplayUnit } from "../DisplayUnit.js";
 import { Modal } from "./Modal.js";
+import { Identity } from "../Identity.js";
+
+// Shown in place of the save status for a session that can't store its
+// preferences: the settings still work, they just don't outlive the page.
+const SESSION_ONLY_NOTE =
+  "These settings apply to this browser until you reload — log in to save them.";
+
+// A device access token's identity is its clientId, and client apps generate
+// those as UUIDs — 36 characters that swamp the footer link. Matched so such a
+// name can be shortened to just its leading group, which is still distinctive
+// enough to tell two devices apart.
+const UUID_PATTERN =
+  /^([0-9a-f]{8})-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// How an identity's name reads in the UI. Display only — the server files
+// preferences under the full value regardless (see the plugin's UiConfigStore).
+function displayName(username) {
+  const uuid = UUID_PATTERN.exec(username);
+  return uuid ? uuid[1] : username;
+}
+
+// Footer auth link text. Naming the account matters on a shared boat: whose
+// login a tablet at the chart table is sitting on — and therefore whose
+// preferences the dialog is editing — is otherwise invisible.
+function authLinkLabel(identity) {
+  if (!identity.loggedIn)
+    return "Log in";
+  return identity.username
+    ? `${displayName(identity.username)} - Log out`
+    : "Log out";
+}
 
 const FIELDS = [
   { key: "enableTidePanel", label: "Show Tide Panel", type: "checkbox" },
@@ -81,10 +115,10 @@ export const ConfigPanel = L.Control.extend({
     getConfig: null, // () => current config object
     getVersion: null, // () => plugin version string, shown at dialog bottom
     onChange: null, // (newConfig) => void | Promise, resolves when persisted
-    // Auth. When logged out the gear opens the login modal directly; when
-    // logged in it opens the settings dialog, whose footer offers a Log out
-    // link (the dialog is never shown to anonymous users).
-    getLoggedIn: null, // () => boolean, checked on gear click
+    // Auth. The identity decides what the open dialog offers: whether changes
+    // are advertised as saved or session-only, whether the admin-only rows show,
+    // and whether the footer link logs in or out.
+    getIdentity: null, // () => Identity, re-read on every open
     onLogin: null, // () => void, opens the shared login modal
     onLogout: null, // () => Promise, resolves when logged out (host then reloads)
     // Custom own-boat icon. The icon isn't a schema field (it's an uploaded
@@ -108,17 +142,6 @@ export const ConfigPanel = L.Control.extend({
     L.DomEvent.disableClickPropagation(container);
     L.DomEvent.on(button, "click", (e) => {
       L.DomEvent.stop(e);
-      // Anonymous users can't persist config (the save POST is auth-gated), so
-      // the gear goes straight to the login modal for them; the settings dialog
-      // is only opened once logged in.
-      const loggedIn = this.options.getLoggedIn
-        ? this.options.getLoggedIn()
-        : true;
-      if (!loggedIn) {
-        if (this.options.onLogin)
-          this.options.onLogin();
-        return;
-      }
       this._toggle();
     });
 
@@ -131,6 +154,14 @@ export const ConfigPanel = L.Control.extend({
   onRemove: function () {
     if (this._modal)
       this._modal.destroy();
+  },
+
+  // The host's identity, or full access when no getter was supplied (an
+  // embedder wiring the panel up by hand gets the unrestricted dialog).
+  _identity: function () {
+    return this.options.getIdentity
+      ? this.options.getIdentity()
+      : Identity.unrestricted();
   },
 
   // Build the settings form into a reusable Modal. The Modal mounts itself on
@@ -163,10 +194,14 @@ export const ConfigPanel = L.Control.extend({
       { label: "Done", variant: "primary", primary: true },
     ]);
 
-    // Footer bottom-left, stacked: the Log out link over the version link to
-    // the repo. The Done button stays pushed to the right (see
-    // #configFooterMeta / #configVersion in style.css). The dialog only opens
-    // when logged in, so the auth link is always Log out.
+    // Footer bottom-left, stacked: the auth link over the version link to the
+    // repo. The Done button stays pushed to the right (see #configFooterMeta /
+    // #configVersion in style.css). The auth link flips with the session (see
+    // _show and authLinkLabel): "name - Log out" once logged in, "Log in" for a
+    // read-only session — which is how an anonymous user reaches the login modal
+    // from here, since the gear itself now just opens the dialog. With server
+    // security disabled nobody is logged in and there's nothing to log into, so
+    // it hides entirely.
     this._modal.footer.insertAdjacentHTML(
       "afterbegin",
       `<div id="configFooterMeta">
@@ -175,12 +210,21 @@ export const ConfigPanel = L.Control.extend({
       </div>`,
     );
     this._version = this._modal.footer.querySelector("#configVersion");
-    this._modal.footer
-      .querySelector("#configLogout")
-      .addEventListener("click", (e) => {
-        e.preventDefault();
+    this._authLink = this._modal.footer.querySelector("#configLogout");
+    this._authLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      // Logging out keeps the dialog open — it reloads on success and reports a
+      // failure inline (see _onLogout). Logging in hands off to another modal,
+      // so close this one first rather than stacking two dimmed backdrops; a
+      // successful login reloads, and a cancelled one leaves the gear a tap
+      // away.
+      if (this._identity().loggedIn) {
         this._onLogout();
-      });
+      } else if (this.options.onLogin) {
+        this._hide();
+        this.options.onLogin();
+      }
+    });
 
     const body = this._modal.body;
     this._status = body.querySelector("#configStatus");
@@ -192,6 +236,7 @@ export const ConfigPanel = L.Control.extend({
 
     // Custom boat-icon controls: a preview, a hidden file input driven by an
     // Upload button, and a Delete button. See _iconRowHtml / _setIconState.
+    this._iconRow = body.querySelector("#configIconRow");
     this._iconPreview = body.querySelector("#configIconPreview");
     this._iconText = body.querySelector("#configIconText");
     this._iconFile = body.querySelector("#configIconFile");
@@ -319,14 +364,35 @@ export const ConfigPanel = L.Control.extend({
     return `<label class="configRow">${label}${control}${hint}</label>`;
   },
 
+  // Reset the status line to its resting content: blank when changes persist,
+  // otherwise the standing note that they're page-local. Shown on open and
+  // restored after each change, so the reason a setting won't stick is on
+  // screen before the user touches anything.
+  _resetStatus: function () {
+    if (this._identity().canWrite())
+      this._setStatus("", "");
+    else
+      this._setStatus(SESSION_ONLY_NOTE, "configStatusNote");
+  },
+
   _onFieldChange: function () {
     const config = this._collect();
-    this._setStatus("Saving…", "");
+    // A read-only session's change still takes effect live; the host just skips
+    // the auth-gated save (see AnchorAlarm.saveConfig), so don't claim it saved
+    // — leave the session-only note standing instead.
+    const persists = this._identity().canWrite();
+    if (persists)
+      this._setStatus("Saving…", "");
     let result;
     if (this.options.onChange)
       result = this.options.onChange(config);
     Promise.resolve(result)
-      .then(() => this._setStatus("Saved", "configStatusOk"))
+      .then(() => {
+        if (persists)
+          this._setStatus("Saved", "configStatusOk");
+        else
+          this._resetStatus();
+      })
       .catch(() => this._setStatus("Save failed", "configStatusError"));
   },
 
@@ -392,9 +458,19 @@ export const ConfigPanel = L.Control.extend({
   _show: function () {
     const config = this.options.getConfig ? this.options.getConfig() : null;
     this._populate(config);
-    this._setStatus("", "");
     this._setIconStatus("", "");
     this._setIconState(config && config.hasCustomIcon);
+    // Re-read the identity on every open. The boat icon is admin-gated
+    // server-side (it changes the display for everyone aboard), so a plain
+    // readwrite user doesn't get the uploader; a read-only session gets the
+    // standing note that its changes won't outlive the page, and a Log in link
+    // to fix that. Nobody is logged in when the server has security disabled,
+    // but everything saves, so that session gets neither.
+    const identity = this._identity();
+    this._iconRow.hidden = !identity.canAdmin();
+    this._authLink.hidden = !identity.authRequired;
+    this._authLink.textContent = authLinkLabel(identity);
+    this._resetStatus();
     if (this._version) {
       const version = this.options.getVersion ? this.options.getVersion() : null;
       this._version.textContent = version ? `Hoeken's Anchor Alarm v${version}` : "";

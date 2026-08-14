@@ -78,13 +78,29 @@ export class SignalKHelper {
   // reject with { status, statusText, message } on HTTP errors (message is the
   // backend's error text when present).
   request(path) {
+    return SignalKHelper._getJson(`${this.baseUrl}/signalk/v1/api/${path}`);
+  }
+
+  // GET a URL as JSON under a deadline, so a server that accepts the connection
+  // but never answers (flaky boat network) can't hang callers forever.
+  static _getJson(url, timeoutMs = 5000) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort("Request timed out"), 5000);
-    return fetch(`${this.baseUrl}/signalk/v1/api/${path}`, {
-      signal: controller.signal,
-    })
+    const timer = setTimeout(
+      () => controller.abort("Request timed out"),
+      timeoutMs,
+    );
+    return fetch(url, { signal: controller.signal })
       .finally(() => clearTimeout(timer))
       .then(SignalKHelper._toJsonOrReject);
+  }
+
+  // Who the browser session is to the server and what it's allowed to do — the
+  // first request the app makes, since every auth-gated control keys off it (see
+  // ui/js/Identity.js for the payload shape and how it maps to permissions).
+  // Lives outside /signalk/v1/api, so it can't go through request(). The server
+  // sends it no-cache and rate-limits it, so call it once per page load.
+  fetchLoginStatus() {
+    return SignalKHelper._getJson(`${this.baseUrl}/skServer/loginStatus`);
   }
 
   raiseAnchor() {
@@ -213,19 +229,15 @@ export class SignalKHelper {
     });
     if (resolution)
       params.set("resolution", String(resolution));
-    // The AbortController/timer are created inside the queued callback so the
-    // 15s deadline only starts once this request actually runs, not while it
-    // waits behind other heavy reads in the queue.
-    return this._enqueueHeavy(() => {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort("Request timed out"), 15000);
-      return fetch(
+    // The deadline is armed inside the queued callback so the 15s only starts
+    // once this request actually runs, not while it waits behind other heavy
+    // reads in the queue.
+    return this._enqueueHeavy(() =>
+      SignalKHelper._getJson(
         `${this.baseUrl}/signalk/v2/api/history/values?${params.toString()}`,
-        { signal: controller.signal },
-      )
-        .finally(() => clearTimeout(timer))
-        .then(SignalKHelper._toJsonOrReject);
-    });
+        15000,
+      ),
+    );
   }
   // Whether a history provider is available: a minimal one-minute values
   // query that any provider satisfies cheaply. Resolves a boolean, never

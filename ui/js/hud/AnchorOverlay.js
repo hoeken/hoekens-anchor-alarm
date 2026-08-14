@@ -139,10 +139,10 @@ export class AnchorOverlay {
     this._zone = appState.getWatchZone();
     this._ensureZoneOverlay();
 
-    // Anonymous users see the zone but get no draggable edit handles (the
-    // setZone POST is auth-gated server-side anyway). Reapply every tick so a
-    // freshly-swapped overlay picks up the current login state.
-    this.zoneOverlay?.setHandlesVisible(appState.loggedIn);
+    // Sessions without write access see the zone but get no draggable edit
+    // handles (the setZone POST is readwrite-gated server-side anyway). Reapply
+    // every tick so a freshly-swapped overlay picks up the current identity.
+    this.zoneOverlay?.setHandlesVisible(appState.identity.canWrite());
 
     this.dropped = appState.isAnchored();
     if (this.dropped && !this._draggingAnchor) {
@@ -157,10 +157,10 @@ export class AnchorOverlay {
     this.zoneOverlay.update({ zone: this._zone, anchorPosition: this.anchorPosition });
     if (!this._draggingAnchor)
       this.anchorHandle.setPosition(this.anchorPosition);
-    // Anonymous users get a small solid zone-colored dot instead of the
-    // draggable ring — same login gate as the zone handles, which hide
+    // Without write access the anchor becomes a small solid zone-colored dot
+    // instead of the draggable ring — same gate as the zone handles, which hide
     // outright; this one doubles as the anchor marker so it stays visible.
-    this.anchorHandle.setDraggable(appState.loggedIn);
+    this.anchorHandle.setDraggable(appState.identity.canWrite());
 
     this._refreshLine();
     this._refreshColor();

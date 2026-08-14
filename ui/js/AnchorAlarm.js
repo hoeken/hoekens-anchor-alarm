@@ -24,6 +24,7 @@ import { LayersControl } from "./hud/LayersControl.js";
 import { ConfigPanel } from "./hud/ConfigPanel.js";
 import { ThemeControl } from "./hud/ThemeControl.js";
 import { Modal } from "./hud/Modal.js";
+import { Identity } from "./Identity.js";
 import { nativeTooltipsSuppressed, isNavicoMfd } from "./BrowserSupport.js";
 
 const UPDATE_INTERVAL_MS = 500;
@@ -98,7 +99,6 @@ class AnchorAlarm {
       glitchFilterSpeed: 0,
       hasCustomIcon: false,
     };
-    this.state.loggedIn = false;
 
     // URL controls for embedding the app in another dashboard (see README).
     // `embedded=true` strips the HUD panels (tide/wind/scope/info) and the
@@ -328,12 +328,15 @@ class AnchorAlarm {
   // === Initial load (one /vessels/self call, broken into phases) ==================
 
   loadInitialData() {
-    // Config first: the scope ratios, glitch limit and control size it carries
-    // have to be in place before the state extraction and buildMap below. Our
-    // own vessel tree then comes from /vessels/self — every other vessel is
-    // streamed over the vessels.* subscription, so there's nothing left in the
-    // bulk /vessels tree that we need.
-    this.loadConfig()
+    // Identity first, then config: which controls buildMap creates depends on
+    // what this session is permitted to do, and the scope ratios, glitch limit
+    // and control size the config carries have to be in place before the state
+    // extraction and buildMap below. Our own vessel tree then comes from
+    // /vessels/self — every other vessel is streamed over the vessels.*
+    // subscription, so there's nothing left in the bulk /vessels tree that we
+    // need.
+    this.loadIdentity()
+      .then(() => this.loadConfig())
       .then(async () => {
         console.log("UI Config:", this.config);
 
@@ -393,15 +396,30 @@ class AnchorAlarm {
       });
   }
 
-  // Config fetch is independent: a 401 (user not logged in) must not block
-  // startup, so on failure we keep the defaults and start pollers anyway.
+  // Establish who we are before any other request. The server's login status
+  // tells us this session's permission level — and whether security is enabled
+  // at all — which is what every auth-gated control keys off (see Identity), so
+  // it has to be settled before the config read and buildMap below. A failed
+  // probe leaves the anonymous default in place: the app degrades to a
+  // read-only view rather than offering controls whose requests would 401.
+  async loadIdentity() {
+    try {
+      this.state.identity = new Identity(await this.signalK.fetchLoginStatus());
+    } catch (error) {
+      this.state.identity = Identity.anonymous();
+      console.error("Failed to read login status, assuming anonymous", error);
+    }
+    console.log("Identity:", this.state.identity);
+  }
+
+  // Config fetch is independent: a 401 (an anonymous session on a server that
+  // doesn't allow read-only access) must not block startup, so on failure we
+  // keep the defaults and start pollers anyway.
   async loadConfig() {
     try {
       this.config = await this.signalK.fetchConfig();
-      this.state.loggedIn = true;
     } catch (error) {
       console.error("Failed to load config, using defaults", error);
-      this.state.loggedIn = false;
     }
   }
 
@@ -496,12 +514,12 @@ class AnchorAlarm {
     return this.signalK.logout().then(() => window.location.reload());
   }
 
-  // Persist UI settings edited via the ConfigPanel. We merge into the live
-  // config and re-render immediately so every setting takes effect without a
-  // reload: panel toggles and basemap re-render here, while the default
-  // watch-zone shape and fleet radius are pushed into the objects that captured
-  // them at construction. Returns the save promise so the dialog can report
-  // status.
+  // Apply UI settings edited via the ConfigPanel, and persist them if this
+  // session is allowed to. We merge into the live config and re-render
+  // immediately so every setting takes effect without a reload: panel toggles
+  // and basemap re-render here, while the default watch-zone shape and fleet
+  // radius are pushed into the objects that captured them at construction.
+  // Returns the save promise so the dialog can report status.
   saveConfig(newConfig) {
     Object.assign(this.config, newConfig);
     // Scope ratios can change live; re-parse and recompute before re-rendering.
@@ -522,6 +540,13 @@ class AnchorAlarm {
     this.setLargeControls(this.config.enableLargeControls);
     this.updateMap();
     this.statusBar.clear("config-save");
+    // Every setting above has already taken effect for this page. Storing them
+    // is what needs write access: for a read-only session the POST would only
+    // 401 (and pop the login modal over a checkbox click), so the choices stay
+    // page-local instead — same as a chart toggle (see onChartToggled). The
+    // dialog says as much while it's open (see ConfigPanel._persistenceNote).
+    if (!this.state.identity.canWrite())
+      return Promise.resolve();
     return this.signalK.saveConfig(newConfig).catch((error) => {
       const detail = error.statusText || error.message || "unknown error";
       const status = error.status ? `${error.status} ` : "";
@@ -586,7 +611,7 @@ class AnchorAlarm {
     this.historyControl = new AnchorageHistoryControl({
       signalK: this.signalK,
       statusBar: this.statusBar,
-      getLoggedIn: () => this.state.loggedIn,
+      getIdentity: () => this.state.identity,
     });
     this.map.addControl(this.historyControl);
   }
@@ -668,17 +693,17 @@ class AnchorAlarm {
     // Buttons - Top Left
     //
 
-    // The settings gear is always available: logged-in users open the config
-    // dialog, while anonymous users' clicks go straight to the login modal
-    // (the save POST is auth-gated server-side, so the dialog is useless to
-    // them — see ConfigPanel). Login and logout both reload, so getLoggedIn is
-    // effectively fixed per page load. In embedded mode the gear is omitted
-    // entirely so the host dashboard owns the configuration.
+    // The settings gear opens the dialog for everyone: every setting in it
+    // applies live, so a read-only session can arrange the display for as long
+    // as the page lives — saveConfig just skips the auth-gated store, and the
+    // dialog offers a Log in link (see ConfigPanel). Login and logout both
+    // reload, so the identity is effectively fixed per page load. In embedded
+    // mode the gear is omitted so the host dashboard owns the configuration.
     if (!this.embedded) {
       this.configPanel = new ConfigPanel({
         getConfig: () => this.config,
         getVersion: () => this.version,
-        getLoggedIn: () => this.state.loggedIn,
+        getIdentity: () => this.state.identity,
         onChange: (newConfig) => this.saveConfig(newConfig),
         onLogin: () => this.showLoginModal(),
         onLogout: () => this.logout(),
@@ -1018,10 +1043,10 @@ class AnchorAlarm {
   // clicks are saved. Non-chart overlays (Seascape) match no chartLayers
   // entry and fall through. The choice lands in the per-identity `charts`
   // ui-config map via its own route (one chart per call — see
-  // SignalKHelper.saveChartEnabled); no entry defaults to enabled. Logged-out
-  // sessions can't write ui-config, so for them the choice stays local to
-  // the page (and skipping the POST avoids popping the login modal on a
-  // 401 for a mere checkbox click).
+  // SignalKHelper.saveChartEnabled); no entry defaults to enabled. Sessions
+  // without write access can't store ui-config, so for them the choice stays
+  // local to the page (and skipping the POST avoids popping the login modal on
+  // a 401 for a mere checkbox click).
   onChartToggled(layer, enabled) {
     if (this._chartMutation)
       return;
@@ -1029,7 +1054,7 @@ class AnchorAlarm {
     if (!chart || this.isChartEnabled(chart) === enabled)
       return;
     this.config.charts = { ...this.config.charts, [chart.id]: enabled };
-    if (!this.state.loggedIn)
+    if (!this.state.identity.canWrite())
       return;
     this.signalK.saveChartEnabled(chart.id, enabled).catch((error) => {
       console.error("Failed to save chart visibility", error);

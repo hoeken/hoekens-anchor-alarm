@@ -11,6 +11,7 @@
 import { Modal } from "./Modal.js";
 import { setTitle } from "../BrowserSupport.js";
 import { SignalKHelper } from "../SignalKHelper.js";
+import { Identity } from "../Identity.js";
 
 // bootstrap-icons: bi-clock-history.
 const HISTORY_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-clock-history" viewBox="0 0 16 16">
@@ -80,12 +81,12 @@ export const AnchorageHistoryControl = L.Control.extend({
     position: "topleft",
   },
 
-  // opts: { signalK, statusBar, getLoggedIn }
+  // opts: { signalK, statusBar, getIdentity }
   initialize: function (opts) {
     L.Control.prototype.initialize.call(this);
     this._signalK = opts.signalK;
     this._statusBar = opts.statusBar;
-    this._getLoggedIn = opts.getLoggedIn || (() => false);
+    this._getIdentity = opts.getIdentity || (() => Identity.anonymous());
     this._layer = null; // layer group of the currently displayed track
     this._shownSessionId = null;
     this._modal = null;
@@ -203,9 +204,10 @@ export const AnchorageHistoryControl = L.Control.extend({
       info.appendChild(detail);
       row.appendChild(info);
 
-      // Delete is destructive and auth-gated server-side; only offer it to
-      // logged-in users so anonymous taps don't dead-end in the login modal.
-      if (this._getLoggedIn()) {
+      // Delete is destructive and readwrite-gated server-side; only offer it to
+      // sessions that can actually do it, so a read-only tap doesn't dead-end
+      // in the login modal.
+      if (this._getIdentity().canWrite()) {
         const del = document.createElement("button");
         del.type = "button";
         del.className = "sessionDelete";

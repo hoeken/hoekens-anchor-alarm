@@ -70,7 +70,7 @@ It's also handy to use a circle zone to _choose_ your spot first: position the z
 If you have engine data in SignalK, enable the engine check and the watch will end on its own when you motor off (see Engine override above).
 
 > [!NOTE]
-> You can view the app without logging in (read-only). Editing controls (dropping/raising the anchor, resizing zones, settings) appear once you log into your SignalK server.
+> You can view the app without logging in (read-only). Editing controls — dropping/raising the anchor, resizing zones — appear once you log into your SignalK server with a read/write or admin account; the boat icon uploader is admin only. Settings are open to everyone, but without a read/write login they only apply until you reload. If your server has no security configured, everything is available to everyone.
 
 ## Embedding
 

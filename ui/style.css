@@ -1225,7 +1225,13 @@ html.largeControls .leaflet-touch .leaflet-control-zoom-out {
   color: red;
 }
 
-/* Footer bottom-left cluster: the Log out link stacked over the version link.
+/* Standing note for a read-only session, whose settings can't be stored: an
+   explanation rather than an error, so it reads as muted body text. */
+#configStatus.configStatusNote {
+  color: var(--surface-muted);
+}
+
+/* Footer bottom-left cluster: the auth link stacked over the version link.
    margin-right:auto pins the cluster left while the Done button stays right;
    align-self:flex-end sits it on the footer's baseline. */
 #configFooterMeta {
@@ -1236,9 +1242,16 @@ html.largeControls .leaflet-touch .leaflet-control-zoom-out {
   align-items: flex-start;
 }
 
+/* The auth link, which names the logged-in account ("admin - Log out"). Device
+   clientIds are shortened before they get here (see displayName in
+   ConfigPanel), so this cap is just a backstop against an unusually long
+   username pushing the Done button onto a second footer row: it wraps instead.
+   Ellipsizing would cut the "Log out" the link is actually for, since the name
+   comes first. */
 #configLogout {
   cursor: pointer;
   padding-bottom: 2px;
+  max-width: 18em;
   font-size: 10pt;
   color: var(--link);
   text-decoration: none;

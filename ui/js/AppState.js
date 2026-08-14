@@ -2,6 +2,7 @@
 
 import { SignalKHelper } from "./SignalKHelper.js";
 import { BoatConfig } from "./BoatConfig.js";
+import { Identity } from "./Identity.js";
 import {
   bearing as turfBearing,
   bearingToAzimuth,
@@ -45,6 +46,10 @@ export class AppState {
     // clears it.
     this.glitchFilter = new GlitchFilter();
     this.positionGlitch = null;
+    // Who we are to the server and what we may do (see Identity). Replaced once
+    // the startup login-status probe resolves; until then the least-privileged
+    // identity, so no write control renders before we know it's permitted.
+    this.identity = Identity.anonymous();
   }
 
   setGlitchFilterSpeed(speed) {
