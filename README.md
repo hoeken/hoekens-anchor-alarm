@@ -2,6 +2,9 @@
 
 A simple web UI anchor alarm for [SignalK](https://signalk.org/), built for setting from your phone, tablet or computer. Handy for setting the anchor alarm from the helm, or a quick check from bed when the wind picks up at 2am.
 
+> [!IMPORTANT]
+> **Requires Signal K server v2.31 or newer.** Major performance upgrades and features in v2.31 that are now required for this plugin to work. Plugin versions previous to 2.12.0 will continue to work in older versions of SK Server.
+
 This started life as a fork of the venerable [signalk-anchoralarm-plugin](https://github.com/sbender9/signalk-anchoralarm-plugin) by Scott Bender, but has since grown its own personality (and a fair bit of new code). The goal is a focused web UI with my own style and a few opinionated features, like automatically cancelling the alarm when your engines fire up. If you'd rather drive everything from an external app or API, the original plugin might be a better fit for you.
 
 ## Features

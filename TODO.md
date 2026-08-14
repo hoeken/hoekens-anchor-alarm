@@ -1,7 +1,3 @@
-# 2.13.0
-
-- update README with big 'SignalK Server >= v2.31 Required' heading
-
 # LONG TERM
 
 - investigate signalk-restricted-areas as an additional layer.
