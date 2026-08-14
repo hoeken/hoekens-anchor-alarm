@@ -98,7 +98,7 @@ export default defineConfig({
   plugins: [
     viteSingleFile({ removeViteModuleLoader: true }),
     inlineVendorAndFixSourcemap(),
-    // Emit a Brotli `.br` sidecar next to every text asset, so a server can
+    // Emit pre-compressed sidecars next to every text asset, so a server can
     // send pre-compressed bytes instead of compressing on each request. That
     // matters here: everything above collapses into one ~770 kB index.html,
     // and it is typically served by a Signal K server on a single-threaded
@@ -106,9 +106,12 @@ export default defineConfig({
     // boat data. Originals are kept, so anything that doesn't understand the
     // sidecars keeps working unchanged.
     compression({
-      // Brotli only — gzip would be a second set of files for a fallback no
-      // browser we target still needs (Chromium 69 on Navico MFDs has `br`).
-      algorithms: ["brotliCompress"],
+      // Both `.br` and `.gz`. Brotli is what every browser we target actually
+      // gets (Chromium 69 on Navico MFDs included), but not every serving
+      // layer looks for a `.br` — plenty only know the `.gz` convention
+      // (nginx's gzip_static, express-static-gzip's default). The `.gz` set is
+      // compressed once at build time, so carrying it costs nothing at runtime.
+      algorithms: ["brotliCompress", "gzip"],
       // The default list, plus the sourcemaps (`.map`, the single largest
       // output at ~2.5 MB) and the PWA manifest.
       include: /\.(html|xml|css|json|js|mjs|svg|map|webmanifest)$/,
