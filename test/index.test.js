@@ -421,6 +421,13 @@ describe("raiseAnchor()", () => {
     plugin.configuration = { zone: droppedZone(), enableNormalNotifications: true };
     plugin.raiseAnchor();
     assert.equal(h.lastDelta("notifications.navigation.anchor"), null);
+
+    plugin.startWatchingPosition();
+    assert.deepEqual(h.lastDelta("notifications.navigation.anchor"), {
+      state: "normal",
+      method: ["visual"],
+      message: "Watching",
+    });
   });
 });
 

@@ -337,6 +337,10 @@ If the `enableNormalNotifications` config option is turned off, the plugin clear
 this notification (rather than emitting a `normal`-state message) when idle, to
 reduce clutter. Drag alarms are unaffected.
 
+When the anchor is raised, the notification is always cleared. This ensures
+that the next anchor-watch session starts a fresh notification lifecycle and
+does not inherit an acknowledgement or silence state from the previous session.
+
 ### Legacy PUT handlers
 
 For backwards compatibility with the original `signalk-anchoralarm-plugin`, the
