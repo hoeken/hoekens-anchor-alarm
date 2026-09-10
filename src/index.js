@@ -523,9 +523,14 @@ export default function (app) {
     plugin.onStop = [];
   };
 
-  plugin.stopWatchingPosition = function () {
+  plugin.stopWatchingPosition = function ({ clearNotification = false } = {}) {
     plugin.alarm_state = "normal";
-    plugin.updateAnchorAlarm(plugin.alarm_state, "Off", ["visual"]);
+    if (clearNotification) {
+      plugin.bus.queueDelta("notifications.navigation.anchor", null);
+      plugin.bus.sendUpdates();
+    } else {
+      plugin.updateAnchorAlarm(plugin.alarm_state, "Off", ["visual"]);
+    }
 
     app.setPluginStatus("Off");
 
@@ -816,7 +821,7 @@ export default function (app) {
     delete plugin.configuration.zone;
     plugin.savePluginOptions();
 
-    plugin.stopWatchingPosition();
+    plugin.stopWatchingPosition({ clearNotification: true });
 
     plugin.notifyTimeZero();
   };

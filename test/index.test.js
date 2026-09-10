@@ -415,6 +415,13 @@ describe("raiseAnchor()", () => {
     assert.equal(h.lastDelta("navigation.anchor.state"), "off");
     assert.equal(h.lastStatus(), "Off");
   });
+
+  test("clears the notification so the next anchor watch starts a fresh lifecycle", () => {
+    const { h, plugin } = setup();
+    plugin.configuration = { zone: droppedZone(), enableNormalNotifications: true };
+    plugin.raiseAnchor();
+    assert.equal(h.lastDelta("notifications.navigation.anchor"), null);
+  });
 });
 
 describe("checkPosition()", () => {
