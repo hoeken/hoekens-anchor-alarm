@@ -249,6 +249,28 @@ export class SignalKHelper {
       .then(() => true)
       .catch(() => false);
   }
+  // A History API position value as {latitude, longitude}, or null for a
+  // bucket without a fix. The API hands a position out as a [longitude,
+  // latitude] pair — GeoJSON order, as the server's OpenAPI schema defines it
+  // and as signalk-to-influxdb2 and signalk-parquet return it — but a
+  // provider may hand out the data model's {latitude, longitude} object
+  // instead. Both are read, so the track does not depend on which provider
+  // answers. A third element (altitude) is ignored.
+  static historyPosition(value) {
+    if (Array.isArray(value)) {
+      const [longitude, latitude] = value;
+      return Number.isFinite(latitude) && Number.isFinite(longitude)
+        ? { latitude, longitude }
+        : null;
+    }
+    if (
+      value &&
+      Number.isFinite(value.latitude) &&
+      Number.isFinite(value.longitude)
+    )
+      return { latitude: value.latitude, longitude: value.longitude };
+    return null;
+  }
   // Flatten a v2 History API values response (columns per requested path)
   // into [{time, latitude, longitude}] for the navigation.position column,
   // skipping the null rows a SAMPLE BY fill produces for empty buckets.
@@ -262,17 +284,10 @@ export class SignalKHelper {
       return [];
     const positions = [];
     for (const row of response.data) {
-      const value = row[index + 1]; // row[0] is the timestamp
-      if (
-        value &&
-        typeof value.latitude === "number" &&
-        typeof value.longitude === "number"
-      )
-        positions.push({
-          time: row[0],
-          latitude: value.latitude,
-          longitude: value.longitude,
-        });
+      // row[0] is the timestamp
+      const position = SignalKHelper.historyPosition(row[index + 1]);
+      if (position)
+        positions.push({ time: row[0], ...position });
     }
     return positions;
   }
