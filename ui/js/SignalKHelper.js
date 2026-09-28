@@ -5,6 +5,16 @@
 // local cache) without changing the static helpers or call sites that use them.
 
 const SIGNALK_DEFAULT_FRESHNESS_SEC = 60;
+// The track queries ask for at least the last day, reaching back to the start
+// of the current anchoring session when it is older, so the approach and the
+// drop are drawn however long the stay. Their `resolution` spaces the points
+// so no vessel's track exceeds TRACK_MAX_POINTS: one second for a day,
+// proportionally coarser beyond.
+const TRACK_MIN_WINDOW_MS = 24 * 60 * 60 * 1000;
+const TRACK_MAX_POINTS = 86400;
+// /self/track merges in a history provider's record, so it gets the History
+// API's deadline rather than request()'s.
+const OWN_TRACK_TIMEOUT_MS = 15000;
 
 export class SignalKHelper {
   constructor({ baseUrl = "", pluginName = null } = {}) {
@@ -26,7 +36,8 @@ export class SignalKHelper {
   // concurrent heavy queries contend and all slow down; served back-to-back
   // each stays fast. The queue is strict FIFO with a concurrency of one, so
   // requests execute in the order callers enqueue them — startup enqueues
-  // charts, then tracks, then history, which is the order they run.
+  // charts, then the one-minute history probe, then the tracks (which first
+  // wait for their window), which is the order they run.
   //
   // `fn` (which performs the actual fetch, and arms any request timeout it
   // sets) is invoked only when its turn comes up, so time spent waiting in the
@@ -195,16 +206,34 @@ export class SignalKHelper {
   fetchSelfVessel() {
     return this.request("vessels/self");
   }
-  fetchTracks(radius) {
-    return this._enqueueHeavy(() => this.request(`tracks?radius=${radius}`));
+  // Every vessel's track within `radius` of our own, from the tracks plugin's
+  // own store. `window` is a trackWindow().
+  fetchTracks(radius, window) {
+    return this._enqueueHeavy(() =>
+      this.request(`tracks?radius=${radius}&${SignalKHelper.trackQuery(window)}`),
+    );
+  }
+  // Our own vessel's track from the tracks plugin. Unlike /tracks, this route
+  // fills the window from a history provider where one has recorded it, at
+  // the requested resolution, and from the plugin's store elsewhere. Tracks
+  // plugin 2.x has no such route, so callers treat any failure as "no own
+  // track here" and fall back to the own entry in /tracks.
+  fetchOwnTrack(window) {
+    return this._enqueueHeavy(() =>
+      SignalKHelper._getJson(
+        `${this.baseUrl}/signalk/v1/api/self/track?${SignalKHelper.trackQuery(window)}`,
+        OWN_TRACK_TIMEOUT_MS,
+      ),
+    );
   }
   // Recorded anchoring sessions (drop/raise spans) from the plugin's session
-  // log, newest first. Plain fetch rather than pluginFetch on purpose: this is
-  // called silently at startup (track rehydration), and a 401 there must
-  // reject quietly instead of popping the login modal uninvited.
+  // log, newest first. Not pluginFetch on purpose: this is called silently at
+  // startup (the track window), and a 401 there must reject quietly instead
+  // of popping the login modal uninvited.
   fetchSessions() {
-    return fetch(`${this.baseUrl}/plugins/${this.pluginName}/sessions`)
-      .then(SignalKHelper._toJsonOrReject);
+    return SignalKHelper._getJson(
+      `${this.baseUrl}/plugins/${this.pluginName}/sessions`,
+    );
   }
   deleteSession(id) {
     return this.pluginFetch(`sessions/${encodeURIComponent(id)}`, {
@@ -248,6 +277,51 @@ export class SignalKHelper {
     return this.fetchPositionHistory(from.toISOString(), to.toISOString(), 60)
       .then(() => true)
       .catch(() => false);
+  }
+  // The window and point spacing (whole seconds) for the track queries; see
+  // TRACK_MIN_WINDOW_MS. `sessionStart` is the open anchoring session's
+  // droppedAt, or undefined when the anchor is up or the log is unreadable.
+  static trackWindow(sessionStart, now = Date.now()) {
+    let from = now - TRACK_MIN_WINDOW_MS;
+    const dropped = Date.parse(sessionStart);
+    if (Number.isFinite(dropped) && dropped < from)
+      from = dropped;
+    const resolution = Math.max(
+      1,
+      Math.ceil((now - from) / 1000 / TRACK_MAX_POINTS),
+    );
+    return { from: new Date(from).toISOString(), resolution };
+  }
+  // Query string for the tracks plugin's v1 routes. `times` returns when each
+  // point was recorded, so the glitch filter judges real intervals. Tracks
+  // plugin 3.x answers 400 to any parameter it doesn't read, so only these
+  // go in; 2.x reads none of them and returns its whole in-memory buffer.
+  static trackQuery({ from, resolution }) {
+    return new URLSearchParams({
+      from,
+      resolution: `${resolution}s`,
+      times: "true",
+    }).toString();
+  }
+  // Flatten one vessel's track from the tracks plugin — a MultiLineString of
+  // [lon, lat] segments, plus a parallel `times` array when the plugin sends
+  // one — into [{latitude, longitude, time}] oldest first, with the segments
+  // joined into one line. `time` is epoch ms, or null without times.
+  static trackPoints(track) {
+    const points = [];
+    const segments = Array.isArray(track?.coordinates) ? track.coordinates : [];
+    segments.forEach((segment, s) => {
+      const times = track.times?.[s];
+      for (let i = 0; i < segment.length; i++) {
+        const time = Date.parse(times?.[i]);
+        points.push({
+          latitude: segment[i][1],
+          longitude: segment[i][0],
+          time: Number.isFinite(time) ? time : null,
+        });
+      }
+    });
+    return points;
   }
   // Flatten a v2 History API values response (columns per requested path)
   // into [{time, latitude, longitude}] for the navigation.position column,
