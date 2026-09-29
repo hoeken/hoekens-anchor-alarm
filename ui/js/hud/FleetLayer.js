@@ -1,8 +1,9 @@
 // FleetLayer owns every vessel marker and history hotline on the map,
 // including our own. The host drives it with three inputs: a one-shot bulk
-// history load from /tracks, per-tick own-position append, and a live feed of
-// other vessels. Out-of-range AIS vessels are removed on each sync; the own
-// boat is never auto-removed (its mmsi key never appears in the AIS list).
+// history load from the tracks plugin, per-tick own-position append, and a
+// live feed of other vessels. Out-of-range AIS vessels are removed on each
+// sync; the own boat is never auto-removed (its mmsi key never appears in the
+// AIS list).
 //
 // The other-vessel feed is the shared vessels.* delta subscription alone
 // (ingestVesselDelta), which carries the static identity paths — name, ship
@@ -43,10 +44,10 @@ const SIMPLIFY_TOLERANCE_SELF = 0.000002;
 const SIMPLIFY_TOLERANCE_OTHERS = 0.00001;
 const SIMPLIFY_THRESHOLD_SELF = 10000;
 const SIMPLIFY_THRESHOLD_OTHERS = 1000;
-// The /tracks payload carries bare coordinates with no timestamps, so when
-// glitch-filtering bulk history we assume consecutive points are one second
-// apart — the resolution the README recommends running the tracks plugin at —
-// which turns the speed limit into a per-point distance limit.
+// Tracks plugin 2.x ignores the `times` parameter and sends bare coordinates,
+// so when glitch-filtering its history we assume consecutive points are one
+// second apart — the resolution 2.x was typically run at — which turns the
+// speed limit into a per-point distance limit.
 const TRACK_POINT_INTERVAL_MS = 1000;
 
 // Track styling. Hotlines render to a single shared canvas (the plugin's
@@ -90,6 +91,9 @@ export class FleetLayer {
     this.vessels = {}; // mmsi -> L.BoatMarker (with .gpsAntennaMarker attached)
     this.vesselTracks = {}; // mmsi -> L.hotline
     this.trackPointCounts = {}; // mmsi -> current point count in the hotline
+    // Bumped per bulk track load, so a load overtaken by a newer one (a
+    // radius change mid-flight) is dropped instead of drawn over it.
+    this.tracksLoadSeq = 0;
     this.ownVessel = undefined;
     this.ownAntenna = undefined;
     this.ownBoatConfig = undefined;
@@ -333,64 +337,83 @@ export class FleetLayer {
     );
   }
 
-  // Fetch historical tracks for the current filter radius and draw them. Split
-  // out of loadInitialData so setFilterRadius can re-run it on a radius change
-  // without re-arming the fleet timer. The /tracks read is heavy, so it's
-  // skipped entirely while both track toggles are off; the first toggle-on
-  // fetches it lazily (see setShowOwnTrack/setShowOtherTracks). When the
-  // tracks plugin can't supply the own-boat track, the History API rebuilds
-  // it instead (see rehydrateOwnTrackFallback).
+  // Fetch historical tracks from the tracks plugin and draw them. Split out of
+  // loadInitialData so setFilterRadius can re-run it on a radius change
+  // without re-arming the fleet timer. The reads are heavy, so they're skipped
+  // entirely while both track toggles are off; the first toggle-on fetches
+  // them lazily (see setShowOwnTrack/setShowOtherTracks). Both are bounded to
+  // trackWindow(). Our own track comes from /self/track, which draws on a
+  // history provider's finer record where there is one; /tracks, read from
+  // the plugin's own store, supplies everyone else (see tracksByMmsi).
   fetchAndLoadTracks() {
     if (!this.showOwnTrack && !this.showOtherTracks)
       return;
     this.tracksLoadStarted = true;
-    this.app.signalK
-      .fetchTracks(this.filterRadius)
-      .then((tracks) => {
-        this.app.statusBar.clear("tracks-plugin");
+    const load = ++this.tracksLoadSeq;
+    const signalK = this.app.signalK;
+    this.trackWindow()
+      .then((window) =>
+        Promise.all([
+          signalK.fetchOwnTrack(window).catch(() => null),
+          signalK.fetchTracks(this.filterRadius, window).catch(() => {
+            // // A 404 just means the tracks plugin isn't installed — historical
+            // // fleet tracks are an optional extra, not something to warn about.
+            // if (err.status === 404) {
+            //   this.app.statusBar.clear("tracks-plugin");
+            // } else {
+            //   const detail = err.statusText || err.message || "unknown error";
+            //   this.app.statusBar.set(
+            //     "tracks-plugin",
+            //     `Tracks plugin not available: ${detail}`,
+            //     "warning",
+            //   );
+            // }
+            return null;
+          }),
+        ]),
+      )
+      .then(([ownTrack, tracks]) => {
+        if (load !== this.tracksLoadSeq)
+          return;
+        if (tracks)
+          this.app.statusBar.clear("tracks-plugin");
         this.loadHistoricalTracks(
-          tracks,
+          this.tracksByMmsi(tracks, ownTrack),
           this.app.state.getPosition(),
           this.filterRadius,
         );
-        if (!this.hasOwnTrack(tracks))
-          this.rehydrateOwnTrackFallback();
       })
-      .catch(() => {
-        // // A 404 just means the tracks plugin isn't installed — historical
-        // // fleet tracks are an optional extra, not something to warn about.
-        // if (err.status === 404) {
-        //   this.app.statusBar.clear("tracks-plugin");
-        // } else {
-        //   const detail = err.statusText || err.message || "unknown error";
-        //   this.app.statusBar.set(
-        //     "tracks-plugin",
-        //     `Tracks plugin not available: ${detail}`,
-        //     "warning",
-        //   );
-        // }
-        this.rehydrateOwnTrackFallback();
-      });
+      .catch((error) => console.warn("Loading historical tracks failed", error));
   }
 
-  // Whether a /tracks payload carries any points for our own boat.
-  hasOwnTrack(tracks) {
-    for (const uri in tracks) {
-      const match = uri.match(/urn:mrn:imo:mmsi:(\d+)$/);
-      if (match && this.isOwnTrack(match[1]))
-        return (tracks[uri].coordinates?.[0]?.length ?? 0) > 0;
+  // The track queries' window (see SignalKHelper.trackWindow): the last day,
+  // reaching back to the start of the open anchoring session in the plugin's
+  // session log. With the anchor up, or the log unreadable, it's the last day.
+  trackWindow() {
+    const sessionStart = this.app.state.isAnchored()
+      ? this.app.signalK
+        .fetchSessions()
+        .then(({ sessions }) => sessions?.find((s) => !s.raisedAt)?.droppedAt)
+        .catch(() => undefined)
+      : Promise.resolve(undefined);
+    return sessionStart.then((droppedAt) =>
+      SignalKHelper.trackWindow(droppedAt),
+    );
+  }
+
+  // Key the /tracks payload by MMSI, with our own entry replaced by the
+  // /self/track answer whenever that route returned a track: it has the
+  // history provider's points, which /tracks never does.
+  tracksByMmsi(tracks, ownTrack) {
+    const byMmsi = {};
+    for (const context in tracks ?? {}) {
+      const match = context.match(/urn:mrn:imo:mmsi:(\d+)$/);
+      if (match)
+        byMmsi[match[1]] = tracks[context];
     }
-    return false;
-  }
-
-  // The tracks plugin is the preferred (cheap, in-memory) source for the
-  // own-boat track; when it fails or comes back without one — plugin missing,
-  // errored, or its buffer lost to a server restart — fall back to rebuilding
-  // the current session's track from the (heavier) History API.
-  rehydrateOwnTrackFallback() {
-    if (!this.showOwnTrack || this.ownTrackSeeded)
-      return;
-    this.app.rehydrateOwnTrack();
+    if (this.ownMmsi && Array.isArray(ownTrack?.coordinates))
+      byMmsi[String(this.ownMmsi)] = ownTrack;
+    return byMmsi;
   }
 
   // Apply a new fleet filter radius live (from the settings dialog). Re-fetch
@@ -557,51 +580,41 @@ export class FleetLayer {
     this.ownVessel.setBoatIcon(url || this.ownBoatConfig.icon);
   }
 
-  // Initial bulk history load from /tracks. Includes self.
+  // Initial bulk history load: every vessel's track from the tracks plugin,
+  // keyed by MMSI (see tracksByMmsi). Includes self.
   loadHistoricalTracks(tracks, ownLatLng, filterRadius) {
-    const mmsiRegex = /urn:mrn:imo:mmsi:(\d+)$/;
-    for (let uri in tracks) {
-      const match = uri.match(mmsiRegex);
-      if (!match)
-        continue;
-      const mmsi = match[1];
-      const data = tracks[uri];
-
-      // A history-seeded own track (see seedOwnTrack) is a superset of the
-      // tracks plugin's in-memory buffer — don't let the shorter one clobber
-      // it. Live appends extend the seeded track either way.
-      if (this.isOwnTrack(mmsi) && this.ownTrackSeeded)
+    for (const mmsi in tracks) {
+      const history = SignalKHelper.trackPoints(tracks[mmsi]);
+      if (!history.length)
         continue;
 
-      const history = data.coordinates?.[0];
-      if (!history || !history.length)
-        continue;
-
-      // Fresh filter per track: bulk history is glitch-filtered on a synthetic
-      // one-second clock (see TRACK_POINT_INTERVAL_MS), independent of the live
-      // per-vessel filters, so spikes recorded by the tracks plugin don't get
-      // drawn. Runs before the radius filter so the last-good baseline follows
-      // the whole track, not just the in-radius part.
+      // Fresh filter per track: bulk history is glitch-filtered on the times
+      // the plugin recorded the points at, independent of the live per-vessel
+      // filters, so spikes recorded by the tracks plugin don't get drawn. A
+      // track not fully timed runs on a synthetic one-second clock instead
+      // (see TRACK_POINT_INTERVAL_MS), never a mix of the two. Runs before
+      // the radius filter so the last-good baseline follows the whole track,
+      // not just the in-radius part.
+      const timed = history.every((position) => position.time !== null);
       const glitchFilter = new GlitchFilter(this.glitchFilterSpeed);
       const points = [];
       let i = 0;
       let syntheticTime = 0;
       let glitched = 0;
-      for (let position of history) {
-        const lat = position[1];
-        const lon = position[0];
+      for (const position of history) {
         syntheticTime += TRACK_POINT_INTERVAL_MS;
-        if (!glitchFilter.check({ latitude: lat, longitude: lon }, syntheticTime).accepted) {
+        const time = timed ? position.time : syntheticTime;
+        if (!glitchFilter.check(position, time).accepted) {
           glitched++;
           continue;
         }
         const dist = distance(
           point([ownLatLng.lng, ownLatLng.lat]),
-          point([lon, lat]),
+          point([position.longitude, position.latitude]),
           { units: "meters" },
         );
         if (dist < filterRadius) {
-          points.push([lat, lon, i]);
+          points.push([position.latitude, position.longitude, i]);
           i++;
         }
       }
@@ -626,38 +639,6 @@ export class FleetLayer {
       this.vesselTracks[mmsi] = this.createTrack(points, points.length, mmsi);
       this.trackPointCounts[mmsi] = this.vesselTracks[mmsi].getLatLngs().length;
     }
-  }
-
-  // Replace (or create) the own-boat scribble track from positions fetched
-  // off the server's History API — used at startup to rehydrate the current
-  // anchoring session's track, which the tracks plugin loses on a server
-  // restart. Positions are [{latitude, longitude}] oldest first. Applies the
-  // same synthetic-clock glitch filtering as the bulk /tracks load — but the
-  // clock must advance by the History API sampling interval the caller
-  // actually requested, or coarse samples from a long session would be
-  // judged at an artificially inflated speed and discarded. No radius
-  // filter: an anchor session's track is inherently local. Live deltas keep
-  // extending the seeded track through addPointToTrack.
-  seedOwnTrack(positions, sampleIntervalMs = TRACK_POINT_INTERVAL_MS) {
-    const glitchFilter = new GlitchFilter(this.glitchFilterSpeed);
-    const points = [];
-    let syntheticTime = 0;
-    for (const position of positions) {
-      syntheticTime += sampleIntervalMs;
-      if (!glitchFilter.check(position, syntheticTime).accepted)
-        continue;
-      points.push([position.latitude, position.longitude, points.length]);
-    }
-    if (!points.length)
-      return;
-
-    const mmsi = String(this.ownMmsi);
-    if (this.vesselTracks[mmsi])
-      this.map.removeLayer(this.vesselTracks[mmsi]);
-    this.vesselTracks[mmsi] = this.createTrack(points, points.length, mmsi);
-    this.trackPointCounts[mmsi] = this.vesselTracks[mmsi].getLatLngs().length;
-    this.ownTrackSeeded = true;
-    console.log(`Own track rehydrated from history: ${points.length} points`);
   }
 
   // Single entry point for extending any vessel track. Handles dedupe,

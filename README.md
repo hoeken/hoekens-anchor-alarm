@@ -27,11 +27,11 @@ I always forget to switch the alarm off before motoring away, so now I don't hav
 
 ### 🛰️ Tracks & fleet
 
-Historical tracks are color-coded (green for fresh, fading to red as they age) via the [@signalk/tracks-plugin](https://github.com/SignalK/tracks). Other AIS vessels show up too, with their own tracks and accurately-typed icons. Click a vessel for a detailed popup: name, MMSI, length, beam, distance, bearing, SOG, and COG.
+Historical tracks are color-coded (green for fresh, fading to red as they age) via the [@signalk/tracks-plugin](https://github.com/SignalK/tracks). The map shows the last 24 hours, or the whole of the current anchorage if you've been there longer. Other AIS vessels show up too, with their own tracks and accurately-typed icons. Click a vessel for a detailed popup: name, MMSI, length, beam, distance, bearing, SOG, and COG.
 
 ### 🕰️ Past anchorages
 
-If your server has a history provider plugin (e.g. [signalk-questdb](https://github.com/dirkwa/signalk-questdb)), the plugin logs every anchoring session (drop and raise times, anchor position, watch zone) and a clock button appears on the map. It opens a list of past anchorages; pick one and its full vessel track is reconstructed from the server's recorded position history and drawn on the map. The same mechanism rebuilds the live scribble track when the tracks plugin can't supply it (not installed, or errored) — recorded position history survives where the in-memory track doesn't. Without a history provider everything behaves as before.
+If your server has a history provider plugin (e.g. [signalk-questdb](https://github.com/dirkwa/signalk-questdb)), the plugin logs every anchoring session (drop and raise times, anchor position, watch zone) and a clock button appears on the map. It opens a list of past anchorages; pick one and its full vessel track is reconstructed from the server's recorded position history and drawn on the map. Without a history provider everything behaves as before.
 
 ### 📊 Heads-up panels
 
@@ -113,8 +113,8 @@ Besides the web UI, the plugin exposes an HTTP API (drop/raise the anchor, set t
 
 This app pairs well with some other software:
 
-- **[signalk-questdb](https://github.com/dirkwa/signalk-questdb)** (or any v2 History API provider): enables the past-anchorages browser and makes the live scribble track survive server restarts.
-- **[@signalk/tracks-plugin](https://github.com/SignalK/tracks)**: currently used for the historical tracks. I recommend a resolution of 1000ms and 86400 points, which gives you high-resolution data for the last 24 hours. **Note:** support for the tracks plugin will be dropped in a future release — use a history provider instead (signalk-questdb recommended).
+- **[@signalk/tracks-plugin](https://github.com/SignalK/tracks)**: draws the historical tracks, yours and other vessels'; install it from the App Store. Version 3 keeps its own record across restarts, by default one position a minute (its _Track resolution_ setting). With a history provider installed, your own track is filled in from that provider's finer record instead, so the default is fine. Without one, a resolution of 1000 ms gives a one-second track.
+- **[signalk-questdb](https://github.com/dirkwa/signalk-questdb)** (or any v2 History API provider): enables the past-anchorages browser, and gives the tracks plugin a finer record of your own track to draw.
 - **[signalk-tides](https://github.com/bkeepers/signalk-tides)**: feeds the scope calculator and tide panel.
 - **[signalk-autostate](https://github.com/meri-imperiumi/signalk-autostate)**: just by using the anchor app, the plugin can tell the difference between moored and anchored. Great for automating things like an anchor light.
 - **Node-RED + Pushbullet**: for push notifications to your phone. Really great for when you're off the boat, and handy on the boat too.

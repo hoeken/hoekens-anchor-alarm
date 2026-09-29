@@ -368,7 +368,7 @@ class AnchorAlarm {
 
         // Everything below runs only once /vessels/self has resolved: buildMap
         // constructs the FleetLayer (whose constructor starts the heavy
-        // /tracks fetch), and initAnchorageHistory probes the heavy History
+        // track fetches), and initAnchorageHistory probes the heavy History
         // API — deliberately kept off the critical path of the bulk load.
         this.buildMap();
         // With the FleetLayer now able to receive them, subscribe vessels.*:
@@ -582,10 +582,8 @@ class AnchorAlarm {
   // installed. The availability probe is itself a history query, so it only
   // runs when the past-anchorages feature is on — at startup here, or on the
   // first enable from the settings dialog (see setAnchorageHistoryEnabled).
-  // Own-track rehydration doesn't ride on this probe: the fleet layer invokes
-  // it as a fallback of the /tracks load (see rehydrateOwnTrack), so it works
-  // with past anchorages off. Without a provider the probe resolves false and
-  // the control is never added.
+  // Without a provider the probe resolves false and the control is never
+  // added.
   initAnchorageHistory() {
     if (this.config.enableAnchorageHistory)
       this.probeAnchorageHistory();
@@ -631,44 +629,6 @@ class AnchorAlarm {
       this.map.removeControl(this.historyControl);
       this.historyControl = null;
     }
-  }
-
-  // Replace the own-boat scribble track with the full current-session track
-  // from the History API (droppedAt → now). Invoked by the fleet layer only
-  // as a fallback when the tracks plugin couldn't supply the own track (see
-  // FleetLayer.rehydrateOwnTrackFallback); only an open session has a track
-  // worth rebuilding, so it no-ops when the anchor is up. Failures are
-  // non-fatal: whatever track the fleet layer already has keeps being used.
-  rehydrateOwnTrack() {
-    if (!this.state.isAnchored())
-      return;
-    this.signalK
-      .fetchSessions()
-      .then(({ sessions }) => {
-        const open = sessions && sessions.find((s) => !s.raisedAt);
-        if (!open)
-          return;
-        const from = open.droppedAt;
-        const to = new Date().toISOString();
-        const durationSec = Math.max(1, (Date.parse(to) - Date.parse(from)) / 1000);
-        // Same point budget as the anchorage-history display: cap what a
-        // days-long session sends over and hands to the hotline.
-        const resolution = Math.max(1, Math.ceil(durationSec / 2000));
-        return this.signalK
-          .fetchPositionHistory(from, to, resolution)
-          .then((response) => {
-            const positions = SignalKHelper.positionsFromHistory(response);
-            if (positions.length)
-              this.fleetLayer?.seedOwnTrack(positions, resolution * 1000);
-          });
-      })
-      .catch((error) => {
-        // A 404/501 just means no history provider is installed — the
-        // fallback quietly has nothing to offer then.
-        if (error && (error.status === 404 || error.status === 501))
-          return;
-        console.warn("Own-track rehydration from history failed", error);
-      });
   }
 
   // Recompute/re-render on a fixed cadence. Started only after buildMap so
