@@ -1,3 +1,17 @@
+# v2.13.1
+
+## Improvements
+
+- Track history loads much faster: the map now fetches the last 24 hours (or back to when you dropped anchor) instead of every track point ever recorded
+- Your own boat's track now comes straight from the Tracks plugin, including history from a history provider where one is recorded
+- The Tracks plugin is now recommended rather than bundled, so you can install whichever version you want from the App Store. If you only had it because this plugin installed it, reinstall it from the App Store after upgrading
+
+## Bug fixes
+
+- Raising the anchor now clears the anchor notification instead of leaving an "Off" alarm behind
+- Past anchorage tracks and your own track now show up with history providers other than QuestDB, such as InfluxDB and Parquet
+- Fewer genuine track points get thrown out as glitches
+
 # v2.13.0
 
 ## Requires Signal K server v2.31
