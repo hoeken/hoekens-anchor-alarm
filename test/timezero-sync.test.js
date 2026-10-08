@@ -141,11 +141,18 @@ describe("Values CSV", () => {
     assert.equal(parseValues(undefined), null);
   });
 
-  test("uses the TimeZero epoch (seconds since 1990) for timestamps", () => {
-    // Unix 2000-01-01 = 946684800; TZ epoch offset = 631152000.
+  test("uses the TimeZero epoch (seconds since 2000) for timestamps", () => {
+    // Unix 2000-01-01T00:00:00Z is TimeZero time 0.
     const values = buildValues(null, 946684800);
-    const tz = Number(values.split(",")[2]);
-    assert.equal(tz, 946684800 - 631152000);
+    assert.equal(Number(values.split(",")[2]), 0);
+  });
+
+  test("writes timestamps on the scale TimeZero's own records use", () => {
+    // From a live TZ Professional: route "Rte 2025-01-28" has CreationDate
+    // 791320587. Writing that instant must reproduce the same number.
+    const created = Date.parse("2025-01-27T19:16:27Z") / 1000;
+    const values = buildValues(null, created);
+    assert.equal(Number(values.split(",")[2]), 791320587);
   });
 });
 
