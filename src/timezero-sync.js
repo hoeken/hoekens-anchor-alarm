@@ -165,6 +165,12 @@ export function parseValues(values) {
 const F_VISIBLE_HOSTS = 8;
 const F_ANCHOR_TICK = 14;
 
+// Our tick for TimeZero's synced tables (routes, marks and their data), which
+// beacon field 10 advertises. We hold none of them, so it never moves: a peer
+// syncs our empty tables once, records this tick, and leaves them alone.
+const TABLE_TICK = 1;
+const SYNCED_TABLES = /\/LanSynchronizationApi\/(UserObject|PlanningRoutePoint|LargeData)$/;
+
 export function buildBeacon(state) {
   return [
     PROTOCOL,
@@ -183,7 +189,7 @@ export function buildBeacon(state) {
     // chosen and have our anchor pulled.
     String(state.visibleHosts ?? 1),
     "0", // [9] CanCloudSync
-    String(state.currentTick ?? 1), // [10]
+    String(TABLE_TICK), // [10] currentTick
     "1", // [11] activeRouteTick
     "0", // [12] largeDataHash
     "22", // [13] schemaVersion — TimeZero broadcasts 22
@@ -494,6 +500,23 @@ export class TimeZeroSync {
         });
         return;
       }
+      // A peer syncing tables reads each one from its last tick. Answer with
+      // the shape TimeZero itself returns for "nothing new": anything else
+      // leaves the round unfinished, and the peer repeats it from tick 0
+      // every second without ever reaching the anchor.
+      if (SYNCED_TABLES.test(path) && req.method === "GET") {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            CurrentTick: TABLE_TICK,
+            SyncTicks: "",
+            RemainingToSync: 0,
+            Objects: [],
+            Layers: [],
+          }),
+        );
+        return;
+      }
       // Answer 200 to TZ's reachability probe (bare GET /) and everything
       // else so it treats us as a live peer.
       res.writeHead(200, { "Content-Type": "application/json" });
@@ -646,7 +669,6 @@ export class TimeZeroSync {
         uuid: this.uuid,
         userId: this.userId,
         anchorWatchTick: this.anchorTick,
-        currentTick: this.anchorTick,
         visibleHosts: this._advertisedVisibleHosts(),
       }),
       "utf8",
