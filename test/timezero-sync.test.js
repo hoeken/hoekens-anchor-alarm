@@ -1,5 +1,8 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import {
   toMercator,
   fromMercator,
@@ -475,6 +478,82 @@ describe("advertised anchor tick", () => {
     const before = sync.anchorTick;
     sync.notifyAnchorChanged();
     assert.equal(sync.anchorTick, before + 1);
+  });
+});
+
+describe("anchor tick across a restart", () => {
+  const tempStateFile = () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "aa-tz-"));
+    return { file: path.join(dir, "timezero-sync.json"), dir };
+  };
+
+  // The beacon a TZ Professional on NavNet sends, captured live, advertising
+  // the given anchor tick in field 14.
+  const navnetBeacon = (tick) =>
+    Buffer.from(
+      `TZ Sync 1.0;NAVSTATION;TZ Professional;;;;NAVSTATION/7b8e1933-6e73-4b0e-a94d-c5c43b138f36;33745900;2;1;31892;3;0;167;${tick};0;175906`,
+    );
+
+  test("a restarted engine resumes the tick it last advertised", () => {
+    const { file, dir } = tempStateFile();
+    try {
+      const before = new TimeZeroSync(stubApp(), { stateFile: file });
+      before.peers.set("172.31.3.50", { anchorWatchTick: 2062 });
+      before.notifyAnchorChanged();
+      assert.equal(before.anchorTick, 2063);
+
+      const after = new TimeZeroSync(stubApp(), { stateFile: file });
+      assert.equal(after.anchorTick, 2063);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("a restarted engine resumes a tick adopted from a peer", () => {
+    const { file, dir } = tempStateFile();
+    try {
+      const before = new TimeZeroSync(stubApp(), { stateFile: file });
+      before._applyRemote(JSON.stringify({ ChangeTick: 2062, Values: "NULL,10,0,0" }));
+
+      const after = new TimeZeroSync(stubApp(), { stateFile: file });
+      assert.equal(after.anchorTick, 2062);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("starts from 1 without a usable state file", () => {
+    const { file, dir } = tempStateFile();
+    try {
+      assert.equal(new TimeZeroSync(stubApp(), { stateFile: file }).anchorTick, 1);
+      for (const content of ["{not json", '{"anchorTick":-3}', '{"anchorTick":"2062"}']) {
+        fs.writeFileSync(file, content);
+        assert.equal(new TimeZeroSync(stubApp(), { stateFile: file }).anchorTick, 1, content);
+      }
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("does not pull a peer's unchanged anchor after a restart", () => {
+    // Before the restart we advertised 2063; TimeZero still holds the older
+    // state at 2062. Pulling it would overwrite the anchor the plugin restored.
+    const { file, dir } = tempStateFile();
+    try {
+      fs.writeFileSync(file, JSON.stringify({ anchorTick: 2063 }));
+      const pulled = [];
+      const sync = new TimeZeroSync(stubApp(), { stateFile: file });
+      sync._pullFrom = (peer) => pulled.push(peer.anchorWatchTick);
+
+      sync._onBeacon(navnetBeacon(2062), "172.31.3.50");
+      assert.deepEqual(pulled, []);
+
+      // A change made on TimeZero while we were down still comes through.
+      sync._onBeacon(navnetBeacon(2064), "172.31.3.50");
+      assert.deepEqual(pulled, [2064]);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 
