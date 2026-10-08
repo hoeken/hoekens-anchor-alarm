@@ -335,9 +335,9 @@ export function buildSchema(app) {
       },
       enableTimeZeroSync: {
         type: "boolean",
-        title: "Sync Anchor with TimeZero (LAN)",
+        title: "Sync Anchor with TimeZero (LAN) — deprecated",
         description:
-          "Broadcast this anchor to — and accept anchor changes from — TimeZero (TZ Professional / TZ iBoat) instances on the local network, so dropping or raising here shows up there and vice versa. Only works when Signal K is reachable on a Furuno NavNet (172.31.x.x) address, which TimeZero allows without a My TIMEZERO account. Note: TimeZero's anchor watch is a circle, so only circular watch zones sync.",
+          "Deprecated: the TimeZero Sync plugin (signalk-timezero-sync) syncs the anchor watch together with routes, waypoints and the active route. Use it instead and leave this off; only one of them can talk to TimeZero. Broadcast this anchor to — and accept anchor changes from — TimeZero (TZ Professional / TZ iBoat) instances on the local network, so dropping or raising here shows up there and vice versa. Only works when Signal K is reachable on a Furuno NavNet (172.31.x.x) address, which TimeZero allows without a My TIMEZERO account. Note: TimeZero's anchor watch is a circle, so only circular watch zones sync.",
         default: false,
       },
       timeZeroHostName: {
