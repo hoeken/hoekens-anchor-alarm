@@ -38,6 +38,11 @@ const BEACON_INTERVAL_MS = 1000;
 const PEER_STALE_MS = 5000;
 // How long a peer may hold the sync lock before we treat it as abandoned.
 const LOCK_TIMEOUT_MS = 30000;
+// How long to wait before pushing the same anchor tick to a peer again, when
+// its beacon still shows it behind. Beacons arrive every second; this keeps a
+// peer that refuses, or accepts without adopting the tick, from being asked
+// on every one of them.
+const PUSH_RETRY_MS = 30000;
 // visibleHosts we advertise when no other TZ peer is on the network: high so TZ
 // elects us master and pulls the anchor from us (its only path to a plugin-side
 // raise/drop). When real TZ peers are present we advertise LOW instead, so we
@@ -166,6 +171,10 @@ export function parseValues(values) {
 // [13] stays put (it's the schema version — 22 on TZ, and the same across
 // unrelated peers). [11] likewise matches the ActiveRoute CurrentTick.
 const F_VISIBLE_HOSTS = 8;
+
+// A peer that takes part in TimeZero anchor sync, as opposed to an unrelated
+// host that happens to broadcast on the discovery port.
+const isTzSyncPeer = (peer) => peer.canSync && (peer.deviceType || "").startsWith("TZ");
 const F_ANCHOR_TICK = 14;
 
 // Our tick for TimeZero's synced tables (routes, marks and their data), which
@@ -263,6 +272,10 @@ export class TimeZeroSync {
     this.peers = new Map();
     // Guards against overlapping pulls; see _pullFrom.
     this.pulling = false;
+    // Guards against overlapping pushes, and per peer address the tick last
+    // pushed and when it may be pushed again; see _pushTo.
+    this.pushing = false;
+    this.pushes = new Map();
     // NetworkID of the peer currently holding our sync lock, and when it was
     // taken. A peer that dies mid-sync never sends ReleaseLock, so the lock
     // expires rather than blocking every other peer until a plugin restart.
@@ -384,12 +397,13 @@ export class TimeZeroSync {
   //
   // TZ elects the peer advertising the highest count as sync master and pulls
   // from it, so a high value is how a plugin-side anchor raise/drop reaches TZ
-  // (the plugin never pushes to TZ; TZ has to pull). But when two real TZ
+  // when no TimeZero master is present. But when two real TZ
   // instances are on the network they run that same election between themselves
   // to sync routes/marks — a flat high value from us wins it and stalls their
   // sync (issue #36). So advertise high only when we're the sole TZ authority,
   // and step aside otherwise. Our own TZ->plugin pull is gated on the anchor
-  // tick and isTrustedPeer, not on this field, so it keeps working either way.
+  // tick and isTrustedPeer, not on this field, so it keeps working either way;
+  // while we step aside, our own changes reach TZ by push (see _pushTo).
   _advertisedVisibleHosts() {
     return this._otherTzPeerPresent() ? VISIBLE_HOSTS_DEFERRED : VISIBLE_HOSTS_SOLE;
   }
@@ -402,7 +416,7 @@ export class TimeZeroSync {
     for (const peer of this.peers.values()) {
       if (now - (peer.lastSeen ?? 0) > PEER_STALE_MS)
         continue;
-      if (peer.canSync && (peer.deviceType || "").startsWith("TZ"))
+      if (isTzSyncPeer(peer))
         return true;
     }
     return false;
@@ -580,21 +594,94 @@ export class TimeZeroSync {
     }
   }
 
-  // Minimal HTTP GET. TimeZero responds with chunked encoding, so this must
-  // speak HTTP/1.1 (Node's http client does).
+  // Push our anchor to a peer the way TimeZero peers do between themselves:
+  // take the sync lock, POST the anchor, release the lock. A busy lock is
+  // retried on the next beacon. Otherwise the same tick goes to that peer at
+  // most once per PUSH_RETRY_MS, whether the push failed or the peer took it
+  // without adopting the tick; a newer local change is pushed straight away.
+  async _pushTo(peer) {
+    const last = this.pushes.get(peer.address);
+    if (this.pushing || (last?.tick === this.anchorTick && Date.now() < last.retryAt))
+      return;
+    this.pushing = true;
+    const networkId = `${this.hostName}/${this.uuid}`;
+    // The tick this attempt is for; the local anchor may move on meanwhile.
+    let tick = this.anchorTick;
+    const attempted = () =>
+      this.pushes.set(peer.address, { tick, retryAt: Date.now() + PUSH_RETRY_MS });
+    try {
+      const lock = await this._get(
+        peer.address,
+        `/LanSynchronizationApi/GetLock?NetworkID=${encodeURIComponent(networkId)}`,
+      );
+      if (lock.status !== 202) {
+        this.app.debug(
+          `TimeZero sync lock busy on ${peer.name} (${lock.status}); retrying next beacon`,
+        );
+        return;
+      }
+      try {
+        // Sync may have been stopped while we waited for the lock.
+        if (!this.started)
+          return;
+        const anchor = this._currentSerialized();
+        tick = anchor.ChangeTick;
+        attempted();
+        const res = await this._post(
+          peer.address,
+          "/LanSynchronizationApi/AnchorWatch",
+          JSON.stringify(anchor),
+        );
+        if (res.status >= 200 && res.status < 300) {
+          this.app.debug(
+            `TimeZero sync pushed anchor to ${peer.name} (tick ${peer.anchorWatchTick} -> ${anchor.ChangeTick})`,
+          );
+        } else {
+          this.app.debug(`TimeZero sync push to ${peer.name} refused (${res.status})`);
+        }
+      } finally {
+        await this._get(
+          peer.address,
+          `/LanSynchronizationApi/ReleaseLock?NetworkID=${encodeURIComponent(networkId)}`,
+        ).catch(() => {});
+      }
+    } catch (err) {
+      attempted();
+      this.app.debug(`TimeZero sync push to ${peer.name} failed: ${err.message}`);
+    } finally {
+      this.pushing = false;
+    }
+  }
+
   _get(address, path) {
+    return this._request(address, path);
+  }
+
+  // TimeZero sends its own POST bodies as text/plain JSON.
+  _post(address, path, body) {
+    return this._request(address, path, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+      body,
+    });
+  }
+
+  // Minimal HTTP client. TimeZero responds with chunked encoding, so this must
+  // speak HTTP/1.1 (Node's http client does).
+  _request(address, path, { method = "GET", headers = {}, body } = {}) {
     return new Promise((resolve, reject) => {
-      const req = http.get(
-        { host: address, port: COMMAND_PORT, path, timeout: 5000 },
+      const req = http.request(
+        { host: address, port: COMMAND_PORT, path, method, headers, timeout: 5000 },
         (res) => {
-          let body = "";
+          let data = "";
           res.setEncoding("utf8");
-          res.on("data", (c) => (body += c));
-          res.on("end", () => resolve({ status: res.statusCode, body }));
+          res.on("data", (c) => (data += c));
+          res.on("end", () => resolve({ status: res.statusCode, body: data }));
         },
       );
       req.on("timeout", () => req.destroy(new Error("timeout")));
       req.on("error", reject);
+      req.end(body);
     });
   }
 
@@ -635,8 +722,15 @@ export class TimeZeroSync {
         );
       // A peer advertising a higher anchor tick than ours has an anchor
       // change we haven't seen — go and fetch it.
-      if (this.isTrustedPeer(address) && peer.anchorWatchTick > this.anchorTick)
+      if (!this.isTrustedPeer(address))
+        return;
+      if (peer.anchorWatchTick > this.anchorTick)
         this._pullFrom(peer, known?.anchorWatchTick);
+      // A TimeZero behind us missed our last anchor change. TimeZero pulls
+      // only from the master it elected, which is never us while a real
+      // TimeZero is present, so take the change to it.
+      else if (peer.anchorWatchTick < this.anchorTick && isTzSyncPeer(peer))
+        this._pushTo(peer);
     } catch {
       /* not a beacon we understand */
     }

@@ -18,6 +18,13 @@ import {
 // A minimal app stub: the sync engine only uses debug/error for logging.
 const stubApp = () => ({ debug() {}, error() {} });
 
+// Tests use real TimeZero addresses and beacons, and pulls and pushes go to
+// port 32000 on whatever address a beacon came from. On a boat's NavNet that
+// is a live chartplotter, so no request leaves the process unless a test
+// stubs the transport itself.
+TimeZeroSync.prototype._request = () =>
+  Promise.reject(new Error("network access is disabled in tests"));
+
 // Ground-truth samples captured from live TimeZero Professional hardware
 // (MASTERCABIN) over the LAN sync protocol. These pin the wire format so a
 // regression in the codec is caught immediately.
@@ -620,6 +627,160 @@ describe("anchor tick across a restart", () => {
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe("pushing our anchor to a TimeZero that is behind", () => {
+  // TimeZero only pulls from the master it elected. With a real TimeZero on
+  // the network we step aside, so a local drop or raise has to be pushed:
+  // lock, POST AnchorWatch, release — accepted live by a TZ Professional.
+  const tzBeacon = (tick, deviceType = "TZ Professional") =>
+    Buffer.from(
+      `TZ Sync 1.0;NAVSTATION;${deviceType};;;;NAVSTATION/7b8e1933-6e73-4b0e-a94d-c5c43b138f36;33745900;2;1;31892;3;0;167;${tick};0;175906`,
+    );
+  const ANCHOR_SET = { position: { latitude: -17.8076, longitude: 177.1549 }, radius: 60 };
+  const flush = () => new Promise((r) => setImmediate(r));
+
+  // A sync engine at tick 2065 whose peer traffic is recorded, not sent.
+  const pushingSync = ({ lock = 202, post = 201 } = {}) => {
+    const calls = [];
+    const sync = new TimeZeroSync(stubApp(), { anchorProvider: () => ANCHOR_SET });
+    sync.anchorTick = 2065;
+    sync.started = true;
+    sync._get = async (address, path) => {
+      calls.push(`GET ${path.split("?")[0]}`);
+      return { status: path.includes("GetLock") ? lock : 200, body: "" };
+    };
+    sync._post = async (address, path, body) => {
+      calls.push(`POST ${path} ${body}`);
+      return { status: post, body: "" };
+    };
+    return { sync, calls };
+  };
+
+  test("locks, posts our anchor, then releases", async () => {
+    const { sync, calls } = pushingSync();
+    sync._onBeacon(tzBeacon(2062), "172.31.3.50");
+    await flush();
+    assert.equal(calls.length, 3);
+    assert.equal(calls[0], "GET /LanSynchronizationApi/GetLock");
+    assert.match(calls[1], /^POST \/LanSynchronizationApi\/AnchorWatch /);
+    assert.equal(calls[2], "GET /LanSynchronizationApi/ReleaseLock");
+    const dto = JSON.parse(calls[1].split(" ").slice(2).join(" "));
+    assert.equal(dto.ChangeTick, 2065);
+    const pushed = parseValues(dto.Values);
+    assert.equal(pushed.radius, 60);
+    assert.ok(Math.abs(pushed.position.latitude - ANCHOR_SET.position.latitude) < 1e-6);
+  });
+
+  test("pushes the same tick again only after the retry delay", async () => {
+    // The peer took the push but its beacon still shows the old tick.
+    const { sync, calls } = pushingSync();
+    const posts = () => calls.filter((c) => c.startsWith("POST")).length;
+    sync._onBeacon(tzBeacon(2062), "172.31.3.50");
+    await flush();
+    sync._onBeacon(tzBeacon(2062), "172.31.3.50");
+    await flush();
+    assert.equal(posts(), 1);
+
+    sync.pushes.get("172.31.3.50").retryAt = Date.now() - 1;
+    sync._onBeacon(tzBeacon(2062), "172.31.3.50");
+    await flush();
+    assert.equal(posts(), 2);
+  });
+
+  test("pushes a newer local change straight away, even after a failure", async () => {
+    const { sync, calls } = pushingSync({ post: 500 });
+    sync._onBeacon(tzBeacon(2062), "172.31.3.50");
+    await flush();
+    sync.anchorTick = 2066;
+    sync._onBeacon(tzBeacon(2062), "172.31.3.50");
+    await flush();
+    const ticks = calls
+      .filter((c) => c.startsWith("POST"))
+      .map((c) => JSON.parse(c.split(" ").slice(2).join(" ")).ChangeTick);
+    assert.deepEqual(ticks, [2065, 2066]);
+  });
+
+  test("a failed push doesn't hold back a change made while it was in flight", async () => {
+    const { sync, calls } = pushingSync();
+    sync._post = async (address, path, body) => {
+      calls.push(`POST ${path} ${body}`);
+      sync.anchorTick = 2066; // the anchor moves while the POST is pending
+      throw new Error("connection reset");
+    };
+    sync._onBeacon(tzBeacon(2062), "172.31.3.50");
+    await flush();
+    sync._post = async (address, path, body) => {
+      calls.push(`POST ${path} ${body}`);
+      return { status: 201, body: "" };
+    };
+    sync._onBeacon(tzBeacon(2062), "172.31.3.50");
+    await flush();
+    const ticks = calls
+      .filter((c) => c.startsWith("POST"))
+      .map((c) => JSON.parse(c.split(" ").slice(2).join(" ")).ChangeTick);
+    assert.deepEqual(ticks, [2065, 2066]);
+  });
+
+  test("does not post once sync has stopped, and still releases the lock", async () => {
+    const { sync, calls } = pushingSync();
+    const getLock = sync._get;
+    sync._get = async (address, path) => {
+      // The plugin stops sync while the lock request is in flight.
+      if (path.includes("GetLock"))
+        sync.stop();
+      return getLock(address, path);
+    };
+    sync._onBeacon(tzBeacon(2062), "172.31.3.50");
+    await flush();
+    assert.deepEqual(calls, [
+      "GET /LanSynchronizationApi/GetLock",
+      "GET /LanSynchronizationApi/ReleaseLock",
+    ]);
+  });
+
+  test("retries a busy lock on the next beacon", async () => {
+    const { sync, calls } = pushingSync({ lock: 409 });
+    sync._onBeacon(tzBeacon(2062), "172.31.3.50");
+    await flush();
+    sync._onBeacon(tzBeacon(2062), "172.31.3.50");
+    await flush();
+    assert.deepEqual(calls, [
+      "GET /LanSynchronizationApi/GetLock",
+      "GET /LanSynchronizationApi/GetLock",
+    ]);
+  });
+
+  test("waits before offering a refused push again", async () => {
+    const { sync, calls } = pushingSync({ post: 500 });
+    sync._onBeacon(tzBeacon(2062), "172.31.3.50");
+    await flush();
+    sync._onBeacon(tzBeacon(2062), "172.31.3.50");
+    await flush();
+    assert.equal(calls.filter((c) => c.startsWith("POST")).length, 1);
+
+    sync.pushes.get("172.31.3.50").retryAt = Date.now() - 1;
+    sync._onBeacon(tzBeacon(2062), "172.31.3.50");
+    await flush();
+    assert.equal(calls.filter((c) => c.startsWith("POST")).length, 2);
+  });
+
+  test("leaves peers alone that are level, untrusted, or not TimeZero", async () => {
+    const { sync, calls } = pushingSync();
+    sync._onBeacon(tzBeacon(2065), "172.31.3.50"); // already has our tick
+    sync._onBeacon(tzBeacon(2062), "192.168.0.50"); // off NavNet, no user id
+    sync._onBeacon(tzBeacon(2062, "Chartplotter"), "172.31.3.60");
+    await flush();
+    assert.deepEqual(calls, []);
+  });
+
+  test("pulls rather than pushes when the peer is ahead", async () => {
+    const { sync, calls } = pushingSync();
+    sync._onBeacon(tzBeacon(2070), "172.31.3.50");
+    await flush();
+    assert.equal(calls.filter((c) => c.startsWith("POST")).length, 0);
+    assert.ok(calls.includes("GET /LanSynchronizationApi/AnchorWatch"));
   });
 });
 
