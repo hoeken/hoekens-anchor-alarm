@@ -211,6 +211,65 @@ describe("discovery beacon", () => {
 // election two real TZ Professional peers run between themselves to sync
 // routes/marks. We advertise high only when no other TZ peer is visible, and
 // step aside otherwise; our own TZ->plugin pull doesn't depend on the field.
+describe("synced tables", () => {
+  // TimeZero, as sync master, reads each table from the tick it last saw.
+  // Captured live: when our reply lacked this shape it repeated the read from
+  // tick 0 about once a second and never got to the anchor.
+  const serve = async (sync, path) => {
+    const { createServer, get } = await import("node:http");
+    const server = createServer((req, res) => {
+      Object.defineProperty(req.socket, "remoteAddress", {
+        value: "172.31.3.50",
+        configurable: true,
+      });
+      sync._handle(req, res);
+    });
+    await new Promise((r) => server.listen(0, "127.0.0.1", r));
+    try {
+      return await new Promise((resolve, reject) => {
+        const req = get({ host: "127.0.0.1", port: server.address().port, path }, (res) => {
+          let body = "";
+          res.on("data", (c) => (body += c));
+          res.on("end", () => resolve({ status: res.statusCode, body }));
+        });
+        req.on("error", reject);
+      });
+    } finally {
+      server.close();
+    }
+  };
+
+  test("answers each table read with TimeZero's empty-result shape", async () => {
+    const sync = new TimeZeroSync(stubApp(), {});
+    for (const table of ["UserObject", "PlanningRoutePoint", "LargeData"]) {
+      const res = await serve(
+        sync,
+        `/LanSynchronizationApi/${table}?MinTick=0&Limit=5000&CanUseLayers=False`,
+      );
+      assert.equal(res.status, 200, table);
+      assert.deepEqual(
+        JSON.parse(res.body),
+        { CurrentTick: 1, SyncTicks: "", RemainingToSync: 0, Objects: [], Layers: [] },
+        table,
+      );
+    }
+  });
+
+  test("advertises the table tick it serves, not the anchor tick", () => {
+    // Field 10 is the table tick. Advertising the anchor tick there made
+    // TimeZero think we held thousands of route and mark changes.
+    const sync = new TimeZeroSync(stubApp(), {});
+    sync.anchorTick = 2065;
+    const sent = [];
+    sync.socket = { send: (buf) => sent.push(buf.toString("utf8")) };
+    sync._navNetBroadcasts = () => ["172.31.255.255"];
+    sync._sendBeacon();
+    const f = sent[0].split(";");
+    assert.equal(f[10], "1");
+    assert.equal(f[14], "2065");
+  });
+});
+
 describe("advertised visibleHosts (master-election deference)", () => {
   const recent = (extra) => ({
     canSync: true,
