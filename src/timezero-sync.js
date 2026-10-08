@@ -1,4 +1,5 @@
 import dgram from "dgram";
+import fs from "fs";
 import http from "http";
 import os from "os";
 
@@ -236,10 +237,12 @@ export class TimeZeroSync {
     this.server = null;
     this.beaconTimer = null;
     // Monotonic tick; bumped every time our anchor changes so TZ sees us as
-    // newer and pulls. Persisted lifetime isn't needed — TZ compares relative
-    // to what it last saw, and a restart re-advertising a low tick just means
-    // TZ won't pull a stale copy from us, which is correct.
-    this.anchorTick = 1;
+    // newer and pulls, and compared against peer beacons to decide when to
+    // pull from them. It has to outlive a restart: starting again from 1
+    // would make every peer's tick look newer, and the first beacon would
+    // pull TimeZero's last state over the anchor the plugin just restored.
+    this.stateFile = options.stateFile || null;
+    this.anchorTick = this._loadAnchorTick();
     // Provider for the current anchor: () => {position:{latitude,longitude},
     // radius} | null. Set by the plugin so a TZ GET reflects live SK state.
     this.anchorProvider = options.anchorProvider || (() => null);
@@ -332,13 +335,40 @@ export class TimeZeroSync {
   // Bump our advertised anchor tick so the next beacon tells peers we changed.
   //
   // The tick is account-wide in TimeZero and already in the thousands, so it
-  // isn't enough to increment our own counter: after a plugin restart we would
-  // start again from 1 and every local anchor change would look older than
-  // TimeZero's current state, so no peer would ever pull it. Step past the
+  // isn't enough to increment our own counter: on a first start we begin at 1
+  // and every local anchor change would look older than TimeZero's current
+  // state, so no peer would ever pull it. Step past the
   // highest tick any peer has advertised instead, which keeps a local change
   // strictly newer than everything we've seen.
   notifyAnchorChanged() {
-    this.anchorTick = Math.max(this.anchorTick, this._highestPeerTick()) + 1;
+    this._setAnchorTick(Math.max(this.anchorTick, this._highestPeerTick()) + 1);
+  }
+
+  // The tick saved by the last run, or 1 when there is none (first start, sync
+  // newly enabled, unreadable file).
+  _loadAnchorTick() {
+    if (!this.stateFile)
+      return 1;
+    try {
+      const tick = JSON.parse(fs.readFileSync(this.stateFile, "utf8"))?.anchorTick;
+      return Number.isInteger(tick) && tick > 0 ? tick : 1;
+    } catch {
+      return 1;
+    }
+  }
+
+  // Atomic write (tmp + rename) so a crash mid-write can't tear the file.
+  _setAnchorTick(tick) {
+    this.anchorTick = tick;
+    if (!this.stateFile)
+      return;
+    try {
+      const tmp = `${this.stateFile}.tmp`;
+      fs.writeFileSync(tmp, JSON.stringify({ anchorTick: tick }));
+      fs.renameSync(tmp, this.stateFile);
+    } catch (err) {
+      this.app.error(`TimeZero sync state write failed: ${err.message}`);
+    }
   }
 
   // The visibleHosts count to advertise in our beacon.
@@ -557,10 +587,32 @@ export class TimeZeroSync {
         `TimeZero sync received anchor tick=${dto.ChangeTick} ${anchor ? "set" : "raised"}`,
       );
       if (typeof dto.ChangeTick === "number")
-        this.anchorTick = dto.ChangeTick;
+        this._setAnchorTick(dto.ChangeTick);
       this.onRemoteAnchor(anchor);
     } catch (err) {
       this.app.error(`TimeZero sync bad remote anchor: ${err.message}`);
+    }
+  }
+
+  _onBeacon(msg, address) {
+    try {
+      const peer = parseBeacon(msg.toString("utf8"), address);
+      // Ignore our own beacon echoing back off the broadcast.
+      if (!peer || peer.uuid?.endsWith(this.uuid))
+        return;
+      const known = this.peers.get(address);
+      peer.lastSeen = Date.now();
+      this.peers.set(address, peer);
+      if (!known)
+        this.app.debug(
+          `TimeZero peer ${peer.name} (${address}) ${peer.deviceType}`,
+        );
+      // A peer advertising a higher anchor tick than ours has an anchor
+      // change we haven't seen — go and fetch it.
+      if (this.isTrustedPeer(address) && peer.anchorWatchTick > this.anchorTick)
+        this._pullFrom(peer, known?.anchorWatchTick);
+    } catch {
+      /* not a beacon we understand */
     }
   }
 
@@ -569,27 +621,7 @@ export class TimeZeroSync {
     socket.on("error", (err) => {
       this.app.error(`TimeZero sync discovery error: ${err.message}`);
     });
-    socket.on("message", (msg, rinfo) => {
-      try {
-        const peer = parseBeacon(msg.toString("utf8"), rinfo.address);
-        // Ignore our own beacon echoing back off the broadcast.
-        if (!peer || peer.uuid?.endsWith(this.uuid))
-          return;
-        const known = this.peers.get(rinfo.address);
-        peer.lastSeen = Date.now();
-        this.peers.set(rinfo.address, peer);
-        if (!known)
-          this.app.debug(
-            `TimeZero peer ${peer.name} (${rinfo.address}) ${peer.deviceType}`,
-          );
-        // A peer advertising a higher anchor tick than ours has an anchor
-        // change we haven't seen — go and fetch it.
-        if (this.isTrustedPeer(rinfo.address) && peer.anchorWatchTick > this.anchorTick)
-          this._pullFrom(peer, known?.anchorWatchTick);
-      } catch {
-        /* not a beacon we understand */
-      }
-    });
+    socket.on("message", (msg, rinfo) => this._onBeacon(msg, rinfo.address));
     socket.bind(DISCOVERY_PORT, () => {
       try {
         socket.setBroadcast(true);

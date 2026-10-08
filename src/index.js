@@ -14,6 +14,7 @@
  */
 
 import { degreesToRadians, distance, point, radiansToDegrees } from "@turf/turf";
+import path from "path";
 import semver from "semver";
 import { Watchdog } from "./watchdog.js";
 import { metas, buildSchema, applyDefaults, migrateConfig, readZoneConfig } from "./schema.js";
@@ -33,6 +34,9 @@ import { ValidationError, StateError } from "./errors.js";
 // to run rather than half-working. The "-0" floor admits the 2.31.0 betas,
 // which sort below 2.31.0 and would otherwise be turned away.
 const MIN_SERVER_VERSION = ">=2.31.0-0";
+
+// TimeZero sync state kept across restarts, in the plugin data dir.
+const TIMEZERO_STATE_FILE = "timezero-sync.json";
 
 export default function (app) {
   const plugin = {};
@@ -177,6 +181,7 @@ export default function (app) {
           const timeZeroSync = new TimeZeroSync(app, {
             hostName: plugin.configuration.timeZeroHostName || "SignalK",
             userId: userId,
+            stateFile: path.join(app.getDataDirPath(), TIMEZERO_STATE_FILE),
             anchorProvider: () => plugin.currentAnchorForSync(),
             onRemoteAnchor: (anchor) => plugin.applyRemoteAnchor(anchor),
           });
