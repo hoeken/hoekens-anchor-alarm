@@ -54,8 +54,11 @@ const DEVICE_TYPE = "TZ iBoat"; // a legitimate sync-peer device type
 const WGS84_A = 6378137.0; // semi-major axis, metres
 const WGS84_E = 0.0818191908426; // first eccentricity
 
-// TZ / MaxSea timestamps are seconds since 1990-01-01 UTC, not the Unix epoch.
-const TZ_EPOCH_OFFSET = 631152000;
+// TimeZero timestamps are seconds since 2000-01-01 UTC, not the Unix epoch.
+// Checked against a live TZ Professional: a route it named "Rte 2025-01-28"
+// carries CreationDate 791320587, which is 2025-01-27T19:16:27Z (the 28th in
+// the boat's UTC+12 time zone).
+const TZ_EPOCH_OFFSET = 946684800;
 
 // ---- pure geometry / blob codec (unit-testable, no I/O) --------------------
 
