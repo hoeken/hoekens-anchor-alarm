@@ -43,6 +43,8 @@ Logged-in users can tweak the UI without leaving for the plugin config page. A g
 
 ### 🔄 TimeZero anchor sync
 
+> **Deprecated.** The [TimeZero Sync](https://github.com/dirkwa/signalk-timezero-sync) plugin (`signalk-timezero-sync`) syncs the anchor watch with TimeZero, and also routes, waypoints and the active route. It works with this plugin through the standard Signal K anchor paths. Install it and leave **"Sync Anchor with TimeZero (LAN)"** off: only one of them can talk to TimeZero. The built-in sync will be removed in a future release.
+
 Optionally keep your anchor watch in sync with [TimeZero](https://mytimezero.com/) (TZ Professional / TZ iBoat) instances on the same network. Drop, reshape, or raise the anchor here and it appears in TimeZero; do it in TimeZero and it flows back into Signal K. Enable **"Sync Anchor with TimeZero (LAN)"** in the plugin config.
 
 TimeZero pairs peers in one of two ways:
