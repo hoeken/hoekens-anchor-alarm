@@ -51,7 +51,8 @@
       "signalk-navico-embedder",
       "@meri-imperiumi/signalk-autostate",
       "@signalk/tracks-plugin",
-      "signalk-questdb"
+      "signalk-questdb",
+      "signalk-timezero-sync"
     ]
   },
   "author": {
