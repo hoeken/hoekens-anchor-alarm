@@ -1,3 +1,9 @@
+# v2.13.3
+
+## Bug fixes
+
+- OpenStreetMap tiles load again instead of showing "Access blocked"
+
 # v2.13.2
 
 ## Improvements
