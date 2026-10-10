@@ -1,3 +1,17 @@
+# v2.13.2
+
+## Improvements
+
+- TimeZero users who want anchor sync are now pointed to the signalk-timezero-sync plugin, which is recommended in the App Store
+
+## Bug fixes
+
+- Dropping or raising the anchor in Signal K now shows up on a TimeZero chartplotter
+- Restarting the server no longer raises the anchor because TimeZero still remembered an older raise
+- TimeZero no longer re-syncs with the plugin every second
+- Anchor timestamps sent to TimeZero are no longer ten years in the future
+- The tide panel no longer drifts out of date when the page is left open for a long time
+
 # v2.13.1
 
 ## Improvements
