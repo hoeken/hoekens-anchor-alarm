@@ -235,10 +235,19 @@ class AnchorAlarm {
       },
     );
 
+    // OSM's tile usage policy requires a Referer on every tile request and
+    // answers 403 "Access blocked" tiles without one. Pin the policy on the
+    // <img> tags themselves so a Referrer-Policy: no-referrer/same-origin
+    // header from a reverse proxy (or an embedding app) can't strip it. Only
+    // the origin is sent, so LAN IPs / .local / Tailscale hostnames are fine.
+    // Single hostname: the a/b/c subdomains are deprecated.
     this.osmLayer = L.tileLayer(
-      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
       {
-        attribution: "Map data from OpenStreetMap (OSM)",
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        referrerPolicy: "strict-origin-when-cross-origin",
+        maxNativeZoom: 19, // OSM's highest zoom; overzoom beyond instead of 404ing
         maxZoom: 23,
       },
     );
