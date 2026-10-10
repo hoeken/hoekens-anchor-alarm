@@ -206,6 +206,12 @@ export class SignalKHelper {
   fetchSelfVessel() {
     return this.request("vessels/self");
   }
+  // Our own vessel's environment.tide subtree, polled to keep the tide panel
+  // fresh (tide isn't subscribed on the delta stream).
+  fetchTide() {
+    return this.request("vessels/self/environment/tide");
+  }
+
   // Every vessel's track within `radius` of our own, from the tracks plugin's
   // own store. `window` is a trackWindow().
   fetchTracks(radius, window) {

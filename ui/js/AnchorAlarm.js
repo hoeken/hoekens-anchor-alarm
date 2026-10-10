@@ -29,6 +29,7 @@ import { nativeTooltipsSuppressed, isNavicoMfd } from "./BrowserSupport.js";
 
 const UPDATE_INTERVAL_MS = 500;
 const INITIAL_LOAD_RETRY_MS = 5000;
+const TIDE_REFRESH_MS = 15 * 60 * 1000;
 
 // Read a boolean-valued query parameter. Returns `fallback` when the param is
 // absent; otherwise a case-insensitive "true" is true and anything else
@@ -378,6 +379,7 @@ class AnchorAlarm {
         // connect handler sends it instead (fleetLayer exists from here on).
         this.state.websocketSubscribeFleet(this.client);
         this.startUpdateTimer();
+        this.startTideTimer();
 
         this.anchorController.estimateAnchorPosition();
         this.updateMap();
@@ -639,6 +641,25 @@ class AnchorAlarm {
       () => this.update(),
       UPDATE_INTERVAL_MS,
     );
+  }
+
+  // Tide comes from REST rather than deltas (see AppState.setTide). The initial
+  // /vessels/self load seeds it; this keeps it fresh. A 404 means the tide
+  // provider has gone away, so the panel hides; other failures keep the last
+  // good data until the next attempt.
+  startTideTimer() {
+    if (this.tideTimer)
+      return;
+    this.tideTimer = setInterval(() => {
+      this.signalK.fetchTide()
+        .then((tide) => this.state.setTide(tide))
+        .catch((error) => {
+          if (error.status === 404)
+            this.state.setTide(undefined);
+          else
+            console.warn("Tide refresh failed:", error);
+        });
+    }, TIDE_REFRESH_MS);
   }
 
   // Decorates the map shell built in init() with the rest of the controls.

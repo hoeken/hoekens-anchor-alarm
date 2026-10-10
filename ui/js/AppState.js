@@ -111,13 +111,6 @@ export class AppState {
             sendMeta: "all",
           },
           {
-            path: "environment.tide",
-            period: 60 * 1000,
-            format: "full",
-            policy: "fixed",
-            sendMeta: "all",
-          },
-          {
             path: "navigation.anchor.position",
             period: DELTA_FAST_SPEED,
             format: "full",
@@ -290,8 +283,7 @@ export class AppState {
     this.aws = this.extract(data, "environment.wind.speedApparent", this.aws);
     // The tide subtree is replaced wholesale when present — it's a tree of
     // per-field envelopes with no timestamp of its own, so _newest always
-    // picks it. Tide moves hourly; a snapshot a few seconds behind the delta
-    // stream is harmless.
+    // picks it. After startup it's refreshed by polling (see setTide).
     this.tide = this.extract(data, "environment.tide", this.tide, false);
 
     if (!this.anchor)
@@ -325,6 +317,14 @@ export class AppState {
 
     this.anchor.notification =
       this.extract(data, "notifications.navigation.anchor", this.anchor.notification, false);
+  }
+
+  // Tide isn't on the delta stream: patching individual tide fields as deltas
+  // arrived left the panel wrong on long-lived pages. Instead the whole
+  // environment.tide subtree is re-fetched on a slow timer and swapped in at
+  // once (see AnchorAlarm.startTideTimer).
+  setTide(tide) {
+    this.tide = tide && typeof tide === "object" ? tide : undefined;
   }
 
   handleDelta(timestamp, delta) {
@@ -387,18 +387,6 @@ export class AppState {
       this.twa = apply(this.twa);
     else if (path == "environment.wind.speedApparent")
       this.aws = apply(this.aws);
-    else if (path == "environment.tide.heightHigh")
-      (this.tide ??= {}).heightHigh = apply(this.tide.heightHigh);
-    else if (path == "environment.tide.heightLow")
-      (this.tide ??= {}).heightLow = apply(this.tide.heightLow);
-    else if (path == "environment.tide.heightNow")
-      (this.tide ??= {}).heightNow = apply(this.tide.heightNow);
-    else if (path == "environment.tide.stationName")
-      (this.tide ??= {}).stationName = apply(this.tide.stationName);
-    else if (path == "environment.tide.timeHigh")
-      (this.tide ??= {}).timeHigh = apply(this.tide.timeHigh);
-    else if (path == "environment.tide.timeLow")
-      (this.tide ??= {}).timeLow = apply(this.tide.timeLow);
     else if (path == "navigation.anchor.state") {
       if (!this._anchorSuppressed("state"))
         this.anchor.state = apply(this.anchor.state);
