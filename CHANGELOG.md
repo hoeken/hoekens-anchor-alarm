@@ -1,3 +1,11 @@
+# Unreleased
+
+## Improvements
+
+- Include a stable `data.anchorSessionId` in anchor notifications so downstream
+  consumers can correlate one continuing anchor watch across plugin or Signal K
+  restarts without relying on Signal K's server-owned notification id.
+
 # v2.13.3
 
 ## Bug fixes

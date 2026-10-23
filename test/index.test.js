@@ -86,6 +86,15 @@ describe("updateAnchorAlarm()", () => {
       message: "Dragging",
     });
   });
+
+  test("includes the active anchor session id for downstream correlation", () => {
+    const { h, plugin } = setup();
+    plugin.anchorSessionId = "anchor-session-one";
+    plugin.updateAnchorAlarm("alarm", "Dragging");
+    assert.deepEqual(h.lastDelta("notifications.navigation.anchor").data, {
+      anchorSessionId: "anchor-session-one",
+    });
+  });
 });
 
 describe("updateAnchorState()", () => {
@@ -275,8 +284,27 @@ describe("dropAnchor()", () => {
     assert.equal(saved.type, "circle");
     assert.equal(saved.radius, 60);
     assert.deepEqual(saved.position, { latitude: 37.8, longitude: -122.4 });
+    assert.equal(saved.anchorSessionId, plugin.anchorSessionId);
+    assert.match(saved.anchorSessionId, /^[0-9a-f-]{36}$/);
+    assert.equal(
+      h.lastDelta("notifications.navigation.anchor").data.anchorSessionId,
+      saved.anchorSessionId,
+    );
     assert.ok(h.calls.savePluginOptions.length >= 1);
     assert.equal(h.calls.subscriptions.length, 1);
+  });
+
+  test("starts a fresh correlation session for each real drop", () => {
+    const { h, plugin } = setup();
+    plugin.configuration = { state: "emergency" };
+    h.setSelfPath("navigation.position.value", ANCHOR);
+
+    plugin.dropAnchor({ zone: { type: "circle", radius: 60 } });
+    const firstId = plugin.anchorSessionId;
+    plugin.raiseAnchor();
+    plugin.dropAnchor({ zone: { type: "circle", radius: 60 } });
+
+    assert.notEqual(plugin.anchorSessionId, firstId);
   });
 });
 
@@ -291,6 +319,20 @@ describe("setZone()", () => {
     const { plugin } = setup();
     plugin.configuration = {};
     assert.throws(() => plugin.setZone({ type: "circle", radius: 80 }), StateError);
+  });
+
+  test("keeps the anchor session id when the zone changes", () => {
+    const { h, plugin } = setup();
+    const sessionId = "anchor-session-one";
+    plugin.anchorSessionId = sessionId;
+    plugin.configuration = {
+      zone: droppedZone({ anchorSessionId: sessionId }),
+    };
+    h.setSelfPath("navigation.position.value", ANCHOR);
+
+    plugin.setZone({ type: "circle", radius: 90 });
+
+    assert.equal(JSON.parse(plugin.configuration.zone).anchorSessionId, sessionId);
   });
 
   test("fails when there is no GPS fix", () => {
@@ -703,7 +745,30 @@ describe("start()", () => {
     assert.equal(ret, undefined);
     assert.equal(h.lastDelta("navigation.anchor.state"), "on");
     assert.equal(h.calls.subscriptions.length, 1);
-    assert.equal(h.calls.savePluginOptions.length, 0); // nothing to migrate
+    const persisted = JSON.parse(plugin.configuration.zone);
+    assert.equal(persisted.anchorSessionId, plugin.anchorSessionId);
+    assert.equal(
+      h.lastDelta("notifications.navigation.anchor").data.anchorSessionId,
+      persisted.anchorSessionId,
+    );
+    assert.equal(h.calls.savePluginOptions.length, 1); // adds correlation id
+  });
+
+  test("keeps the same anchor session id after a restart", () => {
+    const sessionId = "8f41ef1b-9db4-49aa-9b0a-0fc397e36c61";
+    const { h, plugin } = setup();
+    plugin.start({
+      zone: droppedZone({ anchorSessionId: sessionId }),
+      noPositionAlarmTime: 0,
+      state: "emergency",
+    });
+
+    assert.equal(plugin.anchorSessionId, sessionId);
+    assert.equal(
+      h.lastDelta("notifications.navigation.anchor").data.anchorSessionId,
+      sessionId,
+    );
+    assert.equal(h.calls.savePluginOptions.length, 0);
   });
 
   test("creates a position watchdog when noPositionAlarmTime > 0", () => {
@@ -785,6 +850,9 @@ describe("stop()", () => {
       state: "normal",
       method: ["visual"],
       message: "Stopped",
+      data: {
+        anchorSessionId: plugin.anchorSessionId,
+      },
     });
   });
 

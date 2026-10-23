@@ -321,7 +321,10 @@ as a Signal K notification value:
 {
   "state": "alarm",
   "method": ["visual", "sound"],
-  "message": "Anchor Dragging (42m)"
+  "message": "Anchor Dragging (42m)",
+  "data": {
+    "anchorSessionId": "5bf07fc2-91ef-48c4-b970-30da772ed924"
+  }
 }
 ```
 
@@ -332,6 +335,11 @@ as a Signal K notification value:
   `["visual"]` only.
 - `message` — human-readable status, e.g. `"Watching"`,
   `"Anchor Dragging (42m)"`, `"Engines on, alarm disabled."`.
+- `data.anchorSessionId` — producer-owned identifier for one drop-to-raise
+  anchoring session. It remains stable across plugin and Signal K restarts and
+  zone changes, and changes on the next drop. Signal K's actionable
+  notification `id` is server-owned and may change after a restart; downstream
+  consumers can use `anchorSessionId` only for lifecycle correlation.
 
 If the `enableNormalNotifications` config option is turned off, the plugin clears
 this notification (rather than emitting a `normal`-state message) when idle, to

@@ -14,6 +14,7 @@
  */
 
 import { degreesToRadians, distance, point, radiansToDegrees } from "@turf/turf";
+import { randomUUID } from "node:crypto";
 import path from "path";
 import semver from "semver";
 import { Watchdog } from "./watchdog.js";
@@ -67,6 +68,11 @@ export default function (app) {
   // Whether the most recent fix was rejected as a glitch — set so the next
   // good fix knows to swap the glitch pluginError back to the normal status.
   plugin.positionGlitched = false;
+  // Correlates one drop..raise span across plugin and Signal K restarts.
+  // Signal K owns the actionable notification id and allocates a new one
+  // after a server restart, so downstream consumers need a producer-owned,
+  // non-actionable key to recognise the continuing anchor watch.
+  plugin.anchorSessionId = null;
 
   plugin.bus = new SignalKBus(app, plugin.id);
   plugin.sessionLog = new SessionLog(app);
@@ -100,13 +106,44 @@ export default function (app) {
     plugin.configuration = props || {};
     // v2.1 -> v2.2 upgrade: legacy `radius` becomes a `zone` config.
     // Persist immediately so the next restart sees the migrated shape.
-    const migrated = migrateConfig(plugin.configuration);
+    const zoneMigrated = migrateConfig(plugin.configuration);
+    let sessionMigrated = false;
     // v2.11 upgrade: UI preferences move out of the plugin config into
     // per-identity storage; any legacy keys become the boat-wide baseline.
     const uiMigrated = plugin.uiConfigStore.migrateFromPluginConfig(
       plugin.configuration,
     );
     plugin.configuration = applyDefaults(app, plugin.configuration);
+
+    // Persist one producer-owned correlation id with the active zone. Signal K
+    // notification ids are intentionally server-owned and do not survive a
+    // server restart; this id identifies only the anchoring session and never
+    // grants notification actions. Older saved zones are upgraded in place.
+    const zoneConfig = readZoneConfig(plugin.configuration);
+    const anchorPosition = zoneConfig?.position;
+    let zone;
+    try {
+      zone = watchZoneFromConfig(zoneConfig);
+    } catch (e) {
+      app.error("error: " + e);
+      console.error(e.stack);
+      return e;
+    }
+    if (anchorPosition && zone) {
+      plugin.anchorSessionId = typeof zoneConfig.anchorSessionId === "string" &&
+        zoneConfig.anchorSessionId.length > 0
+        ? zoneConfig.anchorSessionId
+        : randomUUID();
+      if (zoneConfig.anchorSessionId !== plugin.anchorSessionId) {
+        plugin.configuration.zone = JSON.stringify({
+          ...zoneConfig,
+          anchorSessionId: plugin.anchorSessionId,
+        });
+        sessionMigrated = true;
+      }
+    } else {
+      plugin.anchorSessionId = null;
+    }
 
     // Load config before the first notification so enableNormalNotifications
     // governs the "Started" message too.
@@ -116,9 +153,11 @@ export default function (app) {
     for (const [key, value] of Object.entries(metas))
       plugin.bus.queueMeta(key, value);
 
-    if (migrated || uiMigrated) {
-      if (migrated)
+    if (zoneMigrated || sessionMigrated || uiMigrated) {
+      if (zoneMigrated)
         app.debug("migrated legacy radius config to zone shape");
+      if (sessionMigrated)
+        app.debug("added anchor session correlation id to saved zone");
       if (uiMigrated)
         app.debug("migrated legacy UI preferences to per-identity storage");
       plugin.savePluginOptions();
@@ -151,9 +190,6 @@ export default function (app) {
       }
 
       //should we be watching?
-      const zoneConfig = readZoneConfig(plugin.configuration);
-      const anchorPosition = zoneConfig?.position;
-      const zone = watchZoneFromConfig(zoneConfig);
       if (anchorPosition && zone) {
         plugin.updateAnchorState({
           anchorPosition: anchorPosition,
@@ -297,11 +333,17 @@ export default function (app) {
     if (state === "normal" && plugin.configuration?.enableNormalNotifications === false) {
       plugin.bus.queueDelta("notifications.navigation.anchor", null);
     } else {
-      plugin.bus.queueDelta("notifications.navigation.anchor", {
+      const notification = {
         state: state,
         method: method,
         message: message,
-      });
+      };
+      if (plugin.anchorSessionId) {
+        notification.data = {
+          anchorSessionId: plugin.anchorSessionId,
+        };
+      }
+      plugin.bus.queueDelta("notifications.navigation.anchor", notification);
     }
 
     plugin.bus.sendUpdates();
@@ -717,6 +759,10 @@ export default function (app) {
       parsedPosition.longitude,
     );
 
+    // A real drop starts a new producer lifecycle. Keep the id in the saved
+    // zone so the same watch can be correlated after a plugin/server restart.
+    plugin.anchorSessionId = randomUUID();
+
     plugin.updateAnchorState({
       anchorPosition: parsedPosition,
       currentRadius: 0,
@@ -727,6 +773,7 @@ export default function (app) {
     plugin.configuration.zone = JSON.stringify({
       ...resolvedZone.getConfig(),
       position: parsedPosition,
+      anchorSessionId: plugin.anchorSessionId,
     });
 
     plugin.sessionLog.start(parsedPosition, resolvedZone.getConfig());
@@ -797,6 +844,7 @@ export default function (app) {
     plugin.configuration.zone = JSON.stringify({
       ...resolvedZone.getConfig(),
       position: anchorPosition,
+      anchorSessionId: plugin.anchorSessionId ?? existingZoneConfig.anchorSessionId,
     });
     plugin.sessionLog.updateZone(resolvedZone.getConfig(), movedPosition);
     plugin.savePluginOptions();
@@ -827,6 +875,7 @@ export default function (app) {
     plugin.savePluginOptions();
 
     plugin.stopWatchingPosition({ clearNotification: true });
+    plugin.anchorSessionId = null;
 
     plugin.notifyTimeZero();
   };
