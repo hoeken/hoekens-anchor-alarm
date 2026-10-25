@@ -1349,6 +1349,17 @@ html.largeControls .leaflet-touch .leaflet-control-layers-toggle {
   background-repeat: no-repeat !important;
 }
 
+/* The expanded layer list runs down the left edge to near the bottom of the
+   map (Leaflet caps it at the map height, then scrolls), straight through the
+   wind and tide panels in the bottom-left corner. Both corners sit at
+   leaflet.css's z-index 1000 and the bottom one comes later in the DOM, so the
+   panels would cover the lower charts and nobody could tap them. Lift the
+   top-left corner above it: the open list is a transient menu, and the panels
+   reappear as soon as it closes. */
+.leaflet-top.leaflet-left {
+  z-index: 1001;
+}
+
 /* "Base Layer" / "Charts + Overlays" section headers inside the expanded
    layer control (added by hud/LayersControl.js). Bold text with a rule
    filling the rest of the row, vertically centered on the text via flex;
