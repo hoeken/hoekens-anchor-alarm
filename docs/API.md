@@ -63,18 +63,19 @@ Errors share their own envelope, with an HTTP status matching `statusCode`:
 
 ```json
 {
-  "statusCode": 403,
+  "statusCode": 400,
   "state": "FAILED",
   "message": "position with latitude and longitude required"
 }
 ```
 
-| Status | Meaning                                                                                                                                     |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `403`  | Validation or anchor-state error (e.g. missing position, boat outside the zone, no anchor dropped). The `message` explains what went wrong. |
-| `500`  | Unexpected internal error.                                                                                                                  |
+| Status | Meaning                                                                                                                                                                    |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `400`  | The request is invalid (e.g. a position without numeric latitude and longitude, a zone of an unknown type, no zone for `setZone`). The `message` explains what went wrong. |
+| `409`  | The anchor's current state does not allow the request (e.g. boat outside the zone, no anchor dropped, no GPS position). The `message` explains what went wrong.            |
+| `500`  | Unexpected internal error.                                                                                                                                                 |
 
-(The `icon` upload route adds `400`, `413`, and `415` — see below.)
+(The `icon` upload route answers `400` for an empty upload and adds `413` and `415` — see below.)
 
 ### Anchor control
 
@@ -97,7 +98,7 @@ curl -X POST http://[signalk-server]:[port]/plugins/hoekens-anchor-alarm/dropAnc
   -d '{ "position": { "latitude": 37.8199, "longitude": -122.4783 }, "zone": { "type": "circle", "radius": 30 } }'
 ```
 
-The drop is rejected (`403`) if the boat's current GPS position is already
+The drop is rejected (`409`) if the boat's current GPS position is already
 outside the requested zone — dropping there would trip the drag alarm
 immediately. (This guard is skipped when there is no GPS fix, or when the
 `allowZoneOutsideVessel` config option is enabled for alarm testing.)
@@ -123,7 +124,7 @@ curl -X POST http://[signalk-server]:[port]/plugins/hoekens-anchor-alarm/setZone
   -d '{ "zone": { "type": "circle", "radius": 45 } }'
 ```
 
-Like `dropAnchor`, this is rejected (`403`) if the new zone (around the new
+Like `dropAnchor`, this is rejected (`409`) if the new zone (around the new
 position, when one is given) would no longer contain the boat (unless
 `allowZoneOutsideVessel` is enabled).
 

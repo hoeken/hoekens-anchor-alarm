@@ -411,7 +411,7 @@ export function pickUiConfig(config = {}) {
 }
 
 // Coerce/validate one value against its JSON Schema property. Mirrors how
-// SignalK's admin form treats the same schema. Throws ValidationError (→ 403)
+// SignalK's admin form treats the same schema. Throws ValidationError (→ 400)
 // on anything that doesn't fit.
 function coerceToSchema(key, prop, value) {
   if (!prop)

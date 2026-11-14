@@ -159,16 +159,16 @@ describe("http-routes register()", () => {
       assert.deepEqual(res.body, { statusCode: 200, state: "COMPLETED" });
     });
 
-    test("a ValidationError maps to 403 FAILED with the message", () => {
+    test("a ValidationError maps to 400 FAILED with the message", () => {
       plugin.dropAnchor = () => {
         throw new ValidationError("position required");
       };
       wire();
       const res = fakeRes();
       router.handlers.post["/dropAnchor"]({ body: {} }, res);
-      assert.equal(res.statusCode, 403);
+      assert.equal(res.statusCode, 400);
       assert.deepEqual(res.body, {
-        statusCode: 403,
+        statusCode: 400,
         state: "FAILED",
         message: "position required",
       });
@@ -205,14 +205,15 @@ describe("http-routes register()", () => {
       assert.equal(res.statusCode, 200);
     });
 
-    test("a StateError maps to 403", () => {
+    test("a StateError maps to 409", () => {
       plugin.setZone = () => {
         throw new StateError("no anchor is currently dropped");
       };
       wire();
       const res = fakeRes();
       router.handlers.post["/setZone"]({ body: {} }, res);
-      assert.equal(res.statusCode, 403);
+      assert.equal(res.statusCode, 409);
+      assert.equal(res.body.statusCode, 409);
       assert.equal(res.body.message, "no anchor is currently dropped");
     });
   });
@@ -375,14 +376,14 @@ describe("http-routes register()", () => {
       assert.equal(res.body.enableScopePanel, false);
     });
 
-    test("rejects an invalid value with 403 and stores nothing", () => {
+    test("rejects an invalid value with 400 and stores nothing", () => {
       wire();
       const res = fakeRes();
       router.handlers.post["/ui-config"](
         asUser("bob", { defaultBasemap: "CARRIER_PIGEON" }),
         res,
       );
-      assert.equal(res.statusCode, 403);
+      assert.equal(res.statusCode, 400);
       assert.equal(
         fs.existsSync(path.join(harness.dataDir(), "ui-config")),
         false,
@@ -459,12 +460,12 @@ describe("http-routes register()", () => {
       });
     });
 
-    test("rejects a missing or empty identifier with 403 and stores nothing", () => {
+    test("rejects a missing or empty identifier with 400 and stores nothing", () => {
       wire();
       for (const body of [{}, { identifier: "", enabled: true }, { identifier: 7, enabled: true }, undefined]) {
         const res = fakeRes();
         router.handlers.post["/ui-config/charts"]({ body }, res);
-        assert.equal(res.statusCode, 403);
+        assert.equal(res.statusCode, 400);
       }
       assert.equal(
         fs.existsSync(path.join(harness.dataDir(), "ui-config")),
@@ -472,14 +473,14 @@ describe("http-routes register()", () => {
       );
     });
 
-    test("rejects a non-boolean enabled with 403", () => {
+    test("rejects a non-boolean enabled with 400", () => {
       wire();
       const res = fakeRes();
       router.handlers.post["/ui-config/charts"](
         asUser("bob", { identifier: "chart-a", enabled: "yes" }),
         res,
       );
-      assert.equal(res.statusCode, 403);
+      assert.equal(res.statusCode, 400);
       assert.deepEqual(plugin.uiConfigStore.resolve("bob").charts, {});
     });
   });
