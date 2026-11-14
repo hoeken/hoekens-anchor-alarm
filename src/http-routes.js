@@ -16,7 +16,7 @@
 import { createRequire } from "module";
 import fs from "fs";
 import path from "path";
-import { AnchorError, ValidationError } from "./errors.js";
+import { AnchorError, StateError, ValidationError } from "./errors.js";
 import { coerceUiConfig } from "./schema.js";
 
 const require = createRequire(import.meta.url);
@@ -161,11 +161,16 @@ export function register(app, plugin, router) {
   const readwrite = access("readwrite");
   const admin = router;
 
+  // A refusal is the request's fault (400) or clashes with the anchor's
+  // current state (409), such as a zone that would leave the boat outside.
+  // 403 would say the user may not do this at all, which clients show as a
+  // login problem.
   function fail(res, err) {
     if (err instanceof AnchorError) {
       app.debug(err.message);
-      res.status(403).json({
-        statusCode: 403,
+      const statusCode = err instanceof StateError ? 409 : 400;
+      res.status(statusCode).json({
+        statusCode,
         state: "FAILED",
         message: err.message,
       });

@@ -190,7 +190,7 @@
         "properties": {
           "statusCode": {
             "type": "integer",
-            "example": 403
+            "example": 409
           },
           "state": {
             "type": "string",
@@ -244,17 +244,32 @@
       }
     },
     "responses": {
-      "AnchorError": {
-        "description": "Request rejected due to an anchor validation or state error.",
+      "InvalidRequest": {
+        "description": "Request rejected because it is invalid, such as a missing or malformed field.",
         "content": {
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/ErrorResponse"
             },
             "example": {
-              "statusCode": 403,
+              "statusCode": 400,
               "state": "FAILED",
               "message": "position with latitude and longitude required"
+            }
+          }
+        }
+      },
+      "AnchorStateConflict": {
+        "description": "Request rejected because the anchor's current state does not allow it, such as a zone that would leave the boat outside or no anchor dropped.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "statusCode": 409,
+              "state": "FAILED",
+              "message": "Boat is outside the watch zone."
             }
           }
         }
@@ -359,8 +374,11 @@
               }
             }
           },
-          "403": {
-            "$ref": "#/components/responses/AnchorError"
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "409": {
+            "$ref": "#/components/responses/AnchorStateConflict"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -437,8 +455,11 @@
               }
             }
           },
-          "403": {
-            "$ref": "#/components/responses/AnchorError"
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "409": {
+            "$ref": "#/components/responses/AnchorStateConflict"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -461,9 +482,6 @@
                 }
               }
             }
-          },
-          "403": {
-            "$ref": "#/components/responses/AnchorError"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -521,8 +539,8 @@
               }
             }
           },
-          "403": {
-            "$ref": "#/components/responses/AnchorError"
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -571,8 +589,8 @@
               }
             }
           },
-          "403": {
-            "$ref": "#/components/responses/AnchorError"
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
